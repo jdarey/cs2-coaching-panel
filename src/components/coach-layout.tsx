@@ -109,7 +109,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start gap-2 px-3" size="sm">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.avatarUrl || ''} alt={user?.name || ''} />
+                    <AvatarImage src={(user as any)?.avatarUrl || ''} alt={user?.name || ''} />
                     <AvatarFallback>{user?.name?.[0] || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start">

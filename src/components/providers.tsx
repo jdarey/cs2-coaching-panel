@@ -8,9 +8,10 @@ import { ReactNode } from 'react'
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
-      {children}
-      <Toaster />
-      <TooltipProvider />
+      <TooltipProvider>
+        {children}
+        <Toaster />
+      </TooltipProvider>
     </SessionProvider>
   )
 }

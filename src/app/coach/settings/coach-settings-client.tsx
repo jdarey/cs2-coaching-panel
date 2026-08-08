@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
-import { CoachLayout } from '@/components/coach-layout'
+import { CoachLayout } from '@/components/coach-layout-export'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
-import { User, Mail, Lock, Shield, Bell, Palette, Moon, Sun, Loader2, Save, Globe, Discord } from 'lucide-react'
+import { User, Mail, Lock, Shield, Bell, Palette, Moon, Sun, Loader2, Save, Globe, MessageCircle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface User {
@@ -32,11 +32,13 @@ interface Settings {
   discordWebhook: string | null
   createdAt: string
   updatedAt: string
-} | null
+}
+
+type SettingsOrNull = Settings | null
 
 interface CoachSettingsClientProps {
   initialUser: User
-  initialSettings: Settings
+  initialSettings: SettingsOrNull
 }
 
 export function CoachSettingsClient({ initialUser, initialSettings }: CoachSettingsClientProps) {
@@ -179,7 +181,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'notifications' | 'appearance' | 'integrations' | 'account')} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile"><User className="mr-2 h-4 w-4" /> Profil</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="mr-2 h-4 w-4" /> Powiadomienia</TabsTrigger>
@@ -314,7 +316,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Discord className="h-10 w-10 text-discord bg-discord/10 rounded-lg p-2" />
+                  <MessageCircle className="h-10 w-10 text-purple-600 bg-purple-100 rounded-lg p-2" />
                   <div className="flex-1">
                     <Switch
                       checked={notifications.discord}

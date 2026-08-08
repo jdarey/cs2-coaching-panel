@@ -56,7 +56,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'watching' | 'watched' | 'implemented'>('all')
   const [search, setSearch] = useState('')
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
-  const [videoProgressDialog, setVideoProgressDialog] = useState<{ video: Session['videos'][0]; sessionTitle: string; progress: Progress | undefined } | null>(null)
+  const [videoProgressDialog, setVideoProgressDialog] = useState<{ video: typeof allVideos[0]; sessionTitle: string; progress: Progress | undefined } | null>(null)
   const { toast } = useToast()
 
   const getProgressForVideo = (videoId: string, sessionId: string) => 

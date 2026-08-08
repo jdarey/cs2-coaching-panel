@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
-import { CoachLayout } from '@/components/coach-layout'
+import { CoachLayout } from '@/components/coach-layout-export'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

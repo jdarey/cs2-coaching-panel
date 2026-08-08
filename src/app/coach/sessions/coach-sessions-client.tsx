@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, cn } from '@/lib/utils'
-import { CoachLayout } from '@/components/coach-layout'
+import { CoachLayout } from '@/components/coach-layout-export'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -198,7 +198,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                 <DialogTitle>{editingSession ? 'Edytuj sesję' : 'Nowa sesja treningowa'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'details' | 'tags' | 'videos' | 'notes')}>
                   <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="details">Szczegóły</TabsTrigger>
                     <TabsTrigger value="tags">Tagi</TabsTrigger>
@@ -338,7 +338,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter} className="w-full sm:w-auto">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Wszystkie statusy" />
             </SelectTrigger>

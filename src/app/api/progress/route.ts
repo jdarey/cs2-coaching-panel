@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { videoProgressSchema } from '@/lib/validations'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -98,26 +100,32 @@ export async function POST(request: NextRequest) {
       updateData.watchedAt = new Date()
     }
 
-    const progress = await prisma.videoProgress.upsert({
-      where: {
-        userId_videoId_sessionId: {
+    const existing = await prisma.videoProgress.findFirst({
+        where: {
           userId,
           videoId: validated.videoId,
-          sessionId: validated.sessionId || null,
+          sessionId: validated.sessionId ?? null,
         },
-      },
-      update: updateData,
-      create: {
-        userId,
-        videoId: validated.videoId,
-        sessionId: validated.sessionId,
-        ...updateData,
-      },
-      include: {
-        video: true,
-        session: { select: { id: true, title: true } },
-      },
-    })
+      })
+
+      let progress
+      if (existing) {
+        progress = await prisma.videoProgress.update({
+          where: { id: existing.id },
+          data: updateData,
+          include: { video: true, session: { select: { id: true, title: true } } },
+        })
+      } else {
+        progress = await prisma.videoProgress.create({
+          data: {
+            userId,
+            videoId: validated.videoId,
+            sessionId: validated.sessionId ?? null,
+            ...updateData,
+          },
+          include: { video: true, session: { select: { id: true, title: true } } },
+        })
+      }
 
     return NextResponse.json(progress)
   } catch (error) {

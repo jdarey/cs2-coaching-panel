@@ -42,7 +42,7 @@ export default async function CoachStudentsPage() {
         implemented: progress.filter((p) => p.status === 'IMPLEMENTED').length,
       }
 
-      return { ...student, progressStats: stats }
+      return { ...student, progressStats: stats, createdAt: student.createdAt.toISOString() }
     })
   )
 

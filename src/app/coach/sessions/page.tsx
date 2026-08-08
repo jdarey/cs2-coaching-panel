@@ -41,5 +41,14 @@ export default async function CoachSessionsPage() {
     }),
   ])
 
-  return <CoachSessionsClient initialSessions={sessions} initialStudents={students} initialTags={tags} initialVideos={videos} />
+  // Convert Date fields to strings for client component
+  const sessionsForClient = sessions.map((s) => ({
+    ...s,
+    scheduledAt: s.scheduledAt?.toISOString() ?? null,
+    completedAt: s.completedAt?.toISOString() ?? null,
+    createdAt: s.createdAt.toISOString(),
+    updatedAt: s.updatedAt.toISOString(),
+  }))
+
+  return <CoachSessionsClient initialSessions={sessionsForClient} initialStudents={students} initialTags={tags} initialVideos={videos} />
 }

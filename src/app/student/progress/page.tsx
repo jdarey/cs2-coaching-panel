@@ -38,5 +38,20 @@ export default async function StudentProgressPage() {
     }),
   ])
 
-  return <StudentProgressClient initialProgress={progress} initialSessions={sessions} initialTags={tags} />
+  // Convert Date fields to strings for client component
+  const progressForClient = progress.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+    watchedAt: p.watchedAt?.toISOString() ?? null,
+    session: p.session ? { ...p.session, scheduledAt: p.session.scheduledAt?.toISOString() ?? null } : undefined,
+  }))
+
+  const sessionsForClient = sessions.map((s) => ({
+    ...s,
+    scheduledAt: s.scheduledAt?.toISOString() ?? null,
+    createdAt: s.createdAt.toISOString(),
+  }))
+
+  return <StudentProgressClient initialProgress={progressForClient} initialSessions={sessionsForClient} initialTags={tags} />
 }

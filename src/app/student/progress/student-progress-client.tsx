@@ -16,7 +16,7 @@ interface Progress {
   note: string | null
   watchedAt: string | null
   video: { id: string; title: string; tags: { tag: { id: string; name: string; color: string } }[] }
-  session: { id: string; title: string; scheduledAt: string | null }
+  session?: { id: string; title: string; scheduledAt: string | null }
 }
 
 interface Session {
@@ -339,7 +339,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                           </div>
                           <div className="min-w-0">
                             <h4 className="font-medium truncate">{p.video.title}</h4>
-                            <p className="text-sm text-muted-foreground truncate">{p.session.title}</p>
+                            <p className="text-sm text-muted-foreground truncate">{p.session?.title}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">

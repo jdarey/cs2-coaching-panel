@@ -228,7 +228,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'overview' | 'videos' | 'notes')}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Przegląd</TabsTrigger>
             <TabsTrigger value="videos">Filmy ({totalVideos})</TabsTrigger>
@@ -272,7 +272,8 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                       <span>{session.coach.name || session.coach.email}</span>
                     </div>
                   </div>
-                </CardContent              </Card>
+                </CardContent>
+              </Card>
 
               {/* Tags with Coach Notes */}
               <Card>
@@ -310,7 +311,8 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                       ))}
                     </div>
                   )}
-                </CardContent              </Card>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -515,5 +517,3 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
     </StudentLayout>
   )
 }
-
-import { VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS } from '@/lib/utils'

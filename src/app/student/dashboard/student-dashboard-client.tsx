@@ -30,7 +30,7 @@ interface Progress {
   note: string | null
   watchedAt: string | null
   video: { id: string; title: string; thumbnail: string | null; tags: { tag: { id: string; name: string; color: string } }[] }
-  session: { id: string; title: string }
+  session?: { id: string; title: string }
 }
 
 interface Coach {
@@ -261,14 +261,14 @@ export function StudentDashboardClient({ initialStats, initialSessions, initialP
                           )}
                           <div className="min-w-0">
                             <h4 className="font-medium truncate">{p.video.title}</h4>
-                            <p className="text-sm text-muted-foreground truncate">{p.session.title}</p>
+                            <p className="text-sm text-muted-foreground truncate">{p.session?.title}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className={cn(VIDEO_STATUS_COLORS[p.status])}>
                             {VIDEO_STATUS_LABELS[p.status]}
                           </Badge>
-                          {p.status !== 'IMPLEMENTED' && (
+                          {p.status !== 'IMPLEMENTED' && p.session && (
                             <Button asChild variant="outline" size="sm">
                               <Link href={`/student/sessions/${p.session.id}`}>
                                 Kontynuuj

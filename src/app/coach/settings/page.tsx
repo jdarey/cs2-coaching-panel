@@ -27,5 +27,18 @@ export default async function CoachSettingsPage() {
     redirect('/login')
   }
 
-  return <CoachSettingsClient initialUser={user} initialSettings={settings} />
+  // Convert Date fields to strings for client component
+  const userForClient = {
+    ...user,
+    createdAt: user.createdAt.toISOString(),
+  }
+
+  const settingsForClient = settings ? {
+    ...settings,
+    createdAt: settings.createdAt.toISOString(),
+    updatedAt: settings.updatedAt.toISOString(),
+    defaultTagColors: settings.defaultTagColors as Record<string, string>,
+  } : null
+
+  return <CoachSettingsClient initialUser={userForClient} initialSettings={settingsForClient} />
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   // Verify cron secret
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
       const orphanedProgress = await tx.videoProgress.deleteMany({
         where: {
           sessionId: { not: null },
-          session: { id: null },
+          session: null,
         },
       })
 
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
         where: {
           isActive: false,
           createdAt: { lt: ninetyDaysAgo },
-          sessions: { none: {} },
+          sessionVideos: { none: {} },
         },
         select: { id: true },
       })

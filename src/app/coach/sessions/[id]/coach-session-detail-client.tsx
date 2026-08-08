@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl } from '@/lib/utils'
-import { CoachLayout } from '@/components/coach-layout'
+import { CoachLayout } from '@/components/coach-layout-export'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -167,7 +167,8 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                   <Trash2 className="mr-2 h-4 w-4" />
                   Usuń sesję
                 </DropdownMenuItem>
-              </DropdownMenuContent            </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -222,7 +223,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'overview' | 'videos' | 'notes')}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Przegląd</TabsTrigger>
             <TabsTrigger value="videos">Filmy ({totalVideos})</TabsTrigger>
@@ -401,7 +402,8 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Usuń z sesji
                                   </DropdownMenuItem>
-                                </DropdownMenuContent                              </DropdownMenu>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         </div>
@@ -492,5 +494,3 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
     </CoachLayout>
   )
 }
-
-import { VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS } from '@/lib/utils'

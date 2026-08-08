@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         where: { id: student.id },
         data: { coachId: userId, role: 'STUDENT' },
         select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
-      })
+      }) as any
     } else {
       // Create new student
       const passwordHash = await bcrypt.hash(password, 12)
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
           coachId: userId,
         },
         select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
-      })
+      }) as any
     }
 
     return NextResponse.json(student, { status: 201 })

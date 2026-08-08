@@ -87,3 +87,7 @@ export const ROLE_LABELS: Record<string, string> = {
   COACH: 'Trener',
   STUDENT: 'Uczeń',
 }
+
+// Aliases for video status
+export const VIDEO_STATUS_LABELS = STATUS_LABELS
+export const VIDEO_STATUS_COLORS = STATUS_COLORS

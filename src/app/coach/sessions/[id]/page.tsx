@@ -35,13 +35,35 @@ export default async function CoachSessionDetailPage({ params }: { params: Promi
     redirect('/coach/sessions')
   }
 
+  // Convert Date fields to strings for client component
+  const sessionForClient = {
+    ...sessionData,
+    scheduledAt: sessionData.scheduledAt?.toISOString() ?? null,
+    completedAt: sessionData.completedAt?.toISOString() ?? null,
+    createdAt: sessionData.createdAt.toISOString(),
+    updatedAt: sessionData.updatedAt.toISOString(),
+    notes: sessionData.notes.map((note) => ({
+      ...note,
+      createdAt: note.createdAt.toISOString(),
+      updatedAt: note.updatedAt.toISOString(),
+    })),
+  }
+
   // Get student's progress for videos in this session
-  const progress = await prisma.videoProgress.findMany({
+  const progressData = await prisma.videoProgress.findMany({
     where: {
       userId: sessionData.studentId,
       sessionId: id,
     },
   })
 
-  return <CoachSessionDetailClient initialSession={sessionData} initialProgress={progress} />
+  // Convert Date fields to strings for client component
+  const progress = progressData.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+    watchedAt: p.watchedAt?.toISOString() ?? null,
+  }))
+
+  return <CoachSessionDetailClient initialSession={sessionForClient} initialProgress={progress} />
 }

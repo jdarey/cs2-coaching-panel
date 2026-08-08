@@ -139,7 +139,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'notifications' | 'appearance' | 'account')} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile"><User className="mr-2 h-4 w-4" /> Profil</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="mr-2 h-4 w-4" /> Powiadomienia</TabsTrigger>

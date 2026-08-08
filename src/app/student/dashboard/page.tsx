@@ -50,5 +50,22 @@ export default async function StudentDashboardPage() {
     activeSessions: sessions.filter((s) => s.status === 'ACTIVE').length,
   }
 
-  return <StudentDashboardClient initialStats={stats} initialSessions={sessions} initialProgress={progress} initialCoach={coach?.coach} />
+  // Convert Date fields to strings for client component
+  const sessionsForClient = sessions.map((s) => ({
+    ...s,
+    scheduledAt: s.scheduledAt?.toISOString() ?? null,
+    completedAt: s.completedAt?.toISOString() ?? null,
+    createdAt: s.createdAt.toISOString(),
+    updatedAt: s.updatedAt.toISOString(),
+  }))
+
+  const progressForClient = progress.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+    watchedAt: p.watchedAt?.toISOString() ?? null,
+    session: p.session ? { ...p.session } : undefined,
+  }))
+
+  return <StudentDashboardClient initialStats={stats} initialSessions={sessionsForClient} initialProgress={progressForClient} initialCoach={coach?.coach ?? null} />
 }

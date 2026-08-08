@@ -29,5 +29,11 @@ export default async function StudentSettingsPage() {
     redirect('/login')
   }
 
-  return <StudentSettingsClient initialUser={user} />
+  // Convert Date fields to strings for client component
+  const userForClient = {
+    ...user,
+    createdAt: user.createdAt.toISOString(),
+  }
+
+  return <StudentSettingsClient initialUser={userForClient} />
 }

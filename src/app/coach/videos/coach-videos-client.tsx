@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatDate, getVideoThumbnail, getVideoEmbedUrl, cn } from '@/lib/utils'
-import { CoachLayout } from '@/components/coach-layout'
+import { CoachLayout } from '@/components/coach-layout-export'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -253,7 +253,7 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
               className="pl-10"
             />
           </div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'youtube' | 'vimeo' | 'drive' | 'other')} className="w-full sm:w-auto">
             <TabsList>
               <TabsTrigger value="all">Wszystkie</TabsTrigger>
               <TabsTrigger value="youtube">YouTube</TabsTrigger>

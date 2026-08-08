@@ -31,9 +31,25 @@ export default async function StudentVideosPage() {
 
   // Get progress for all videos
   const sessionIds = sessions.map((s) => s.id)
-  const progress = await prisma.videoProgress.findMany({
+  const progressData = await prisma.videoProgress.findMany({
     where: { userId, sessionId: { in: sessionIds } },
   })
 
-  return <StudentVideosClient initialSessions={sessions} initialProgress={progress} />
+  const progress = progressData.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+    watchedAt: p.watchedAt?.toISOString() ?? null,
+  }))
+
+  // Convert Date fields to strings for client component
+  const sessionsForClient = sessions.map((s) => ({
+    ...s,
+    scheduledAt: s.scheduledAt?.toISOString() ?? null,
+    completedAt: s.completedAt?.toISOString() ?? null,
+    createdAt: s.createdAt.toISOString(),
+    updatedAt: s.updatedAt.toISOString(),
+  }))
+
+  return <StudentVideosClient initialSessions={sessionsForClient} initialProgress={progress} />
 }

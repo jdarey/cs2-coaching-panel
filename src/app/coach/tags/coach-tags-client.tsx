@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { CoachLayout } from '@/components/coach-layout'
+import { CoachLayout } from '@/components/coach-layout-export'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -211,7 +211,8 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     {editingTag ? 'Zapisz' : 'Dodaj tag'}
                   </Button>
-                </DialogFooter              </form>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
