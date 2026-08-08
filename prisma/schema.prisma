@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  COACH
+  STUDENT
+}
+
+enum SessionStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum VideoStatus {
+  PENDING
+  WATCHING
+  WATCHED
+  IMPLEMENTED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  role          Role      @default(STUDENT)
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Coach relations
+  coachedStudents User[]   @relation("CoachStudent")
+  coach           User?    @relation("CoachStudent", fields: [coachId], references: [id])
+  coachId         String?
+
+  // Sessions
+  sessionsAsCoach   Session[] @relation("SessionCoach")
+  sessionsAsStudent Session[] @relation("SessionStudent")
+
+  // Progress
+  videoProgress VideoProgress[]
+  sessionNotes  SessionNote[]
+  coachSettings CoachSettings?
+
+  @@index([coachId])
+  @@index([email])
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String   @default("#3B82F6") // hex color for UI
+  icon        String?  // lucide icon name
+  isGlobal    Boolean  @default(false)     // global tags visible to all coaches
+  coachId     String?  // null = global, set = coach-specific
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  videos      VideoTag[]
+  sessions    SessionTag[]
+  sessionVideos SessionVideo[]
+
+  @@unique([name, coachId]) // unique per coach
+  @@index([coachId])
+  @@index([isGlobal])
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  url         String   // YouTube, Vimeo, Google Drive, direct link
+  thumbnail   String?  // auto-fetched or manual
+  description String?
+  duration    Int?     // seconds
+  source      String   @default("youtube") // youtube, vimeo, drive, other
+  isActive    Boolean  @default(true)
+  coachId     String   // videos belong to coach
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tags        VideoTag[]
+  progress    VideoProgress[]
+  sessionVideos SessionVideo[]
+
+  @@index([coachId])
+  @@index([isActive])
+}
+
+model VideoTag {
+  videoId String
+  tagId   String
+  video   Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag     Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, tagId])
+}
+
+model Session {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  status      SessionStatus @default(DRAFT)
+  scheduledAt DateTime?
+  completedAt DateTime?
+  coachId     String
+  studentId   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  coach       User   @relation("SessionCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student     User   @relation("SessionStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  tags        SessionTag[]
+  videos      SessionVideo[]
+  notes       SessionNote[]
+  videoProgress VideoProgress[]
+
+  @@index([coachId])
+  @@index([studentId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model SessionTag {
+  id        String   @id @default(cuid())
+  sessionId String
+  tagId     String
+  note      String?  // coach's note for this specific tag in this session
+  order     Int      @default(0)
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, tagId])
+  @@index([sessionId])
+  @@index([tagId])
+}
+
+model SessionVideo {
+  id        String      @id @default(cuid())
+  sessionId String
+  videoId   String
+  tagId     String?     // which tag this video addresses (optional)
+  order     Int         @default(0)
+  session   Session     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  video     Video       @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag       Tag?        @relation(fields: [tagId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([videoId])
+}
+
+model SessionNote {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String   // who wrote it
+  content   String
+  isPrivate Boolean  @default(false) // coach-only notes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model VideoProgress {
+  id        String      @id @default(cuid())
+  userId    String
+  videoId   String
+  sessionId String?
+  status    VideoStatus @default(PENDING)
+  watchedAt DateTime?
+  progress  Float       @default(0) // 0-100%
+  note      String?     // student's personal note
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, videoId, sessionId])
+  @@index([userId])
+  @@index([videoId])
+  @@index([sessionId])
+}
+
+// Coach-specific settings (fully customizable)
+model CoachSettings {
+  id                String   @id @default(cuid())
+  coachId           String   @unique
+  defaultTagColors  Json     @default("{}") // tagId -> color override
+  defaultVideoOrder String[] @default([]) // videoId order preference
+  notificationEmail Boolean  @default(false)
+  notificationDiscord Boolean  @default(false)
+  discordWebhook    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+}
