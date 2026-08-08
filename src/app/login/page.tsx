@@ -8,8 +8,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Loader2, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { Suspense } from 'react'
 
@@ -78,18 +77,16 @@ function LoginForm() {
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="twój@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  autoComplete="email"
-                />
-              </div>
+              <Input
+                id="email"
+                type="email"
+                placeholder="twój@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                autoComplete="email"
+              />
             </div>
 
             <div className="space-y-2">
@@ -115,6 +112,7 @@ function LoginForm() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading} size="lg">
+              {isLoading && <span className="mr-2 h-4 w-4 animate-spin">⏳</span>}
               Zaloguj się
             </Button>
           </form>
