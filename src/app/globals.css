@@ -66,7 +66,7 @@
   }
 }
 
-@layer utilities {
+@layer components {
   .glass {
     @apply bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10;
   }
@@ -79,6 +79,88 @@
   
   .text-gradient {
     @apply bg-gradient-to-r from-primary via-primary-glow to-primary bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-purple {
+    @apply bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden rounded-xl px-6 py-3.5 font-semibold text-sm transition-all duration-300 ease-out 
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
+           disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed
+           active:scale-[0.98] hover:shadow-lg;
+  }
+  
+  .btn-primary {
+    @apply btn-premium text-primary-foreground 
+           hover:shadow-xl hover:shadow-primary/25
+           hover:shadow-primary/40;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.9), hsl(var(--primary-glow) / 0.9));
+    box-shadow: 0 20px 40px -10px hsl(var(--primary) / 0.4);
+  }
+  
+  .btn-secondary {
+    @apply btn-premium bg-white/80 dark:bg-white/5 backdrop-blur-xl 
+           border border-white/20 dark:border-white/10 
+           hover:bg-white dark:hover:bg-white/10
+           text-foreground shadow-lg;
+  }
+  
+  .btn-ghost {
+    @apply btn-premium bg-transparent hover:bg-accent text-accent-foreground;
+  }
+  
+  .input-premium {
+    @apply w-full h-12 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-xl 
+           border border-white/20 dark:border-white/10 
+           px-4 py-3 text-sm placeholder:text-muted-foreground/50
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+           focus-visible:border-primary/50
+           disabled:cursor-not-allowed disabled:opacity-50
+           transition-all duration-300;
+  }
+  
+  .label-premium {
+    @apply block mb-2 text-sm font-medium text-foreground/80;
+  }
+  
+  .card-premium {
+    @apply rounded-2xl bg-white/50 dark:bg-white/5 backdrop-blur-2xl 
+           border border-white/20 dark:border-white/10 
+           shadow-2xl shadow-black/5 dark:shadow-black/20
+           transition-all duration-500;
+  }
+  
+  .card-premium-hover {
+    @apply card-premium hover:border-primary/30 hover:shadow-[0_0_40px_-10px] hover:shadow-primary/20;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10;
+  }
+  .glass-strong {
+    @apply bg-white/80 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/15;
+  }
+  .glass-card {
+    @apply bg-white/50 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
+  }
+  
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)), hsl(var(--primary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
   .text-gradient-blue {
@@ -163,55 +245,14 @@
   }
 }
 
-@layer components {
-  .btn-premium {
-    @apply relative overflow-hidden rounded-xl px-6 py-3.5 font-semibold text-sm transition-all duration-300 ease-out 
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
-           disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed
-           active:scale-[0.98] hover:shadow-lg;
-  }
-  
-  .btn-primary {
-    @apply btn-premium bg-gradient-to-r from-primary to-primary-glow text-primary-foreground 
-           hover:from-primary/90 hover:to-primary-glow/90 shadow-xl shadow-primary/25
-           hover:shadow-primary/40;
-  }
-  
-  .btn-secondary {
-    @apply btn-premium bg-white/80 dark:bg-white/5 backdrop-blur-xl 
-           border border-white/20 dark:border-white/10 
-           hover:bg-white dark:hover:bg-white/10
-           text-foreground shadow-lg;
-  }
-  
-  .btn-ghost {
-    @apply btn-premium bg-transparent hover:bg-accent text-accent-foreground;
-  }
-  
-  .input-premium {
-    @apply w-full h-12 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-xl 
-           border border-white/20 dark:border-white/10 
-           px-4 py-3 text-sm placeholder:text-muted-foreground/50
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-           focus-visible:border-primary/50
-           disabled:cursor-not-allowed disabled:opacity-50
-           transition-all duration-300;
-  }
-  
-  .label-premium {
-    @apply block mb-2 text-sm font-medium text-foreground/80;
-  }
-  
-  .card-premium {
-    @apply rounded-2xl bg-white/50 dark:bg-white/5 backdrop-blur-2xl 
-           border border-white/20 dark:border-white/10 
-           shadow-2xl shadow-black/5 dark:shadow-black/20
-           transition-all duration-500;
-  }
-  
-  .card-premium-hover {
-    @apply card-premium hover:border-primary/30 hover:shadow-[0_0_40px_-10px] hover:shadow-primary/20;
-  }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 @keyframes float {
