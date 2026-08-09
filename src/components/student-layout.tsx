@@ -105,14 +105,14 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
                     CS2 Coaching
                   </span>
                 </Link>
-                <button
+                <Button
                   variant="ghost"
                   size="icon"
                   className="lg:hidden"
                   onClick={() => setMobileSidebarOpen(false)}
                 >
                   <X className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
 
               <nav className="flex-1 overflow-y-auto py-4 px-3">
@@ -184,9 +184,9 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
             {/* Mobile header */}
             <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 border-b px-4" style={{ background: 'rgba(10,10,10,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex h-full items-center justify-between px-4">
-                <button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(true)}>
+                <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(true)}>
                   <Menu className="h-5 w-5" />
-                </button>
+                </Button>
                 <h1 className="font-space font-bold text-lg" style={{ background: 'linear-gradient(135deg, #fff 0%, #7c6fff 50%, #5a4fff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   CS2 Coaching
                 </h1>
