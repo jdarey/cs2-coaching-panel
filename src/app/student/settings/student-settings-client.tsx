@@ -83,12 +83,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     return () => window.removeEventListener('resize', update)
   }, [activeSection])
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   const handleAvatarPick = (file: File | null) => {
     if (!file) return
     if (!file.type.startsWith('image/')) {
@@ -231,10 +226,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
 
         {/* ===== Tabs with animated underline ===== */}
         <div
-          className="spotlight relative rounded-3xl glass-liquid rise-in overflow-hidden mb-8"
-          style={{ animationDelay: '0.1s' }}
-          onMouseMove={handleCardMouse}
-        >
+          className=" relative rounded-3xl glass-liquid rise-in overflow-hidden mb-8"
+          style={{ animationDelay: '0.1s' }} >
           <div className="relative flex gap-1 px-3 sm:px-4 pt-3 border-b border-white/[0.06] overflow-x-auto">
             {SECTIONS.map((s) => {
               const Icon = s.icon
@@ -264,9 +257,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
               <div className="space-y-6" style={{ animationDelay: '0.15s' }}>
                 {/* Avatar + identity preview */}
                 <div
-                  className="spotlight relative rounded-3xl glass-tinted p-6 overflow-hidden rise-in"
-                  onMouseMove={handleCardMouse}
-                >
+                  className=" relative rounded-3xl glass-tinted p-6 overflow-hidden rise-in" >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-5">
                     <div className="relative">
                       <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15">
@@ -344,7 +335,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                    className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Zapisz zmiany
@@ -354,10 +345,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                 {/* Coach card */}
                 {user.coach && (
                   <div
-                    className="spotlight relative rounded-3xl glass-liquid p-5 overflow-hidden rise-in"
-                    style={{ animationDelay: '0.05s' }}
-                    onMouseMove={handleCardMouse}
-                  >
+                    className=" relative rounded-3xl glass-liquid p-5 overflow-hidden rise-in"
+                    style={{ animationDelay: '0.05s' }} >
                     <p className="text-xs uppercase tracking-wider text-white/40 font-semibold mb-3">Twój trener</p>
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12 rounded-xl ring-1 ring-white/10">
@@ -437,7 +426,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Zmień hasło

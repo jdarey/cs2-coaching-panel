@@ -208,12 +208,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
   const totalVideos = session.videos.length
   const progressPercent = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   const STATUS_PILL_STYLES: Record<string, string> = {
     DRAFT: 'bg-gray-400/10 text-gray-300 border-gray-400/25',
     ACTIVE: 'bg-blue-400/10 text-blue-300 border-blue-400/25',
@@ -234,7 +229,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
             href="/coach/sessions"
             className="group inline-flex items-center gap-2 text-sm font-medium text-white/55 hover:text-white transition-colors duration-300 mb-8"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl group-hover:border-[#2de5ca]/25 group-hover:bg-[#2de5ca]/5 transition-all duration-300">
+            <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-[#181818] group-hover:border-[#2de5ca]/25 group-hover:bg-[#2de5ca]/5 transition-all duration-300">
               <ArrowLeft className="h-4 w-4" />
             </span>
             <span>Sesje</span>
@@ -243,9 +238,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
 
         {/* Hero header */}
         <div
-          className="glass-liquid spotlight rise-in relative overflow-hidden rounded-3xl p-7 sm:p-9 mb-8"
-          onMouseMove={handleCardMouse}
-          style={{ animationDelay: '70ms' }}
+          className="glass-liquid rise-in relative overflow-hidden rounded-3xl p-7 sm:p-9 mb-8" style={{ animationDelay: '70ms' }}
         >
           <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-gradient-to-br from-[#2de5ca]/25 to-[#147a6b]/10 blur-3xl animate-aurora-slow" />
           <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -260,7 +253,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                   <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
                   {STATUS_LABELS[session.status]}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white/60 border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white/60 border border-white/[0.06] bg-[#181818]">
                   <Calendar className="h-3.5 w-3.5" />
                   {formatDate(session.createdAt)}
                 </span>
@@ -284,16 +277,14 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
               <div className="glass-tinted relative overflow-hidden rounded-2xl px-5 py-4 min-w-[140px]">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-1">Filmy</div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="font-display text-3xl font-bold text-gradient-violet count-glow">
+                  <span className="font-display text-3xl font-bold text-gradient-violet ">
                     {totalVideos}
                   </span>
                   <span className="text-xs text-white/40">total</span>
                 </div>
               </div>
               <div
-                className="glass-liquid relative overflow-hidden rounded-2xl px-5 py-4 min-w-[140px]"
-                onMouseMove={handleCardMouse}
-              >
+                className="glass-liquid relative overflow-hidden rounded-2xl px-5 py-4 min-w-[140px]" >
                 <div className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-1">Ukończono</div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-display text-3xl font-bold text-emerald-300">{progressPercent}%</span>
@@ -317,9 +308,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
             style={{ animationDelay: '140ms' }}
           >
             <div
-              className="glass-liquid spotlight relative overflow-hidden rounded-3xl"
-              onMouseMove={handleCardMouse}
-            >
+              className="glass-liquid relative overflow-hidden rounded-3xl" >
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
                 <div className="flex items-center gap-2.5">
                   <PlayCircle className="h-5 w-5 text-[#2de5ca]" />
@@ -342,7 +331,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                   ) : (
                     <div className="relative h-full w-full grid place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(45,229,202,0.12),transparent_60%),radial-gradient(circle_at_70%_80%,rgba(124,58,237,0.12),transparent_55%)]">
                       <div className="text-center">
-                        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl">
+                        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-white/[0.08] bg-[#181818]">
                           <PlayCircle className="h-8 w-8 text-white/30" />
                         </div>
                         <p className="text-sm font-medium text-white/55">No current video</p>
@@ -375,9 +364,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
 
             {/* Video list sidebar */}
             <div
-              className="glass-liquid spotlight relative overflow-hidden rounded-3xl"
-              onMouseMove={handleCardMouse}
-            >
+              className="glass-liquid relative overflow-hidden rounded-3xl" >
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
                 <div className="flex items-center gap-2.5">
                   <ListVideo className="h-5 w-5 text-[#2de5ca]" />
@@ -505,7 +492,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:border-[#2de5ca]/25 hover:bg-[#2de5ca]/5 transition-all duration-300"
+                  className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-[#181818] px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:border-[#2de5ca]/25 hover:bg-[#2de5ca]/5 transition-all duration-300"
                 >
                   <Send className="h-3.5 w-3.5" />
                   Napisz wiadomość
@@ -570,9 +557,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
 
         {/* Add-video section */}
         <div
-          className="glass-liquid spotlight rise-in relative overflow-hidden rounded-3xl mt-8"
-          onMouseMove={handleCardMouse}
-          style={{ animationDelay: '350ms' }}
+          className="glass-liquid rise-in relative overflow-hidden rounded-3xl mt-8" style={{ animationDelay: '350ms' }}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
             <div className="flex items-center gap-2.5">
@@ -590,7 +575,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                   value={videoSearch}
                   onChange={(e) => setVideoSearch(e.target.value)}
                   placeholder="Szukaj w bibliotece filmów..."
-                  className="w-full h-12 rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
+                  className="w-full h-12 rounded-xl bg-[#181818] border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
                 />
               </div>
             </div>
@@ -609,13 +594,13 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     value={newVideoUrl}
                     onChange={(e) => setNewVideoUrl(e.target.value)}
                     placeholder="https://youtube.com/watch?v=..."
-                    className="w-full h-12 rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 rounded-xl bg-[#181818] border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isLoading || !newVideoUrl.trim()}
-                  className="shimmer-line relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/25 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className=" relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/25 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Dodaj film
@@ -627,9 +612,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
 
         {/* Notes section */}
         <div
-          className="glass-liquid spotlight rise-in relative overflow-hidden rounded-3xl mt-8"
-          onMouseMove={handleCardMouse}
-          style={{ animationDelay: '420ms' }}
+          className="glass-liquid rise-in relative overflow-hidden rounded-3xl mt-8" style={{ animationDelay: '420ms' }}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
             <div className="flex items-center gap-2.5">
@@ -645,7 +628,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
                 rows={3}
-                className="w-full min-h-[110px] rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] px-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300 resize-none"
+                className="w-full min-h-[110px] rounded-xl bg-[#181818] border border-white/[0.06] px-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300 resize-none"
               />
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <label className="inline-flex items-center gap-2 cursor-pointer group">
@@ -672,7 +655,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <button
                   type="submit"
                   disabled={isLoading || !newNote.trim()}
-                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-5 h-10 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/20 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className=" relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-5 h-10 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/20 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   Dodaj notatkę
@@ -748,9 +731,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
 
         {/* Status change control */}
         <div
-          className="glass-liquid spotlight rise-in relative overflow-hidden rounded-3xl mt-8"
-          onMouseMove={handleCardMouse}
-          style={{ animationDelay: '490ms' }}
+          className="glass-liquid rise-in relative overflow-hidden rounded-3xl mt-8" style={{ animationDelay: '490ms' }}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
             <div className="flex items-center gap-2.5">
@@ -770,7 +751,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     className={cn(
                       'group relative overflow-hidden rounded-2xl px-4 py-3.5 text-sm font-medium transition-all duration-300',
                       isActive
-                        ? 'shimmer-line text-white btn-darey shadow-lg shadow-[#147a6b]/25'
+                        ? ' text-white btn-darey shadow-lg shadow-[#147a6b]/25'
                         : 'border border-white/[0.06] bg-white/[0.02] text-white/65 hover:text-white hover:border-white/[0.1] hover:bg-white/[0.04]'
                     )}
                   >
@@ -798,7 +779,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 type="button"
                 onClick={handleSaveStatus}
                 disabled={isLoading || sessionStatus === session.status}
-                className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/25 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className=" relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/25 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Zapisz status

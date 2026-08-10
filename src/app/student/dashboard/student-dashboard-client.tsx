@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { formatDate, formatDateTime, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Tilt3D } from '@/components/tilt-3d'
 import { StudentLayout } from '@/components/student-layout'
 import { Film, Clock, Play, CheckCircle2, CalendarClock, BookOpen, TrendingUp, Settings, ArrowRight, Sparkles, Plus, MessageSquare, MessageSquareHeart, Flame, Trophy, Target, Zap } from 'lucide-react'
 import Link from 'next/link'
@@ -126,12 +125,7 @@ export function StudentDashboardClient({
     return () => window.removeEventListener('resize', update)
   }, [activeTab, mounted])
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   if (!mounted) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#060606]">
@@ -271,12 +265,7 @@ export function StudentDashboardClient({
 
         {/* ===== Coach Banner ===== */}
         {coach && (
-          <Tilt3D
-            wrapperClassName="animate-rise-in animate-rise-in-delay-1 mb-10"
-            wrapperStyle={{ animationDelay: '60ms' }}
-            className="relative rounded-3xl overflow-hidden glass-card p-6 md:p-8"
-            maxTilt={5}
-          >
+          <div className="animate-rise-in animate-rise-in-delay-1 mb-10 relative rounded-3xl overflow-hidden glass-card p-6 md:p-8" style={{ animationDelay: '60ms' }}>
             <div className="absolute inset-0 bg-gradient-to-r from-[#2de5ca]/10 via-transparent to-[#2de5ca]/10" />
             <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 md:gap-6">
               <div className="flex items-center gap-4">
@@ -303,7 +292,7 @@ export function StudentDashboardClient({
               <div className="flex flex-1 gap-3 md:justify-end flex-wrap">
                 <Link
                   href="/student/sessions"
-                  className="shimmer-sweep relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-white glass hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
+                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-white glass hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
                 >
                   <BookOpen className="w-4.5 h-4.5 text-[#8cffef]" />
                   Przeglądaj sesje
@@ -318,7 +307,7 @@ export function StudentDashboardClient({
                 </Link>
               </div>
             </div>
-          </Tilt3D>
+          </div>
         )}
 
         {/* ===== Stats Grid ===== */}
@@ -327,16 +316,10 @@ export function StudentDashboardClient({
             const meta = STAT_META[stat.key]
             const Icon = meta.icon
             return (
-              <Tilt3D
-                key={stat.key}
-                wrapperClassName="animate-rise-in"
-                wrapperStyle={{ animationDelay: `${80 + i * 60}ms` }}
-                className="h-full rounded-3xl"
-                maxTilt={9}
-              >
               <div
-                className="group relative h-full rounded-3xl p-6 glass-card overflow-hidden"
-                onMouseMove={handleCardMouse}
+                key={stat.key}
+                className="animate-rise-in h-full rounded-3xl group relative h-full rounded-3xl p-6 glass-card overflow-hidden"
+                style={{ animationDelay: `${80 + i * 60}ms` }}
               >
                 <div
                   className="absolute -top-12 -right-12 w-36 h-36 rounded-full opacity-40 blur-3xl transition-opacity duration-500 group-hover:opacity-70"
@@ -345,7 +328,7 @@ export function StudentDashboardClient({
                 <div className="relative z-10 flex items-start justify-between">
                   <div>
                     <p className="text-white/45 text-[13px] font-medium tracking-wide">{meta.label}</p>
-                    <p className="font-display text-4xl leading-none font-bold mt-2 animate-count-glow">{stat.value}</p>
+                    <p className="font-display text-4xl leading-none font-bold mt-2">{stat.value}</p>
                   </div>
                   <div
                     className={cn(
@@ -368,7 +351,6 @@ export function StudentDashboardClient({
                   />
                 </div>
               </div>
-              </Tilt3D>
             )
           })}
         </div>
@@ -376,12 +358,7 @@ export function StudentDashboardClient({
         {/* ===== Progress Overview ===== */}
         <div className="grid gap-6 lg:grid-cols-3 mb-10">
           {/* Progress Ring + Breakdown */}
-          <Tilt3D
-            wrapperClassName="animate-rise-in lg:col-span-2"
-            wrapperStyle={{ animationDelay: '180ms' }}
-            className="relative rounded-3xl p-7 md:p-8 glass-card overflow-hidden"
-            maxTilt={4}
-          >
+          <div className="animate-rise-in lg:col-span-2 relative rounded-3xl p-7 md:p-8 glass-card overflow-hidden" style={{ animationDelay: '180ms' }}>
             <div className="flex flex-col md:flex-row md:items-center gap-7 md:gap-10 relative z-10">
               {/* Circular Progress */}
               <div className="relative w-[160px] h-[160px] flex-shrink-0 mx-auto md:mx-0">
@@ -440,15 +417,10 @@ export function StudentDashboardClient({
                 </div>
               </div>
             </div>
-          </Tilt3D>
+          </div>
 
           {/* Quick Actions */}
-          <Tilt3D
-            wrapperClassName="animate-rise-in"
-            wrapperStyle={{ animationDelay: '240ms' }}
-            className="relative rounded-3xl p-7 glass-card overflow-hidden"
-            maxTilt={4}
-          >
+          <div className="animate-rise-in relative rounded-3xl p-7 glass-card overflow-hidden" style={{ animationDelay: '240ms' }}>
             <div className="flex items-center gap-2 mb-5 relative z-10">
               <div className="p-2 rounded-lg glass">
                 <Sparkles className="w-4 h-4 text-[#8cffef]" />
@@ -487,16 +459,11 @@ export function StudentDashboardClient({
                 )
               })}
             </div>
-          </Tilt3D>
+          </div>
         </div>
 
         {/* ===== Tabs Section ===== */}
-        <Tilt3D
-          wrapperClassName="animate-rise-in"
-          wrapperStyle={{ animationDelay: '300ms' }}
-          className="relative rounded-3xl glass-card overflow-hidden"
-          maxTilt={3}
-        >
+        <div className="animate-rise-in relative rounded-3xl glass-card overflow-hidden" style={{ animationDelay: '300ms' }}>
           {/* Tab bar */}
           <div className="relative flex gap-1 px-4 pt-4 border-b border-white/[0.05]">
             {[
@@ -656,7 +623,7 @@ export function StudentDashboardClient({
                 )}              </div>
             )}
           </div>
-        </Tilt3D>
+        </div>
 
 
         {/* ===== Footer hint ===== */}

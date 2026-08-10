@@ -98,12 +98,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
   const getProgressForVideo = (videoId: string) => progress.find((p) => p.videoId === videoId)
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   const handleProgressChange = async (videoId: string, status: Progress['status'], progressValue: number, note?: string) => {
     setIsLoading(true)
 
@@ -226,10 +221,8 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
         {/* ===== Hero header ===== */}
         <div
-          className="spotlight relative rounded-3xl glass-liquid p-6 sm:p-8 overflow-hidden rise-in mb-8"
-          style={{ animationDelay: '0.05s' }}
-          onMouseMove={handleCardMouse}
-        >
+          className=" relative rounded-3xl glass-liquid p-6 sm:p-8 overflow-hidden rise-in mb-8"
+          style={{ animationDelay: '0.05s' }} >
           <div className="flex flex-col gap-5">
             <div className="flex flex-wrap items-center gap-3">
               <span
@@ -271,10 +264,8 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
           {/* Video player with sidebar list */}
           <div
-            className="lg:col-span-2 spotlight relative rounded-3xl glass-liquid overflow-hidden rise-in"
-            style={{ animationDelay: '0.1s' }}
-            onMouseMove={handleCardMouse}
-          >
+            className="lg:col-span-2 relative rounded-3xl glass-liquid overflow-hidden rise-in"
+            style={{ animationDelay: '0.1s' }} >
             {/* Player */}
             <div className="relative aspect-video w-full bg-[#060606]">
               {activeEmbedUrl ? (
@@ -395,10 +386,8 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
           {/* Coach card (right) */}
           <div
-            className="spotlight relative rounded-3xl glass-tinted p-6 overflow-hidden rise-in flex flex-col"
-            style={{ animationDelay: '0.15s' }}
-            onMouseMove={handleCardMouse}
-          >
+            className=" relative rounded-3xl glass-tinted p-6 overflow-hidden rise-in flex flex-col"
+            style={{ animationDelay: '0.15s' }} >
             <p className="text-xs uppercase tracking-wider text-white/45 font-semibold mb-4">Twój trener</p>
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 rounded-2xl ring-1 ring-white/15">
@@ -428,7 +417,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
             <a
               href={`mailto:${session.coach.email}`}
-              className="shimmer-line relative mt-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-white/[0.07] hover:border-[#2de5ca]/30 transition-all duration-300 overflow-hidden"
+              className=" relative mt-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-white/[0.07] hover:border-[#2de5ca]/30 transition-all duration-300 overflow-hidden"
             >
               <Send className="w-4 h-4" />
               Napisz wiadomość
@@ -522,10 +511,8 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
         {/* ===== OVERVIEW ===== */}
         {activeTab === 'overview' && (
           <div
-            className="spotlight relative rounded-3xl glass-liquid p-6 sm:p-7 overflow-hidden rise-in"
-            style={{ animationDelay: '0.25s' }}
-            onMouseMove={handleCardMouse}
-          >
+            className=" relative rounded-3xl glass-liquid p-6 sm:p-7 overflow-hidden rise-in"
+            style={{ animationDelay: '0.25s' }} >
             <div className="space-y-5">
               {session.scheduledAt && (
                 <div>
@@ -570,9 +557,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
           <div className="space-y-4 rise-in" style={{ animationDelay: '0.25s' }}>
             {session.videos.length === 0 ? (
               <div
-                className="spotlight relative rounded-3xl glass-liquid p-12 overflow-hidden text-center"
-                onMouseMove={handleCardMouse}
-              >
+                className=" relative rounded-3xl glass-liquid p-12 overflow-hidden text-center" >
                 <div className="grid place-items-center w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/40 mx-auto mb-3">
                   <PlayCircle className="w-7 h-7" />
                 </div>
@@ -589,9 +574,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                 return (
                   <div
                     key={video.id}
-                    className="spotlight relative rounded-3xl glass-liquid overflow-hidden rise-in"
-                    onMouseMove={handleCardMouse}
-                  >
+                    className=" relative rounded-3xl glass-liquid overflow-hidden rise-in" >
                     <div className="grid lg:grid-cols-[auto_1fr] gap-0">
                       {/* Thumbnail */}
                       <button
@@ -744,9 +727,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
         {activeTab === 'notes' && (
           <div className="space-y-5 rise-in" style={{ animationDelay: '0.25s' }}>
             <div
-              className="spotlight relative rounded-3xl glass-liquid p-6 sm:p-7 overflow-hidden"
-              onMouseMove={handleCardMouse}
-            >
+              className=" relative rounded-3xl glass-liquid p-6 sm:p-7 overflow-hidden" >
               <form onSubmit={handleAddNote} className="space-y-4">
                 <Textarea
                   placeholder="Wpisz swoją notatkę do tej sesji..."
@@ -758,7 +739,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                 <button
                   type="submit"
                   disabled={isLoading || !newNote.trim()}
-                  className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   Dodaj notatkę
@@ -768,9 +749,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
             {session.notes.length === 0 ? (
               <div
-                className="spotlight relative rounded-3xl glass-liquid p-10 overflow-hidden text-center"
-                onMouseMove={handleCardMouse}
-              >
+                className=" relative rounded-3xl glass-liquid p-10 overflow-hidden text-center" >
                 <div className="grid place-items-center w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/40 mx-auto mb-2">
                   <MessageSquare className="w-6 h-6" />
                 </div>

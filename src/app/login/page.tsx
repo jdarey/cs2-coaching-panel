@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
-import { Tilt3D } from '@/components/tilt-3d'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -84,13 +83,8 @@ function LoginForm() {
           <p className="text-white/45 text-sm font-light">Zaloguj się do swojego panelu</p>
         </div>
 
-        {/* Auth card — tilts in 3D toward the cursor */}
-        <Tilt3D
-          wrapperClassName="animate-rise-in animate-rise-in-delay-1"
-          className="relative rounded-3xl glass-card p-7 md:p-10 shimmer-sweep"
-          maxTilt={5}
-          glare={false}
-        >
+        {/* Auth card */}
+        <div className="animate-rise-in animate-rise-in-delay-1 relative rounded-3xl glass-card p-7 md:p-10">
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
             <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.45) 0%, transparent 70%)' }} />
           </div>
@@ -177,7 +171,7 @@ function LoginForm() {
 
               <Button
                 type="submit"
-                className="shimmer-sweep btn-3d group relative w-full h-13 rounded-xl overflow-hidden font-display font-semibold text-sm btn-primary-gradient"
+                className=" group relative w-full h-13 rounded-xl overflow-hidden font-display font-semibold text-sm btn-primary-gradient"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -202,13 +196,13 @@ function LoginForm() {
               </div>
               <Link
                 href="/register"
-                className="shimmer-sweep relative block w-full text-center px-5 py-3.5 rounded-xl text-sm font-medium text-white glass hover:bg-white/[0.06] hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
+                className=" relative block w-full text-center px-5 py-3.5 rounded-xl text-sm font-medium text-white glass hover:bg-white/[0.06] hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
               >
                 Załóż nowe konto
               </Link>
             </div>
           </div>
-        </Tilt3D>
+        </div>
 
         <p className="mt-8 text-center text-[11px] text-white/30 font-light tracking-wide">
           Bezpieczne logowanie · Twoje dane są szyfrowane end-to-end

@@ -67,7 +67,7 @@ export function CoachStudentDetailClient({
         </Link>
 
         {/* Profile header */}
-        <div className="glass-card rise-in tilt-hover relative rounded-3xl p-6 md:p-8 mb-8 overflow-hidden">
+        <div className="glass-card rise-in relative rounded-3xl p-6 md:p-8 mb-8 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-white/[0.04] via-transparent to-transparent" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
             <div className="flex items-center gap-5 min-w-0">
@@ -162,7 +162,7 @@ export function CoachStudentDetailClient({
               <Link
                 key={session.id}
                 href={`/coach/sessions/${session.id}`}
-                className="glass-card rise-in tilt-hover group relative block rounded-3xl p-5 md:p-6 overflow-hidden"
+                className="glass-card rise-in group relative block rounded-3xl p-5 md:p-6 overflow-hidden"
                 style={{ animationDelay: `${0.05 + i * 0.05}s` }}
               >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">

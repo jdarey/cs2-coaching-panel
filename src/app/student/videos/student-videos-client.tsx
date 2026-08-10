@@ -69,11 +69,6 @@ const STATUS_META: Record<string, { color: string; icon: typeof Clock; dot: stri
   IMPLEMENTED: { color: '#2fb6a2', icon: CheckCircle2, dot: 'bg-[#2fb6a2]', ring: 'ring-[#2fb6a2]/30', glow: 'rgba(47,182,162,0.35)' },
 }
 
-const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-  const r = e.currentTarget.getBoundingClientRect()
-  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-}
 
 export function StudentVideosClient({ initialSessions, initialProgress }: StudentVideosClientProps) {
   const [sessions] = useState<Session[]>(initialSessions)
@@ -168,7 +163,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
         <div
-          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-6 bg-[#060606]/80 backdrop-blur-md"
+          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-6 bg-[#0a0a0a]"
           style={{
             background: 'linear-gradient(180deg, rgba(6,7,13,0.92) 0%, rgba(6,7,13,0.72) 60%, rgba(6,7,13,0) 100%)',
             borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -202,14 +197,12 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
             return (
               <div
                 key={stat.label}
-                className="glass-liquid spotlight rise-in rounded-2xl p-3.5 relative overflow-hidden"
-                onMouseMove={handleCardMouse}
-                style={{ animationDelay: `${i * 70}ms` }}
+                className="glass-liquid rise-in rounded-2xl p-3.5 relative overflow-hidden" style={{ animationDelay: `${i * 70}ms` }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase tracking-[0.16em] text-white/40 font-semibold mb-1">{stat.label}</p>
-                    <p className="font-display text-2xl font-bold tabular-nums text-white count-glow">{stat.value}</p>
+                    <p className="font-display text-2xl font-bold tabular-nums text-white ">{stat.value}</p>
                   </div>
                   <span
                     className="grid place-items-center h-9 w-9 rounded-xl ring-1 shrink-0"
@@ -229,7 +222,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
         </div>
 
         {/* ===== Completion ring ===== */}
-        <div className="glass-liquid spotlight rise-in rounded-2xl p-4 sm:p-5 mb-6 relative overflow-hidden" onMouseMove={handleCardMouse} style={{ animationDelay: '320ms' }}>
+        <div className="glass-liquid rise-in rounded-2xl p-4 sm:p-5 mb-6 relative overflow-hidden" style={{ animationDelay: '320ms' }}>
           <div className="flex items-center gap-4">
             <div className="relative grid place-items-center shrink-0">
               <svg width={62} height={62} viewBox="0 0 62 62" className="-rotate-90">
@@ -266,7 +259,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
 
         {/* ===== Search ===== */}
         <div className="relative mb-4 max-w-md">
-          <div className="glass-liquid spotlight rounded-xl relative overflow-hidden" onMouseMove={handleCardMouse}>
+          <div className="glass-liquid rounded-xl relative overflow-hidden" >
             <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
             <input
               type="text"
@@ -402,9 +395,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               return (
                 <div
                   key={`${item.sessionId}-${video.id}`}
-                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover rounded-3xl relative overflow-hidden group hover:border-[#2de5ca]/25"
-                  onMouseMove={handleCardMouse}
-                  style={{
+                  className="glass-liquid rise-in rounded-3xl relative overflow-hidden group hover:border-[#2de5ca]/25" style={{
                     animationDelay: `${Math.min(idx * 60, 600)}ms`,
                     // override hover border to violet glow when hovered
                     ['--hover-border' as string]: 'rgba(45,229,202,0.25)',
@@ -554,7 +545,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       {/* Open progress dialog */}
                       <button
                         onClick={() => setVideoProgressDialog({ video: item, sessionTitle: item.sessionTitle, progress: p })}
-                        className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold text-white bg-white/[0.04] border border-white/[0.08] hover:bg-[#2de5ca]/15 hover:border-[#2de5ca]/30 hover:text-white transition-all duration-300 shimmer-line relative overflow-hidden"
+                        className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold text-white bg-white/[0.04] border border-white/[0.08] hover:bg-[#2de5ca]/15 hover:border-[#2de5ca]/30 hover:text-white transition-all duration-300 relative overflow-hidden"
                       >
                         <PlayCircle className="h-3.5 w-3.5 text-[#8cffef]" strokeWidth={2.2} />
                         <span>Oceń</span>

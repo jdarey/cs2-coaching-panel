@@ -216,12 +216,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
     }))
   }
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   const statusPillFor = (status: string) => STATUS_PILL_STYLES[status] || STATUS_PILL_STYLES.DRAFT
 
   const TABS: { id: 'details' | 'tags' | 'videos' | 'notes'; label: string; icon: typeof BookOpen }[] = [
@@ -235,7 +230,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#060606]/80 backdrop-blur-md border-b border-white/[0.06]">
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#0a0a0a] border-b border-white/[0.06]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-3">
@@ -254,7 +249,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
             </div>
             <button
               onClick={openAddDialog}
-              className="shimmer-line group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-2xl px-6 text-sm font-semibold text-white shadow-[0_8px_40px_-10px_rgba(47,182,162,0.55)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              className=" group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-2xl px-6 text-sm font-semibold text-white shadow-[0_8px_40px_-10px_rgba(47,182,162,0.55)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
             >
               <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
@@ -268,7 +263,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
         <div className="mt-8 space-y-4 rise-in">
           {/* Search */}
           <div className="relative group">
-            <div className="glass-liquid spotlight rounded-2xl flex items-center gap-2 pl-4 pr-2 h-14" onMouseMove={handleCardMouse}>
+            <div className="glass-liquid rounded-2xl flex items-center gap-2 pl-4 pr-2 h-14" >
               <Filter className="h-4 w-4 shrink-0 text-violet-300/70" />
               <input
                 value={search}
@@ -325,7 +320,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
         {/* ===== Sessions grid ===== */}
         {filteredSessions.length === 0 ? (
           <div className="mt-8 rise-in">
-            <div className="glass-liquid spotlight rounded-3xl p-12 text-center" onMouseMove={handleCardMouse}>
+            <div className="glass-liquid rounded-3xl p-12 text-center" >
               <div className="mx-auto mb-5 grid place-items-center h-20 w-20 rounded-3xl bg-gradient-to-br from-[#2de5ca]/15 to-[#147a6b]/5 ring-1 ring-inset ring-[#2de5ca]/20">
                 {search || statusFilter !== 'all' ? (
                   <Search className="h-9 w-9 text-violet-300/70" />
@@ -341,7 +336,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <p className="mt-1.5 text-sm text-white/50 mb-6">Nie masz jeszcze żadnych sesji. Stwórz pierwszą już teraz.</p>
                   <button
                     onClick={openAddDialog}
-                    className="shimmer-line group relative inline-flex h-11 items-center gap-2 overflow-hidden rounded-2xl px-5 text-sm font-semibold text-white transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    className=" group relative inline-flex h-11 items-center gap-2 overflow-hidden rounded-2xl px-5 text-sm font-semibold text-white transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
                     style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                   >
                     <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
@@ -358,10 +353,8 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
               const pill = statusPillFor(session.status)
               return (
                 <article
-                  key={session.id}
-                  onMouseMove={handleCardMouse}
-                  className={cn(
-                    'glass-liquid spotlight shimmer-line tilt-hover group relative flex flex-col rounded-3xl p-5',
+                  key={session.id} className={cn(
+                    'glass-liquid group relative flex flex-col rounded-3xl p-5',
                     'hover:border-[#2de5ca]/25',
                     'rise-in'
                   )}
@@ -471,7 +464,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
 
                     <Link
                       href={`/coach/sessions/${session.id}`}
-                      className="shimmer-line group/btn relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-white shadow-[0_6px_24px_-10px_rgba(47,182,162,0.6)] transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                      className=" group/btn relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-white shadow-[0_6px_24px_-10px_rgba(47,182,162,0.6)] transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
                       style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                     >
                       <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />
@@ -509,7 +502,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-[#060606]/80 backdrop-blur-md"
+            className="fixed inset-0 bg-[#0a0a0a]"
             onClick={() => !isLoading && setDialogOpen(false)}
             aria-hidden
           />
@@ -580,7 +573,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                           onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                           required
                           disabled={isLoading}
-                          className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300"
+                          className="h-12 w-full rounded-xl bg-[#181818] ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300"
                         />
                       </div>
                     </div>
@@ -595,7 +588,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                           onChange={(e) => setFormData((prev) => ({ ...prev, studentId: e.target.value }))}
                           disabled={isLoading || !!editingSession}
                           required
-                          className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 disabled:opacity-50"
+                          className="h-12 w-full appearance-none rounded-xl bg-[#181818] ring-1 ring-inset ring-white/[0.06] pl-11 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 disabled:opacity-50"
                         >
                           <option value="" className="bg-[#0b0c16]">Wybierz ucznia</option>
                           {students.map((s) => (
@@ -617,7 +610,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                         onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                         rows={3}
                         disabled={isLoading}
-                        className="w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 resize-none"
+                        className="w-full rounded-xl bg-[#181818] ring-1 ring-inset ring-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 resize-none"
                       />
                     </div>
 
@@ -632,7 +625,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                             value={formData.scheduledAt}
                             onChange={(e) => setFormData((prev) => ({ ...prev, scheduledAt: e.target.value }))}
                             disabled={isLoading}
-                            className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 [color-scheme:dark]"
+                            className="h-12 w-full rounded-xl bg-[#181818] ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 [color-scheme:dark]"
                           />
                         </div>
                       </div>
@@ -644,7 +637,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                             value={formData.status}
                             onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value as any }))}
                             disabled={isLoading}
-                            className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 disabled:opacity-50"
+                            className="h-12 w-full appearance-none rounded-xl bg-[#181818] ring-1 ring-inset ring-white/[0.06] px-4 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 disabled:opacity-50"
                           >
                             <option value="DRAFT" className="bg-[#0b0c16]">Szkic</option>
                             <option value="ACTIVE" className="bg-[#0b0c16]">Aktywna</option>
@@ -747,7 +740,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-semibold text-white shadow-[0_8px_30px_-10px_rgba(47,182,162,0.6)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                    className=" relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-semibold text-white shadow-[0_8px_30px_-10px_rgba(47,182,162,0.6)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                     style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                   >
                     <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />

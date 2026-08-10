@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState, useEffect, useRef } from 'react'
+import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
@@ -39,30 +39,9 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const glowRef = useRef<HTMLDivElement>(null)
 
   const user = session?.user
   const userRole = (user as any)?.role
-
-  // Cursor glow: direct DOM write via rAF — no per-mousemove re-renders.
-  useEffect(() => {
-    let raf = 0
-    const handleMouseMove = (e: MouseEvent) => {
-      if (raf) return
-      raf = requestAnimationFrame(() => {
-        raf = 0
-        if (glowRef.current) {
-          glowRef.current.style.left = `${e.clientX}px`
-          glowRef.current.style.top = `${e.clientY}px`
-        }
-      })
-    }
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [])
 
   // Client-side signout — never follows NextAuth's server redirect (built from
   // NEXTAUTH_URL, which on Vercel can point at a removed deployment and 404).
@@ -82,25 +61,13 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
     <div className="relative min-h-screen bg-[#060606] font-sans text-white overflow-x-hidden">
       <AuroraBackground />
 
-      {/* Cursor follower glow */}
-      <div
-        ref={glowRef}
-        className="fixed pointer-events-none z-0 w-[320px] h-[320px] rounded-full opacity-30 will-change-transform"
-        style={{
-          transform: 'translate(-50%, -50%)',
-          left: '-500px',
-          top: '-500px',
-          background: 'radial-gradient(circle, rgba(47,182,162,0.18) 0%, transparent 70%)',
-        }}
-      />
-
       {/* Mobile overlay */}
       <div
         className={cn(
-          'fixed inset-0 z-40 lg:hidden transition-opacity duration-300 backdrop-blur-sm',
+          'fixed inset-0 z-40 lg:hidden transition-opacity duration-300',
           mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
-        style={{ background: 'rgba(6,6,6,0.45)' }}
+        style={{ background: 'rgba(6,6,6,0.8)' }}
         onClick={() => setMobileSidebarOpen(false)}
       />
 
@@ -112,9 +79,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
             sidebarOpen && mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
           style={{
-            background: 'linear-gradient(180deg, rgba(20,122,107,0.5) 0%, rgba(6,6,6,0.6) 100%)',
-            backdropFilter: 'blur(16px) saturate(160%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(160%)',
+            background: '#0a0a0a',
             borderRight: '1px solid rgba(255,255,255,0.07)',
           }}
         >
@@ -235,7 +200,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
         {/* Main */}
         <div className="relative z-10 flex-1 min-w-0 min-h-screen flex flex-col">
           {/* Mobile top bar */}
-          <header className="lg:hidden sticky top-0 z-30 h-16 border-b border-white/[0.05] bg-[#060606]/80 px-4 flex items-center justify-between">
+          <header className="lg:hidden sticky top-0 z-30 h-16 border-b border-white/[0.05] bg-[#0a0a0a] px-4 flex items-center justify-between">
             <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-white/5" onClick={() => { setMobileSidebarOpen(true); setSidebarOpen(true) }}>
               <Menu className="h-5 w-5" />
             </Button>
@@ -251,7 +216,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
           {/* Desktop collapse toggle */}
           <button
             onClick={() => setSidebarOpen((v) => !v)}
-            className="hidden lg:flex absolute top-6 left-[270px] z-40 items-center justify-center w-7 h-12 -translate-x-3.5 rounded-r-xl bg-white/[0.04] border border-l-0 border-white/[0.07] hover:bg-white/[0.08] backdrop-blur-xl transition-colors duration-300 text-white/40 hover:text-white"
+            className="hidden lg:flex absolute top-6 left-[270px] z-40 items-center justify-center w-7 h-12 -translate-x-3.5 rounded-r-xl bg-white/[0.04] border border-l-0 border-white/[0.07] hover:bg-white/[0.08] transition-colors duration-300 text-white/40 hover:text-white"
             aria-label="Przełącz sidebar"
           >
             <ChevronLeftIcon className={cn('w-4 h-4 transition-transform duration-300', !sidebarOpen && 'rotate-180')} />

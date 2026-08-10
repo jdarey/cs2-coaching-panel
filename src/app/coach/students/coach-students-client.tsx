@@ -50,11 +50,6 @@ const PROGRESS_DOTS: { key: 'total' | 'pending' | 'watched' | 'implemented'; lab
   { key: 'implemented', label: 'Wdrożone', color: '#2de5ca' },
 ]
 
-const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-  const r = e.currentTarget.getBoundingClientRect()
-  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-}
 
 export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProps) {
   const [students, setStudents] = useState<Student[]>(initialStudents)
@@ -181,7 +176,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#060606]/80 backdrop-blur-md">
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#0a0a0a]">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
@@ -197,10 +192,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 </div>
               </div>
 
-              {/* Gradient add-student button with shimmer */}
+              {/* Gradient add-student button */}
               <button
                 onClick={openAddDialog}
-                className="shimmer-line relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
+                className=" relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
                 style={{
                   background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
                   boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
@@ -223,9 +218,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {stats.map((stat, i) => (
             <div
-              key={stat.label}
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in rounded-2xl p-4 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-[#2de5ca]/25"
+              key={stat.label} className="glass-liquid rise-in rounded-2xl p-4 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-[#2de5ca]/25"
               style={{ animationDelay: `${0.05 + i * 0.06}s` }}
             >
               <div className="flex items-center gap-3">
@@ -244,7 +237,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 </div>
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.14em] text-white/40 font-medium">{stat.label}</p>
-                  <p className="font-display text-2xl font-bold text-white count-glow mt-0.5 leading-none">{stat.value}</p>
+                  <p className="font-display text-2xl font-bold text-white mt-0.5 leading-none">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -275,9 +268,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
         {/* ===== Students list / empty state ===== */}
         {filteredStudents.length === 0 ? (
           <div
-            className="glass-liquid spotlight rise-in mt-6 rounded-3xl p-10 sm:p-14 text-center relative overflow-hidden"
-            onMouseMove={handleCardMouse}
-          >
+            className="glass-liquid rise-in mt-6 rounded-3xl p-10 sm:p-14 text-center relative overflow-hidden" >
             <div
               className="mx-auto mb-6 grid place-items-center w-20 h-20 rounded-3xl relative overflow-hidden"
               style={{
@@ -306,7 +297,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             {!search && (
               <button
                 onClick={openAddDialog}
-                className="shimmer-line relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
+                className=" relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
                 style={{
                   background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
                   boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
@@ -332,9 +323,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
               const levelInfo = getLevel(student.progressStats.watched + student.progressStats.implemented)
               return (
                 <div
-                  key={student.id}
-                  onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover group relative rounded-3xl p-6 hover:border-[#2de5ca]/25 overflow-hidden"
+                  key={student.id} className="glass-liquid rise-in group relative rounded-3xl p-6 hover:border-[#2de5ca]/25 overflow-hidden"
                   style={{ animationDelay: `${0.05 + i * 0.05}s` }}
                 >
                   <div className="flex items-start justify-between gap-4 flex-wrap sm:flex-nowrap">
@@ -543,7 +532,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="shimmer-line relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                  className=" relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                   style={{
                     background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
                     boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',

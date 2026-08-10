@@ -309,12 +309,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     setFormData((prev) => ({ ...prev, url, source }))
   }
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   const tabs = [
     { value: 'all', label: 'Wszystkie' },
     { value: 'youtube', label: 'YouTube' },
@@ -347,7 +342,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             </div>
             <button
               onClick={openAddDialog}
-              className="shimmer-sweep relative overflow-hidden group inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow"
+              className=" relative overflow-hidden group inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow"
             >
               <Plus className="h-4 w-4" />
               Dodaj film
@@ -405,9 +400,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
         {/* Videos grid */}
         {filteredVideos.length === 0 ? (
           <div
-            className="glass-liquid spotlight animate-rise-in rounded-3xl p-16 text-center"
-            onMouseMove={handleCardMouse}
-          >
+            className="glass-liquid animate-rise-in rounded-3xl p-16 text-center" >
             {search || activeTab !== 'all' ? (
               <>
                 <Search className="h-12 w-12 mx-auto mb-4 text-white/30" />
@@ -434,9 +427,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               const Src = SOURCE_META[video.source] || SOURCE_META.other
               return (
                 <article
-                  key={video.id}
-                  onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight rise-in tilt-hover group relative flex flex-col rounded-3xl overflow-hidden"
+                  key={video.id} className="glass-liquid rise-in group relative flex flex-col rounded-3xl overflow-hidden"
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
                   {/* Thumbnail */}
@@ -589,9 +580,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               aria-hidden="true"
             />
             <div
-              className="glass-liquid spotlight relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-7 animate-rise-in"
-              onMouseMove={handleCardMouse}
-              role="dialog"
+              className="glass-liquid relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-7 animate-rise-in" role="dialog"
               aria-modal="true"
               aria-labelledby="video-dialog-title"
             >
@@ -723,7 +712,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   <button
                     type="submit"
                     disabled={isLoading || !formData.title.trim() || !formData.url.trim()}
-                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -760,9 +749,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               aria-hidden="true"
             />
             <div
-              className="glass-liquid spotlight relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-7 animate-rise-in"
-              onMouseMove={handleCardMouse}
-              role="dialog"
+              className="glass-liquid relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-7 animate-rise-in" role="dialog"
               aria-modal="true"
               aria-labelledby="assign-dialog-title"
             >
@@ -876,7 +863,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   <button
                     type="submit"
                     disabled={isLoading || !assignFormData.studentId || (assignFormData.createNewSession && !assignFormData.newSessionTitle.trim())}
-                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                     Przypisz do ucznia

@@ -55,12 +55,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
   const sessions = initialSessions
   const tags = initialTags
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   // Overall stats
   const stats = useMemo(
     () => ({
@@ -198,9 +193,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Hero stats row */}
         <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {/* Obejrzane */}
-          <div
-            onMouseMove={handleCardMouse}
-            className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '0ms' }}
           >
             <div className="flex items-start justify-between">
@@ -209,16 +202,14 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               </div>
               <TrendingUp className="w-4 h-4 text-white/30" />
             </div>
-            <p className="mt-6 font-display text-3xl font-bold count-glow text-white">
+            <p className="mt-6 font-display text-3xl font-bold text-white">
               {stats.watched + stats.implemented}
             </p>
             <p className="mt-1 text-sm text-white/45">Obejrzane filmy</p>
           </div>
 
           {/* Wdrożone */}
-          <div
-            onMouseMove={handleCardMouse}
-            className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '80ms' }}
           >
             <div className="flex items-start justify-between">
@@ -227,14 +218,12 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               </div>
               <Award className="w-4 h-4 text-white/30" />
             </div>
-            <p className="mt-6 font-display text-3xl font-bold count-glow text-white">{stats.implemented}</p>
+            <p className="mt-6 font-display text-3xl font-bold text-white">{stats.implemented}</p>
             <p className="mt-1 text-sm text-white/45">Wdrożone do gry</p>
           </div>
 
           {/* % ukończenia */}
-          <div
-            onMouseMove={handleCardMouse}
-            className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '160ms' }}
           >
             <div className="flex items-start justify-between">
@@ -243,7 +232,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               </div>
               <span className="text-[10px] uppercase tracking-wider text-white/30">cel</span>
             </div>
-            <p className="mt-6 font-display text-3xl font-bold count-glow text-white">
+            <p className="mt-6 font-display text-3xl font-bold text-white">
               {completionRate}
               <span className="text-xl text-white/40">%</span>
             </p>
@@ -251,9 +240,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {/* Aktywne dni */}
-          <div
-            onMouseMove={handleCardMouse}
-            className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '240ms' }}
           >
             <div className="flex items-start justify-between">
@@ -262,7 +249,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               </div>
               <Activity className="w-4 h-4 text-white/30" />
             </div>
-            <p className="mt-6 font-display text-3xl font-bold count-glow text-white">{activeDays}</p>
+            <p className="mt-6 font-display text-3xl font-bold text-white">{activeDays}</p>
             <p className="mt-1 text-sm text-white/45">Aktywne dni</p>
           </div>
         </section>
@@ -270,9 +257,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Circular + status breakdown + sessions card */}
         <section className="grid gap-5 lg:grid-cols-3">
           {/* Big circular progress */}
-          <div
-            onMouseMove={handleCardMouse}
-            className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-8 relative overflow-hidden lg:col-span-1 flex flex-col items-center justify-center"
+          <div className="glass-liquid rise-in rounded-3xl p-8 relative overflow-hidden lg:col-span-1 flex flex-col items-center justify-center"
             style={{ animationDelay: '120ms' }}
           >
             <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-[#2fb6a2]/15 blur-3xl animate-aurora-slow pointer-events-none" />
@@ -317,9 +302,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {/* Status breakdown card */}
-          <div
-            onMouseMove={handleCardMouse}
-            className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7 relative overflow-hidden lg:col-span-1 flex flex-col"
+          <div className="glass-liquid rise-in rounded-3xl p-7 relative overflow-hidden lg:col-span-1 flex flex-col"
             style={{ animationDelay: '180ms' }}
           >
             <div className="flex items-center gap-2 mb-6">
@@ -357,9 +340,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {/* Sessions card */}
-          <div
-            onMouseMove={handleCardMouse}
-            className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7 relative overflow-hidden lg:col-span-1 flex flex-col"
+          <div className="glass-liquid rise-in rounded-3xl p-7 relative overflow-hidden lg:col-span-1 flex flex-col"
             style={{ animationDelay: '240ms' }}
           >
             <div className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-[#2fb6a2]/12 blur-3xl animate-aurora pointer-events-none" />
@@ -370,7 +351,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
 
             <div className="grid grid-cols-2 gap-3 mb-5">
               <div className="rounded-2xl p-4 bg-white/[0.03] border border-white/[0.06]">
-                <p className="font-display text-3xl font-bold count-glow text-white">{stats.totalSessions}</p>
+                <p className="font-display text-3xl font-bold text-white">{stats.totalSessions}</p>
                 <p className="text-xs text-white/45 mt-1">Wszystkie sesje</p>
               </div>
               <div className="rounded-2xl p-4 bg-white/[0.03] border border-[#34d399]/15">
@@ -401,9 +382,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         </section>
 
         {/* Activity chart */}
-        <section
-          onMouseMove={handleCardMouse}
-          className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7 relative overflow-hidden"
+        <section className="glass-liquid rise-in rounded-3xl p-7 relative overflow-hidden"
           style={{ animationDelay: '120ms' }}
         >
           <div className="absolute -top-24 left-1/3 w-72 h-72 rounded-full bg-[#2fb6a2]/10 blur-3xl animate-aurora-slow pointer-events-none" />
@@ -552,9 +531,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {tagProgress.length === 0 ? (
-            <div
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rounded-3xl py-14 px-6 relative overflow-hidden text-center flex flex-col items-center"
+            <div className="glass-liquid rounded-3xl py-14 px-6 relative overflow-hidden text-center flex flex-col items-center"
             >
               <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca]/25 to-[#2fb6a2]/10 ring-1 ring-white/15 mb-4">
                 <Target className="w-7 h-7 text-[#8cffef]" />
@@ -568,9 +545,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             <div className="grid gap-4 md:grid-cols-2">
               {tagProgress.map((item, i) => (
                 <div
-                  key={item.tag?.id || item.tag?.name}
-                  onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-5 relative overflow-hidden"
+                  key={item.tag?.id || item.tag?.name} className="glass-liquid rise-in rounded-3xl p-5 relative overflow-hidden"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -621,9 +596,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {recentActivity.length === 0 ? (
-            <div
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rounded-3xl py-14 px-6 relative overflow-hidden text-center flex flex-col items-center"
+            <div className="glass-liquid rounded-3xl py-14 px-6 relative overflow-hidden text-center flex flex-col items-center"
             >
               <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca]/25 to-[#2fb6a2]/10 ring-1 ring-white/15 mb-4">
                 <PlayCircle className="w-7 h-7 text-[#8cffef]" />
@@ -658,9 +631,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                           : 'from-[#fbbf24] to-[#f59e0b]'
                   return (
                     <li
-                      key={p.id}
-                      onMouseMove={handleCardMouse}
-                      className="group glass-liquid spotlight rise-in tilt-hover rounded-3xl p-5 relative overflow-hidden"
+                      key={p.id} className="group glass-liquid rise-in rounded-3xl p-5 relative overflow-hidden"
                       style={{ animationDelay: `${i * 50}ms` }}
                     >
                       <div className="flex items-start gap-4">

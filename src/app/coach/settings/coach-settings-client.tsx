@@ -239,12 +239,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     localStorage.setItem('theme', newTheme)
   }
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   const tabs = [
     { value: 'profile', label: 'Profil', Icon: User },
     { value: 'password', label: 'Hasło', Icon: Lock },
@@ -315,9 +310,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
         <div className="max-w-3xl space-y-6">
           {/* Profile tab */}
           {activeTab === 'profile' && (
-            <section
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7"
+            <section className="glass-liquid rise-in rounded-3xl p-7"
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
@@ -405,7 +398,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
+                    className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -421,9 +414,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
 
           {/* Password tab */}
           {activeTab === 'password' && (
-            <section
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7"
+            <section className="glass-liquid rise-in rounded-3xl p-7"
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
@@ -463,7 +454,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
+                    className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -510,9 +501,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
 
           {/* Notifications tab */}
           {activeTab === 'notifications' && (
-            <section
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in rounded-3xl p-7 space-y-7"
+            <section className="glass-liquid rise-in rounded-3xl p-7 space-y-7"
             >
               <div className="flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
@@ -625,7 +614,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     <button
                       onClick={handleDiscordSave}
                       disabled={isLoading}
-                      className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
+                      className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                     >
                       {isLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -642,9 +631,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
 
           {/* Appearance tab */}
           {activeTab === 'appearance' && (
-            <section
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7"
+            <section className="glass-liquid rise-in rounded-3xl p-7"
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">

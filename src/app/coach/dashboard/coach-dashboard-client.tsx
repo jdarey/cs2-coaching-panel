@@ -2,10 +2,8 @@
 
 import { cn, formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Tilt3D } from '@/components/tilt-3d'
 import { Plus, Users, BookOpen, Video, Tag, ArrowRight, UserCheck, Sparkles, Activity } from 'lucide-react'
 import Link from 'next/link'
-import type { MouseEvent } from 'react'
 
 interface Stats {
   studentsCount: number
@@ -20,11 +18,6 @@ interface CoachDashboardClientProps {
   initialStats: Stats
 }
 
-function handleCardMouse(e: MouseEvent<HTMLElement>) {
-  const r = e.currentTarget.getBoundingClientRect()
-  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-}
 
 export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps) {
   const { studentsCount, sessionsCount, videosCount, tagsCount, recentSessions, recentStudents } = initialStats
@@ -46,7 +39,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* =========================== STICKY HEADER =========================== */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#060606]/80 backdrop-blur-md border-b border-white/[0.06]">
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#0a0a0a] border-b border-white/[0.06]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
             <div className="flex items-start gap-4">
               <div className="relative hidden sm:block">
@@ -68,7 +61,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               <Link
                 href="/coach/sessions"
                 className={cn(
-                  'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
+                  ' group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
                   'btn-darey shadow-lg shadow-[#147a6b]/30',
                   'ring-1 ring-white/20 hover:shadow-xl hover:shadow-[#147a6b]/40 hover:-translate-y-0.5 transition-all duration-300',
                 )}
@@ -79,7 +72,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               <Link
                 href="/coach/videos"
                 className={cn(
-                  'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
+                  ' group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
                   'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#2de5ca]/25 hover:bg-white/[0.07]',
                   'backdrop-blur-xl hover:-translate-y-0.5 transition-all duration-300',
                 )}
@@ -107,12 +100,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
         </div>
 
         {/* =========================== EFFECTIVENESS HERO RING =========================== */}
-        <Tilt3D
-          wrapperClassName="rise-in mb-8"
-          wrapperStyle={{ animationDelay: '0.04s' }}
-          className="glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8"
-          maxTilt={6}
-        >
+        <div className="rise-in mb-8 glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8" style={{ animationDelay: '0.04s' }}>
           <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#147a6b]/20 blur-3xl animate-aurora pointer-events-none" />
           <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-[#2fb6a2]/15 blur-3xl animate-aurora-slow pointer-events-none" />
 
@@ -146,7 +134,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               </svg>
               <div className="absolute inset-0 grid place-items-center text-center">
                 <div>
-                  <div className="font-display text-4xl font-bold text-gradient-mesh count-glow leading-none">
+                  <div className="font-display text-4xl font-bold text-gradient-mesh leading-none">
                     {effectiveness}%
                   </div>
                   <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/45">
@@ -185,36 +173,28 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               </div>
             </div>
           </div>
-        </Tilt3D>
+        </div>
 
         {/* =========================== STATS GRID =========================== */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {statCards.map((stat, i) => (
-            <Tilt3D
-              key={stat.name}
-              wrapperClassName="rise-in"
-              wrapperStyle={{ animationDelay: `${0.08 + i * 0.06}s` }}
-              className="h-full rounded-3xl"
-              maxTilt={10}
-            >
+            <div key={stat.name} className="rise-in h-full rounded-3xl" style={{ animationDelay: `${0.08 + i * 0.06}s` }}>
               <Link
-                href={stat.href}
-                onMouseMove={handleCardMouse}
-                className={cn(
-                  'glass-liquid spotlight group relative flex h-full flex-col overflow-hidden rounded-3xl p-6',
+                href={stat.href} className={cn(
+                  'glass-liquid group relative flex h-full flex-col overflow-hidden rounded-3xl p-6',
                   'transition-all duration-500',
                   'border border-white/[0.06] hover:border-[#2de5ca]/25',
                 )}
               >
-                <div className="layer-1 flex items-start justify-between">
+                <div className=" flex items-start justify-between">
                   <div className="relative grid h-12 w-12 place-items-center rounded-2xl ring-1 ring-white/30 shadow-lg shadow-black/30">
                     <div className={cn('absolute inset-0 rounded-2xl bg-gradient-to-br opacity-95', stat.gradient)} />
                     <stat.icon className="relative h-5 w-5 text-white" />
                   </div>
                   <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#8cffef] group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
-                <div className="layer-2 mt-5">
-                  <p className="font-display text-3xl font-bold text-white count-glow tabular-nums">
+                <div className=" mt-5">
+                  <p className="font-display text-3xl font-bold text-white tabular-nums">
                     {stat.value}
                   </p>
                   <p className="mt-1 text-sm text-white/55 group-hover:text-white/70 transition-colors">
@@ -223,19 +203,14 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 </div>
                 <div className={cn('pointer-events-none absolute -bottom-10 -right-8 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl transition-opacity duration-500 group-hover:opacity-40', stat.gradient)} />
               </Link>
-            </Tilt3D>
+            </div>
           ))}
         </div>
 
         {/* =========================== SESSIONS + STUDENTS =========================== */}
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
           {/* Recent Sessions */}
-          <Tilt3D
-            wrapperClassName="rise-in lg:col-span-2"
-            wrapperStyle={{ animationDelay: '0.34s' }}
-            className="glass-liquid relative overflow-hidden rounded-3xl p-6"
-            maxTilt={5}
-          >
+          <div className="rise-in lg:col-span-2 glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '0.34s' }}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/30">
@@ -263,7 +238,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 <p className="text-sm text-white/55">Brak sesji. Utwórz swoją pierwszą sesję.</p>
                 <Link
                   href="/coach/sessions"
-                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#147a6b]/25 hover:-translate-y-0.5 transition-all"
+                  className=" relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#147a6b]/25 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Utwórz sesję
                 </Link>
@@ -316,15 +291,10 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 ))}
               </div>
             )}
-          </Tilt3D>
+          </div>
 
           {/* Recent Students */}
-          <Tilt3D
-            wrapperClassName="rise-in"
-            wrapperStyle={{ animationDelay: '0.42s' }}
-            className="glass-liquid relative overflow-hidden rounded-3xl p-6"
-            maxTilt={5}
-          >
+          <div className="rise-in glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '0.42s' }}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#8cffef] ring-1 ring-white/30">
@@ -352,7 +322,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 <p className="text-sm text-white/55">Brak uczniów. Dodaj pierwszego ucznia.</p>
                 <Link
                   href="/coach/students"
-                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#147a6b]/25 hover:-translate-y-0.5 transition-all"
+                  className=" relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#147a6b]/25 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Dodaj ucznia
                 </Link>
@@ -402,7 +372,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 })}
               </div>
             )}
-          </Tilt3D>
+          </div>
         </div>
 
         {/* =========================== BENTO QUICK ACTIONS =========================== */}
@@ -437,13 +407,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 icon: UserCheck,
               },
             ].map((a, i) => (
-              <Tilt3D
-                key={a.name}
-                wrapperClassName="rise-in"
-                wrapperStyle={{ animationDelay: `${0.5 + i * 0.06}s` }}
-                className="h-full"
-                maxTilt={8}
-              >
+              <div key={a.name} className="rise-in h-full" style={{ animationDelay: `${0.5 + i * 0.06}s` }}>
                 <Link
                   href={a.href}
                   className="bento-card group flex h-full flex-col p-6"
@@ -458,7 +422,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                   </span>
                   <div className="pointer-events-none absolute -bottom-12 -right-10 w-36 h-36 rounded-full bg-[#2fb6a2]/25 blur-2xl transition-opacity duration-500 opacity-0 group-hover:opacity-100" />
                 </Link>
-              </Tilt3D>
+              </div>
             ))}
           </div>
         </div>

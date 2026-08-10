@@ -85,11 +85,6 @@ const FILTER_OPTIONS = [
   { value: 'ARCHIVED', label: 'Zarchiwizowana' },
 ]
 
-const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-  const r = e.currentTarget.getBoundingClientRect()
-  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-}
 
 export function StudentSessionsClient({ initialSessions, initialProgress }: StudentSessionsClientProps) {
   const [sessions] = useState<Session[]>(initialSessions)
@@ -141,7 +136,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
     <StudentLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#060606]/70 backdrop-blur-xl">
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#0a0a0a]">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
@@ -225,7 +220,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
 
         {/* ===== Session list / empty state ===== */}
         {filteredSessions.length === 0 ? (
-          <div className="glass-liquid spotlight rise-in mt-8 rounded-3xl p-10 sm:p-14 text-center" onMouseMove={handleCardMouse}>
+          <div className="glass-liquid rise-in mt-8 rounded-3xl p-10 sm:p-14 text-center" >
             <div className="mx-auto mb-6 grid place-items-center w-20 h-20 rounded-3xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(124,111,255,0.25) 0%, rgba(90,79,255,0.10) 100%)', border: '1px solid rgba(124,111,255,0.3)' }}>
               <div className="absolute inset-0 text-gradient-mesh opacity-40 blur-2xl animate-aurora" style={{ background: 'linear-gradient(135deg, #8cffef 0%, #2fb6a2 45%, #2fb6a2 100%)' }} />
               {search || statusFilter !== 'all' ? (
@@ -251,9 +246,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
               const videoCount = session.videos.length
               return (
                 <div
-                  key={session.id}
-                  onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover group relative rounded-3xl p-6 hover:border-[#2de5ca]/25"
+                  key={session.id} className="glass-liquid rise-in group relative rounded-3xl p-6 hover:border-[#2de5ca]/25"
                   style={{ animationDelay: `${0.05 + i * 0.05}s` }}
                 >
                   <div className="flex items-start justify-between gap-4">

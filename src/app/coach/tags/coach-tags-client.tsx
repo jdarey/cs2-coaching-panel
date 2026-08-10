@@ -182,12 +182,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
     setFormData({ name: '', description: '', color: DEFAULT_COLORS[0], icon: '' })
   }
 
-  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-  }
-
+  
   const stats = [
     { label: 'Wszystkie tagi', value: tags.length, Icon: Hash },
     { label: 'Używane', value: usedCount, Icon: Layers },
@@ -216,7 +211,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
           </div>
           <button
             onClick={openAddDialog}
-            className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow rise-in"
+            className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow rise-in"
             style={{ animationDelay: '80ms' }}
           >
             <Plus className="h-4 w-4" />
@@ -228,16 +223,14 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
           {stats.map((s, i) => (
             <div
-              key={s.label}
-              onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in flex items-center gap-3 rounded-2xl p-4"
+              key={s.label} className="glass-liquid rise-in flex items-center gap-3 rounded-2xl p-4"
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
                 <s.Icon className="h-5 w-5 text-[#8cffef]" />
               </span>
               <div className="min-w-0">
-                <p className="font-display text-2xl font-bold leading-none count-glow text-white">
+                <p className="font-display text-2xl font-bold leading-none text-white">
                   {s.value}
                 </p>
                 <p className="text-xs text-white/45 mt-1 truncate">{s.label}</p>
@@ -269,9 +262,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
         {/* Tag grid */}
         {filteredTags.length === 0 ? (
           <div
-            className="glass-liquid spotlight rise-in rounded-3xl p-16 text-center"
-            onMouseMove={handleCardMouse}
-          >
+            className="glass-liquid rise-in rounded-3xl p-16 text-center" >
             {search ? (
               <>
                 <Search className="h-12 w-12 mx-auto mb-4 text-white/30" />
@@ -298,9 +289,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
               const accent = lighten(tag.color, 60)
               return (
                 <article
-                  key={tag.id}
-                  onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight rise-in tilt-hover group relative flex flex-col rounded-3xl p-5"
+                  key={tag.id} className="glass-liquid rise-in group relative flex flex-col rounded-3xl p-5"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -379,9 +368,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
             onClick={() => setDialogOpen(false)}
           />
           <div
-            className="glass-liquid spotlight relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-7 rise-in"
-            onMouseMove={handleCardMouse}
-          >
+            className="glass-liquid relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-7 rise-in" >
             <div className="mb-6 flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
                 <Sparkles className="h-5 w-5 text-[#8cffef]" />
@@ -533,7 +520,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
+                  className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
