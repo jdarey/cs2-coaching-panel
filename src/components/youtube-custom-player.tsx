@@ -23,7 +23,7 @@ const QUALITY_LABELS: Record<string, string> = {
 }
 
 // Default minimum quality injected via URL parameter
-const DEFAULT_VQ = 'hd1080'
+const DEFAULT_VQ = 'hd2160'
 
 export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'Uczeń' }: YoutubeCustomPlayerProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
@@ -151,11 +151,12 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         rel:            0,
         showinfo:       0,
         iv_load_policy: 3,
+        cc_load_policy: 0, // disable captions by default
         playsinline:    1,
         wmode:          'opaque',
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
-        // vq sets quality at the URL level - force high quality
-        vq:             qualityVq || 'hd1080',
+        // vq sets quality at the URL level - force 4K
+        vq:             qualityVq || 'hd2160',
       },
       events: {
         onReady: (event: any) => {
@@ -502,13 +503,14 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       onMouseLeave={() => { isPlaying && !isEnded && setShowControls(false); setShowQualityMenu(false) }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. YouTube iframe — render at 2x resolution so YouTube ABR picks HD quality.
-           Visually crop to normal size via overflow:hidden on wrapper. */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef} style={{ transform: 'scale(0.5)', transformOrigin: 'top left', width: '200%', height: '200%' }}>
+      {/* 1. YouTube iframe — render at 4x resolution so YouTube ABR picks 4K quality.
+           Visually crop to normal size via overflow:hidden on wrapper.
+           pointer-events:none blocks the native center play button. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef} style={{ transform: 'scale(0.25)', transformOrigin: 'top left', width: '400%', height: '400%' }}>
         <div
           id={mountId}
-          className="absolute"
-          style={{ width: '106%', height: '120%', top: '-10%', left: '-3%' }}
+          className="absolute inset-0"
+          style={{ width: '100%', height: '100%' }}
         />
       </div>
 
