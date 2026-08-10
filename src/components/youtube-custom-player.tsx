@@ -65,9 +65,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const reinitPlayRef   = useRef(false)
   const reinitVqRef     = useRef(DEFAULT_VQ)
 
-  // Unique DOM id for each player instance
-  const instanceKey = useRef(0)
-  const [playerKey, setPlayerKey] = useState(0) // bump to remount the iframe div
+  // Removed playerKey remount - causes removeChild errors
 
   // Reset on videoId change
   useEffect(() => {
@@ -89,12 +87,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     setIsReinitialising(false)
     setThumbSrc(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
     if (overlayTimeoutRef.current) clearTimeout(overlayTimeoutRef.current)
-    instanceKey.current += 1
-    setPlayerKey(instanceKey.current)
   }, [videoId])
 
-  // Stable player DOM id (per instance)
-  const playerId = useRef(`yt-player-${Math.random().toString(36).substring(2, 9)}`)
+  // Stable player DOM id (per videoId)
+  const playerId = useRef(`yt-player-${videoId}`)
 
   // 1. Load YouTube IFrame API
   useEffect(() => {
@@ -122,7 +118,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     return () => { window.removeEventListener('youtube-api-ready', onApiReady); clearInterval(interval) }
   }, [])
 
-  // 2. Build player whenever API is ready OR playerKey changes (quality reinit)
+  // 2. Build player whenever API is ready OR videoId changes
   useEffect(() => {
     if (!isApiReady) return
     const win = window as any
@@ -134,8 +130,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       playerRef.current = null
     }
 
-    // Recreate the mount point (playerKey bump unmounts and remounts the div)
-    const mountId = `yt-${playerKey}-${videoId.slice(0, 6)}`
+    const mountId = playerId.current
     const mount   = document.getElementById(mountId)
     if (!mount) return
 
@@ -157,7 +152,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         playsinline:    1,
         wmode:          'opaque',
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
-        // vq sets quality at the URL level — more reliable than setPlaybackQuality()
+        // vq sets quality at the URL level
         vq:             qualityVq,
       },
       events: {
@@ -219,7 +214,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isApiReady, playerKey])
+  }, [isApiReady, videoId])
 
   // 3. Time polling
   useEffect(() => {
@@ -236,15 +231,13 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   // 3b. Sync quality via setPlaybackQuality when player is ready and vq changes
   useEffect(() => {
     if (!isReady || !playerRef.current?.setPlaybackQuality) return
-    // Skip during reinit to avoid calling on destroyed player
-    if (isReinitialising) return
     // vq state tracks the desired quality
     if (vq !== 'auto' && currentQuality !== vq) {
       try {
         playerRef.current.setPlaybackQuality(vq)
       } catch (_) {}
     }
-  }, [isReady, vq, currentQuality, isReinitialising])
+  }, [isReady, vq, currentQuality])
 
   // 4. Controls auto-hide
   const resetControlsTimer = useCallback(() => {
@@ -323,10 +316,8 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   }
 
   /**
-   * Quality change via vq URL parameter reinit + setPlaybackQuality fallback.
-   * We snapshot current position + play state, show a loading overlay,
-   * then bump playerKey which triggers a full player rebuild with the new vq.
-   * Also calls setPlaybackQuality() on current player for immediate effect.
+   * Quality change via setPlaybackQuality + loadVideoById for immediate effect.
+   * No player remount needed - avoids removeChild errors.
    */
   const setQuality = (q: string) => {
     if (!playerRef.current) return
@@ -334,7 +325,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     const t          = playerRef.current.getCurrentTime?.() ?? 0
     const wasPlaying = isPlaying
 
-    // Store params for the new player instance
+    // Store params in case we need to reinit
     reinitStartRef.current = t
     reinitPlayRef.current  = wasPlaying
     reinitVqRef.current    = q
@@ -343,15 +334,29 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     setVq(q)
     setShowQualityMenu(false)
 
-    // Show buffering overlay during reinit
+    // Show buffering overlay
     setIsReinitialising(true)
 
-    // Try to change quality on current player immediately (before reinit)
-    forceQuality(q)
+    // Method 1: Try setPlaybackQuality (instant, no reload)
+    const didSet = forceQuality(q)
 
-    // Bump key → triggers useEffect to destroy & rebuild player with new vq
-    instanceKey.current += 1
-    setPlayerKey(instanceKey.current)
+    // Method 2: If that didn't work, use loadVideoById with suggestedQuality
+    // This reloads the video at the new quality without destroying the player
+    if (playerRef.current.loadVideoById) {
+      try {
+        playerRef.current.loadVideoById(videoId, t, q)
+      } catch (_) {}
+    }
+
+    // If video was playing, ensure it resumes (loadVideoById may pause)
+    if (wasPlaying) {
+      setTimeout(() => {
+        playerRef.current?.playVideo()
+      }, 100)
+    }
+
+    // Hide reinit overlay after a short delay
+    setTimeout(() => setIsReinitialising(false), 800)
 
     resetControlsTimer()
   }
@@ -370,8 +375,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
 
   const qualityLabel = (q: string) => QUALITY_LABELS[q] ?? q
 
-  // The mount point div id (changes with playerKey)
-  const mountId = `yt-${playerKey}-${videoId.slice(0, 6)}`
+  const mountId = playerId.current
 
   return (
     <div
@@ -383,9 +387,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     >
       {/* 1. YouTube iframe — cropped to hide native UI */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef}>
-        {/* playerKey in key forces DOM remount on quality change */}
         <div
-          key={playerKey}
           id={mountId}
           className="absolute"
           style={{ width: '106%', height: '120%', top: '-10%', left: '-3%' }}
