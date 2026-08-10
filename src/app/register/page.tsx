@@ -115,17 +115,17 @@ export default function RegisterPage() {
 
       {/* Floating decorative elements */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(139,123,255,0.5) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.4) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.09) 0%, transparent 70%)' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] shadow-[0_16px_40px_-10px_rgba(139,123,255,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
-              <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
-              <div className="absolute inset-0 rounded-2xl ring-1 ring-white/30" />
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-white shadow-[0_16px_40px_-12px_rgba(255,255,255,0.25)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+              <GraduationCap className="w-7 h-7 text-[#060606]" strokeWidth={2.2} />
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
           </Link>
           <h1 className="font-display text-3xl md:text-4xl leading-none font-bold tracking-tight text-gradient-premium mb-3">
@@ -141,7 +141,7 @@ export default function RegisterPage() {
           maxTilt={4}
         >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-            <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.4) 0%, transparent 70%)' }} />
+            <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10">

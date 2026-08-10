@@ -21,6 +21,7 @@ import {
   Send,
   CheckCircle2,
 } from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 
 interface User {
@@ -63,6 +64,10 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     newVideos: true,
   })
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '')
+  const [avatarDirty, setAvatarDirty] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const { update: refreshSession } = useSession()
   const { toast } = useToast()
 
   const tabRefs = useRef<Record<SectionKey, HTMLButtonElement | null>>({ profile: null, password: null, notifications: null, appearance: null })
@@ -84,6 +89,37 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
 
+  const handleAvatarPick = (file: File | null) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Błąd', description: 'Wybierz plik obrazu (JPG, PNG, WEBP)', variant: 'destructive' })
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Błąd', description: 'Plik jest za duży (maks. 5 MB)', variant: 'destructive' })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        // Downscale to 256x256 to keep the stored data URL small
+        const size = 256
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        ctx.drawImage(img, 0, 0, size, size)
+        setAvatarUrl(canvas.toDataURL('image/jpeg', 0.85))
+        setAvatarDirty(true)
+      }
+      img.src = String(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -92,7 +128,10 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name }),
+        body: JSON.stringify({
+          name: formData.name,
+          avatarUrl: avatarDirty ? avatarUrl : undefined,
+        }),
       })
 
       const data = await res.json()
@@ -102,6 +141,9 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
         return
       }
 
+      if (avatarDirty) setAvatarDirty(false)
+      // Refresh the session token so the sidebar avatar updates immediately
+      await refreshSession()
       toast({ title: 'Zapisano', description: 'Profil zaktualizowany' })
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
@@ -228,14 +270,30 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                   <div className="flex flex-col sm:flex-row sm:items-center gap-5">
                     <div className="relative">
                       <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15">
-                        <AvatarImage src={user.avatarUrl || ''} alt={user.name || ''} />
+                        <AvatarImage src={avatarUrl || ''} alt={user.name || ''} />
                         <AvatarFallback className="text-2xl bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] text-white">
                           {getInitials(user.name || 'U')}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-xl bg-[#06070d] border border-white/10">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          handleAvatarPick(e.target.files?.[0] || null)
+                          e.target.value = ''
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-xl bg-[#06070d] border border-white/10 hover:border-[#8b7bff]/40 transition"
+                        aria-label="Zmień zdjęcie profilowe"
+                        title="Zmień zdjęcie profilowe"
+                      >
                         <Camera className="w-3.5 h-3.5 text-white/55" />
-                      </div>
+                      </button>
                     </div>
                     <div>
                       <p className="text-lg font-display font-semibold text-white">{user.name || 'Bez nazwy'}</p>
@@ -286,7 +344,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                    className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Zapisz zmiany
@@ -379,7 +437,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                  className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Zmień hasło
@@ -418,7 +476,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                         onClick={() => handleNotificationChange(item.key, !on)}
                         className={cn(
                           'relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-300',
-                          on ? 'bg-gradient-to-r from-[#8b7bff] to-[#5a4fff]' : 'bg-white/[0.08] border border-white/[0.08]',
+                          on ? 'btn-darey' : 'bg-white/[0.08] border border-white/[0.08]',
                         )}
                       >
                         <span
@@ -505,7 +563,16 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
               </div>
             </div>
             <button
-              onClick={() => alert('Funkcja do zaimplementowania')}
+              onClick={async () => {
+                if (!confirm('Czy na pewno chcesz trwale usunąć swoje konto? Ta akcja jest nieodwracalna.')) return
+                const res = await fetch('/api/user/account', { method: 'DELETE' })
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({}))
+                  toast({ title: 'Błąd', description: data.error || 'Nie udało się usunąć konta', variant: 'destructive' })
+                  return
+                }
+                await signOut({ callbackUrl: '/login' })
+              }}
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-red-200 bg-red-500/15 border border-red-500/25 hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-300 flex-shrink-0"
             >
               <Trash2 className="w-4 h-4" />

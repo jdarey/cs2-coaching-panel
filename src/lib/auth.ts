@@ -41,11 +41,24 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
         token.avatarUrl = (user as any).avatarUrl
+      }
+      // When the client calls session.update() (e.g. after changing the
+      // avatar/name in settings), re-read the user so the sidebar and pages
+      // reflect the change without requiring a full re-login.
+      if (trigger === 'update' && token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { name: true, avatarUrl: true },
+        })
+        if (dbUser) {
+          token.name = dbUser.name
+          token.avatarUrl = dbUser.avatarUrl
+        }
       }
       return token
     },

@@ -1,10 +1,19 @@
 import type { Metadata } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
 
-const inter = Inter({ subsets: ['latin', 'latin-ext'], variable: '--font-sans' })
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-display' })
+// Darey-style typography: Space Grotesk everywhere (400-700, latin-ext for Polish)
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+})
+const spaceGroteskDisplay = Space_Grotesk({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['500', '600', '700'],
+  variable: '--font-display',
+})
 
 export const metadata: Metadata = {
   title: 'CS2 Coaching Panel',
@@ -18,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${spaceGroteskDisplay.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

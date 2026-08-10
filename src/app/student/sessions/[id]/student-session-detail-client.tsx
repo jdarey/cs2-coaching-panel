@@ -379,7 +379,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                             {/* Mini progress bar */}
                             <div className="mt-2 h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] transition-all duration-500"
+                                className="h-full rounded-full btn-darey transition-all duration-500"
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
@@ -497,7 +497,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   className={cn(
                     'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300',
                     active
-                      ? 'bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] text-white shadow-[0_10px_24px_-8px_rgba(124,111,255,0.55)]'
+                      ? 'btn-darey text-white shadow-[0_10px_24px_-8px_rgba(124,111,255,0.55)]'
                       : 'text-white/55 hover:text-white hover:bg-white/[0.04]',
                   )}
                 >
@@ -665,7 +665,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                           </div>
                           <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden mb-4">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] transition-all duration-500"
+                              className="h-full rounded-full btn-darey transition-all duration-500"
                               style={{ width: `${currentProgress}%` }}
                             />
                           </div>
@@ -688,7 +688,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                                     className={cn(
                                       'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300',
                                       active
-                                        ? 'bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] text-white shadow-[0_8px_20px_-8px_rgba(124,111,255,0.55)]'
+                                        ? 'btn-darey text-white shadow-[0_8px_20px_-8px_rgba(124,111,255,0.55)]'
                                         : 'text-white/55 hover:text-white hover:bg-white/[0.05]',
                                     )}
                                   >
@@ -758,7 +758,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                 <button
                   type="submit"
                   disabled={isLoading || !newNote.trim()}
-                  className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                  className="shimmer-line relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   Dodaj notatkę
@@ -857,7 +857,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                           className={cn(
                             'flex-1 px-2 py-2 rounded-xl text-xs font-medium transition-all duration-300',
                             active
-                              ? 'bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] text-white shadow-[0_8px_20px_-8px_rgba(124,111,255,0.55)]'
+                              ? 'btn-darey text-white shadow-[0_8px_20px_-8px_rgba(124,111,255,0.55)]'
                               : 'text-white/60 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07]',
                           )}
                         >

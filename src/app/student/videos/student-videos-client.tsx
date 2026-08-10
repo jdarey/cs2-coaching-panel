@@ -379,7 +379,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
             {(search || activeTab !== 'all') && (
               <button
                 onClick={() => { setSearch(''); setActiveTab('all'); setSelectedSessionId(null) }}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] hover:shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] transition-shadow"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white btn-darey hover:shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] transition-shadow"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Wyczyść filtry
@@ -706,7 +706,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                 {/* Close */}
                 <button
                   onClick={() => setVideoProgressDialog(null)}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] hover:shadow-[0_14px_36px_-10px_rgba(124,111,255,0.55)] transition-shadow"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white btn-darey hover:shadow-[0_14px_36px_-10px_rgba(124,111,255,0.55)] transition-shadow"
                 >
                   Zamknij
                   <ArrowRight className="h-4 w-4" />

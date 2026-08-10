@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import {
   User,
@@ -71,6 +72,10 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
   })
   const [discordWebhook, setDiscordWebhook] = useState(initialSettings?.discordWebhook || '')
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '')
+  const [avatarDirty, setAvatarDirty] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const { update: refreshSession } = useSession()
   const { toast } = useToast()
 
   type TabKey = 'profile' | 'password' | 'notifications' | 'appearance'
@@ -87,6 +92,37 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     return () => window.removeEventListener('resize', update)
   }, [activeTab])
 
+  const handleAvatarPick = (file: File | null) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Błąd', description: 'Wybierz plik obrazu (JPG, PNG, WEBP)', variant: 'destructive' })
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Błąd', description: 'Plik jest za duży (maks. 5 MB)', variant: 'destructive' })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        // Downscale to 256x256 to keep the stored data URL small
+        const size = 256
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        ctx.drawImage(img, 0, 0, size, size)
+        setAvatarUrl(canvas.toDataURL('image/jpeg', 0.85))
+        setAvatarDirty(true)
+      }
+      img.src = String(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -95,7 +131,10 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name }),
+        body: JSON.stringify({
+          name: formData.name,
+          avatarUrl: avatarDirty ? avatarUrl : undefined,
+        }),
       })
 
       const data = await res.json()
@@ -105,6 +144,9 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
         return
       }
 
+      if (avatarDirty) setAvatarDirty(false)
+      // Refresh the session token so the sidebar avatar updates immediately
+      await refreshSession()
       toast({ title: 'Zapisano', description: 'Profil zaktualizowany' })
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
@@ -287,13 +329,13 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                 </div>
               </div>
 
-              {/* Avatar preview */}
+              {/* Avatar preview — click the camera to change the photo */}
               <div className="mb-6 flex items-center gap-4">
                 <div className="relative">
-                  {user.avatarUrl ? (
+                  {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={user.avatarUrl}
+                      src={avatarUrl}
                       alt={user.name || ''}
                       className="h-20 w-20 rounded-xl object-cover ring-1 ring-white/15"
                     />
@@ -302,9 +344,25 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                       {getInitials(user.name || 'T')}
                     </div>
                   )}
-                  <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl glass-tinted ring-1 ring-white/15">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      handleAvatarPick(e.target.files?.[0] || null)
+                      e.target.value = ''
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl glass-tinted ring-1 ring-white/15 hover:ring-[#c084fc]/40 transition"
+                    aria-label="Zmień zdjęcie profilowe"
+                    title="Zmień zdjęcie profilowe"
+                  >
                     <Camera className="h-4 w-4 text-[#d8b4fe]" />
-                  </span>
+                  </button>
                 </div>
                 <div className="min-w-0">
                   <p className="text-lg font-medium text-white truncate">{user.name || 'Bez nazwy'}</p>
@@ -347,7 +405,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -405,7 +463,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -430,7 +488,16 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     </p>
                   </div>
                   <button
-                    onClick={() => alert('Funkcja do zaimplementowania')}
+                    onClick={async () => {
+                      if (!confirm('Czy na pewno chcesz trwale usunąć swoje konto? Ta akcja jest nieodwracalna.')) return
+                      const res = await fetch('/api/user/account', { method: 'DELETE' })
+                      if (!res.ok) {
+                        const data = await res.json().catch(() => ({}))
+                        toast({ title: 'Błąd', description: data.error || 'Nie udało się usunąć konta', variant: 'destructive' })
+                        return
+                      }
+                      await signOut({ callbackUrl: '/login' })
+                    }}
                     className="inline-flex items-center gap-2 rounded-xl px-4 h-10 text-sm font-medium text-red-200 border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 transition"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -475,7 +542,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         className={cn(
                           'relative h-9 w-16 shrink-0 rounded-full transition-all',
                           on
-                            ? 'bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_0_18px_-2px_rgba(168,85,247,0.6)]'
+                            ? 'btn-darey shadow-[0_0_18px_-2px_rgba(168,85,247,0.6)]'
                             : 'glass-tinted'
                         )}
                         aria-pressed={on}
@@ -516,7 +583,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     className={cn(
                       'relative h-9 w-16 shrink-0 rounded-full transition-all',
                       notifications.discord
-                        ? 'bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_0_18px_-2px_rgba(168,85,247,0.6)]'
+                        ? 'btn-darey shadow-[0_0_18px_-2px_rgba(168,85,247,0.6)]'
                         : 'glass-tinted'
                     )}
                     aria-pressed={notifications.discord}
@@ -558,7 +625,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     <button
                       onClick={handleDiscordSave}
                       disabled={isLoading}
-                      className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                      className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                     >
                       {isLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -619,7 +686,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                       <p className="mt-3 font-medium text-white">{opt.label}</p>
                       <p className="text-xs text-white/45 mt-0.5">{opt.desc}</p>
                       {active && (
-                        <span className="absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-r from-[#c084fc] to-[#7c3aed]">
+                        <span className="absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full btn-darey">
                           <Sparkles className="h-3 w-3 text-white" />
                         </span>
                       )}

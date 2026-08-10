@@ -347,7 +347,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             </div>
             <button
               onClick={openAddDialog}
-              className="shimmer-sweep relative overflow-hidden group inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow"
+              className="shimmer-sweep relative overflow-hidden group inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow"
             >
               <Plus className="h-4 w-4" />
               Dodaj film
@@ -420,7 +420,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                 <p className="text-white/55 mb-5">Nie masz jeszcze żadnych filmów w bazie</p>
                 <button
                   onClick={openAddDialog}
-                  className="inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed]"
+                  className="inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey"
                 >
                   <Plus className="h-4 w-4" />
                   Dodaj pierwszy film
@@ -475,7 +475,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     <div className="absolute top-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-1 group-hover:translate-y-0">
                       <button
                         onClick={() => openAssignDialog(video)}
-                        className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_8px_24px_-8px_rgba(192,132,252,0.5)] hover:shadow-[0_12px_32px_-8px_rgba(192,132,252,0.7)] transition-all"
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white btn-darey shadow-[0_8px_24px_-8px_rgba(192,132,252,0.5)] hover:shadow-[0_12px_32px_-8px_rgba(192,132,252,0.7)] transition-all"
                         aria-label={`Przypisz "${video.title}" do ucznia`}
                       >
                         <UserPlus className="h-3.5 w-3.5" />
@@ -723,7 +723,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   <button
                     type="submit"
                     disabled={isLoading || !formData.title.trim() || !formData.url.trim()}
-                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -876,7 +876,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   <button
                     type="submit"
                     disabled={isLoading || !assignFormData.studentId || (assignFormData.createNewSession && !assignFormData.newSessionTitle.trim())}
-                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                     Przypisz do ucznia

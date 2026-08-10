@@ -66,10 +66,10 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Link
-                href="/coach/sessions/new"
+                href="/coach/sessions"
                 className={cn(
                   'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
-                  'bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-lg shadow-[#7c3aed]/30',
+                  'btn-darey shadow-lg shadow-[#7c3aed]/30',
                   'ring-1 ring-white/20 hover:shadow-xl hover:shadow-[#7c3aed]/40 hover:-translate-y-0.5 transition-all duration-300',
                 )}
               >
@@ -77,7 +77,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 Nowa sesja
               </Link>
               <Link
-                href="/coach/videos/new"
+                href="/coach/videos"
                 className={cn(
                   'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
                   'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.07]',
@@ -247,8 +247,8 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 </div>
                 <p className="text-sm text-white/55">Brak sesji. Utwórz swoją pierwszą sesję.</p>
                 <Link
-                  href="/coach/sessions/new"
-                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
+                  href="/coach/sessions"
+                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Utwórz sesję
                 </Link>
@@ -337,7 +337,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 <p className="text-sm text-white/55">Brak uczniów. Dodaj pierwszego ucznia.</p>
                 <Link
                   href="/coach/students"
-                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
+                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Dodaj ucznia
                 </Link>
@@ -415,25 +415,25 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/coach/sessions/new"
-                className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/30 hover:-translate-y-0.5 transition-all"
+                href="/coach/sessions"
+                className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/30 hover:-translate-y-0.5 transition-all"
               >
                 <Plus className="h-4 w-4" /> Nowa sesja
               </Link>
               <Link
-                href="/coach/videos/new"
+                href="/coach/videos"
                 className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
               >
                 <Video className="h-4 w-4" /> Dodaj film
               </Link>
               <Link
-                href="/coach/tags/new"
+                href="/coach/tags"
                 className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
               >
                 <Tag className="h-4 w-4" /> Dodaj tag
               </Link>
               <Link
-                href="/coach/students/new"
+                href="/coach/students"
                 className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
               >
                 <UserCheck className="h-4 w-4" /> Dodaj ucznia

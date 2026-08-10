@@ -216,7 +216,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
           </div>
           <button
             onClick={openAddDialog}
-            className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow rise-in"
+            className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow rise-in"
             style={{ animationDelay: '80ms' }}
           >
             <Plus className="h-4 w-4" />
@@ -283,7 +283,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                 <p className="text-white/55 mb-5">Nie masz jeszcze żadnych tagów</p>
                 <button
                   onClick={openAddDialog}
-                  className="inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed]"
+                  className="inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey"
                 >
                   <Plus className="h-4 w-4" />
                   Dodaj pierwszy tag
@@ -533,7 +533,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

@@ -5,6 +5,7 @@ import { formatDate, formatDateTime, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tilt3D } from '@/components/tilt-3d'
+import { StudentLayout } from '@/components/student-layout'
 import { Film, Clock, Play, CheckCircle2, CalendarClock, BookOpen, TrendingUp, Settings, ArrowRight, Sparkles, LogOut, GraduationCap, Plus, Target, Trophy, Zap, Shield, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -91,8 +92,6 @@ export function StudentDashboardClient({
   const [activeTab, setActiveTab] = useState<TabKey>('sessions')
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({ sessions: null, activity: null })
   const [underline, setUnderline] = useState({ left: 0, width: 0 })
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -107,14 +106,6 @@ export function StudentDashboardClient({
     return () => window.removeEventListener('resize', update)
   }, [activeTab, mounted])
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY })
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
-
   const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
     e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
@@ -123,7 +114,7 @@ export function StudentDashboardClient({
 
   if (!mounted) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#06070d]">
+      <div className="fixed inset-0 flex items-center justify-center bg-[#060606]">
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
             <div className="absolute inset-0 rounded-full border-2 border-white/10" />
@@ -137,19 +128,8 @@ export function StudentDashboardClient({
   }
 
   return (
-    <div className="relative min-h-screen bg-[#06070d] text-white font-sans antialiased overflow-x-hidden">
-      {/* Cursor follower glow */}
-      <div
-        className="fixed pointer-events-none z-0 w-[300px] h-[300px] rounded-full blur-[80px] opacity-30 transition-all duration-500"
-        style={{
-          transform: `translate(-50%, -50%)`,
-          left: `${mousePos.x}px`,
-          top: `${mousePos.y}px`,
-          background: 'radial-gradient(circle, rgba(139,123,255,0.25) 0%, transparent 70%)',
-        }}
-      />
-
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+    <StudentLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Hero Header ===== */}
         <div className="animate-rise-in mb-10 md:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium text-white/60 glass mb-6 backdrop-blur-xl">
@@ -526,7 +506,7 @@ export function StudentDashboardClient({
                           {typeof p.progress === 'number' && (
                             <div className="mt-2.5 h-1.5 rounded-full bg-white/[0.05] overflow-hidden max-w-xs">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-[#a594ff] to-[#5a4fff]"
+                                className="h-full rounded-full bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] shadow-[0_0_12px_rgba(139,123,255,0.5)]"
                                 style={{ width: `${p.progress}%`, transition: 'width 0.8s ease' }}
                               />
                             </div>
@@ -565,8 +545,8 @@ export function StudentDashboardClient({
             Systematyczność to klucz do sukcesu
           </p>
         </div>
-      </main>
-    </div>
+      </div>
+    </StudentLayout>
   )
 }
 

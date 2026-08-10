@@ -451,7 +451,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                                   'h-full rounded-full transition-all duration-700',
                                   pct >= 100
                                     ? 'bg-gradient-to-r from-emerald-400/80 to-emerald-500/60'
-                                    : 'bg-gradient-to-r from-[#c084fc] to-[#7c3aed]'
+                                    : 'bg-gradient-to-r from-[#8b7bff]/70 to-[#5a4fff]/70'
                                 )}
                                 style={{ width: `${Math.min(100, Math.max(2, pct))}%` }}
                               />
@@ -615,7 +615,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <button
                   type="submit"
                   disabled={isLoading || !newVideoUrl.trim()}
-                  className="shimmer-line relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-lg shadow-[#7c3aed]/25 hover:shadow-[#7c3aed]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="shimmer-line relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#7c3aed]/25 hover:shadow-[#7c3aed]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Dodaj film
@@ -672,7 +672,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <button
                   type="submit"
                   disabled={isLoading || !newNote.trim()}
-                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-5 h-10 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-lg shadow-[#7c3aed]/20 hover:shadow-[#7c3aed]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-5 h-10 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#7c3aed]/20 hover:shadow-[#7c3aed]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   Dodaj notatkę
@@ -770,7 +770,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     className={cn(
                       'group relative overflow-hidden rounded-2xl px-4 py-3.5 text-sm font-medium transition-all duration-300',
                       isActive
-                        ? 'shimmer-line text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-lg shadow-[#7c3aed]/25'
+                        ? 'shimmer-line text-white btn-darey shadow-lg shadow-[#7c3aed]/25'
                         : 'border border-white/[0.06] bg-white/[0.02] text-white/65 hover:text-white hover:border-white/[0.1] hover:bg-white/[0.04]'
                     )}
                   >
@@ -798,7 +798,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 type="button"
                 onClick={handleSaveStatus}
                 disabled={isLoading || sessionStatus === session.status}
-                className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-lg shadow-[#7c3aed]/25 hover:shadow-[#7c3aed]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#7c3aed]/25 hover:shadow-[#7c3aed]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Zapisz status

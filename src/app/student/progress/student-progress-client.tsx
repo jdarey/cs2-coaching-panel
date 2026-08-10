@@ -598,7 +598,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
 
                   <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#a594ff] to-[#5a4fff]"
+                      className="h-full rounded-full btn-darey"
                       style={{ width: `${item.rate}%`, transition: 'width 1s cubic-bezier(0.16,1,0.3,1)' }}
                     />
                   </div>
@@ -709,7 +709,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                               </div>
                               <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
                                 <div
-                                  className="h-full rounded-full bg-gradient-to-r from-[#a594ff] to-[#5a4fff]"
+                                  className="h-full rounded-full btn-darey"
                                   style={{ width: `${p.progress}%`, transition: 'width 1s cubic-bezier(0.16,1,0.3,1)' }}
                                 />
                               </div>

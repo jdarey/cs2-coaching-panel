@@ -42,7 +42,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
   if (userRole !== 'COACH') return null
 
   return (
-    <div className="relative min-h-screen bg-[#06070d] font-sans text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#060606] font-sans text-white overflow-x-hidden">
       <AuroraBackground />
 
       {/* Cursor follower glow - purple for coach */}
@@ -52,7 +52,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
           transform: `translate(-50%, -50%)`,
           left: `${mousePos.x}px`,
           top: `${mousePos.y}px`,
-          background: 'radial-gradient(circle, rgba(192,132,252,0.25) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
         }}
       />
 
@@ -62,7 +62,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
           'fixed inset-0 z-40 lg:hidden transition-opacity duration-300 backdrop-blur-sm',
           mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
-        style={{ background: 'rgba(6,7,13,0.8)' }}
+        style={{ background: 'rgba(6,6,6,0.85)' }}
         onClick={() => setMobileSidebarOpen(false)}
       />
 
@@ -74,7 +74,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
           style={{
-            background: 'linear-gradient(180deg, rgba(10,11,18,0.95) 0%, rgba(6,7,13,0.95) 100%)',
+            background: 'linear-gradient(180deg, rgba(9,9,9,0.97) 0%, rgba(6,6,6,0.97) 100%)',
             backdropFilter: 'blur(32px) saturate(180%)',
             WebkitBackdropFilter: 'blur(32px) saturate(180%)',
             borderRight: '1px solid rgba(255,255,255,0.06)',
@@ -84,8 +84,8 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             {/* Logo */}
             <div className="flex h-18 items-center justify-between px-6 border-b border-white/[0.05]">
               <Link href="/coach/dashboard" className="flex items-center gap-3 group">
-                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-gradient-to-br from-[#c084fc] to-[#7c3aed] shadow-[0_10px_30px_-8px_rgba(192,132,252,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
-                  <ShieldCheck className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
+                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-white shadow-[0_10px_30px_-10px_rgba(255,255,255,0.25)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+                  <ShieldCheck className="w-5.5 h-5.5 text-[#060606]" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/30" />
                 </div>
                 <div className="leading-tight">
@@ -115,12 +115,12 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                       >
                         {active && (
                           <>
-                            <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#c084fc]/15 to-[#7c3aed]/5 border border-[#c084fc]/25" style={{ boxShadow: '0 0 24px -6px rgba(192,132,252,0.4)' }} />
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-gradient-to-b from-[#d8b4fe] to-[#7c3aed] shadow-[0_0_12px_rgba(192,132,252,0.8)]" />
+                            <span className="absolute inset-0 rounded-xl bg-white/[0.06] border border-white/10" style={{ boxShadow: '0 0 24px -10px rgba(255,255,255,0.15)' }} />
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
                           </>
                         )}
                         {!active && <span className="absolute inset-0 rounded-xl bg-transparent group-hover:bg-white/[0.03] transition-colors" />}
-                        <item.icon className={cn('relative w-[18px] h-[18px] transition-all duration-300', active ? 'text-[#d8b4fe]' : 'text-white/50 group-hover:text-white/80')} strokeWidth={2.1} />
+                        <item.icon className={cn('relative w-[18px] h-[18px] transition-all duration-300', active ? 'text-white' : 'text-white/50 group-hover:text-white/80')} strokeWidth={2.1} />
                         <span className="relative">{item.name}</span>
                       </Link>
                     </li>
@@ -135,7 +135,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                 <div className="flex items-center gap-3 mb-4">
                   <Avatar className="h-10 w-10 rounded-xl ring-1 ring-white/15">
                     <AvatarImage src={(user as any)?.avatarUrl || ''} alt={user?.name || ''} />
-                    <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] text-white font-display font-semibold text-sm">
+                    <AvatarFallback className="rounded-xl bg-white text-[#060606] font-display font-semibold text-sm">
                       {user?.name?.[0] || 'T'}
                     </AvatarFallback>
                   </Avatar>
