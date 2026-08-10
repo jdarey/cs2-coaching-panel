@@ -14,6 +14,7 @@ import {
   getVideoEmbedUrl,
 } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
+import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -196,6 +197,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
   const completionPct = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0
 
   const activeVideo = session.videos.find((sv) => sv.video.id === activeVideoId)?.video ?? null
+  const activeVideoYtId = activeVideo ? getVideoId(activeVideo.url) : null
   // In-app embed: YouTube via youtube-nocookie (no tracking cookies, no
   // direct link in the address bar), Vimeo via player.vimeo.com.
   const buildEmbedUrl = (url: string) => {
@@ -280,7 +282,13 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
               className="relative aspect-video w-full bg-[#060606] select-none"
               onContextMenu={(e) => e.preventDefault()}
             >
-              {activeEmbedUrl ? (
+              {activeVideo && activeVideoYtId ? (
+                <YoutubeCustomPlayer
+                  videoId={activeVideoYtId}
+                  title={activeVideo.title}
+                  studentName={session.student.name || 'Uczeń'}
+                />
+              ) : activeEmbedUrl ? (
                 <>
                   <iframe
                     src={activeEmbedUrl}

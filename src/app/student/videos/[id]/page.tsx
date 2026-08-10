@@ -53,6 +53,7 @@ export default async function StudentVideoPlayerPage({ params }: { params: Promi
         title: video.title,
         description: video.description,
         source: video.source,
+        url: video.url,
         embedUrl,
         sessions: video.sessionVideos.map((sv) => ({ id: sv.session.id, title: sv.session.title })),
         tags: video.tags.map((vt) => ({ name: vt.tag.name, color: vt.tag.color })),

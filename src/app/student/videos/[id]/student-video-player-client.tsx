@@ -3,12 +3,15 @@
 import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, BookOpen, Film } from 'lucide-react'
 import { StudentLayout } from '@/components/student-layout'
+import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import { getVideoId } from '@/lib/utils'
 
 interface PlayerVideo {
   id: string
   title: string
   description: string | null
   source: string
+  url: string
   embedUrl: string | null
   sessions: { id: string; title: string }[]
   tags: { name: string; color: string }[]
@@ -20,6 +23,7 @@ interface StudentVideoPlayerClientProps {
 }
 
 export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPlayerClientProps) {
+  const ytId = getVideoId(video.url)
   return (
     <StudentLayout>
       {/* Right-click and selection are blocked around the player so the
@@ -41,14 +45,40 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
         {/* ===== Player card ===== */}
         <div className="relative rounded-3xl glass-card overflow-hidden rise-in" style={{ animationDelay: '0.05s' }}>
           <div className="relative aspect-video w-full bg-black">
-            {video.embedUrl ? (
-              <iframe
-                src={video.embedUrl}
+            {ytId ? (
+              <YoutubeCustomPlayer
+                videoId={ytId}
                 title={video.title}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
+                studentName={studentName}
               />
+            ) : video.embedUrl ? (
+              <>
+                <iframe
+                  src={video.embedUrl}
+                  title={video.title}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+                {/* Branding bar: an opaque strip across the top of the embedded
+                    player hides the host's logo, title and share controls. It is
+                    pointer-transparent, so clicks still reach the player. */}
+                <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-between gap-3 px-3 bg-gradient-to-b from-black/85 via-black/55 to-transparent">
+                  <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/20">
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#8cffef]" />
+                    <span className="max-w-[220px] truncate">{studentName}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/50 ring-1 ring-white/15">
+                    <Film className="h-3.5 w-3.5 text-[#8cffef]" />
+                    Wideo treningowe
+                  </span>
+                </div>
+                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-[0.06]">
+                  <span className="font-display text-2xl font-bold tracking-[0.2em] text-white select-none">
+                    {studentName}
+                  </span>
+                </div>
+              </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-white/[0.03] to-transparent">
                 <div className="grid place-items-center w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/40">
@@ -57,25 +87,6 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
                 <p className="text-white/55 text-sm">To źródło nie obsługuje odtwarzania w aplikacji</p>
               </div>
             )}
-
-            {/* Branding bar: an opaque strip across the top of the embedded
-                player hides the host's logo, title and share controls. It is
-                pointer-transparent, so clicks still reach the player. */}
-            <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-between gap-3 px-3 bg-gradient-to-b from-black/85 via-black/55 to-transparent">
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/20">
-                <ShieldCheck className="h-3.5 w-3.5 text-[#8cffef]" />
-                <span className="max-w-[220px] truncate">{studentName}</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/50 ring-1 ring-white/15">
-                <Film className="h-3.5 w-3.5 text-[#8cffef]" />
-                Wideo treningowe
-              </span>
-            </div>
-            <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-[0.06]">
-              <span className="font-display text-2xl font-bold tracking-[0.2em] text-white select-none">
-                {studentName}
-              </span>
-            </div>
           </div>
         </div>
 
