@@ -58,10 +58,18 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
               </div>
             )}
 
-            {/* Watermark: ties the video to this student so a leak is traceable */}
-            <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/90 bg-black/45 backdrop-blur-md ring-1 ring-white/15">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#8cffef]" />
-              <span className="max-w-[180px] truncate">{studentName}</span>
+            {/* Branding bar: an opaque strip across the top of the embedded
+                player hides the host's logo, title and share controls. It is
+                pointer-transparent, so clicks still reach the player. */}
+            <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-between gap-3 px-3 bg-gradient-to-b from-black/85 via-black/55 to-transparent">
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/20">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#8cffef]" />
+                <span className="max-w-[220px] truncate">{studentName}</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/50 ring-1 ring-white/15">
+                <Film className="h-3.5 w-3.5 text-[#8cffef]" />
+                Wideo treningowe
+              </span>
             </div>
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-[0.06]">
               <span className="font-display text-2xl font-bold tracking-[0.2em] text-white select-none">
@@ -78,10 +86,6 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
           </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/65 bg-white/[0.04] border border-white/[0.08]">
-              <Film className="w-3.5 h-3.5 text-[#8cffef]" />
-              {video.source}
-            </span>
             {video.sessions.map((s) => (
               <Link
                 key={s.id}

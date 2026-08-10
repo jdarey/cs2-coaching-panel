@@ -11,14 +11,10 @@ import {
   Trash2,
   Pencil,
   Play,
-  ExternalLink,
   Loader2,
   X,
   Clock,
   Film,
-  Youtube,
-  Video as VideoIcon,
-  HardDrive,
   Link as LinkIcon,
   Tag as TagIcon,
   Layers,
@@ -67,13 +63,6 @@ interface CoachVideosClientProps {
   initialTags: Tag[]
   initialStudents: Student[]
   initialSessions: Session[]
-}
-
-const SOURCE_META: Record<string, { label: string; Icon: typeof Youtube }> = {
-  youtube: { label: 'YouTube', Icon: Youtube },
-  vimeo: { label: 'Vimeo', Icon: VideoIcon },
-  drive: { label: 'Drive', Icon: HardDrive },
-  other: { label: 'Link', Icon: LinkIcon },
 }
 
 export function CoachVideosClient({ initialVideos, initialTags, initialStudents, initialSessions }: CoachVideosClientProps) {
@@ -411,7 +400,6 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredVideos.map((video, i) => {
-              const Src = SOURCE_META[video.source] || SOURCE_META.other
               return (
                 <article
                   key={video.id} className="glass-liquid rise-in group relative flex flex-col rounded-3xl overflow-hidden"
@@ -437,12 +425,6 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2de5ca]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
 
-                    {/* Source badge top-left */}
-                    <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/40 ring-1 ring-white/15 text-white/85">
-                      <Src.Icon className="h-3.5 w-3.5" />
-                      {Src.label}
-                    </div>
-
                     {/* Duration pill bottom-right */}
                     <div className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/50 ring-1 ring-white/15 text-white">
                       <Clock className="h-3 w-3" />
@@ -464,14 +446,9 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
 
                   {/* Body */}
                   <div className="flex flex-1 flex-col p-5 pt-3">
-                    <a
-                      href={video.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14b8a6]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060606] rounded"
-                    >
+                    <h3 className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet transition-colors rounded">
                       {video.title}
-                    </a>
+                    </h3>
                     {video.description && (
                       <p className="mt-1.5 text-sm text-white/45 line-clamp-2">{video.description}</p>
                     )}
@@ -524,24 +501,6 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <a
-                          href={video.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#2de5ca]/25 transition"
-                          aria-label="Odtwórz na zewnątrz"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                        <a
-                          href={video.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-[#8cffef] hover:border-[#8cffef]/25 transition"
-                          aria-label="Otwórz w YouTube/Vimeo"
-                        >
-                          <Play className="h-4 w-4" />
-                        </a>
                         <button
                           onClick={() => handleDelete(video.id)}
                           className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-red-300 hover:border-red-500/30 transition"
@@ -711,18 +670,6 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                 </div>
               </form>
 
-              {/* External link hint for editing */}
-              {editingVideo && (
-                <a
-                  href={editingVideo.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-1.5 text-xs text-white/45 hover:text-white/70 transition"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Otwórz oryginalny link w nowej karcie
-                </a>
-              )}
             </div>
           </div>
         )}

@@ -429,8 +429,6 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                                 <Clock className="h-3 w-3" />
                                 {formatDuration(video.duration)}
                               </span>
-                              <span className="text-white/20">·</span>
-                              <span className="truncate">{video.source}</span>
                             </div>
                             <div className="mt-2 h-1 w-full rounded-full bg-white/[0.04] overflow-hidden">
                               <div

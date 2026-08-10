@@ -430,13 +430,6 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       </span>
                     </div>
 
-                    {/* Source — top-right */}
-                    <div className="absolute top-2.5 right-2.5">
-                      <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold text-white/70 bg-black/45 backdrop-blur-md ring-1 ring-white/10 capitalize">
-                        {video.source}
-                      </span>
-                    </div>
-
                     {/* Play overlay (center) — only when playable embed URL */}
                     {embedUrl && (
                       <Link
