@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { useToast } from '@/hooks/use-toast'
@@ -72,6 +72,20 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
   const [discordWebhook, setDiscordWebhook] = useState(initialSettings?.discordWebhook || '')
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
   const { toast } = useToast()
+
+  type TabKey = 'profile' | 'password' | 'notifications' | 'appearance'
+  const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({ profile: null, password: null, notifications: null, appearance: null })
+  const [underline, setUnderline] = useState({ left: 0, width: 0 })
+
+  useEffect(() => {
+    const update = () => {
+      const el = tabRefs.current[activeTab]
+      if (el) setUnderline({ left: el.offsetLeft, width: el.offsetWidth })
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [activeTab])
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -237,6 +251,9 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
               return (
                 <button
                   key={t.value}
+                  ref={(el) => {
+                    tabRefs.current[t.value] = el
+                  }}
                   onClick={() => setActiveTab(t.value)}
                   className={cn(
                     'relative inline-flex items-center gap-2 h-12 px-4 sm:px-5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors',
@@ -245,12 +262,10 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                 >
                   <t.Icon className="h-4 w-4" />
                   {t.label}
-                  {active && (
-                    <span className="tab-underline absolute left-3 right-3" style={{ left: '12px', right: '12px' }} />
-                  )}
                 </button>
               )
             })}
+            <span className="tab-underline" style={{ left: underline.left, width: underline.width }} />
           </div>
         </div>
 

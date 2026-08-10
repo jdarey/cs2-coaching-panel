@@ -143,8 +143,8 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                     <Settings className="w-3.5 h-3.5" />
                     Ustawienia
                   </Link>
-                  <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
+<button
+                    onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
                     className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-medium text-red-300/85 hover:text-red-200 bg-red-500/[0.08] border border-red-500/15 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-300"
                   >
                     <LogOut className="w-3.5 h-3.5" />

@@ -110,7 +110,7 @@ export function StudentDashboardClient({
 
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<TabKey>('sessions')
-  const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({ ref: null } as any)
+  const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({ sessions: null, activity: null })
   const [underline, setUnderline] = useState({ left: 0, width: 0 })
 
   useEffect(() => {

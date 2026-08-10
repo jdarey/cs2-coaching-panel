@@ -65,7 +65,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
   const { toast } = useToast()
 
-  const tabRefs = useRef<Record<SectionKey, HTMLButtonElement | null>>({ profile: null } as any)
+  const tabRefs = useRef<Record<SectionKey, HTMLButtonElement | null>>({ profile: null, password: null, notifications: null, appearance: null })
   const [underline, setUnderline] = useState({ left: 0, width: 0 })
 
   useEffect(() => {
