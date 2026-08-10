@@ -66,7 +66,7 @@ const STATUS_META: Record<string, { color: string; icon: typeof Clock; dot: stri
   PENDING: { color: '#fbbf24', icon: Hourglass, dot: 'bg-[#fbbf24]', ring: 'ring-[#fbbf24]/30', glow: 'rgba(251,191,36,0.35)' },
   WATCHING: { color: '#2de5ca', icon: CircleDot, dot: 'bg-[#2de5ca]', ring: 'ring-[#2de5ca]/30', glow: 'rgba(45,229,202,0.35)' },
   WATCHED: { color: '#34d399', icon: CheckCircle2, dot: 'bg-[#34d399]', ring: 'ring-[#34d399]/30', glow: 'rgba(52,211,153,0.35)' },
-  IMPLEMENTED: { color: '#2fb6a2', icon: CheckCircle2, dot: 'bg-[#2fb6a2]', ring: 'ring-[#2fb6a2]/30', glow: 'rgba(47,182,162,0.35)' },
+  IMPLEMENTED: { color: '#14b8a6', icon: CheckCircle2, dot: 'bg-[#14b8a6]', ring: 'ring-[#14b8a6]/30', glow: 'rgba(20,184,166,0.35)' },
 }
 
 
@@ -171,7 +171,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
         >
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] ring-1 ring-white/20">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] ring-1 ring-white/20">
                 <Video className="h-4 w-4 text-white" strokeWidth={2.4} />
               </span>
               <span className="text-[11px] uppercase tracking-[0.22em] text-white/40 font-semibold">Biblioteka</span>
@@ -242,7 +242,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                 <defs>
                   <linearGradient id="completionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#8cffef" />
-                    <stop offset="100%" stopColor="#2fb6a2" />
+                    <stop offset="100%" stopColor="#14b8a6" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -358,7 +358,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               className="mx-auto mb-5 grid place-items-center h-20 w-20 rounded-3xl ring-1 ring-white/10"
               style={{
                 background:
-                  'radial-gradient(circle at 30% 30%, rgba(124,111,255,0.28) 0%, rgba(47,182,162,0.12) 40%, rgba(6,7,13,0) 70%)',
+                  'radial-gradient(circle at 30% 30%, rgba(124,111,255,0.28) 0%, rgba(20,184,166,0.12) 40%, rgba(6,7,13,0) 70%)',
               }}
             >
               <Video className="h-8 w-8 text-[#8cffef]" strokeWidth={2} />
@@ -463,7 +463,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         className="absolute inset-0 grid place-items-center"
                         aria-label={`Odtwórz: ${video.title}`}
                       >
-                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] shadow-[0_18px_40px_-10px_rgba(124,111,255,0.75)] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
+                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_18px_40px_-10px_rgba(124,111,255,0.75)] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
                           <Play className="h-6 w-6 text-white translate-x-0.5" fill="currentColor" />
                         </span>
                       </a>

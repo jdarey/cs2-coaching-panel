@@ -138,12 +138,12 @@ export function CoachMessagesClient() {
                     onClick={() => setActiveId(c.id)}
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors duration-200 border-b border-white/[0.04]',
-                      activeId === c.id ? 'bg-[#2fb6a2]/15' : 'hover:bg-white/[0.04]',
+                      activeId === c.id ? 'bg-[#14b8a6]/15' : 'hover:bg-white/[0.04]',
                     )}
                   >
                     <Avatar className="h-10 w-10 rounded-full ring-1 ring-white/10 shrink-0">
                       <AvatarImage src={c.avatarUrl || ''} alt={c.name || ''} />
-                      <AvatarFallback className="rounded-full bg-[#2fb6a2] text-white text-sm font-semibold">
+                      <AvatarFallback className="rounded-full bg-[#14b8a6] text-white text-sm font-semibold">
                         {(c.name || c.email || '?')[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -175,7 +175,7 @@ export function CoachMessagesClient() {
           <div className="glass rounded-2xl overflow-hidden lg:h-[calc(100vh-220px)] flex flex-col">
             {!active ? (
               <div className="flex-1 flex flex-col items-center justify-center p-10 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#2fb6a2]/15 border border-[#2de5ca]/30 grid place-items-center mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#14b8a6]/15 border border-[#2de5ca]/30 grid place-items-center mb-4">
                   <MessageSquare className="w-7 h-7 text-[#8FA3FF]" />
                 </div>
                 <p className="text-white/70 font-semibold">Wybierz rozmowę</p>
@@ -189,7 +189,7 @@ export function CoachMessagesClient() {
                   </button>
                   <Avatar className="h-9 w-9 rounded-full ring-1 ring-white/10">
                     <AvatarImage src={active.avatarUrl || ''} alt={active.name || ''} />
-                    <AvatarFallback className="rounded-full bg-[#2fb6a2] text-white text-xs font-semibold">
+                    <AvatarFallback className="rounded-full bg-[#14b8a6] text-white text-xs font-semibold">
                       {(active.name || active.email || '?')[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -211,7 +211,7 @@ export function CoachMessagesClient() {
                           className={cn(
                             'max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed',
                             mine
-                              ? 'bg-gradient-to-br from-[#2fb6a2] to-[#2fb6a2] text-white rounded-br-md shadow-[0_8px_24px_-8px_rgba(47,182,162,0.6)]'
+                              ? 'bg-gradient-to-br from-[#14b8a6] to-[#14b8a6] text-white rounded-br-md shadow-[0_8px_24px_-8px_rgba(20,184,166,0.6)]'
                               : 'bg-white/[0.06] border border-white/[0.08] text-white/90 rounded-bl-md',
                           )}
                         >

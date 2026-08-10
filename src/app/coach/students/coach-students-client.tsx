@@ -44,7 +44,7 @@ interface CoachStudentsClientProps {
 }
 
 const PROGRESS_DOTS: { key: 'total' | 'pending' | 'watched' | 'implemented'; label: string; color: string }[] = [
-  { key: 'total', label: 'Wszystkie', color: '#2fb6a2' },
+  { key: 'total', label: 'Wszystkie', color: '#14b8a6' },
   { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
   { key: 'watched', label: 'Obejrzane', color: '#34d399' },
   { key: 'implemented', label: 'Wdrożone', color: '#2de5ca' },
@@ -166,7 +166,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
         )
 
   const stats = [
-    { icon: Users, label: 'Uczniowie', value: totalStudents, color: '#2fb6a2' },
+    { icon: Users, label: 'Uczniowie', value: totalStudents, color: '#14b8a6' },
     { icon: Activity, label: 'Aktywni', value: activeStudents, color: '#2de5ca' },
     { icon: Sparkles, label: 'Nowi', value: newStudents, color: '#fbbf24' },
     { icon: TrendingUp, label: 'Średnio', value: `${avgCompletion}%`, color: '#34d399' },
@@ -195,10 +195,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
               {/* Gradient add-student button */}
               <button
                 onClick={openAddDialog}
-                className=" relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
+                className=" relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(20,184,166,0.55)] active:scale-[0.98]"
                 style={{
                   background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
-                  boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
+                  boxShadow: '0 8px 24px -10px rgba(20,184,166,0.5)',
                 }}
               >
                 <Plus className="relative w-4 h-4" strokeWidth={2.5} />
@@ -252,7 +252,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             placeholder="Szukaj ucznia po nazwisku lub emailu..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="glass-liquid h-12 w-full rounded-xl pl-11 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition-all duration-300"
+            className="glass-liquid h-12 w-full rounded-xl pl-11 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/25 focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 focus:border-[#2de5ca]/40 transition-all duration-300"
           />
           {search && (
             <button
@@ -278,7 +278,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             >
               <div
                 className="absolute inset-0 opacity-40 blur-2xl animate-aurora text-gradient-mesh"
-                style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #2fb6a2 45%, #147a6b 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #14b8a6 45%, #147a6b 100%)' }}
               />
               {search ? (
                 <Search className="relative w-9 h-9 text-[#8cffef]" strokeWidth={1.8} />
@@ -297,10 +297,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             {!search && (
               <button
                 onClick={openAddDialog}
-                className=" relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
+                className=" relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(20,184,166,0.55)] active:scale-[0.98]"
                 style={{
                   background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
-                  boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
+                  boxShadow: '0 8px 24px -10px rgba(20,184,166,0.5)',
                 }}
               >
                 <UserPlus className="relative w-4 h-4" strokeWidth={2.4} />
@@ -420,8 +420,8 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                             className="h-full rounded-full transition-all duration-700"
                             style={{
                               width: `${completion}%`,
-                              background: 'linear-gradient(90deg, #34d399 0%, #2fb6a2 100%)',
-                              boxShadow: '0 0 12px rgba(47,182,162,0.5)',
+                              background: 'linear-gradient(90deg, #34d399 0%, #14b8a6 100%)',
+                              boxShadow: '0 0 12px rgba(20,184,166,0.5)',
                             }}
                           />
                         </div>
@@ -448,7 +448,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
 
             <DialogHeader className="relative">
               <div className="flex items-center gap-3 mb-1">
-                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b] shadow-[0_8px_24px_-8px_rgba(47,182,162,0.6)]">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b] shadow-[0_8px_24px_-8px_rgba(20,184,166,0.6)]">
                   <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                 </div>
@@ -474,7 +474,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                     required
                     disabled={isLoading || !!editingStudent}
-                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
+                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
                   />
                 </div>
               </div>
@@ -493,7 +493,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     disabled={isLoading}
-                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
+                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
                   />
                 </div>
               </div>
@@ -515,7 +515,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                       required
                       minLength={6}
                       disabled={isLoading}
-                      className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
+                      className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
                     />
                   </div>
                 </div>
@@ -532,10 +532,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className=" relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                  className=" relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(20,184,166,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                   style={{
                     background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
-                    boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
+                    boxShadow: '0 8px 24px -10px rgba(20,184,166,0.5)',
                   }}
                 >
                   {isLoading ? <Loader2 className="relative w-4 h-4 animate-spin" /> : null}

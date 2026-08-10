@@ -373,7 +373,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                       value={formData.name}
                       onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                       placeholder="Twoje imię"
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/25 focus:border-[#2de5ca]/40 transition"
                     />
                   </div>
                 </div>
@@ -442,7 +442,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         }
                         required
                         minLength={f.id === 'newPassword' ? 6 : undefined}
-                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition"
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/25 focus:border-[#2de5ca]/40 transition"
                       />
                     </div>
                   </div>
@@ -528,7 +528,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         className={cn(
                           'relative h-9 w-16 shrink-0 rounded-full transition-all',
                           on
-                            ? 'btn-darey shadow-[0_0_18px_-2px_rgba(47,182,162,0.6)]'
+                            ? 'btn-darey shadow-[0_0_18px_-2px_rgba(20,184,166,0.6)]'
                             : 'glass-tinted'
                         )}
                         aria-pressed={on}
@@ -569,7 +569,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     className={cn(
                       'relative h-9 w-16 shrink-0 rounded-full transition-all',
                       notifications.discord
-                        ? 'btn-darey shadow-[0_0_18px_-2px_rgba(47,182,162,0.6)]'
+                        ? 'btn-darey shadow-[0_0_18px_-2px_rgba(20,184,166,0.6)]'
                         : 'glass-tinted'
                     )}
                     aria-pressed={notifications.discord}
@@ -601,7 +601,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         placeholder="https://discord.com/api/webhooks/..."
                         value={discordWebhook}
                         onChange={(e) => setDiscordWebhook(e.target.value)}
-                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition"
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/25 focus:border-[#2de5ca]/40 transition"
                       />
                     </div>
                     <p className="text-xs text-white/40">

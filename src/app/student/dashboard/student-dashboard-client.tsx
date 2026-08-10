@@ -61,7 +61,7 @@ type StatKey = 'total' | 'pending' | 'watching' | 'done'
 type TabKey = 'sessions' | 'activity'
 
 const STAT_META: Record<StatKey, { label: string; icon: typeof Film; accent: string; ring: string }> = {
-  total: { label: 'Wszystkie filmy', icon: Film, accent: 'from-[#2de5ca] to-[#2fb6a2]', ring: 'rgba(45,229,202,0.45)' },
+  total: { label: 'Wszystkie filmy', icon: Film, accent: 'from-[#2de5ca] to-[#14b8a6]', ring: 'rgba(45,229,202,0.45)' },
   pending: { label: 'Do oglądania', icon: Clock, accent: 'from-[#fbbf24] to-[#f97316]', ring: 'rgba(251,191,36,0.4)' },
   watching: { label: 'W trakcie', icon: Play, accent: 'from-[#2de5ca] to-[#8cffef]', ring: 'rgba(45,229,202,0.4)' },
   done: { label: 'Zakończone', icon: CheckCircle2, accent: 'from-[#34d399] to-[#16a34a]', ring: 'rgba(52,211,153,0.4)' },
@@ -132,8 +132,8 @@ export function StudentDashboardClient({
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
             <div className="absolute inset-0 rounded-full border-2 border-white/10" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#2de5ca] border-r-[#2fb6a2] animate-spin" />
-            <div className="absolute inset-2 rounded-full bg-[#2fb6a2]/10 blur-md animate-pulse" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#2de5ca] border-r-[#14b8a6] animate-spin" />
+            <div className="absolute inset-2 rounded-full bg-[#14b8a6]/10 blur-md animate-pulse" />
           </div>
           <p className="text-white/40 text-sm font-medium tracking-wide font-display">Ładowanie panelu…</p>
         </div>
@@ -157,7 +157,7 @@ export function StudentDashboardClient({
                 {streak} {streak === 1 ? 'dzień' : 'dni'} serii
               </div>
             )}
-            <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold glass border border-[#2fb6a2]/40 text-[#8cffef]">
+            <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold glass border border-[#14b8a6]/40 text-[#8cffef]">
               <Zap className="w-3.5 h-3.5" />
               Poziom {levelInfo.level}
             </div>
@@ -188,7 +188,7 @@ export function StudentDashboardClient({
         {/* ===== RANK CARD — the „wow” centerpiece ===== */}
         <div className="animate-rise-in mb-10">
           <div className="bento-card p-6 md:p-8 relative overflow-hidden">
-            <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-30" style={{ background: 'radial-gradient(50% 50% at 50% 100%, #2fb6a2 0%, rgba(47,182,162,0.25) 70%, transparent 100%)' }} />
+            <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-30" style={{ background: 'radial-gradient(50% 50% at 50% 100%, #14b8a6 0%, rgba(20,184,166,0.25) 70%, transparent 100%)' }} />
             <div className="relative flex flex-col lg:flex-row lg:items-center gap-8">
               {/* Rank emblem + name */}
               <div className="flex items-center gap-6">
@@ -220,7 +220,7 @@ export function StudentDashboardClient({
                   <p className="text-xs uppercase tracking-widest text-white/40 font-semibold">poziom</p>
                 </div>
                 <div className="mt-3 w-44 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#2fb6a2] to-[#2de5ca] transition-all duration-1000" style={{ width: `${levelInfo.pct}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#14b8a6] to-[#2de5ca] transition-all duration-1000" style={{ width: `${levelInfo.pct}%` }} />
                 </div>
                 <p className="mt-2 text-[11px] text-white/40">{levelInfo.xp}/{levelInfo.xpToNext} XP do kolejnego poziomu</p>
               </div>
@@ -272,7 +272,7 @@ export function StudentDashboardClient({
                 <div className="relative">
                   <Avatar className="w-18 h-18 rounded-2xl ring-2 ring-white/20 shadow-[0_16px_40px_-10px_rgba(45,229,202,0.6)]">
                     <AvatarImage src={coach.avatarUrl ?? undefined} alt={coach.name ?? coach.email} />
-                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] text-white font-display font-semibold text-xl">
+                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white font-display font-semibold text-xl">
                       {(coach.name ?? coach.email)[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -378,8 +378,8 @@ export function StudentDashboardClient({
                   <defs>
                     <linearGradient id="dashProgress" x1="0" y1="0" x2="1" y2="1">
                       <stop offset="0%" stopColor="#8cffef" />
-                      <stop offset="55%" stopColor="#2fb6a2" />
-                      <stop offset="100%" stopColor="#2fb6a2" />
+                      <stop offset="55%" stopColor="#14b8a6" />
+                      <stop offset="100%" stopColor="#14b8a6" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -400,7 +400,7 @@ export function StudentDashboardClient({
                     { v: pending, label: 'Do oglądania', color: '#fbbf24', key: 'pending' },
                     { v: watching, label: 'W trakcie', color: '#2de5ca', key: 'watching' },
                     { v: watched, label: 'Obejrzane', color: '#34d399', key: 'watched' },
-                    { v: implemented, label: 'Wdrożone', color: '#2fb6a2', key: 'implemented' },
+                    { v: implemented, label: 'Wdrożone', color: '#14b8a6', key: 'implemented' },
                   ].map((b) => (
                     <div
                       key={b.key}
@@ -429,12 +429,12 @@ export function StudentDashboardClient({
             </div>
             <div className="grid gap-3 sm:grid-cols-2 relative z-10">
               {[
-                { href: '/student/messages', icon: MessageSquare, label: 'Wiadomości', sub: 'Czat z trenerem', color: 'from-[#2de5ca] to-[#2fb6a2]', ring: 'rgba(45,229,202,0.4)' },
+                { href: '/student/messages', icon: MessageSquare, label: 'Wiadomości', sub: 'Czat z trenerem', color: 'from-[#2de5ca] to-[#14b8a6]', ring: 'rgba(45,229,202,0.4)' },
                 { href: '/student/feedback', icon: MessageSquareHeart, label: 'Moja opinia', sub: 'Podziel się spostrzeżeniami', color: 'from-[#8cffef] to-[#2de5ca]', ring: 'rgba(45,229,202,0.4)' },
                 { href: '/student/sessions', icon: BookOpen, label: 'Wszystkie sesje', sub: 'Przeglądaj swoje sesje', color: 'from-[#2de5ca] to-[#8cffef]', ring: 'rgba(45,229,202,0.4)' },
                 { href: '/student/videos', icon: Film, label: 'Filmy do oglądania', sub: 'Twoja lista filmów', color: 'from-[#fbbf24] to-[#f97316]', ring: 'rgba(251,191,36,0.4)' },
                 { href: '/student/progress', icon: TrendingUp, label: 'Mój postęp', sub: 'Statystyki i wykresy', color: 'from-[#34d399] to-[#16a34a]', ring: 'rgba(52,211,153,0.4)' },
-                { href: '/student/settings', icon: Settings, label: 'Ustawienia', sub: 'Profil i preferencje', color: 'from-[#2fb6a2] to-[#2de5ca]', ring: 'rgba(47,182,162,0.4)' },
+                { href: '/student/settings', icon: Settings, label: 'Ustawienia', sub: 'Profil i preferencje', color: 'from-[#14b8a6] to-[#2de5ca]', ring: 'rgba(20,184,166,0.4)' },
               ].map((a) => {
                 const Icon = a.icon
                 return (
@@ -485,7 +485,7 @@ export function StudentDashboardClient({
                 <span
                   className={cn(
                     'text-[11px] px-2.5 py-1 rounded-full font-medium transition-colors duration-300',
-                    activeTab === t.key ? 'bg-[#2fb6a2]/20 text-[#8cffef] border border-[#2fb6a2]/30' : 'bg-white/[0.04] text-white/40 border border-white/[0.06]',
+                    activeTab === t.key ? 'bg-[#14b8a6]/20 text-[#8cffef] border border-[#14b8a6]/30' : 'bg-white/[0.04] text-white/40 border border-white/[0.06]',
                   )}
                 >
                   {t.count}
@@ -551,7 +551,7 @@ export function StudentDashboardClient({
                         </Badge>
                         <Link
                           href={`/student/sessions/${session.id}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#2fb6a2]/15 hover:border-[#2fb6a2]/40 hover:text-[#8cffef] transition-all duration-300"
+                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300"
                         >
                           Otwórz
                           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
@@ -597,7 +597,7 @@ export function StudentDashboardClient({
                           {typeof p.progress === 'number' && (
                             <div className="mt-2.5 h-1.5 rounded-full bg-white/[0.05] overflow-hidden max-w-xs">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-[#2de5ca] to-[#2fb6a2] shadow-[0_0_12px_rgba(45,229,202,0.5)]"
+                                className="h-full rounded-full bg-gradient-to-r from-[#2de5ca] to-[#14b8a6] shadow-[0_0_12px_rgba(45,229,202,0.5)]"
                                 style={{ width: `${p.progress}%`, transition: 'width 0.8s ease' }}
                               />
                             </div>
@@ -611,7 +611,7 @@ export function StudentDashboardClient({
                         {p.status !== 'IMPLEMENTED' && p.session && (
                           <Link
                             href={`/student/sessions/${p.session.id}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#2fb6a2]/15 hover:border-[#2fb6a2]/40 hover:text-[#8cffef] transition-all duration-300"
+                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300"
                           >
                             Kontynuuj
                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />

@@ -27,7 +27,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
   const statCards = [
     { name: 'Uczniowie', value: studentsCount, icon: Users, href: '/coach/students', gradient: 'from-[#2de5ca] to-[#8cffef]' },
     { name: 'Sesje', value: sessionsCount, icon: BookOpen, href: '/coach/sessions', gradient: 'from-[#34d399] to-[#16a34a]' },
-    { name: 'Filmy', value: videosCount, icon: Video, href: '/coach/videos', gradient: 'from-[#2fb6a2] to-[#147a6b]' },
+    { name: 'Filmy', value: videosCount, icon: Video, href: '/coach/videos', gradient: 'from-[#14b8a6] to-[#147a6b]' },
     { name: 'Tagi', value: tagsCount, icon: Tag, href: '/coach/tags', gradient: 'from-[#fbbf24] to-[#f97316]' },
   ]
 
@@ -102,16 +102,16 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
         {/* =========================== EFFECTIVENESS HERO RING =========================== */}
         <div className="rise-in mb-8 glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8" style={{ animationDelay: '0.04s' }}>
           <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#147a6b]/20 blur-3xl animate-aurora pointer-events-none" />
-          <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-[#2fb6a2]/15 blur-3xl animate-aurora-slow pointer-events-none" />
+          <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-[#14b8a6]/15 blur-3xl animate-aurora-slow pointer-events-none" />
 
           <div className="relative grid lg:grid-cols-[auto_1fr] items-center gap-8">
             {/* SVG ring */}
             <div className="relative mx-auto lg:mx-0 grid place-items-center">
-              <svg width="160" height="160" viewBox="0 0 120 120" className="-rotate-90 drop-shadow-[0_0_24px_rgba(47,182,162,0.35)]">
+              <svg width="160" height="160" viewBox="0 0 120 120" className="-rotate-90 drop-shadow-[0_0_24px_rgba(20,184,166,0.35)]">
                 <defs>
                   <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#8cffef" />
-                    <stop offset="50%" stopColor="#2fb6a2" />
+                    <stop offset="50%" stopColor="#14b8a6" />
                     <stop offset="100%" stopColor="#147a6b" />
                   </linearGradient>
                 </defs>
@@ -420,7 +420,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                   <span className="mt-auto pt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#8FA3FF] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
                     Otwórz <ArrowRight className="w-3.5 h-3.5" />
                   </span>
-                  <div className="pointer-events-none absolute -bottom-12 -right-10 w-36 h-36 rounded-full bg-[#2fb6a2]/25 blur-2xl transition-opacity duration-500 opacity-0 group-hover:opacity-100" />
+                  <div className="pointer-events-none absolute -bottom-12 -right-10 w-36 h-36 rounded-full bg-[#14b8a6]/25 blur-2xl transition-opacity duration-500 opacity-0 group-hover:opacity-100" />
                 </Link>
               </div>
             ))}

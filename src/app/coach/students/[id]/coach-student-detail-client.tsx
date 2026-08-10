@@ -38,7 +38,7 @@ interface SessionSummary {
 }
 
 const PROGRESS_DOTS = [
-  { key: 'total', label: 'Filmy', color: '#2fb6a2' },
+  { key: 'total', label: 'Filmy', color: '#14b8a6' },
   { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
   { key: 'watching', label: 'Ogląda', color: '#2de5ca' },
   { key: 'watched', label: 'Obejrzane', color: '#34d399' },

@@ -81,7 +81,7 @@ const SESSION_STATUSES: { value: string; label: string; color: string }[] = [
   { value: 'DRAFT', label: 'Szkic', color: '#9ca3af' },
   { value: 'ACTIVE', label: 'Aktywna', color: '#2de5ca' },
   { value: 'COMPLETED', label: 'Zakończona', color: '#34d399' },
-  { value: 'ARCHIVED', label: 'Zarchiwizowana', color: '#2fb6a2' },
+  { value: 'ARCHIVED', label: 'Zarchiwizowana', color: '#14b8a6' },
 ]
 
 export function CoachSessionDetailClient({ initialSession, initialProgress }: CoachSessionDetailClientProps) {
@@ -438,7 +438,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                                   'h-full rounded-full transition-all duration-700',
                                   pct >= 100
                                     ? 'bg-gradient-to-r from-emerald-400/80 to-emerald-500/60'
-                                    : 'bg-gradient-to-r from-[#2de5ca]/70 to-[#2fb6a2]/70'
+                                    : 'bg-gradient-to-r from-[#2de5ca]/70 to-[#14b8a6]/70'
                                 )}
                                 style={{ width: `${Math.min(100, Math.max(2, pct))}%` }}
                               />

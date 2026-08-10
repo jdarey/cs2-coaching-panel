@@ -62,7 +62,7 @@ function LoginForm() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-[#2fb6a2] shadow-[0_16px_40px_-10px_rgba(47,182,162,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_16px_40px_-10px_rgba(20,184,166,0.6)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
               <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
@@ -80,7 +80,7 @@ function LoginForm() {
         {/* Auth card */}
         <div className="animate-rise-in animate-rise-in-delay-1 relative rounded-3xl glass-card p-7 md:p-10">
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-            <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.45) 0%, transparent 70%)' }} />
+            <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(45,229,202,0.4) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10">

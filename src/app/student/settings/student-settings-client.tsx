@@ -204,7 +204,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
   }
 
   const inputBase =
-    'h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus-visible:outline-none transition-all duration-300 pl-11 pr-4 text-sm'
+    'h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 focus-visible:outline-none transition-all duration-300 pl-11 pr-4 text-sm'
 
   return (
     <StudentLayout>
@@ -261,7 +261,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     <div className="relative">
                       <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15">
                         <AvatarImage src={avatarUrl || ''} alt={user.name || ''} />
-                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] text-white">
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
                           {getInitials(user.name || 'U')}
                         </AvatarFallback>
                       </Avatar>
@@ -350,7 +350,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12 rounded-xl ring-1 ring-white/10">
                         <AvatarImage src={user.coach.avatarUrl || ''} alt={user.coach.name || ''} />
-                        <AvatarFallback className="bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
                           {user.coach.name?.[0] || 'T'}
                         </AvatarFallback>
                       </Avatar>
@@ -512,7 +512,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                           <Icon className="w-5 h-5" />
                         </div>
                         {theme === t && (
-                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-[#2fb6a2]/20 text-[#8cffef] border border-[#2fb6a2]/30">
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-[#14b8a6]/20 text-[#8cffef] border border-[#14b8a6]/30">
                             <CheckCircle2 className="w-3 h-3" />
                             Aktywny
                           </span>

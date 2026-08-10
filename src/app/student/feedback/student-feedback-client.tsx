@@ -125,7 +125,7 @@ export function StudentFeedbackClient() {
                   className={cn(
                     'flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border transition-all duration-200',
                     type === o.value
-                      ? 'bg-[#2fb6a2]/25 border-[#2de5ca]/50 text-white'
+                      ? 'bg-[#14b8a6]/25 border-[#2de5ca]/50 text-white'
                       : 'glass text-white/55 hover:text-white/85',
                   )}
                 >

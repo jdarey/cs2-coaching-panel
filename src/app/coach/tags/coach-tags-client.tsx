@@ -42,7 +42,7 @@ interface CoachTagsClientProps {
 }
 
 const DEFAULT_COLORS = [
-  '#2fb6a2', '#2de5ca', '#2de5ca', '#ec4899',
+  '#14b8a6', '#2de5ca', '#2de5ca', '#ec4899',
   '#fbbf24', '#2de5ca', '#34d399', '#8cffef',
   '#f97316', '#6366f1',
 ]
@@ -246,7 +246,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
             placeholder="Szukaj tagu..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/30 transition"
+            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/30 transition"
           />
           {search && (
             <button
@@ -348,7 +348,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     >
                       <span
                         className="h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: tag.isGlobal ? '#2fb6a2' : '#64748b' }}
+                        style={{ backgroundColor: tag.isGlobal ? '#14b8a6' : '#64748b' }}
                       />
                       {tag.isGlobal ? 'Globalny' : 'Prywatny'}
                     </span>
@@ -399,7 +399,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     required
                     maxLength={50}
                     disabled={isLoading}
-                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition"
+                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition"
                   />
                 </div>
               </div>
@@ -417,7 +417,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                   maxLength={500}
                   disabled={isLoading}
                   rows={2}
-                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 pl-11 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition resize-none"
+                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 pl-11 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition resize-none"
                 />
               </div>
 

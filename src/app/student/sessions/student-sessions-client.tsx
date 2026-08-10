@@ -67,7 +67,7 @@ const STATUS_HEX: Record<string, string> = {
   PENDING: '#fbbf24',
   WATCHING: '#2de5ca',
   WATCHED: '#34d399',
-  IMPLEMENTED: '#2fb6a2',
+  IMPLEMENTED: '#14b8a6',
 }
 
 const STATUS_DOT: Record<string, string> = {
@@ -139,7 +139,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
         <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#0a0a0a]">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
+              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
                 <BookOpen className="w-5 h-5 text-white" strokeWidth={2.2} />
                 <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
               </div>
@@ -222,7 +222,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
         {filteredSessions.length === 0 ? (
           <div className="glass-liquid rise-in mt-8 rounded-3xl p-10 sm:p-14 text-center" >
             <div className="mx-auto mb-6 grid place-items-center w-20 h-20 rounded-3xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(124,111,255,0.25) 0%, rgba(90,79,255,0.10) 100%)', border: '1px solid rgba(124,111,255,0.3)' }}>
-              <div className="absolute inset-0 text-gradient-mesh opacity-40 blur-2xl animate-aurora" style={{ background: 'linear-gradient(135deg, #8cffef 0%, #2fb6a2 45%, #2fb6a2 100%)' }} />
+              <div className="absolute inset-0 text-gradient-mesh opacity-40 blur-2xl animate-aurora" style={{ background: 'linear-gradient(135deg, #8cffef 0%, #14b8a6 45%, #14b8a6 100%)' }} />
               {search || statusFilter !== 'all' ? (
                 <Search className="relative w-9 h-9 text-[#8cffef]" strokeWidth={1.8} />
               ) : (
@@ -254,10 +254,10 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                     <div className="flex items-start gap-4 min-w-0 flex-1">
                       {/* Coach avatar with gradient ring glow */}
                       <div className="relative shrink-0">
-                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#2de5ca]/45 to-[#2fb6a2]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#2de5ca]/45 to-[#14b8a6]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
                         <Avatar className="relative h-12 w-12 rounded-xl ring-1 ring-white/15">
                           <AvatarImage src={session.coach.avatarUrl || ''} alt={session.coach.name || ''} />
-                          <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] text-white font-display font-semibold">
+                          <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white font-display font-semibold">
                             {getInitials(session.coach.name || 'T')}
                           </AvatarFallback>
                         </Avatar>
@@ -318,7 +318,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                     {/* Right: Otwórz button */}
                     <Link
                       href={`/student/sessions/${session.id}`}
-                      className="relative shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white/85 hover:text-white bg-white/[0.04] hover:bg-gradient-to-r hover:from-[#2de5ca]/20 hover:to-[#2fb6a2]/10 border border-white/[0.08] hover:border-[#2de5ca]/30 transition-all duration-300 overflow-hidden group/btn"
+                      className="relative shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white/85 hover:text-white bg-white/[0.04] hover:bg-gradient-to-r hover:from-[#2de5ca]/20 hover:to-[#14b8a6]/10 border border-white/[0.08] hover:border-[#2de5ca]/30 transition-all duration-300 overflow-hidden group/btn"
                     >
                       <span className="relative">Otwórz</span>
                       <ArrowRight className="relative w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />

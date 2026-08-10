@@ -123,7 +123,7 @@ export function StudentRankClient() {
         <div className="relative mt-6 flex items-center gap-2">
           <Zap className="w-4 h-4 text-[#2de5ca]" />
           <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#2fb6a2] to-[#2de5ca] transition-all duration-1000" style={{ width: `${levelInfo.pct}%` }} />
+            <div className="h-full rounded-full bg-gradient-to-r from-[#14b8a6] to-[#2de5ca] transition-all duration-1000" style={{ width: `${levelInfo.pct}%` }} />
           </div>
           <span className="text-xs text-white/45">{levelInfo.xp}/{levelInfo.xpToNext} XP</span>
         </div>

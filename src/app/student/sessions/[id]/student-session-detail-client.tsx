@@ -283,7 +283,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   rel="noopener noreferrer"
                   className="group w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-white/[0.03] to-transparent"
                 >
-                  <div className="relative grid place-items-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.6)]">
+                  <div className="relative grid place-items-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.6)]">
                     <Play className="w-7 h-7 text-white" />
                     <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                   </div>
@@ -348,7 +348,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                             className={cn(
                               'grid place-items-center w-10 h-10 rounded-xl flex-shrink-0 transition-colors',
                               isActive
-                                ? 'bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] text-white'
+                                ? 'bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white'
                                 : 'bg-white/[0.04] border border-white/[0.07] text-white/55 group-hover:text-[#8cffef]',
                             )}
                           >
@@ -392,7 +392,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 rounded-2xl ring-1 ring-white/15">
                 <AvatarImage src={session.coach.avatarUrl || ''} alt={session.coach.name || ''} />
-                <AvatarFallback className="bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] text-white">
+                <AvatarFallback className="bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
                   {session.coach.name?.[0] || 'T'}
                 </AvatarFallback>
               </Avatar>
@@ -707,7 +707,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                               </a>
                               <button
                                 onClick={() => setVideoProgressDialog({ video: sv, progress: videoProgress })}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-[#2fb6a2]/15 hover:border-[#2fb6a2]/40 hover:text-[#8cffef] transition-all duration-300"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300"
                               >
                                 {currentStatus === 'PENDING' ? 'Rozpocznij' : 'Aktualizuj'}
                               </button>
@@ -734,7 +734,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   rows={3}
-                  className="min-h-[110px] rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 transition-all duration-300 resize-none"
+                  className="min-h-[110px] rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 transition-all duration-300 resize-none"
                 />
                 <button
                   type="submit"
@@ -765,7 +765,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                     <div className="flex items-start gap-3">
                       <Avatar className="h-9 w-9 rounded-xl ring-1 ring-white/10 flex-shrink-0">
                         <AvatarImage src={note.user.avatarUrl || ''} alt={note.user.name || ''} />
-                        <AvatarFallback className="text-xs bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2] text-white">
+                        <AvatarFallback className="text-xs bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
                           {note.user.name?.[0] || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -811,7 +811,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2 mb-5">
-                <div className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#2fb6a2]">
+                <div className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6]">
                   <PlayCircle className="w-5 h-5 text-white" />
                 </div>
                 <h2 className="text-lg font-display font-bold text-white">{videoProgressDialog.video.video.title}</h2>
@@ -883,7 +883,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                       )
                     }
                     rows={3}
-                    className="rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 transition-all duration-300 resize-none"
+                    className="rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 transition-all duration-300 resize-none"
                   />
                 </div>
 

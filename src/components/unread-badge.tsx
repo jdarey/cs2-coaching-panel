@@ -33,7 +33,7 @@ export function UnreadBadge({ kind }: { kind: 'messages' | 'feedback' }) {
 
   if (count <= 0) return null
   return (
-    <span className="relative ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-[#2de5ca] text-white text-[10px] font-bold grid place-items-center shadow-[0_0_12px_rgba(47,182,162,0.7)]">
+    <span className="relative ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-[#2de5ca] text-white text-[10px] font-bold grid place-items-center shadow-[0_0_12px_rgba(20,184,166,0.7)]">
       {count > 99 ? '99+' : count}
     </span>
   )

@@ -120,7 +120,7 @@ export function StudentMessagesClient() {
           <div className="px-5 py-4 border-b border-white/[0.06] flex items-center gap-3">
             <Avatar className="h-10 w-10 rounded-full ring-1 ring-white/10">
               <AvatarImage src={coach.avatarUrl || ''} alt={coach.name || ''} />
-              <AvatarFallback className="rounded-full bg-[#2fb6a2] text-white text-sm font-semibold">
+              <AvatarFallback className="rounded-full bg-[#14b8a6] text-white text-sm font-semibold">
                 {(coach.name || coach.email || 'T')[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -142,7 +142,7 @@ export function StudentMessagesClient() {
                     className={cn(
                       'max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed',
                       mine
-                        ? 'bg-gradient-to-br from-[#2fb6a2] to-[#2fb6a2] text-white rounded-br-md shadow-[0_8px_24px_-8px_rgba(47,182,162,0.6)]'
+                        ? 'bg-gradient-to-br from-[#14b8a6] to-[#14b8a6] text-white rounded-br-md shadow-[0_8px_24px_-8px_rgba(20,184,166,0.6)]'
                         : 'bg-white/[0.06] border border-white/[0.08] text-white/90 rounded-bl-md',
                     )}
                   >
