@@ -502,8 +502,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       onMouseLeave={() => { isPlaying && !isEnded && setShowControls(false); setShowQualityMenu(false) }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. YouTube iframe — cropped to hide native UI */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef}>
+      {/* 1. YouTube iframe — render at 2x resolution so YouTube ABR picks HD quality.
+           Visually crop to normal size via overflow:hidden on wrapper. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef} style={{ transform: 'scale(0.5)', transformOrigin: 'top left', width: '200%', height: '200%' }}>
         <div
           id={mountId}
           className="absolute"
