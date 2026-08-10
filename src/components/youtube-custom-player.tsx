@@ -236,13 +236,15 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   // 3b. Sync quality via setPlaybackQuality when player is ready and vq changes
   useEffect(() => {
     if (!isReady || !playerRef.current?.setPlaybackQuality) return
+    // Skip during reinit to avoid calling on destroyed player
+    if (isReinitialising) return
     // vq state tracks the desired quality
     if (vq !== 'auto' && currentQuality !== vq) {
       try {
         playerRef.current.setPlaybackQuality(vq)
       } catch (_) {}
     }
-  }, [isReady, vq, currentQuality])
+  }, [isReady, vq, currentQuality, isReinitialising])
 
   // 4. Controls auto-hide
   const resetControlsTimer = useCallback(() => {
@@ -324,7 +326,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
    * Quality change via vq URL parameter reinit + setPlaybackQuality fallback.
    * We snapshot current position + play state, show a loading overlay,
    * then bump playerKey which triggers a full player rebuild with the new vq.
-   * Also calls setPlaybackQuality() after ready for immediate effect.
+   * Also calls setPlaybackQuality() on current player for immediate effect.
    */
   const setQuality = (q: string) => {
     if (!playerRef.current) return
@@ -344,12 +346,12 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     // Show buffering overlay during reinit
     setIsReinitialising(true)
 
+    // Try to change quality on current player immediately (before reinit)
+    forceQuality(q)
+
     // Bump key → triggers useEffect to destroy & rebuild player with new vq
     instanceKey.current += 1
     setPlayerKey(instanceKey.current)
-
-    // Also try to change quality on current player immediately (in case reinit is slow/ignored)
-    forceQuality(q)
 
     resetControlsTimer()
   }
