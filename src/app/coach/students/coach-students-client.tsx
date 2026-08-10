@@ -26,6 +26,8 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import { getRank, getLevel } from '@/lib/gamification'
+import { RankEmblem } from '@/components/rank-emblem'
 
 interface Student {
   id: string
@@ -42,10 +44,10 @@ interface CoachStudentsClientProps {
 }
 
 const PROGRESS_DOTS: { key: 'total' | 'pending' | 'watched' | 'implemented'; label: string; color: string }[] = [
-  { key: 'total', label: 'Wszystkie', color: '#162ED3' },
+  { key: 'total', label: 'Wszystkie', color: '#2fb6a2' },
   { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
   { key: 'watched', label: 'Obejrzane', color: '#34d399' },
-  { key: 'implemented', label: 'Wdrożone', color: '#5E74FF' },
+  { key: 'implemented', label: 'Wdrożone', color: '#2de5ca' },
 ]
 
 const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
@@ -169,8 +171,8 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
         )
 
   const stats = [
-    { icon: Users, label: 'Uczniowie', value: totalStudents, color: '#162ED3' },
-    { icon: Activity, label: 'Aktywni', value: activeStudents, color: '#60a5fa' },
+    { icon: Users, label: 'Uczniowie', value: totalStudents, color: '#2fb6a2' },
+    { icon: Activity, label: 'Aktywni', value: activeStudents, color: '#2de5ca' },
     { icon: Sparkles, label: 'Nowi', value: newStudents, color: '#fbbf24' },
     { icon: TrendingUp, label: 'Średnio', value: `${avgCompletion}%`, color: '#34d399' },
   ]
@@ -179,11 +181,11 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#010104]/70 backdrop-blur-xl">
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#060606]/80 backdrop-blur-md">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#5E74FF] to-[#0C169C] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] shrink-0">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] shrink-0">
                   <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                 </div>
@@ -198,10 +200,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
               {/* Gradient add-student button with shimmer */}
               <button
                 onClick={openAddDialog}
-                className="shimmer-line relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(22,46,211,0.55)] active:scale-[0.98]"
+                className="shimmer-line relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
                 style={{
-                  background: 'linear-gradient(135deg, #5E74FF 0%, #0C169C 100%)',
-                  boxShadow: '0 8px 24px -10px rgba(22,46,211,0.5)',
+                  background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
+                  boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
                 }}
               >
                 <Plus className="relative w-4 h-4" strokeWidth={2.5} />
@@ -212,7 +214,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
 
             <div className="relative mt-3">
               <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-40 h-2 rounded-full bg-[#5E74FF]/25 blur-xl animate-aurora-slow" />
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-40 h-2 rounded-full bg-[#2de5ca]/25 blur-xl animate-aurora-slow" />
             </div>
           </div>
         </div>
@@ -223,7 +225,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             <div
               key={stat.label}
               onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in rounded-2xl p-4 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-[#5E74FF]/25"
+              className="glass-liquid spotlight rise-in rounded-2xl p-4 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-[#2de5ca]/25"
               style={{ animationDelay: `${0.05 + i * 0.06}s` }}
             >
               <div className="flex items-center gap-3">
@@ -251,13 +253,13 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
 
         {/* ===== Glass search input ===== */}
         <div className="mt-6 relative max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#9DB4FF] transition-colors duration-300 pointer-events-none" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#8cffef] transition-colors duration-300 pointer-events-none" />
           <input
             type="text"
             placeholder="Szukaj ucznia po nazwisku lub emailu..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="glass-liquid h-12 w-full rounded-xl pl-11 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus-visible:ring-2 focus-visible:ring-[#162ED3]/25 focus:border-[#5E74FF]/40 transition-all duration-300"
+            className="glass-liquid h-12 w-full rounded-xl pl-11 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition-all duration-300"
           />
           {search && (
             <button
@@ -279,18 +281,18 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             <div
               className="mx-auto mb-6 grid place-items-center w-20 h-20 rounded-3xl relative overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(94,116,255,0.25) 0%, rgba(124,58,237,0.10) 100%)',
-                border: '1px solid rgba(94,116,255,0.3)',
+                background: 'linear-gradient(135deg, rgba(45,229,202,0.25) 0%, rgba(124,58,237,0.10) 100%)',
+                border: '1px solid rgba(45,229,202,0.3)',
               }}
             >
               <div
                 className="absolute inset-0 opacity-40 blur-2xl animate-aurora text-gradient-mesh"
-                style={{ background: 'linear-gradient(135deg, #5E74FF 0%, #162ED3 45%, #0C169C 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #2fb6a2 45%, #147a6b 100%)' }}
               />
               {search ? (
-                <Search className="relative w-9 h-9 text-[#9DB4FF]" strokeWidth={1.8} />
+                <Search className="relative w-9 h-9 text-[#8cffef]" strokeWidth={1.8} />
               ) : (
-                <UserPlus className="relative w-9 h-9 text-[#9DB4FF]" strokeWidth={1.8} />
+                <UserPlus className="relative w-9 h-9 text-[#8cffef]" strokeWidth={1.8} />
               )}
             </div>
             <h3 className="font-display text-2xl font-bold text-white">
@@ -304,10 +306,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             {!search && (
               <button
                 onClick={openAddDialog}
-                className="shimmer-line relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(22,46,211,0.55)] active:scale-[0.98]"
+                className="shimmer-line relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98]"
                 style={{
-                  background: 'linear-gradient(135deg, #5E74FF 0%, #0C169C 100%)',
-                  boxShadow: '0 8px 24px -10px rgba(22,46,211,0.5)',
+                  background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
+                  boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
                 }}
               >
                 <UserPlus className="relative w-4 h-4" strokeWidth={2.4} />
@@ -326,28 +328,30 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                         100
                     )
                   : 0
+              const rank = getRank(completion)
+              const levelInfo = getLevel(student.progressStats.watched + student.progressStats.implemented)
               return (
                 <div
                   key={student.id}
                   onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover group relative rounded-3xl p-6 hover:border-[#5E74FF]/25 overflow-hidden"
+                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover group relative rounded-3xl p-6 hover:border-[#2de5ca]/25 overflow-hidden"
                   style={{ animationDelay: `${0.05 + i * 0.05}s` }}
                 >
                   <div className="flex items-start justify-between gap-4 flex-wrap sm:flex-nowrap">
                     {/* Left: avatar + name/email */}
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       <div className="relative shrink-0">
-                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#5E74FF]/45 to-[#0C169C]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#2de5ca]/45 to-[#147a6b]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
                         <Avatar className="relative h-12 w-12 rounded-xl ring-1 ring-white/15">
                           <AvatarImage src={student.avatarUrl || ''} alt={student.name || ''} />
-                          <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#5E74FF] to-[#0C169C] text-white font-display font-semibold">
+                          <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] text-white font-display font-semibold">
                             {getInitials(student.name || 'U')}
                           </AvatarFallback>
                         </Avatar>
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-display text-lg font-bold text-white transition-colors duration-300 group-hover:text-[#9DB4FF] truncate">
+                        <h3 className="font-display text-lg font-bold text-white transition-colors duration-300 group-hover:text-[#8cffef] truncate">
                           {student.name || 'Bez nazwy'}
                         </h3>
                         <p className="mt-0.5 text-sm text-white/45 truncate flex items-center gap-1.5">
@@ -361,17 +365,17 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     <div className="flex items-center gap-2 shrink-0">
                       <Link
                         href={`/coach/students/${student.id}`}
-                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-violet-500/[0.08] hover:bg-violet-500/15 hover:border-[#5E74FF]/30 transition-all duration-300"
+                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-violet-500/[0.08] hover:bg-violet-500/15 hover:border-[#2de5ca]/30 transition-all duration-300"
                         title="Zobacz szczegóły"
                       >
-                        <Eye className="w-4 h-4 text-[#9DB4FF] group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
+                        <Eye className="w-4 h-4 text-[#8cffef] group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
                       </Link>
                       <button
                         onClick={() => openEditDialog(student)}
                         className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-blue-500/[0.08] hover:bg-blue-500/15 hover:border-blue-400/30 transition-all duration-300"
                         title="Edytuj"
                       >
-                        <Edit className="w-4 h-4 text-[#60a5fa] group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
+                        <Edit className="w-4 h-4 text-[#2de5ca] group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
                       </button>
                       <button
                         onClick={() => handleDeleteStudent(student.id)}
@@ -414,18 +418,25 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                       <span className="text-white/65 font-medium">{student._count.sessionsAsStudent}</span>
                     </span>
                     {student.progressStats.total > 0 && (
-                      <div className="flex items-center gap-2 ml-auto">
+                      <div className="flex items-center gap-2.5 ml-auto flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 text-xs text-white/55">
+                          <RankEmblem rank={rank} size={22} glow={false} />
+                          {rank.name}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs text-white/45">
+                          Lv.{levelInfo.level}
+                        </span>
                         <div className="h-1.5 w-28 rounded-full bg-white/[0.05] overflow-hidden border border-white/[0.04]">
                           <div
                             className="h-full rounded-full transition-all duration-700"
                             style={{
                               width: `${completion}%`,
-                              background: 'linear-gradient(90deg, #34d399 0%, #162ED3 100%)',
-                              boxShadow: '0 0 12px rgba(22,46,211,0.5)',
+                              background: 'linear-gradient(90deg, #34d399 0%, #2fb6a2 100%)',
+                              boxShadow: '0 0 12px rgba(47,182,162,0.5)',
                             }}
                           />
                         </div>
-                        <span className="text-[#9DB4FF] font-semibold tabular-nums">{completion}%</span>
+                        <span className="text-[#8cffef] font-semibold tabular-nums">{completion}%</span>
                       </div>
                     )}
                   </div>
@@ -443,12 +454,12 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
         >
           <div className="glass-liquid rounded-3xl p-7 sm:p-8 relative overflow-hidden">
             {/* Aurora glow */}
-            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#5E74FF]/10 blur-3xl animate-aurora-slow pointer-events-none" />
-            <div className="absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-[#0C169C]/10 blur-3xl animate-aurora pointer-events-none" />
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#2de5ca]/10 blur-3xl animate-aurora-slow pointer-events-none" />
+            <div className="absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-[#147a6b]/10 blur-3xl animate-aurora pointer-events-none" />
 
             <DialogHeader className="relative">
               <div className="flex items-center gap-3 mb-1">
-                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#5E74FF] to-[#0C169C] shadow-[0_8px_24px_-8px_rgba(22,46,211,0.6)]">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b] shadow-[0_8px_24px_-8px_rgba(47,182,162,0.6)]">
                   <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                 </div>
@@ -461,10 +472,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             <form onSubmit={handleAddStudent} className="relative space-y-4 mt-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-white/70">
-                  Email <span className="text-[#9DB4FF]">*</span>
+                  Email <span className="text-[#8cffef]">*</span>
                 </Label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#9DB4FF] transition-colors duration-300 pointer-events-none" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#8cffef] transition-colors duration-300 pointer-events-none" />
                   <Input
                     id="email"
                     name="email"
@@ -474,7 +485,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                     required
                     disabled={isLoading || !!editingStudent}
-                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#162ED3]/25 focus-visible:border-[#5E74FF]/40 transition-all duration-300"
+                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
                   />
                 </div>
               </div>
@@ -484,7 +495,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                   Imię <span className="text-white/30">(opcjonalnie)</span>
                 </Label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#9DB4FF] transition-colors duration-300 pointer-events-none" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#8cffef] transition-colors duration-300 pointer-events-none" />
                   <Input
                     id="name"
                     name="name"
@@ -493,7 +504,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     disabled={isLoading}
-                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#162ED3]/25 focus-visible:border-[#5E74FF]/40 transition-all duration-300"
+                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
                   />
                 </div>
               </div>
@@ -501,10 +512,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
               {!editingStudent && (
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium text-white/70">
-                    Hasło <span className="text-[#9DB4FF]">*</span>
+                    Hasło <span className="text-[#8cffef]">*</span>
                   </Label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#9DB4FF] transition-colors duration-300 pointer-events-none" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#8cffef] transition-colors duration-300 pointer-events-none" />
                     <Input
                       id="password"
                       name="password"
@@ -515,7 +526,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                       required
                       minLength={6}
                       disabled={isLoading}
-                      className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#162ED3]/25 focus-visible:border-[#5E74FF]/40 transition-all duration-300"
+                      className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/25 focus-visible:border-[#2de5ca]/40 transition-all duration-300"
                     />
                   </div>
                 </div>
@@ -532,10 +543,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="shimmer-line relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(22,46,211,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                  className="shimmer-line relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(47,182,162,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                   style={{
-                    background: 'linear-gradient(135deg, #5E74FF 0%, #0C169C 100%)',
-                    boxShadow: '0 8px 24px -10px rgba(22,46,211,0.5)',
+                    background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
+                    boxShadow: '0 8px 24px -10px rgba(47,182,162,0.5)',
                   }}
                 >
                   {isLoading ? <Loader2 className="relative w-4 h-4 animate-spin" /> : null}

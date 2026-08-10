@@ -61,20 +61,24 @@ function LoginForm() {
 
       {/* Floating decorative elements */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.5) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.4) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.5) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.4) 0%, transparent 70%)' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-[#162ED3] shadow-[0_16px_40px_-10px_rgba(22,46,211,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-[#2fb6a2] shadow-[0_16px_40px_-10px_rgba(47,182,162,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
               <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
           </Link>
-          <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-premium mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest text-white/55 font-semibold mb-5">
+            <span className="live-dot" />
+            Panel trenera i ucznia
+          </div>
+          <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-vantor mb-3">
             CS2 Coaching
           </h1>
           <p className="text-white/45 text-sm font-light">Zaloguj się do swojego panelu</p>
@@ -87,13 +91,13 @@ function LoginForm() {
           maxTilt={5}
         >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-            <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.45) 0%, transparent 70%)' }} />
+            <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.45) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-[#9DB4FF]" />
-              <p className="text-[11px] uppercase tracking-widest text-[#9DB4FF] font-semibold">Witaj z powrotem</p>
+              <Sparkles className="w-4 h-4 text-[#8cffef]" />
+              <p className="text-[11px] uppercase tracking-widest text-[#8cffef] font-semibold">Witaj z powrotem</p>
             </div>
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">Zaloguj się</h2>
 
@@ -115,7 +119,7 @@ function LoginForm() {
               <div className="space-y-2.5">
                 <Label htmlFor="email" className="label-premium">Email</Label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
                   <Input
                     id="email"
                     type="email"
@@ -141,13 +145,13 @@ function LoginForm() {
                         description: 'Skontaktuj się ze swoim trenerem lub administratorem, aby je zresetować.',
                       })
                     }
-                    className="text-xs text-white/45 hover:text-[#9DB4FF] transition-colors font-medium"
+                    className="text-xs text-white/45 hover:text-[#8cffef] transition-colors font-medium"
                   >
                     Zapomniałeś hasła?
                   </button>
                 </div>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -209,6 +213,23 @@ function LoginForm() {
           Bezpieczne logowanie · Twoje dane są szyfrowane end-to-end
         </p>
       </div>
+
+      {/* Vantor-style marquee band */}
+      <div className="fixed bottom-0 left-0 right-0 z-0 border-t border-white/[0.06] bg-[#060606]/70 backdrop-blur-md py-4">
+        <div className="marquee">
+          <div className="marquee-track text-sm font-display font-semibold text-white/25">
+            {[0, 1].map((n) => (
+              <span key={n} className="flex items-center gap-10">
+                <span>PODNOSIMY TWÓJ LEVEL</span><span className="text-[#2de5ca]">✦</span>
+                <span>AIM TRAINING</span><span className="text-[#2de5ca]">✦</span>
+                <span>ANALIZA MECZÓW</span><span className="text-[#2de5ca]">✦</span>
+                <span>GRANIE W ZESPOLE</span><span className="text-[#2de5ca]">✦</span>
+                <span>MIKRO I MAKRO</span><span className="text-[#2de5ca]">✦</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -217,7 +238,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="relative min-h-screen flex items-center justify-center bg-[#010104] text-white">
+        <div className="relative min-h-screen flex items-center justify-center bg-[#060606] text-white">
           <AuroraBackground variant="auth" />
           <div className="text-center">
             <div className="relative w-16 h-16 mx-auto mb-6">

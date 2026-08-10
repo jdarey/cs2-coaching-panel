@@ -9,7 +9,7 @@ import { Tilt3D } from '@/components/tilt-3d'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Mail, Lock, User, AlertCircle, GraduationCap, ShieldCheck, Sparkles, ArrowRight, ChevronRight, GraduationCap as GraduationCapIcon, ShieldCheck as ShieldCheckIcon } from 'lucide-react'
+import { Loader2, Mail, Lock, User, AlertCircle, Sparkles, ChevronRight, GraduationCap as GraduationCapIcon, ShieldCheck as ShieldCheckIcon } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -105,8 +105,8 @@ export default function RegisterPage() {
   }
 
   const roles: { key: 'STUDENT' | 'COACH'; label: string; sub: string; Icon: typeof GraduationCapIcon; color: string; ring: string }[] = [
-    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#60a5fa] to-[#22d3ee]', ring: 'rgba(96,165,250,0.4)' },
-    { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', Icon: ShieldCheckIcon, color: 'from-[#162ED3] to-[#5E74FF]', ring: 'rgba(22,46,211,0.4)' },
+    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#2de5ca] to-[#8cffef]', ring: 'rgba(45,229,202,0.4)' },
+    { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', Icon: ShieldCheckIcon, color: 'from-[#2fb6a2] to-[#2de5ca]', ring: 'rgba(47,182,162,0.4)' },
   ]
 
   return (
@@ -115,20 +115,24 @@ export default function RegisterPage() {
 
       {/* Floating decorative elements */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.5) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.4) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.5) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.4) 0%, transparent 70%)' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-[#162ED3] shadow-[0_16px_40px_-10px_rgba(22,46,211,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
-              <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-[#2fb6a2] shadow-[0_16px_40px_-10px_rgba(47,182,162,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+              <GraduationCapIcon className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
           </Link>
-          <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-premium mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest text-white/55 font-semibold mb-5">
+            <span className="live-dot" />
+            Dołącz do drużyny
+          </div>
+          <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-vantor mb-3">
             CS2 Coaching
           </h1>
           <p className="text-white/45 text-sm font-light">Utwórz nowe konto</p>
@@ -141,13 +145,13 @@ export default function RegisterPage() {
           maxTilt={4}
         >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-            <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.45) 0%, transparent 70%)' }} />
+            <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.45) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-[#9DB4FF]" />
-              <p className="text-[11px] uppercase tracking-widest text-[#9DB4FF] font-semibold">Rejestracja</p>
+              <Sparkles className="w-4 h-4 text-[#8cffef]" />
+              <p className="text-[11px] uppercase tracking-widest text-[#8cffef] font-semibold">Rejestracja</p>
             </div>
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">Załóż konto</h2>
 
@@ -174,7 +178,7 @@ export default function RegisterPage() {
                         className={cn(
                           'relative group flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border transition-all duration-300 overflow-hidden',
                           active
-                            ? 'border-[#4D63FF]/50 bg-[#4D63FF]/10 shadow-[0_0_28px_-8px_rgba(77,99,255,0.5)]'
+                            ? 'border-[#2de5ca]/50 bg-[#2de5ca]/10 shadow-[0_0_28px_-8px_rgba(45,229,202,0.5)]'
                             : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]',
                         )}
                       >
@@ -190,7 +194,7 @@ export default function RegisterPage() {
                           <p className="text-[11px] text-white/45">{r.sub}</p>
                         </div>
                         {active && (
-                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#4D63FF] shadow-[0_0_12px_rgba(77,99,255,0.8)]" />
+                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#2de5ca] shadow-[0_0_12px_rgba(45,229,202,0.8)]" />
                         )}
                       </button>
                     )
@@ -202,7 +206,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="email" className="label-premium">Email</Label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
                   <Input
                     id="email"
                     name="email"
@@ -224,7 +228,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="name" className="label-premium">Imię <span className="text-white/30 normal-case font-normal">(opcjonalnie)</span></Label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
                   <Input
                     id="name"
                     name="name"
@@ -245,7 +249,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="password" className="label-premium">Hasło</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
                   <Input
                     id="password"
                     name="password"
@@ -267,7 +271,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="confirmPassword" className="label-premium">Potwierdź hasło</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -323,6 +327,23 @@ export default function RegisterPage() {
         <p className="mt-8 text-center text-[11px] text-white/30 font-light tracking-wide">
           Tworząc konto akceptujesz regulamin i politykę prywatności
         </p>
+      </div>
+
+      {/* Vantor-style marquee band */}
+      <div className="fixed bottom-0 left-0 right-0 z-0 border-t border-white/[0.06] bg-[#060606]/70 backdrop-blur-md py-4">
+        <div className="marquee">
+          <div className="marquee-track text-sm font-display font-semibold text-white/25">
+            {[0, 1].map((n) => (
+              <span key={n} className="flex items-center gap-10">
+                <span>PODNOSIMY TWÓJ LEVEL</span><span className="text-[#2de5ca]">✦</span>
+                <span>AIM TRAINING</span><span className="text-[#2de5ca]">✦</span>
+                <span>ANALIZA MECZÓW</span><span className="text-[#2de5ca]">✦</span>
+                <span>GRANIE W ZESPOLE</span><span className="text-[#2de5ca]">✦</span>
+                <span>MIKRO I MAKRO</span><span className="text-[#2de5ca]">✦</span>
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

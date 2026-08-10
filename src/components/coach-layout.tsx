@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState, useEffect } from 'react'
+import { ReactNode, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
@@ -8,51 +8,77 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { AuroraBackground } from '@/components/aurora-background'
-import { LayoutDashboard, Users, BookOpen, Video, Tag, Settings, LogOut, Menu, X, ShieldCheck, ChevronLeft, Sparkles } from 'lucide-react'
+import { UnreadBadge } from '@/components/unread-badge'
+import { LayoutDashboard, Users, BookOpen, Video, Tag, Settings, LogOut, Menu, X, ShieldCheck, MessageSquare, MessageSquareHeart } from 'lucide-react'
 
-const navigation = [
-  { name: 'Dashboard', href: '/coach/dashboard', icon: LayoutDashboard },
-  { name: 'Uczniowie', href: '/coach/students', icon: Users },
-  { name: 'Sesje', href: '/coach/sessions', icon: BookOpen },
-  { name: 'Filmy', href: '/coach/videos', icon: Video },
-  { name: 'Tagi', href: '/coach/tags', icon: Tag },
-  { name: 'Ustawienia', href: '/coach/settings', icon: Settings },
+type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback' }
+
+const navSections: { label: string; items: NavItem[] }[] = [
+  {
+    label: 'Menu główne',
+    items: [
+      { name: 'Dashboard', href: '/coach/dashboard', icon: LayoutDashboard },
+      { name: 'Uczniowie', href: '/coach/students', icon: Users },
+      { name: 'Sesje', href: '/coach/sessions', icon: BookOpen },
+      { name: 'Filmy', href: '/coach/videos', icon: Video },
+      { name: 'Tagi', href: '/coach/tags', icon: Tag },
+    ],
+  },
+  {
+    label: 'Komunikacja',
+    items: [
+      { name: 'Wiadomości', href: '/coach/messages', icon: MessageSquare, badge: 'messages' },
+      { name: 'Opinie uczniów', href: '/coach/feedback', icon: MessageSquareHeart, badge: 'feedback' },
+    ],
+  },
 ]
 
 export function CoachLayout({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const glowRef = useRef<HTMLDivElement>(null)
 
   const user = session?.user
   const userRole = (user as any)?.role
 
-  // All hooks must run unconditionally - an early return above this effect
-  // changed the hook count between renders and crashed the layout once the
-  // session loaded ("Rendered more hooks than during the previous render").
+  // Cursor glow: write directly to the DOM inside a requestAnimationFrame instead
+  // of setState — a mousemove-driven re-render of the whole layout every frame
+  // was the single biggest source of jank on this page.
   useEffect(() => {
+    let raf = 0
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY })
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        if (glowRef.current) {
+          glowRef.current.style.left = `${e.clientX}px`
+          glowRef.current.style.top = `${e.clientY}px`
+        }
+      })
     }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      if (raf) cancelAnimationFrame(raf)
+    }
   }, [])
 
   if (userRole !== 'COACH') return null
 
   return (
-    <div className="relative min-h-screen bg-[#010104] font-sans text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#060606] font-sans text-white overflow-x-hidden">
       <AuroraBackground />
 
-      {/* Cursor follower glow - purple for coach */}
+      {/* Cursor follower glow - direct DOM write, no re-renders */}
       <div
-        className="fixed pointer-events-none z-0 w-[300px] h-[300px] rounded-full blur-[80px] opacity-30 transition-all duration-500"
+        ref={glowRef}
+        className="fixed pointer-events-none z-0 w-[320px] h-[320px] rounded-full opacity-30 will-change-transform"
         style={{
-          transform: `translate(-50%, -50%)`,
-          left: `${mousePos.x}px`,
-          top: `${mousePos.y}px`,
-          background: 'radial-gradient(circle, rgba(22,46,211,0.2) 0%, transparent 70%)',
+          transform: 'translate(-50%, -50%)',
+          left: '-500px',
+          top: '-500px',
+          background: 'radial-gradient(circle, rgba(47,182,162,0.18) 0%, transparent 70%)',
         }}
       />
 
@@ -62,7 +88,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
           'fixed inset-0 z-40 lg:hidden transition-opacity duration-300 backdrop-blur-sm',
           mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
-        style={{ background: 'rgba(1,1,4,0.45)' }}
+        style={{ background: 'rgba(6,6,6,0.45)' }}
         onClick={() => setMobileSidebarOpen(false)}
       />
 
@@ -74,7 +100,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
           style={{
-            background: 'linear-gradient(180deg, rgba(10,17,89,0.5) 0%, rgba(1,1,4,0.6) 100%)',
+            background: 'linear-gradient(180deg, rgba(20,122,107,0.5) 0%, rgba(6,6,6,0.6) 100%)',
             backdropFilter: 'blur(16px) saturate(160%)',
             WebkitBackdropFilter: 'blur(16px) saturate(160%)',
             borderRight: '1px solid rgba(255,255,255,0.07)',
@@ -84,7 +110,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             {/* Logo */}
             <div className="flex h-18 items-center justify-between px-6 border-b border-white/[0.05]">
               <Link href="/coach/dashboard" className="flex items-center gap-3 group">
-                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-[#162ED3] shadow-[0_10px_30px_-8px_rgba(22,46,211,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-[#2fb6a2] shadow-[0_10px_30px_-8px_rgba(47,182,162,0.7)] transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
                   <ShieldCheck className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/30" />
                 </div>
@@ -100,33 +126,62 @@ export function CoachLayout({ children }: { children: ReactNode }) {
 
             {/* Nav */}
             <nav className="flex-1 overflow-y-auto py-6 px-4">
-              <p className="px-3 mb-3 text-[10px] uppercase tracking-widest text-white/30 font-semibold">Menu</p>
-              <ul className="space-y-1">
-                {navigation.map((item) => {
-                  const active = pathname === item.href || pathname.startsWith(item.href + '/')
-                  return (
-                    <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-300 overflow-hidden',
-                          active ? 'text-white' : 'text-white/50 hover:text-white/85',
-                        )}
-                      >
-                        {active && (
-                          <>
-                            <span className="absolute inset-0 rounded-xl bg-[#162ED3]/20 border border-[#5E74FF]/40" style={{ boxShadow: '0 0 24px -8px rgba(22,46,211,0.5)' }} />
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-[#5E74FF] shadow-[0_0_12px_rgba(22,46,211,0.9)]" />
-                          </>
-                        )}
-                        {!active && <span className="absolute inset-0 rounded-xl bg-transparent group-hover:bg-white/[0.03] transition-colors" />}
-                        <item.icon className={cn('relative w-[18px] h-[18px] transition-all duration-300', active ? 'text-white' : 'text-white/50 group-hover:text-white/80')} strokeWidth={2.1} />
-                        <span className="relative">{item.name}</span>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
+              {navSections.map((section) => (
+                <div key={section.label} className="mb-6">
+                  <p className="px-3 mb-2 text-[10px] uppercase tracking-widest text-white/30 font-semibold">{section.label}</p>
+                  <ul className="space-y-1">
+                    {section.items.map((item) => {
+                      const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                      return (
+                        <li key={item.name}>
+                          <Link
+                            href={item.href}
+                            className={cn(
+                              'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors duration-300 overflow-hidden',
+                              active ? 'text-white' : 'text-white/50 hover:text-white/85',
+                            )}
+                          >
+                            {active && (
+                              <>
+                                <span className="absolute inset-0 rounded-xl bg-[#2fb6a2]/20 border border-[#2de5ca]/40" style={{ boxShadow: '0 0 24px -8px rgba(47,182,162,0.5)' }} />
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-[#2de5ca] shadow-[0_0_12px_rgba(47,182,162,0.9)]" />
+                              </>
+                            )}
+                            {!active && <span className="absolute inset-0 rounded-xl bg-transparent group-hover:bg-white/[0.03] transition-colors" />}
+                            <item.icon className={cn('relative w-[18px] h-[18px] transition-colors duration-300', active ? 'text-white' : 'text-white/50 group-hover:text-white/80')} strokeWidth={2.1} />
+                            <span className="relative">{item.name}</span>
+                            {item.badge && <UnreadBadge kind={item.badge} />}
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              ))}
+              <div className="mb-2">
+                <p className="px-3 mb-2 text-[10px] uppercase tracking-widest text-white/30 font-semibold">Konto</p>
+                <ul className="space-y-1">
+                  <li>
+                    <Link
+                      href="/coach/settings"
+                      className={cn(
+                        'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors duration-300 overflow-hidden',
+                        pathname === '/coach/settings' ? 'text-white' : 'text-white/50 hover:text-white/85',
+                      )}
+                    >
+                      {pathname === '/coach/settings' && (
+                        <>
+                          <span className="absolute inset-0 rounded-xl bg-[#2fb6a2]/20 border border-[#2de5ca]/40" />
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-[#2de5ca]" />
+                        </>
+                      )}
+                      {pathname !== '/coach/settings' && <span className="absolute inset-0 rounded-xl bg-transparent group-hover:bg-white/[0.03] transition-colors" />}
+                      <Settings className={cn('relative w-[18px] h-[18px]', pathname === '/coach/settings' ? 'text-white' : 'text-white/50 group-hover:text-white/80')} strokeWidth={2.1} />
+                      <span className="relative">Ustawienia</span>
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             </nav>
 
             {/* User card */}
@@ -135,7 +190,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                 <div className="flex items-center gap-3 mb-4">
                   <Avatar className="h-10 w-10 rounded-xl ring-1 ring-white/15">
                     <AvatarImage src={(user as any)?.avatarUrl || ''} alt={user?.name || ''} />
-                    <AvatarFallback className="rounded-xl bg-[#162ED3] text-white font-display font-semibold text-sm">
+                    <AvatarFallback className="rounded-xl bg-[#2fb6a2] text-white font-display font-semibold text-sm">
                       {user?.name?.[0] || 'T'}
                     </AvatarFallback>
                   </Avatar>
@@ -147,14 +202,14 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                 <div className="grid grid-cols-2 gap-2">
                   <Link
                     href="/coach/settings"
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium text-white/75 hover:text-white glass hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium text-white/75 hover:text-white glass hover:bg-white/[0.06] hover:border-white/[0.12] transition-colors duration-300"
                   >
                     <Settings className="w-4 h-4" />
                     Ustawienia
                   </Link>
                   <button
                     onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium text-red-300/85 hover:text-red-200 bg-red-500/[0.08] border border-red-500/15 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-300"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium text-red-300/85 hover:text-red-200 bg-red-500/[0.08] border border-red-500/15 hover:bg-red-500/15 hover:border-red-500/30 transition-colors duration-300"
                   >
                     <LogOut className="w-4 h-4" />
                     Wyloguj
@@ -168,12 +223,12 @@ export function CoachLayout({ children }: { children: ReactNode }) {
         {/* Main */}
         <div className="relative z-10 flex-1 min-w-0 min-h-screen flex flex-col">
           {/* Mobile top bar */}
-          <header className="lg:hidden sticky top-0 z-30 h-16 border-b border-white/[0.05] backdrop-blur-xl bg-[#06070d]/70 px-4 flex items-center justify-between">
+          <header className="lg:hidden sticky top-0 z-30 h-16 border-b border-white/[0.05] bg-[#060606]/80 px-4 flex items-center justify-between">
             <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-white/5" onClick={() => setMobileSidebarOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br from-[#5E74FF] to-[#0C169C]">
+              <div className="w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b]">
                 <ShieldCheck className="w-4 h-4 text-white" strokeWidth={2.2} />
               </div>
               <span className="font-display font-bold text-sm">CS2 Coach</span>

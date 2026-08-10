@@ -328,12 +328,12 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* Sticky gradient header */}
         <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-6 pt-4 bg-transparent">
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#010104] via-[#010104]/85 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#060606] via-[#060606]/85 to-transparent" />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="animate-rise-in">
               <div className="flex items-center gap-3">
                 <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
-                  <Film className="h-5 w-5 text-[#9DB4FF]" />
+                  <Film className="h-5 w-5 text-[#8cffef]" />
                 </span>
                 <div>
                   <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
@@ -363,7 +363,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Szukaj filmu po tytule lub opisie..."
-              className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#162ED3]/30 transition"
+              className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/30 transition"
               aria-label="Szukaj filmów"
             />
             {search && (
@@ -393,7 +393,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   )}
                 >
                   {active && (
-                    <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#5E74FF]/25 to-[#0C169C]/25 ring-1 ring-[#5E74FF]/30" />
+                    <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#2de5ca]/25 to-[#147a6b]/25 ring-1 ring-[#2de5ca]/30" />
                   )}
                   <span className="relative">{t.label}</span>
                 </button>
@@ -456,7 +456,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         </div>
                       )}
                       {/* Gradient hover overlay */}
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#5E74FF]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2de5ca]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
 
                     {/* Source badge top-left */}
@@ -475,7 +475,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     <div className="absolute top-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-1 group-hover:translate-y-0">
                       <button
                         onClick={() => openAssignDialog(video)}
-                        className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white btn-darey shadow-[0_8px_24px_-8px_rgba(94,116,255,0.5)] hover:shadow-[0_12px_32px_-8px_rgba(94,116,255,0.7)] transition-all"
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white btn-darey shadow-[0_8px_24px_-8px_rgba(45,229,202,0.5)] hover:shadow-[0_12px_32px_-8px_rgba(45,229,202,0.7)] transition-all"
                         aria-label={`Przypisz "${video.title}" do ucznia`}
                       >
                         <UserPlus className="h-3.5 w-3.5" />
@@ -490,7 +490,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       href={video.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#162ED3]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#010104] rounded"
+                      className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2fb6a2]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060606] rounded"
                     >
                       {video.title}
                     </a>
@@ -541,7 +541,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => openEditDialog(video)}
-                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#5E74FF]/25 transition"
+                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#2de5ca]/25 transition"
                           aria-label="Edytuj film"
                         >
                           <Pencil className="h-4 w-4" />
@@ -550,7 +550,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                           href={video.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#5E74FF]/25 transition"
+                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#2de5ca]/25 transition"
                           aria-label="Odtwórz na zewnątrz"
                         >
                           <ExternalLink className="h-4 w-4" />
@@ -559,7 +559,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                           href={video.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-[#9DB4FF] hover:border-[#9DB4FF]/25 transition"
+                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-[#8cffef] hover:border-[#8cffef]/25 transition"
                           aria-label="Otwórz w YouTube/Vimeo"
                         >
                           <Play className="h-4 w-4" />
@@ -597,7 +597,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <Sparkles className="h-5 w-5 text-[#9DB4FF]" />
+                  <Sparkles className="h-5 w-5 text-[#8cffef]" />
                 </span>
                 <div>
                   <h2 id="video-dialog-title" className="font-display text-xl font-bold text-gradient-violet">
@@ -624,7 +624,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                       required
                       disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition"
                     />
                   </div>
                 </div>
@@ -643,7 +643,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       onChange={handleUrlChange}
                       required
                       disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition"
                     />
                   </div>
                   <p className="text-xs text-white/40">
@@ -664,7 +664,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     maxLength={2000}
                     disabled={isLoading}
                     rows={3}
-                    className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition resize-none"
+                    className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition resize-none"
                   />
                 </div>
 
@@ -706,7 +706,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     })}
                   </div>
                   {tags.length === 0 && (
-                    <p className="text-xs text-white/40">Brak dostępnych tagów. Dodaj tagi w sekcji <a href="/coach/tags" className="text-[#9DB4FF] hover:underline">Tagi</a>.</p>
+                    <p className="text-xs text-white/40">Brak dostępnych tagów. Dodaj tagi w sekcji <a href="/coach/tags" className="text-[#8cffef] hover:underline">Tagi</a>.</p>
                   )}
                 </div>
 
@@ -768,7 +768,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <UserPlus className="h-5 w-5 text-[#9DB4FF]" />
+                  <UserPlus className="h-5 w-5 text-[#8cffef]" />
                 </span>
                 <div>
                   <h2 id="assign-dialog-title" className="font-display text-xl font-bold text-gradient-violet">
@@ -792,7 +792,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       onChange={(e) => setAssignFormData((prev) => ({ ...prev, studentId: e.target.value, sessionId: '' }))}
                       required
                       disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition"
                     >
                       <option value="">Wybierz ucznia...</option>
                       {students.map((s) => (
@@ -816,7 +816,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       value={assignFormData.sessionId}
                       onChange={(e) => setAssignFormData((prev) => ({ ...prev, sessionId: e.target.value }))}
                       disabled={isLoading || !assignFormData.studentId}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition"
                     >
                       <option value="">Automatycznie (znajdź lub utwórz)</option>
                       {assignFormData.studentId &&
@@ -842,7 +842,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       checked={assignFormData.createNewSession}
                       onChange={(e) => setAssignFormData((prev) => ({ ...prev, createNewSession: e.target.checked }))}
                       disabled={isLoading}
-                      className="h-4 w-4 rounded border-white/20 bg-white/[0.03] text-[#5E74FF] focus:ring-2 focus:ring-[#162ED3]/30 transition"
+                      className="h-4 w-4 rounded border-white/20 bg-white/[0.03] text-[#2de5ca] focus:ring-2 focus:ring-[#2fb6a2]/30 transition"
                     />
                     <span className="text-xs font-medium text-white/75">Utwórz nową sesję</span>
                   </label>
@@ -857,7 +857,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         value={assignFormData.newSessionTitle}
                         onChange={(e) => setAssignFormData((prev) => ({ ...prev, newSessionTitle: e.target.value }))}
                         disabled={isLoading}
-                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition"
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition"
                       />
                     </div>
                   )}

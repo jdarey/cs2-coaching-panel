@@ -272,7 +272,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
         <div className="mb-8 rise-in">
           <div className="flex items-center gap-3">
             <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
-              <Shield className="h-5 w-5 text-[#9DB4FF]" />
+              <Shield className="h-5 w-5 text-[#8cffef]" />
             </span>
             <div>
               <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
@@ -321,7 +321,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <User className="h-5 w-5 text-[#9DB4FF]" />
+                  <User className="h-5 w-5 text-[#8cffef]" />
                 </span>
                 <div>
                   <h2 className="font-display text-xl font-bold text-gradient-violet">Profil</h2>
@@ -357,11 +357,11 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl glass-tinted ring-1 ring-white/15 hover:ring-[#5E74FF]/40 transition"
+                    className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl glass-tinted ring-1 ring-white/15 hover:ring-[#2de5ca]/40 transition"
                     aria-label="Zmień zdjęcie profilowe"
                     title="Zmień zdjęcie profilowe"
                   >
-                    <Camera className="h-4 w-4 text-[#9DB4FF]" />
+                    <Camera className="h-4 w-4 text-[#8cffef]" />
                   </button>
                 </div>
                 <div className="min-w-0">
@@ -383,7 +383,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                       value={formData.name}
                       onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                       placeholder="Twoje imię"
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#5E74FF]/40 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition"
                     />
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <Lock className="h-5 w-5 text-[#9DB4FF]" />
+                  <Lock className="h-5 w-5 text-[#8cffef]" />
                 </span>
                 <div>
                   <h2 className="font-display text-xl font-bold text-gradient-violet">Hasło</h2>
@@ -454,7 +454,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         }
                         required
                         minLength={f.id === 'newPassword' ? 6 : undefined}
-                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#5E74FF]/40 transition"
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition"
                       />
                     </div>
                   </div>
@@ -516,7 +516,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
             >
               <div className="flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <Bell className="h-5 w-5 text-[#9DB4FF]" />
+                  <Bell className="h-5 w-5 text-[#8cffef]" />
                 </span>
                 <div>
                   <h2 className="font-display text-xl font-bold text-gradient-violet">Powiadomienia</h2>
@@ -542,7 +542,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         className={cn(
                           'relative h-9 w-16 shrink-0 rounded-full transition-all',
                           on
-                            ? 'btn-darey shadow-[0_0_18px_-2px_rgba(22,46,211,0.6)]'
+                            ? 'btn-darey shadow-[0_0_18px_-2px_rgba(47,182,162,0.6)]'
                             : 'glass-tinted'
                         )}
                         aria-pressed={on}
@@ -553,7 +553,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                           className={cn(
                             'absolute top-1 grid h-7 w-7 place-items-center rounded-full transition-all',
                             on
-                              ? 'left-8 bg-white text-[#0C169C]'
+                              ? 'left-8 bg-white text-[#147a6b]'
                               : 'left-1 bg-white/80 text-white/40'
                           )}
                         >
@@ -569,7 +569,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
               <div className="rounded-2xl p-5 glass-liquid">
                 <div className="flex items-center gap-4 mb-4">
                   <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                    <MessageCircle className="h-5 w-5 text-[#9DB4FF]" />
+                    <MessageCircle className="h-5 w-5 text-[#8cffef]" />
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-white">Powiadomienia Discord</p>
@@ -583,7 +583,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     className={cn(
                       'relative h-9 w-16 shrink-0 rounded-full transition-all',
                       notifications.discord
-                        ? 'btn-darey shadow-[0_0_18px_-2px_rgba(22,46,211,0.6)]'
+                        ? 'btn-darey shadow-[0_0_18px_-2px_rgba(47,182,162,0.6)]'
                         : 'glass-tinted'
                     )}
                     aria-pressed={notifications.discord}
@@ -594,7 +594,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                       className={cn(
                         'absolute top-1 grid h-7 w-7 place-items-center rounded-full transition-all',
                         notifications.discord
-                          ? 'left-8 bg-white text-[#0C169C]'
+                          ? 'left-8 bg-white text-[#147a6b]'
                           : 'left-1 bg-white/80 text-white/40'
                       )}
                     >
@@ -615,7 +615,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         placeholder="https://discord.com/api/webhooks/..."
                         value={discordWebhook}
                         onChange={(e) => setDiscordWebhook(e.target.value)}
-                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#5E74FF]/40 transition"
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2de5ca]/40 transition"
                       />
                     </div>
                     <p className="text-xs text-white/40">
@@ -648,7 +648,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <Globe className="h-5 w-5 text-[#9DB4FF]" />
+                  <Globe className="h-5 w-5 text-[#8cffef]" />
                 </span>
                 <div>
                   <h2 className="font-display text-xl font-bold text-gradient-violet">Wygląd</h2>
@@ -666,7 +666,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                       className={cn(
                         'relative overflow-hidden rounded-2xl p-5 text-left transition-all',
                         active
-                          ? 'glass-tinted ring-1 ring-[#5E74FF]/40'
+                          ? 'glass-tinted ring-1 ring-[#2de5ca]/40'
                           : 'glass-liquid hover:border-white/[0.12]'
                       )}
                     >
@@ -679,7 +679,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         <opt.Icon
                           className={cn(
                             'h-5 w-5',
-                            active ? 'text-[#9DB4FF]' : 'text-white/55'
+                            active ? 'text-[#8cffef]' : 'text-white/55'
                           )}
                         />
                       </span>

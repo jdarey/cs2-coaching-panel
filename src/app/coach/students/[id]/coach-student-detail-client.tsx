@@ -15,6 +15,8 @@ import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
+import { getRank, getLevel } from '@/lib/gamification'
+import { RankEmblem } from '@/components/rank-emblem'
 
 interface StudentDetail {
   id: string
@@ -36,11 +38,11 @@ interface SessionSummary {
 }
 
 const PROGRESS_DOTS = [
-  { key: 'total', label: 'Filmy', color: '#162ED3' },
+  { key: 'total', label: 'Filmy', color: '#2fb6a2' },
   { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
-  { key: 'watching', label: 'Ogląda', color: '#60a5fa' },
+  { key: 'watching', label: 'Ogląda', color: '#2de5ca' },
   { key: 'watched', label: 'Obejrzane', color: '#34d399' },
-  { key: 'implemented', label: 'Wdrożone', color: '#5E74FF' },
+  { key: 'implemented', label: 'Wdrożone', color: '#2de5ca' },
 ] as const
 
 export function CoachStudentDetailClient({
@@ -71,7 +73,7 @@ export function CoachStudentDetailClient({
             <div className="flex items-center gap-5 min-w-0">
               <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.6)]">
                 <AvatarImage src={student.avatarUrl || ''} alt={student.name || student.email} />
-                <AvatarFallback className="rounded-2xl bg-white text-[#010104] font-display font-bold text-2xl">
+                <AvatarFallback className="rounded-2xl bg-white text-[#060606] font-display font-bold text-2xl">
                   {getInitials(student.name || student.email)}
                 </AvatarFallback>
               </Avatar>
@@ -90,7 +92,21 @@ export function CoachStudentDetailClient({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 md:ml-auto md:justify-end">
+            <div className="flex flex-wrap gap-2 md:ml-auto md:justify-end items-center">
+              {(() => {
+                const total = progressStats.total ?? 0
+                const completion = total > 0 ? Math.round(((progressStats.watched ?? 0) + (progressStats.implemented ?? 0)) / total * 100) : 0
+                const rank = getRank(completion)
+                const levelInfo = getLevel((progressStats.watched ?? 0) + (progressStats.implemented ?? 0))
+                return (
+                  <span className="inline-flex items-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-full px-3.5 py-1.5 text-xs font-semibold text-white/85">
+                    <RankEmblem rank={rank} size={26} glow={false} />
+                    {rank.name}
+                    <span className="text-white/35">·</span>
+                    Lv.{levelInfo.level}
+                  </span>
+                )
+              })()}
               {PROGRESS_DOTS.map(({ key, label, color }) => {
                 const count = progressStats[key] ?? 0
                 return (

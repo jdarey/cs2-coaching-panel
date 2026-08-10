@@ -42,8 +42,8 @@ interface CoachTagsClientProps {
 }
 
 const DEFAULT_COLORS = [
-  '#162ED3', '#5E74FF', '#5E74FF', '#ec4899',
-  '#fbbf24', '#60a5fa', '#34d399', '#22d3ee',
+  '#2fb6a2', '#2de5ca', '#2de5ca', '#ec4899',
+  '#fbbf24', '#2de5ca', '#34d399', '#8cffef',
   '#f97316', '#6366f1',
 ]
 
@@ -202,7 +202,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
           <div className="rise-in">
             <div className="flex items-center gap-3">
               <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
-                <TagIcon className="h-5 w-5 text-[#9DB4FF]" />
+                <TagIcon className="h-5 w-5 text-[#8cffef]" />
               </span>
               <div>
                 <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
@@ -234,7 +234,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                <s.Icon className="h-5 w-5 text-[#9DB4FF]" />
+                <s.Icon className="h-5 w-5 text-[#8cffef]" />
               </span>
               <div className="min-w-0">
                 <p className="font-display text-2xl font-bold leading-none count-glow text-white">
@@ -253,7 +253,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
             placeholder="Szukaj tagu..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#162ED3]/30 transition"
+            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#2fb6a2]/30 transition"
           />
           {search && (
             <button
@@ -317,7 +317,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => openEditDialog(tag)}
-                        className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#5E74FF]/25 transition"
+                        className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#2de5ca]/25 transition"
                         aria-label="Edytuj"
                       >
                         <Pencil className="h-4 w-4" />
@@ -355,11 +355,11 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                   <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
                     <span
                       className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-                      style={{ color: tag.isGlobal ? '#9DB4FF' : '#94a3b8' }}
+                      style={{ color: tag.isGlobal ? '#8cffef' : '#94a3b8' }}
                     >
                       <span
                         className="h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: tag.isGlobal ? '#162ED3' : '#64748b' }}
+                        style={{ backgroundColor: tag.isGlobal ? '#2fb6a2' : '#64748b' }}
                       />
                       {tag.isGlobal ? 'Globalny' : 'Prywatny'}
                     </span>
@@ -384,7 +384,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
           >
             <div className="mb-6 flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                <Sparkles className="h-5 w-5 text-[#9DB4FF]" />
+                <Sparkles className="h-5 w-5 text-[#8cffef]" />
               </span>
               <div>
                 <h2 className="font-display text-xl font-bold text-gradient-violet">
@@ -412,7 +412,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     required
                     maxLength={50}
                     disabled={isLoading}
-                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition"
+                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition"
                   />
                 </div>
               </div>
@@ -430,7 +430,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                   maxLength={500}
                   disabled={isLoading}
                   rows={2}
-                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 pl-11 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#5E74FF]/40 focus:ring-2 focus:ring-[#162ED3]/25 transition resize-none"
+                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 pl-11 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#2fb6a2]/25 transition resize-none"
                 />
               </div>
 

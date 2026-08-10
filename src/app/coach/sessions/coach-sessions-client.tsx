@@ -48,11 +48,11 @@ interface CoachSessionsClientProps {
 }
 
 const STATUS_FILTERS = [
-  { value: 'all', label: 'Wszystkie', color: '#162ED3' },
+  { value: 'all', label: 'Wszystkie', color: '#2fb6a2' },
   { value: 'DRAFT', label: 'Szkic', color: '#fbbf24' },
-  { value: 'ACTIVE', label: 'Aktywna', color: '#60a5fa' },
+  { value: 'ACTIVE', label: 'Aktywna', color: '#2de5ca' },
   { value: 'COMPLETED', label: 'Zakończona', color: '#34d399' },
-  { value: 'ARCHIVED', label: 'Zarchiwizowana', color: '#5E74FF' },
+  { value: 'ARCHIVED', label: 'Zarchiwizowana', color: '#2de5ca' },
 ] as const
 
 const STATUS_PILL_STYLES: Record<string, { dot: string; text: string; ring: string; bg: string }> = {
@@ -68,13 +68,13 @@ const STATUS_PILL_STYLES: Record<string, { dot: string; text: string; ring: stri
 
 const TAG_DOT: Record<string, string> = {
   '#fbbf24': 'bg-amber-400',
-  '#60a5fa': 'bg-blue-400',
+  '#2de5ca': 'bg-cyan-400',
   '#34d399': 'bg-emerald-400',
-  '#5E74FF': 'bg-fuchsia-400',
-  '#162ED3': 'bg-purple-400',
+  '#2fb6a2': 'bg-teal-400',
+  '#147a6b': 'bg-teal-500',
+  '#8cffef': 'bg-cyan-300',
   '#f472b6': 'bg-pink-400',
   '#fb7185': 'bg-rose-400',
-  '#22d3ee': 'bg-cyan-400',
 }
 
 function getTagDot(color: string | undefined): string {
@@ -235,13 +235,13 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#010104]/60 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#060606]/80 backdrop-blur-md border-b border-white/[0.06]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-3">
                 <span className="relative inline-flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#5E74FF] opacity-60 animate-ping" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#162ED3]" />
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#2de5ca] opacity-60 animate-ping" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#2fb6a2]" />
                 </span>
                 <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-violet-300/70">Coach · Przestrzeń sesji</span>
               </div>
@@ -254,8 +254,8 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
             </div>
             <button
               onClick={openAddDialog}
-              className="shimmer-line group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-2xl px-6 text-sm font-semibold text-white shadow-[0_8px_40px_-10px_rgba(22,46,211,0.55)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: 'linear-gradient(135deg, #5E74FF 0%, #0C169C 100%)' }}
+              className="shimmer-line group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-2xl px-6 text-sm font-semibold text-white shadow-[0_8px_40px_-10px_rgba(47,182,162,0.55)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
             >
               <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
               <Plus className="relative h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
@@ -326,7 +326,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
         {filteredSessions.length === 0 ? (
           <div className="mt-8 rise-in">
             <div className="glass-liquid spotlight rounded-3xl p-12 text-center" onMouseMove={handleCardMouse}>
-              <div className="mx-auto mb-5 grid place-items-center h-20 w-20 rounded-3xl bg-gradient-to-br from-[#5E74FF]/15 to-[#0C169C]/5 ring-1 ring-inset ring-[#5E74FF]/20">
+              <div className="mx-auto mb-5 grid place-items-center h-20 w-20 rounded-3xl bg-gradient-to-br from-[#2de5ca]/15 to-[#147a6b]/5 ring-1 ring-inset ring-[#2de5ca]/20">
                 {search || statusFilter !== 'all' ? (
                   <Search className="h-9 w-9 text-violet-300/70" />
                 ) : (
@@ -342,7 +342,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <button
                     onClick={openAddDialog}
                     className="shimmer-line group relative inline-flex h-11 items-center gap-2 overflow-hidden rounded-2xl px-5 text-sm font-semibold text-white transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                    style={{ background: 'linear-gradient(135deg, #5E74FF 0%, #0C169C 100%)' }}
+                    style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                   >
                     <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
                     <Plus className="relative h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
@@ -362,7 +362,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   onMouseMove={handleCardMouse}
                   className={cn(
                     'glass-liquid spotlight shimmer-line tilt-hover group relative flex flex-col rounded-3xl p-5',
-                    'hover:border-[#5E74FF]/25',
+                    'hover:border-[#2de5ca]/25',
                     'rise-in'
                   )}
                   style={{ animationDelay: `${Math.min(idx, 8) * 70}ms` }}
@@ -371,7 +371,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <div className="relative flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="mb-1.5 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-white/35">
-                        <span className="h-1 w-1 rounded-full bg-[#162ED3]" />
+                        <span className="h-1 w-1 rounded-full bg-[#2fb6a2]" />
                         Sesja
                       </div>
                       <h3 className="font-display text-lg font-bold leading-snug text-white/90 transition-colors duration-300 group-hover:text-gradient-violet group-hover:text-transparent">
@@ -389,7 +389,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
 
                   {/* Student row */}
                   <div className="relative mt-4 flex items-center gap-3">
-                    <div className="grid place-items-center h-10 w-10 rounded-2xl bg-gradient-to-br from-[#5E74FF]/20 to-[#0C169C]/10 ring-1 ring-inset ring-white/10 overflow-hidden">
+                    <div className="grid place-items-center h-10 w-10 rounded-2xl bg-gradient-to-br from-[#2de5ca]/20 to-[#147a6b]/10 ring-1 ring-inset ring-white/10 overflow-hidden">
                       {session.student.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={session.student.avatarUrl} alt={session.student.name || ''} className="h-full w-full object-cover" />
@@ -463,7 +463,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <div className="relative flex items-center gap-2">
                     <button
                       onClick={() => openEditDialog(session)}
-                      className="grid place-items-center h-10 w-10 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] text-white/60 hover:text-white hover:ring-[#5E74FF]/25 hover:bg-[#5E74FF]/10 transition-all duration-300"
+                      className="grid place-items-center h-10 w-10 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] text-white/60 hover:text-white hover:ring-[#2de5ca]/25 hover:bg-[#2de5ca]/10 transition-all duration-300"
                       aria-label="Edytuj"
                     >
                       <Pencil className="h-4 w-4" />
@@ -471,8 +471,8 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
 
                     <Link
                       href={`/coach/sessions/${session.id}`}
-                      className="shimmer-line group/btn relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-white shadow-[0_6px_24px_-10px_rgba(22,46,211,0.6)] transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
-                      style={{ background: 'linear-gradient(135deg, #5E74FF 0%, #0C169C 100%)' }}
+                      className="shimmer-line group/btn relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-white shadow-[0_6px_24px_-10px_rgba(47,182,162,0.6)] transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                      style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                     >
                       <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />
                       <span className="relative inline-flex items-center gap-2">
@@ -509,7 +509,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-[#010104]/80 backdrop-blur-md"
+            className="fixed inset-0 bg-[#060606]/80 backdrop-blur-md"
             onClick={() => !isLoading && setDialogOpen(false)}
             aria-hidden
           />
@@ -521,7 +521,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-violet-300/70">
-                      <span className="h-1 w-1 rounded-full bg-[#162ED3]" />
+                      <span className="h-1 w-1 rounded-full bg-[#2fb6a2]" />
                       {editingSession ? 'Edycja sesji' : 'Zakładanie sesji'}
                     </div>
                     <h2 className="font-display text-2xl font-bold text-gradient-violet">
@@ -556,7 +556,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                         {active && (
                           <span
                             className="absolute inset-0 rounded-xl ring-1 ring-inset"
-                            style={{ background: 'linear-gradient(135deg, #5E74FF33 0%, #0C169C1a 100%)', borderColor: '#5E74FF55', boxShadow: '0 0 20px -6px #162ED3' }}
+                            style={{ background: 'linear-gradient(135deg, #2de5ca33 0%, #147a6b1a 100%)', borderColor: '#2de5ca55', boxShadow: '0 0 20px -6px #2fb6a2' }}
                           />
                         )}
                         <t.icon className="relative h-3.5 w-3.5" />
@@ -580,7 +580,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                           onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                           required
                           disabled={isLoading}
-                          className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#162ED3]/40 transition-all duration-300"
+                          className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300"
                         />
                       </div>
                     </div>
@@ -595,7 +595,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                           onChange={(e) => setFormData((prev) => ({ ...prev, studentId: e.target.value }))}
                           disabled={isLoading || !!editingSession}
                           required
-                          className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#162ED3]/40 transition-all duration-300 disabled:opacity-50"
+                          className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 disabled:opacity-50"
                         >
                           <option value="" className="bg-[#0b0c16]">Wybierz ucznia</option>
                           {students.map((s) => (
@@ -617,7 +617,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                         onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                         rows={3}
                         disabled={isLoading}
-                        className="w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#162ED3]/40 transition-all duration-300 resize-none"
+                        className="w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 resize-none"
                       />
                     </div>
 
@@ -632,7 +632,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                             value={formData.scheduledAt}
                             onChange={(e) => setFormData((prev) => ({ ...prev, scheduledAt: e.target.value }))}
                             disabled={isLoading}
-                            className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#162ED3]/40 transition-all duration-300 [color-scheme:dark]"
+                            className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 [color-scheme:dark]"
                           />
                         </div>
                       </div>
@@ -644,7 +644,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                             value={formData.status}
                             onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value as any }))}
                             disabled={isLoading}
-                            className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#162ED3]/25 focus:border-[#162ED3]/40 transition-all duration-300 disabled:opacity-50"
+                            className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2fb6a2]/25 focus:border-[#2fb6a2]/40 transition-all duration-300 disabled:opacity-50"
                           >
                             <option value="DRAFT" className="bg-[#0b0c16]">Szkic</option>
                             <option value="ACTIVE" className="bg-[#0b0c16]">Aktywna</option>
@@ -673,7 +673,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                             className={cn(
                               'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-300 ring-1 ring-inset',
                               selected
-                                ? 'bg-[#5E74FF]/15 ring-[#5E74FF]/40 text-violet-100 shadow-[0_0_18px_-6px_#162ED3]'
+                                ? 'bg-[#2de5ca]/15 ring-[#2de5ca]/40 text-violet-100 shadow-[0_0_18px_-6px_#2fb6a2]'
                                 : 'bg-white/[0.03] ring-white/[0.06] text-white/60 hover:text-white hover:ring-white/[0.12]'
                             )}
                           >
@@ -700,7 +700,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                             className={cn(
                               'flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ring-1 ring-inset',
                               selected
-                                ? 'bg-[#5E74FF]/10 ring-[#5E74FF]/30'
+                                ? 'bg-[#2de5ca]/10 ring-[#2de5ca]/30'
                                 : 'bg-white/[0.03] ring-white/[0.06] hover:bg-white/[0.05]'
                             )}
                           >
@@ -708,9 +708,9 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                               type="checkbox"
                               checked={selected}
                               onChange={() => toggleVideo(video.id)}
-                              className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#162ED3] focus:ring-[#162ED3]/40 focus:ring-2"
+                              className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#2fb6a2] focus:ring-[#2fb6a2]/40 focus:ring-2"
                             />
-                            <div className="grid place-items-center h-9 w-9 rounded-lg bg-gradient-to-br from-[#5E74FF]/20 to-[#0C169C]/5 ring-1 ring-inset ring-white/10">
+                            <div className="grid place-items-center h-9 w-9 rounded-lg bg-gradient-to-br from-[#2de5ca]/20 to-[#147a6b]/5 ring-1 ring-inset ring-white/10">
                               <Video className="h-4 w-4 text-violet-300/80" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -747,8 +747,8 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="shimmer-line relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-semibold text-white shadow-[0_8px_30px_-10px_rgba(22,46,211,0.6)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-                    style={{ background: 'linear-gradient(135deg, #5E74FF 0%, #0C169C 100%)' }}
+                    className="shimmer-line relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-semibold text-white shadow-[0_8px_30px_-10px_rgba(47,182,162,0.6)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                    style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                   >
                     <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />
                     {isLoading ? (

@@ -4,9 +4,26 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+// Avatar URLs land inside the NextAuth JWT, so they must stay small — a huge
+// base64 data URI (e.g. an uncompressed photo) inflates the token past the
+// cookie-chunking threshold and breaks the session (401s everywhere).
+const avatarSchema = z
+  .string()
+  .refine(
+    (v) => v.length <= 200_000,
+    { message: 'Avatar jest za duży — użyj zdjęcia do ~150KB' },
+  )
+  .refine(
+    (v) => {
+      if (!v.startsWith('data:')) return true // plain http(s) URL
+      return v.startsWith('data:image/') // only image data URIs
+    },
+    { message: 'Avatar musi być obrazem' },
+  )
+
 const profileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  avatarUrl: z.string().url().optional().or(z.literal('')),
+  avatarUrl: z.union([avatarSchema, z.literal('')]).optional(),
 })
 
 export async function PUT(request: NextRequest) {

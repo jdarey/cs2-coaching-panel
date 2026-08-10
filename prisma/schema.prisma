@@ -50,8 +50,55 @@ model User {
   sessionNotes  SessionNote[]
   coachSettings CoachSettings?
 
+  // Messages (direct coach <-> student chat)
+  messagesSent     Message[] @relation("MessageSent")
+  messagesReceived Message[] @relation("MessageReceived")
+
+  // Feedback (students -> coach)
+  feedbackGiven    Feedback[] @relation("FeedbackStudent")
+  feedbackReceived Feedback[] @relation("FeedbackCoach")
+
   @@index([coachId])
   @@index([email])
+}
+
+// Direct messages between a coach and one of their students.
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("MessageSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("MessageReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+}
+
+// Feedback students send to their coach (session review, suggestion, issue...).
+model Feedback {
+  id          String    @id @default(cuid())
+  studentId   String
+  coachId     String
+  sessionId   String?
+  type        String    @default("GENERAL") // GENERAL | SESSION | SUGGESTION | ISSUE
+  content     String
+  status      String    @default("NEW") // NEW | READ | RESPONDED
+  response    String?
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  student User    @relation("FeedbackStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  coach   User    @relation("FeedbackCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([coachId])
+  @@index([studentId])
+  @@index([status])
 }
 
 model Tag {
@@ -122,6 +169,7 @@ model Session {
   videos      SessionVideo[]
   notes       SessionNote[]
   videoProgress VideoProgress[]
+  feedback    Feedback[]
 
   @@index([coachId])
   @@index([studentId])

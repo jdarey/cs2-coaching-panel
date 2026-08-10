@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
-import { Space_Grotesk } from 'next/font/google'
+import { Lexend_Deca } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
 
-// Darey-style typography: Space Grotesk everywhere (400-700, latin-ext for Polish)
-const spaceGrotesk = Space_Grotesk({
+// Vantor template typography: Lexend Deca everywhere (400-700, latin-ext for Polish)
+const lexend = Lexend_Deca({
   subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
 })
-const spaceGroteskDisplay = Space_Grotesk({
+const lexendDisplay = Lexend_Deca({
   subsets: ['latin', 'latin-ext'],
   weight: ['500', '600', '700'],
   variable: '--font-display',
@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} ${spaceGroteskDisplay.variable} font-sans antialiased`}>
+      <body className={`${lexend.variable} ${lexendDisplay.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>
