@@ -181,7 +181,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Header */}
         <header className="rise-in pt-2">
           <div className="flex items-center gap-2.5 mb-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium text-[#a594ff] bg-[#8b7bff]/10 border border-[#8b7bff]/20">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium text-[#9DB4FF] bg-[#4D63FF]/10 border border-[#4D63FF]/20">
               <Sparkles className="w-3 h-3" />
               Panel postępu
             </span>
@@ -204,7 +204,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '0ms' }}
           >
             <div className="flex items-start justify-between">
-              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
+              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#4D63FF] to-[#162ED3] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
                 <Video className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
               <TrendingUp className="w-4 h-4 text-white/30" />
@@ -222,7 +222,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '80ms' }}
           >
             <div className="flex items-start justify-between">
-              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a855f7] to-[#d946ef] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(217,70,239,0.6)]">
+              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#162ED3] to-[#5E74FF] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(94,116,255,0.6)]">
                 <Trophy className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
               <Award className="w-4 h-4 text-white/30" />
@@ -238,7 +238,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '160ms' }}
           >
             <div className="flex items-start justify-between">
-              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#5a4fff] to-[#8b7bff] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(90,79,255,0.6)]">
+              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#162ED3] to-[#4D63FF] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(90,79,255,0.6)]">
                 <Target className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
               <span className="text-[10px] uppercase tracking-wider text-white/30">cel</span>
@@ -275,9 +275,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-8 relative overflow-hidden lg:col-span-1 flex flex-col items-center justify-center"
             style={{ animationDelay: '120ms' }}
           >
-            <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-[#7c6fff]/15 blur-3xl animate-aurora-slow pointer-events-none" />
+            <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-[#3B52FF]/15 blur-3xl animate-aurora-slow pointer-events-none" />
             <div className="flex items-center gap-2 self-start mb-2">
-              <TrendingUp className="w-4 h-4 text-[#a594ff]" />
+              <TrendingUp className="w-4 h-4 text-[#9DB4FF]" />
               <span className="text-xs uppercase tracking-[0.2em] text-white/40 font-semibold">Postęp oglądania</span>
             </div>
 
@@ -285,9 +285,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               <svg width="220" height="220" viewBox="0 0 220 220" className="-rotate-90 drop-shadow-[0_0_30px_rgba(124,111,255,0.25)]">
                 <defs>
                   <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#a594ff" />
-                    <stop offset="50%" stopColor="#7c6fff" />
-                    <stop offset="100%" stopColor="#5a4fff" />
+                    <stop offset="0%" stopColor="#9DB4FF" />
+                    <stop offset="50%" stopColor="#3B52FF" />
+                    <stop offset="100%" stopColor="#162ED3" />
                   </linearGradient>
                 </defs>
                 <circle cx="110" cy="110" r={RING_R} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="14" />
@@ -323,7 +323,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '180ms' }}
           >
             <div className="flex items-center gap-2 mb-6">
-              <Activity className="w-4 h-4 text-[#a594ff]" />
+              <Activity className="w-4 h-4 text-[#9DB4FF]" />
               <span className="text-xs uppercase tracking-[0.2em] text-white/40 font-semibold">Rozkład statusów</span>
             </div>
 
@@ -332,7 +332,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                 { label: 'Do oglądania', value: stats.pending, color: 'from-[#fbbf24] to-[#f59e0b]', text: 'text-amber-300', key: 'PENDING' },
                 { label: 'W trakcie', value: stats.watching, color: 'from-[#60a5fa] to-[#3b82f6]', text: 'text-blue-300', key: 'WATCHING' },
                 { label: 'Obejrzane', value: stats.watched, color: 'from-[#34d399] to-[#10b981]', text: 'text-emerald-300', key: 'WATCHED' },
-                { label: 'Wdrożone', value: stats.implemented, color: 'from-[#a855f7] to-[#d946ef]', text: 'text-fuchsia-300', key: 'IMPLEMENTED' },
+                { label: 'Wdrożone', value: stats.implemented, color: 'from-[#162ED3] to-[#5E74FF]', text: 'text-fuchsia-300', key: 'IMPLEMENTED' },
               ].map((row) => {
                 const pct = stats.total > 0 ? Math.round((row.value / stats.total) * 100) : 0
                 return (
@@ -362,9 +362,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7 relative overflow-hidden lg:col-span-1 flex flex-col"
             style={{ animationDelay: '240ms' }}
           >
-            <div className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-[#a855f7]/12 blur-3xl animate-aurora pointer-events-none" />
+            <div className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-[#162ED3]/12 blur-3xl animate-aurora pointer-events-none" />
             <div className="flex items-center gap-2 mb-6">
-              <Calendar className="w-4 h-4 text-[#a594ff]" />
+              <Calendar className="w-4 h-4 text-[#9DB4FF]" />
               <span className="text-xs uppercase tracking-[0.2em] text-white/40 font-semibold">Sesje z trenerem</span>
             </div>
 
@@ -406,10 +406,10 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7 relative overflow-hidden"
           style={{ animationDelay: '120ms' }}
         >
-          <div className="absolute -top-24 left-1/3 w-72 h-72 rounded-full bg-[#7c6fff]/10 blur-3xl animate-aurora-slow pointer-events-none" />
+          <div className="absolute -top-24 left-1/3 w-72 h-72 rounded-full bg-[#3B52FF]/10 blur-3xl animate-aurora-slow pointer-events-none" />
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] ring-1 ring-white/30">
+              <div className="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-[#4D63FF] to-[#162ED3] ring-1 ring-white/30">
                 <TrendingUp className="w-4 h-4 text-white" strokeLinecap="round" />
               </div>
               <div>
@@ -419,10 +419,10 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="inline-flex items-center gap-1.5 text-white/55">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#a594ff]" /> Obejrzane
+                <span className="w-2.5 h-2.5 rounded-full bg-[#9DB4FF]" /> Obejrzane
               </span>
               <span className="inline-flex items-center gap-1.5 text-white/55">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#d946ef]" /> Wdrożone
+                <span className="w-2.5 h-2.5 rounded-full bg-[#5E74FF]" /> Wdrożone
               </span>
             </div>
           </div>
@@ -432,17 +432,17 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               <svg viewBox="0 0 800 260" className="w-full h-[260px]" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="chartStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#a594ff" />
-                    <stop offset="50%" stopColor="#7c6fff" />
-                    <stop offset="100%" stopColor="#5a4fff" />
+                    <stop offset="0%" stopColor="#9DB4FF" />
+                    <stop offset="50%" stopColor="#3B52FF" />
+                    <stop offset="100%" stopColor="#162ED3" />
                   </linearGradient>
                   <linearGradient id="chartFill" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="rgba(124,111,255,0.35)" />
                     <stop offset="100%" stopColor="rgba(124,111,255,0)" />
                   </linearGradient>
                   <linearGradient id="chartFillImpl" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="rgba(217,70,239,0.22)" />
-                    <stop offset="100%" stopColor="rgba(217,70,239,0)" />
+                    <stop offset="0%" stopColor="rgba(94,116,255,0.22)" />
+                    <stop offset="100%" stopColor="rgba(94,116,255,0)" />
                   </linearGradient>
                 </defs>
 
@@ -477,7 +477,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                           onMouseLeave={() => setHoverPoint(null)}
                           style={{ cursor: 'pointer' }}
                         >
-                          <circle cx={p.x} cy={p.y} r={hoverPoint === i ? 7 : 4.5} fill="#06070d" stroke="url(#chartStroke)" strokeWidth="2.5" />
+                          <circle cx={p.x} cy={p.y} r={hoverPoint === i ? 7 : 4.5} fill="#010104" stroke="url(#chartStroke)" strokeWidth="2.5" />
                         </g>
                       ))}
                     </>
@@ -495,7 +495,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                   }}
                 >
                   <p className="text-white/45 font-medium">{chartData[hoverPoint].week}</p>
-                  <p className="text-[#a594ff] font-display font-semibold">{chartData[hoverPoint].watched} obejrz.</p>
+                  <p className="text-[#9DB4FF] font-display font-semibold">{chartData[hoverPoint].watched} obejrz.</p>
                   <p className="text-fuchsia-300 font-display font-semibold">{chartData[hoverPoint].implemented} wdr.</p>
                 </div>
               )}
@@ -508,8 +508,8 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             </div>
           ) : (
             <div className="relative rounded-2xl bg-white/[0.02] border border-white/[0.06] px-6 py-10 flex flex-col items-center text-center">
-              <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff]/30 to-[#5a4fff]/10 ring-1 ring-white/15 mb-4">
-                <Activity className="w-6 h-6 text-[#a594ff]" />
+              <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#4D63FF]/30 to-[#162ED3]/10 ring-1 ring-white/15 mb-4">
+                <Activity className="w-6 h-6 text-[#9DB4FF]" />
               </div>
               <p className="font-display text-base font-semibold text-white">Brak wystarczających danych do wykresu</p>
               <p className="text-sm text-white/45 mt-1 max-w-md">
@@ -530,7 +530,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                 <path
                   d="M 0 90 C 120 40, 220 60, 320 50 S 520 70, 640 30 S 760 50, 800 20"
                   fill="none"
-                  stroke="#7c6fff"
+                  stroke="#3B52FF"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 />
@@ -542,7 +542,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Tags progress */}
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] ring-1 ring-white/30">
+            <div className="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-[#4D63FF] to-[#162ED3] ring-1 ring-white/30">
               <Target className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -556,8 +556,8 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               onMouseMove={handleCardMouse}
               className="glass-liquid spotlight rounded-3xl py-14 px-6 relative overflow-hidden text-center flex flex-col items-center"
             >
-              <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff]/25 to-[#5a4fff]/10 ring-1 ring-white/15 mb-4">
-                <Target className="w-7 h-7 text-[#a594ff]" />
+              <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#4D63FF]/25 to-[#162ED3]/10 ring-1 ring-white/15 mb-4">
+                <Target className="w-7 h-7 text-[#9DB4FF]" />
               </div>
               <p className="font-display text-base font-semibold text-white">Brak danych o tagach</p>
               <p className="text-sm text-white/45 mt-1 max-w-md">
@@ -577,11 +577,11 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                     <div
                       className="relative w-11 h-11 rounded-2xl grid place-items-center flex-shrink-0 ring-1 ring-white/20"
                       style={{
-                        background: `linear-gradient(135deg, ${item.tag?.color || '#7c6fff'}40, ${item.tag?.color || '#5a4fff'}10)`,
+                        background: `linear-gradient(135deg, ${item.tag?.color || '#3B52FF'}40, ${item.tag?.color || '#162ED3'}10)`,
                         boxShadow: `0 8px 24px -10px ${item.tag?.color || 'rgba(124,111,255,0.5)'}80`,
                       }}
                     >
-                      <Target className="w-5 h-5" style={{ color: item.tag?.color || '#a594ff' }} strokeWidth={2.2} />
+                      <Target className="w-5 h-5" style={{ color: item.tag?.color || '#9DB4FF' }} strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-display font-semibold text-white truncate">{item.tag?.name || 'Nieznany tag'}</h4>
@@ -611,7 +611,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Recent activity timeline */}
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] ring-1 ring-white/30">
+            <div className="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-[#4D63FF] to-[#162ED3] ring-1 ring-white/30">
               <Clock className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -625,8 +625,8 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               onMouseMove={handleCardMouse}
               className="glass-liquid spotlight rounded-3xl py-14 px-6 relative overflow-hidden text-center flex flex-col items-center"
             >
-              <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff]/25 to-[#5a4fff]/10 ring-1 ring-white/15 mb-4">
-                <PlayCircle className="w-7 h-7 text-[#a594ff]" />
+              <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#4D63FF]/25 to-[#162ED3]/10 ring-1 ring-white/15 mb-4">
+                <PlayCircle className="w-7 h-7 text-[#9DB4FF]" />
               </div>
               <p className="font-display text-base font-semibold text-white">Brak ostatniej aktywności</p>
               <p className="text-sm text-white/45 mt-1 max-w-md">
@@ -636,7 +636,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           ) : (
             <div className="relative">
               {/* timeline rail */}
-              <div className="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-[#8b7bff]/40 via-white/[0.08] to-transparent" />
+              <div className="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-[#4D63FF]/40 via-white/[0.08] to-transparent" />
 
               <ul className="space-y-3">
                 {recentActivity.map((p, i) => {
@@ -650,7 +650,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                           : 'text-amber-300'
                   const dot =
                     p.status === 'IMPLEMENTED'
-                      ? 'from-[#d946ef] to-[#a855f7]'
+                      ? 'from-[#5E74FF] to-[#162ED3]'
                       : p.status === 'WATCHED'
                         ? 'from-[#34d399] to-[#10b981]'
                         : p.status === 'WATCHING'
@@ -717,7 +717,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                           )}
 
                           {p.note && (
-                            <p className="mt-3 text-sm text-white/55 italic border-l-2 border-[#8b7bff]/30 pl-3">
+                            <p className="mt-3 text-sm text-white/55 italic border-l-2 border-[#4D63FF]/30 pl-3">
                               &ldquo;{p.note}&rdquo;
                             </p>
                           )}
@@ -738,9 +738,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Footer flourish */}
         <div className="pt-4 flex items-center justify-center gap-2 text-[11px] text-white/25 font-medium tracking-wide">
           <span className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
-          <Sparkles className="w-3 h-3 text-[#8b7bff]/50" />
+          <Sparkles className="w-3 h-3 text-[#4D63FF]/50" />
           <span className="uppercase tracking-[0.25em]">Twoja droga do mistrzostwa</span>
-          <Sparkles className="w-3 h-3 text-[#8b7bff]/50" />
+          <Sparkles className="w-3 h-3 text-[#4D63FF]/50" />
           <span className="h-px w-12 bg-gradient-to-l from-transparent to-white/15" />
         </div>
       </div>

@@ -36,11 +36,11 @@ interface SessionSummary {
 }
 
 const PROGRESS_DOTS = [
-  { key: 'total', label: 'Filmy', color: '#a855f7' },
+  { key: 'total', label: 'Filmy', color: '#162ED3' },
   { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
   { key: 'watching', label: 'Ogląda', color: '#60a5fa' },
   { key: 'watched', label: 'Obejrzane', color: '#34d399' },
-  { key: 'implemented', label: 'Wdrożone', color: '#c084fc' },
+  { key: 'implemented', label: 'Wdrożone', color: '#5E74FF' },
 ] as const
 
 export function CoachStudentDetailClient({
@@ -71,7 +71,7 @@ export function CoachStudentDetailClient({
             <div className="flex items-center gap-5 min-w-0">
               <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.6)]">
                 <AvatarImage src={student.avatarUrl || ''} alt={student.name || student.email} />
-                <AvatarFallback className="rounded-2xl bg-white text-[#060606] font-display font-bold text-2xl">
+                <AvatarFallback className="rounded-2xl bg-white text-[#010104] font-display font-bold text-2xl">
                   {getInitials(student.name || student.email)}
                 </AvatarFallback>
               </Avatar>

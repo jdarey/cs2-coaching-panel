@@ -210,7 +210,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
   }
 
   const inputBase =
-    'h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#8b7bff]/50 focus-visible:ring-2 focus-visible:ring-[#7c6fff]/25 focus-visible:outline-none transition-all duration-300 pl-11 pr-4 text-sm'
+    'h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#4D63FF]/50 focus-visible:ring-2 focus-visible:ring-[#3B52FF]/25 focus-visible:outline-none transition-all duration-300 pl-11 pr-4 text-sm'
 
   return (
     <StudentLayout>
@@ -218,7 +218,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
         {/* ===== Page header ===== */}
         <div className="rise-in mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-white/65 bg-white/[0.04] border border-white/[0.07] mb-5 backdrop-blur-xl">
-            <Settings className="w-3.5 h-3.5 text-[#a594ff]" />
+            <Settings className="w-3.5 h-3.5 text-[#9DB4FF]" />
             Panel ucznia
           </div>
           <h1 className="font-display text-4xl md:text-[3.4rem] leading-[1.05] font-bold tracking-tight mb-3 text-gradient-violet">
@@ -271,7 +271,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     <div className="relative">
                       <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15">
                         <AvatarImage src={avatarUrl || ''} alt={user.name || ''} />
-                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] text-white">
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#4D63FF] to-[#162ED3] text-white">
                           {getInitials(user.name || 'U')}
                         </AvatarFallback>
                       </Avatar>
@@ -288,7 +288,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-xl bg-[#06070d] border border-white/10 hover:border-[#8b7bff]/40 transition"
+                        className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-xl bg-[#010104] border border-white/10 hover:border-[#4D63FF]/40 transition"
                         aria-label="Zmień zdjęcie profilowe"
                         title="Zmień zdjęcie profilowe"
                       >
@@ -362,7 +362,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12 rounded-xl ring-1 ring-white/10">
                         <AvatarImage src={user.coach.avatarUrl || ''} alt={user.coach.name || ''} />
-                        <AvatarFallback className="bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-[#4D63FF] to-[#162ED3] text-white">
                           {user.coach.name?.[0] || 'T'}
                         </AvatarFallback>
                       </Avatar>
@@ -462,7 +462,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       className="group flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
                     >
                       <div className="flex items-start gap-3 min-w-0">
-                        <div className="grid place-items-center w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] text-[#a594ff] flex-shrink-0">
+                        <div className="grid place-items-center w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] text-[#9DB4FF] flex-shrink-0">
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
@@ -502,7 +502,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       ? 'text-[#fbbf24]'
                       : t === 'dark'
                         ? 'text-[#60a5fa]'
-                        : 'text-[#a594ff]'
+                        : 'text-[#9DB4FF]'
                   return (
                     <button
                       key={t}
@@ -510,7 +510,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       className={cn(
                         'group relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300',
                         theme === t
-                          ? 'glass-tinted border-[#8b7bff]/30'
+                          ? 'glass-tinted border-[#4D63FF]/30'
                           : 'bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]',
                       )}
                     >
@@ -524,7 +524,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                           <Icon className="w-5 h-5" />
                         </div>
                         {theme === t && (
-                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-[#7c6fff]/20 text-[#a594ff] border border-[#7c6fff]/30">
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-[#3B52FF]/20 text-[#9DB4FF] border border-[#3B52FF]/30">
                             <CheckCircle2 className="w-3 h-3" />
                             Aktywny
                           </span>

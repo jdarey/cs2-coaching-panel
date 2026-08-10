@@ -41,7 +41,7 @@ export function AuroraBackground({
               left: `${Math.random() * 100}%`,
               width: `${Math.random() * 3 + 1}px`,
               height: `${Math.random() * 3 + 1}px`,
-              background: `radial-gradient(circle, ${i % 3 === 0 ? 'rgba(255,255,255,0.30)' : i % 3 === 1 ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.20)'}, transparent 70%)`,
+              background: `radial-gradient(circle, ${i % 3 === 0 ? 'rgba(125,146,255,0.7)' : i % 3 === 1 ? 'rgba(94,116,255,0.6)' : 'rgba(22,46,211,0.55)'}, transparent 70%)`,
               animationDelay: `${Math.random() * 8}s`,
               animationDuration: `${Math.random() * 4 + 6}s`,
               opacity: Math.random() * 0.5 + 0.1,
@@ -79,25 +79,25 @@ export function AuroraBackground({
 
       {/* ===== Aurora Blobs - Organic, living gradients ===== */}
       <div
-        className={`absolute ${variant === 'auth' ? '-top-32' : '-top-40 -left-32'} w-[700px] h-[700px] rounded-full blur-[160px] opacity-60 animate-aurora`}
+        className={`absolute ${variant === 'auth' ? '-top-32' : '-top-40 -left-32'} w-[700px] h-[700px] rounded-full blur-[120px] opacity-60 animate-aurora`}
         style={{ 
-          background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 40%, transparent 75%)',
-          opacity: 0.5 * baseOpacity,
+          background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(22,46,211,0.35) 0%, rgba(22,46,211,0.14) 40%, transparent 75%)',
+          opacity: 0.14 * baseOpacity,
           transformOrigin: 'center center',
         }}
       />
       <div
-        className={`absolute ${variant === 'auth' ? 'top-1/4 -right-40' : 'top-1/3 -right-48'} w-[800px] h-[800px] rounded-full blur-[180px] opacity-50 animate-aurora-slow`}
+        className={`absolute ${variant === 'auth' ? 'top-1/4 -right-40' : 'top-1/3 -right-48'} w-[800px] h-[800px] rounded-full blur-[120px] opacity-50 animate-aurora-slow`}
         style={{ 
-          background: 'radial-gradient(ellipse 55% 45% at 50% 50%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 45%, transparent 80%)',
-          opacity: 0.4 * baseOpacity,
+          background: 'radial-gradient(ellipse 55% 45% at 50% 50%, rgba(94,116,255,0.28) 0%, rgba(22,46,211,0.12) 45%, transparent 80%)',
+          opacity: 0.09 * baseOpacity,
         }}
       />
       <div
-        className={`absolute ${variant === 'auth' ? '-bottom-40 left-1/3' : '-bottom-48 left-1/4'} w-[650px] h-[650px] rounded-full blur-[160px] opacity-40 animate-aurora-reverse`}
+        className={`absolute ${variant === 'auth' ? '-bottom-40 left-1/3' : '-bottom-48 left-1/4'} w-[650px] h-[650px] rounded-full blur-[120px] opacity-40 animate-aurora-reverse`}
         style={{ 
-          background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.025) 50%, transparent 80%)',
-          opacity: 0.3 * baseOpacity,
+          background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(22,46,211,0.22) 0%, rgba(10,17,89,0.12) 50%, transparent 80%)',
+          opacity: 0.06 * baseOpacity,
         }}
       />
       
@@ -110,7 +110,7 @@ export function AuroraBackground({
           left: `${mousePos.x * 100}%`,
           top: `${mousePos.y * 100}%`,
           transform: 'translate(-50%, -50%)',
-          background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,255,255,0.08) 0%, transparent 80%)',
+          background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(22,46,211,0.28) 0%, transparent 80%)',
           pointerEvents: 'none',
         }}
       />
@@ -139,7 +139,7 @@ export function AuroraBackground({
       <div
         className="absolute inset-0"
         style={{ 
-          background: 'radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%)',
+          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.3) 65%, rgba(0,0,0,0.5) 100%)',
           opacity: baseOpacity,
         }}
       />
@@ -148,40 +148,12 @@ export function AuroraBackground({
       <div
         className="absolute top-0 left-0 right-0 h-[600px]"
         style={{ 
-          background: 'radial-gradient(ellipse at top center, rgba(255,255,255,0.04) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at top center, rgba(22,46,211,0.12) 0%, transparent 60%)',
           opacity: baseOpacity,
         }}
       />
 
-      {/* ===== Noise Texture - Film Grain ===== */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '180px',
-          animation: 'noise-shift 0.2s steps(1) infinite',
-        }}
-      />
-
-      {/* ===== Subtle Scanlines ===== */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px)',
-          backgroundSize: '100% 3px',
-          opacity: 0.4 * baseOpacity,
-          maskImage: 'radial-gradient(ellipse at center, black 50%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at center, black 50%, transparent 100%)',
-        }}
-      />
-
       <style jsx global>{`
-        @keyframes noise-shift {
-          0% { background-position: 0 0; }
-          100% { background-position: 10px 10px; }
-        }
         @keyframes drift-3d {
           0%, 100% { transform: translate3d(0, 0, 0) rotateZ(0deg); }
           25% { transform: translate3d(30px, -24px, 40px) rotateZ(6deg); }

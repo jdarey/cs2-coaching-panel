@@ -66,7 +66,7 @@ const STATUS_META: Record<string, { color: string; icon: typeof Clock; dot: stri
   PENDING: { color: '#fbbf24', icon: Hourglass, dot: 'bg-[#fbbf24]', ring: 'ring-[#fbbf24]/30', glow: 'rgba(251,191,36,0.35)' },
   WATCHING: { color: '#60a5fa', icon: CircleDot, dot: 'bg-[#60a5fa]', ring: 'ring-[#60a5fa]/30', glow: 'rgba(96,165,250,0.35)' },
   WATCHED: { color: '#34d399', icon: CheckCircle2, dot: 'bg-[#34d399]', ring: 'ring-[#34d399]/30', glow: 'rgba(52,211,153,0.35)' },
-  IMPLEMENTED: { color: '#a855f7', icon: CheckCircle2, dot: 'bg-[#a855f7]', ring: 'ring-[#a855f7]/30', glow: 'rgba(168,85,247,0.35)' },
+  IMPLEMENTED: { color: '#162ED3', icon: CheckCircle2, dot: 'bg-[#162ED3]', ring: 'ring-[#162ED3]/30', glow: 'rgba(22,46,211,0.35)' },
 }
 
 const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
@@ -168,7 +168,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
         <div
-          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-6 backdrop-blur-2xl"
+          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-6 backdrop-blur-xl"
           style={{
             background: 'linear-gradient(180deg, rgba(6,7,13,0.92) 0%, rgba(6,7,13,0.72) 60%, rgba(6,7,13,0) 100%)',
             borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -176,7 +176,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
         >
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] ring-1 ring-white/20">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#4D63FF] to-[#162ED3] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] ring-1 ring-white/20">
                 <Video className="h-4 w-4 text-white" strokeWidth={2.4} />
               </span>
               <span className="text-[11px] uppercase tracking-[0.22em] text-white/40 font-semibold">Biblioteka</span>
@@ -193,7 +193,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
         {/* ===== Stats glass strip ===== */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { label: 'Wszystkie', value: stats.total, accent: '#8b7bff', icon: BookOpen },
+            { label: 'Wszystkie', value: stats.total, accent: '#4D63FF', icon: BookOpen },
             { label: 'Do oglądania', value: stats.pending, accent: '#fbbf24', icon: Clock },
             { label: 'W trakcie', value: stats.watching, accent: '#60a5fa', icon: Play },
             { label: 'Ukończone', value: stats.watched + stats.implemented, accent: '#34d399', icon: CheckCircle2 },
@@ -248,8 +248,8 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                 />
                 <defs>
                   <linearGradient id="completionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#a594ff" />
-                    <stop offset="100%" stopColor="#5a4fff" />
+                    <stop offset="0%" stopColor="#9DB4FF" />
+                    <stop offset="100%" stopColor="#162ED3" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -344,7 +344,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
             <select
               value={selectedSessionId || ''}
               onChange={(e) => setSelectedSessionId(e.target.value || null)}
-              className="h-9 self-center rounded-xl bg-white/[0.04] border border-white/[0.08] px-3 text-xs text-white/70 focus:outline-none focus:border-[#8b7bff]/30 hover:bg-white/[0.07] transition-colors cursor-pointer"
+              className="h-9 self-center rounded-xl bg-white/[0.04] border border-white/[0.08] px-3 text-xs text-white/70 focus:outline-none focus:border-[#4D63FF]/30 hover:bg-white/[0.07] transition-colors cursor-pointer"
               style={{ backdropFilter: 'blur(16px)' }}
             >
               <option value="" className="bg-[#06070d]">Wszystkie sesje</option>
@@ -365,10 +365,10 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               className="mx-auto mb-5 grid place-items-center h-20 w-20 rounded-3xl ring-1 ring-white/10"
               style={{
                 background:
-                  'radial-gradient(circle at 30% 30%, rgba(124,111,255,0.28) 0%, rgba(168,85,247,0.12) 40%, rgba(6,7,13,0) 70%)',
+                  'radial-gradient(circle at 30% 30%, rgba(124,111,255,0.28) 0%, rgba(22,46,211,0.12) 40%, rgba(6,7,13,0) 70%)',
               }}
             >
-              <Video className="h-8 w-8 text-[#a594ff]" strokeWidth={2} />
+              <Video className="h-8 w-8 text-[#9DB4FF]" strokeWidth={2} />
             </div>
             <h3 className="font-display text-xl font-bold text-white mb-1.5">Nie znaleziono filmów</h3>
             <p className="text-sm text-white/50 max-w-sm mx-auto">
@@ -402,12 +402,12 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               return (
                 <div
                   key={`${item.sessionId}-${video.id}`}
-                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover rounded-3xl relative overflow-hidden group hover:border-[#8b7bff]/25"
+                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover rounded-3xl relative overflow-hidden group hover:border-[#4D63FF]/25"
                   onMouseMove={handleCardMouse}
                   style={{
                     animationDelay: `${Math.min(idx * 60, 600)}ms`,
                     // override hover border to violet glow when hovered
-                    ['--hover-border' as string]: 'rgba(139,123,255,0.25)',
+                    ['--hover-border' as string]: 'rgba(77,99,255,0.25)',
                   }}
                 >
                   {/* ===== Thumbnail (16:9) ===== */}
@@ -428,7 +428,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                     {/* gradient overlay on hover */}
                     <div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{ background: 'linear-gradient(180deg, rgba(139,123,255,0.40) 0%, rgba(6,7,13,0) 60%)' }}
+                      style={{ background: 'linear-gradient(180deg, rgba(77,99,255,0.40) 0%, rgba(6,7,13,0) 60%)' }}
                     />
 
                     {/* Status badge pill — top-left */}
@@ -472,7 +472,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         className="absolute inset-0 grid place-items-center"
                         aria-label={`Odtwórz: ${video.title}`}
                       >
-                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] shadow-[0_18px_40px_-10px_rgba(124,111,255,0.75)] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
+                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#4D63FF] to-[#162ED3] shadow-[0_18px_40px_-10px_rgba(124,111,255,0.75)] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
                           <Play className="h-6 w-6 text-white translate-x-0.5" fill="currentColor" />
                         </span>
                       </a>
@@ -482,7 +482,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                   {/* ===== Body ===== */}
                   <div className="p-4">
                     {/* Title — turns violet on hover, clamps to 2 lines */}
-                    <h3 className="font-display text-lg font-bold leading-snug text-white transition-colors duration-300 group-hover:text-[#a594ff] line-clamp-2">
+                    <h3 className="font-display text-lg font-bold leading-snug text-white transition-colors duration-300 group-hover:text-[#9DB4FF] line-clamp-2">
                       {video.title}
                     </h3>
 
@@ -554,9 +554,9 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       {/* Open progress dialog */}
                       <button
                         onClick={() => setVideoProgressDialog({ video: item, sessionTitle: item.sessionTitle, progress: p })}
-                        className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold text-white bg-white/[0.04] border border-white/[0.08] hover:bg-[#8b7bff]/15 hover:border-[#8b7bff]/30 hover:text-white transition-all duration-300 shimmer-line relative overflow-hidden"
+                        className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold text-white bg-white/[0.04] border border-white/[0.08] hover:bg-[#4D63FF]/15 hover:border-[#4D63FF]/30 hover:text-white transition-all duration-300 shimmer-line relative overflow-hidden"
                       >
-                        <PlayCircle className="h-3.5 w-3.5 text-[#a594ff]" strokeWidth={2.2} />
+                        <PlayCircle className="h-3.5 w-3.5 text-[#9DB4FF]" strokeWidth={2.2} />
                         <span>Oceń</span>
                         <ArrowRight className="h-3 w-3 opacity-60 transition-transform group-hover:translate-x-0.5" />
                       </button>
@@ -568,7 +568,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         href={video.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[11px] text-white/45 hover:text-[#a594ff] transition-colors"
+                        className="inline-flex items-center gap-1.5 text-[11px] text-white/45 hover:text-[#9DB4FF] transition-colors"
                       >
                         <ExternalLink className="h-3 w-3" />
                         Otwórz źródło
@@ -595,7 +595,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               {/* Dialog header */}
               <div className="flex items-start justify-between gap-3 p-5 border-b border-white/[0.06]">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#a594ff] font-semibold mb-1">Twoja ocena</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#9DB4FF] font-semibold mb-1">Twoja ocena</p>
                   <h2 className="font-display text-lg font-bold text-white line-clamp-2">{videoProgressDialog.video.video.title}</h2>
                   <p className="text-xs text-white/45 mt-1 flex items-center gap-1.5">
                     <BookOpen className="h-3 w-3" /> {videoProgressDialog.sessionTitle}
@@ -672,7 +672,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       videoProgressDialog.progress?.status || 'WATCHING',
                       parseInt(e.target.value)
                     )}
-                    className="w-full accent-[#8b7bff] cursor-pointer"
+                    className="w-full accent-[#4D63FF] cursor-pointer"
                     style={{ height: '6px' }}
                   />
                 </div>
@@ -691,14 +691,14 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       e.target.value
                     )}
                     rows={3}
-                    className="w-full rounded-xl bg-white/[0.025] border border-white/[0.08] px-3.5 py-2.5 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#8b7bff]/40 transition-colors resize-none"
+                    className="w-full rounded-xl bg-white/[0.025] border border-white/[0.08] px-3.5 py-2.5 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#4D63FF]/40 transition-colors resize-none"
                   />
                 </div>
 
                 {/* Save spinner */}
                 {isSaving && (
                   <div className="flex items-center justify-center gap-2 text-xs text-white/55">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#a594ff]" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#9DB4FF]" />
                     Zapisywanie…
                   </div>
                 )}

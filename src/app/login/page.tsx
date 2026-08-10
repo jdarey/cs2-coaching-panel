@@ -61,20 +61,20 @@ function LoginForm() {
 
       {/* Floating decorative elements */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.09) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.5) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.4) 0%, transparent 70%)' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-white shadow-[0_16px_40px_-12px_rgba(255,255,255,0.25)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
-              <GraduationCap className="w-7 h-7 text-[#060606]" strokeWidth={2.2} />
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-[#162ED3] shadow-[0_16px_40px_-10px_rgba(22,46,211,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+              <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
           </Link>
-          <h1 className="font-display text-3xl md:text-4xl leading-none font-bold tracking-tight text-gradient-premium mb-3">
+          <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-premium mb-3">
             CS2 Coaching
           </h1>
           <p className="text-white/45 text-sm font-light">Zaloguj się do swojego panelu</p>
@@ -87,13 +87,13 @@ function LoginForm() {
           maxTilt={5}
         >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-            <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)' }} />
+            <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(22,46,211,0.45) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-[#a594ff]" />
-              <p className="text-[11px] uppercase tracking-widest text-[#a594ff] font-semibold">Witaj z powrotem</p>
+              <Sparkles className="w-4 h-4 text-[#9DB4FF]" />
+              <p className="text-[11px] uppercase tracking-widest text-[#9DB4FF] font-semibold">Witaj z powrotem</p>
             </div>
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">Zaloguj się</h2>
 
@@ -115,7 +115,7 @@ function LoginForm() {
               <div className="space-y-2.5">
                 <Label htmlFor="email" className="label-premium">Email</Label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
                   <Input
                     id="email"
                     type="email"
@@ -141,13 +141,13 @@ function LoginForm() {
                         description: 'Skontaktuj się ze swoim trenerem lub administratorem, aby je zresetować.',
                       })
                     }
-                    className="text-xs text-white/45 hover:text-[#a594ff] transition-colors font-medium"
+                    className="text-xs text-white/45 hover:text-[#9DB4FF] transition-colors font-medium"
                   >
                     Zapomniałeś hasła?
                   </button>
                 </div>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#9DB4FF]" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -217,7 +217,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="relative min-h-screen flex items-center justify-center bg-[#06070d] text-white">
+        <div className="relative min-h-screen flex items-center justify-center bg-[#010104] text-white">
           <AuroraBackground variant="auth" />
           <div className="text-center">
             <div className="relative w-16 h-16 mx-auto mb-6">

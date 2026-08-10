@@ -60,18 +60,18 @@ interface StudentSessionsClientProps {
 }
 
 const STATUS_HEX: Record<string, string> = {
-  DRAFT: '#a594ff',
+  DRAFT: '#9DB4FF',
   ACTIVE: '#60a5fa',
   COMPLETED: '#34d399',
   ARCHIVED: '#94a3b8',
   PENDING: '#fbbf24',
   WATCHING: '#60a5fa',
   WATCHED: '#34d399',
-  IMPLEMENTED: '#a855f7',
+  IMPLEMENTED: '#162ED3',
 }
 
 const STATUS_DOT: Record<string, string> = {
-  DRAFT: '#8b7bff',
+  DRAFT: '#4D63FF',
   ACTIVE: '#60a5fa',
   COMPLETED: '#34d399',
   ARCHIVED: '#94a3b8',
@@ -141,10 +141,10 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
     <StudentLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#06070d]/70 backdrop-blur-2xl">
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#010104]/70 backdrop-blur-xl">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
+              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#4D63FF] to-[#162ED3] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
                 <BookOpen className="w-5 h-5 text-white" strokeWidth={2.2} />
                 <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
               </div>
@@ -158,7 +158,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
 
             <div className="relative mt-4">
               <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-40 h-2 rounded-full bg-[#8b7bff]/25 blur-xl animate-aurora-slow" />
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-40 h-2 rounded-full bg-[#4D63FF]/25 blur-xl animate-aurora-slow" />
             </div>
           </div>
         </div>
@@ -167,13 +167,13 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
         <div className="mt-6 flex flex-col lg:flex-row gap-4">
           {/* Glass search input */}
           <div className="relative flex-1 max-w-md group">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#a594ff] transition-colors duration-300" />
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#9DB4FF] transition-colors duration-300" />
             <input
               type="text"
               placeholder="Szukaj sesji..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="glass-liquid h-12 w-full rounded-xl pl-11 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#8b7bff]/40 transition-all duration-300"
+              className="glass-liquid h-12 w-full rounded-xl pl-11 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#4D63FF]/40 transition-all duration-300"
             />
             {search && (
               <button
@@ -227,11 +227,11 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
         {filteredSessions.length === 0 ? (
           <div className="glass-liquid spotlight rise-in mt-8 rounded-3xl p-10 sm:p-14 text-center" onMouseMove={handleCardMouse}>
             <div className="mx-auto mb-6 grid place-items-center w-20 h-20 rounded-3xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(124,111,255,0.25) 0%, rgba(90,79,255,0.10) 100%)', border: '1px solid rgba(124,111,255,0.3)' }}>
-              <div className="absolute inset-0 text-gradient-mesh opacity-40 blur-2xl animate-aurora" style={{ background: 'linear-gradient(135deg, #a594ff 0%, #7c6fff 45%, #5a4fff 100%)' }} />
+              <div className="absolute inset-0 text-gradient-mesh opacity-40 blur-2xl animate-aurora" style={{ background: 'linear-gradient(135deg, #9DB4FF 0%, #3B52FF 45%, #162ED3 100%)' }} />
               {search || statusFilter !== 'all' ? (
-                <Search className="relative w-9 h-9 text-[#a594ff]" strokeWidth={1.8} />
+                <Search className="relative w-9 h-9 text-[#9DB4FF]" strokeWidth={1.8} />
               ) : (
-                <BookOpen className="relative w-9 h-9 text-[#a594ff]" strokeWidth={1.8} />
+                <BookOpen className="relative w-9 h-9 text-[#9DB4FF]" strokeWidth={1.8} />
               )}
             </div>
             <h3 className="font-display text-2xl font-bold text-white">
@@ -246,14 +246,14 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
         ) : (
           <div className="mt-6 space-y-4">
             {filteredSessions.map((session, i) => {
-              const statusHex = STATUS_HEX[session.status] || '#a594ff'
+              const statusHex = STATUS_HEX[session.status] || '#9DB4FF'
               const tagCount = session.tags.length
               const videoCount = session.videos.length
               return (
                 <div
                   key={session.id}
                   onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover group relative rounded-3xl p-6 hover:border-[#8b7bff]/25"
+                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover group relative rounded-3xl p-6 hover:border-[#4D63FF]/25"
                   style={{ animationDelay: `${0.05 + i * 0.05}s` }}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -261,10 +261,10 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                     <div className="flex items-start gap-4 min-w-0 flex-1">
                       {/* Coach avatar with gradient ring glow */}
                       <div className="relative shrink-0">
-                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#8b7bff]/45 to-[#a855f7]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#4D63FF]/45 to-[#162ED3]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
                         <Avatar className="relative h-12 w-12 rounded-xl ring-1 ring-white/15">
                           <AvatarImage src={session.coach.avatarUrl || ''} alt={session.coach.name || ''} />
-                          <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] text-white font-display font-semibold">
+                          <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#4D63FF] to-[#162ED3] text-white font-display font-semibold">
                             {getInitials(session.coach.name || 'T')}
                           </AvatarFallback>
                         </Avatar>
@@ -272,7 +272,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2.5 flex-wrap">
-                          <h3 className="font-display text-xl font-bold text-white transition-colors duration-300 group-hover:text-[#a594ff] truncate">
+                          <h3 className="font-display text-xl font-bold text-white transition-colors duration-300 group-hover:text-[#9DB4FF] truncate">
                             {session.title}
                           </h3>
                           {/* Status pill */}
@@ -297,7 +297,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                         {tagCount > 0 && (
                           <div className="mt-3 flex flex-wrap items-center gap-1.5">
                             {session.tags.slice(0, 4).map((st) => {
-                              const c = st.tag.color || '#a594ff'
+                              const c = st.tag.color || '#9DB4FF'
                               return (
                                 <span
                                   key={st.tag.id}
@@ -325,7 +325,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                     {/* Right: Otwórz button */}
                     <Link
                       href={`/student/sessions/${session.id}`}
-                      className="relative shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white/85 hover:text-white bg-white/[0.04] hover:bg-gradient-to-r hover:from-[#8b7bff]/20 hover:to-[#5a4fff]/10 border border-white/[0.08] hover:border-[#8b7bff]/30 transition-all duration-300 overflow-hidden group/btn"
+                      className="relative shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white/85 hover:text-white bg-white/[0.04] hover:bg-gradient-to-r hover:from-[#4D63FF]/20 hover:to-[#162ED3]/10 border border-white/[0.08] hover:border-[#4D63FF]/30 transition-all duration-300 overflow-hidden group/btn"
                     >
                       <span className="relative">Otwórz</span>
                       <ArrowRight className="relative w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -354,7 +354,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                       </span>
                     )}
                     {videoCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 ml-auto text-[#a594ff]/80">
+                      <span className="inline-flex items-center gap-1.5 ml-auto text-[#9DB4FF]/80">
                         <PlayCircle className="w-3.5 h-3.5" />
                         Obejrzyj materiały
                       </span>

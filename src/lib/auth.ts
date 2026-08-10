@@ -3,6 +3,16 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+// NextAuth v4 hardcodes `http://localhost:3000` as its fallback base URL when
+// NEXTAUTH_URL is unset, which makes login/logout redirects (data.url) point
+// at the wrong origin whenever the dev server runs on a different port — e.g.
+// the Freebuff preview on :3100. Signing out then navigates the browser to
+// localhost:3000 where nothing listens, showing an error page instead of the
+// login screen. Pin the base URL to the port the dev server actually uses.
+if (process.env.NODE_ENV !== 'production' && !process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = `http://localhost:${process.env.PORT || 3000}`
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

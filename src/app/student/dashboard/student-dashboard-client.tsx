@@ -59,7 +59,7 @@ type StatKey = 'total' | 'pending' | 'watching' | 'done'
 type TabKey = 'sessions' | 'activity'
 
 const STAT_META: Record<StatKey, { label: string; icon: typeof Film; accent: string; ring: string }> = {
-  total: { label: 'Wszystkie filmy', icon: Film, accent: 'from-[#8b7bff] to-[#5a4fff]', ring: 'rgba(139,123,255,0.45)' },
+  total: { label: 'Wszystkie filmy', icon: Film, accent: 'from-[#4D63FF] to-[#162ED3]', ring: 'rgba(77,99,255,0.45)' },
   pending: { label: 'Do oglądania', icon: Clock, accent: 'from-[#fbbf24] to-[#f97316]', ring: 'rgba(251,191,36,0.4)' },
   watching: { label: 'W trakcie', icon: Play, accent: 'from-[#60a5fa] to-[#22d3ee]', ring: 'rgba(96,165,250,0.4)' },
   done: { label: 'Zakończone', icon: CheckCircle2, accent: 'from-[#34d399] to-[#16a34a]', ring: 'rgba(52,211,153,0.4)' },
@@ -114,12 +114,12 @@ export function StudentDashboardClient({
 
   if (!mounted) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#060606]">
+      <div className="fixed inset-0 flex items-center justify-center bg-[#010104]">
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
             <div className="absolute inset-0 rounded-full border-2 border-white/10" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#8b7bff] border-r-[#5a4fff] animate-spin" />
-            <div className="absolute inset-2 rounded-full bg-[#7c6fff]/10 blur-md animate-pulse" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#4D63FF] border-r-[#162ED3] animate-spin" />
+            <div className="absolute inset-2 rounded-full bg-[#3B52FF]/10 blur-md animate-pulse" />
           </div>
           <p className="text-white/40 text-sm font-medium tracking-wide font-display">Ładowanie panelu…</p>
         </div>
@@ -134,12 +134,12 @@ export function StudentDashboardClient({
         <div className="animate-rise-in mb-10 md:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium text-white/60 glass mb-6 backdrop-blur-xl">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-[#8b7bff] opacity-70 animate-ping" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#8b7bff]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-[#4D63FF] opacity-70 animate-ping" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#4D63FF]" />
             </span>
             Witaj z powrotem
           </div>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-[1.02] font-bold tracking-tight mb-4 text-gradient-premium">
+          <h1 className="font-display text-display font-bold tracking-tight mb-4 text-gradient-premium">
             Panel ucznia
           </h1>
           <p className="text-white/45 text-lg md:text-xl max-w-2xl font-light tracking-wide">
@@ -155,22 +155,22 @@ export function StudentDashboardClient({
             className="relative rounded-3xl overflow-hidden glass-card p-6 md:p-8"
             maxTilt={5}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#8b7bff]/10 via-transparent to-[#c084fc]/10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#4D63FF]/10 via-transparent to-[#5E74FF]/10" />
             <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 md:gap-6">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Avatar className="w-18 h-18 rounded-2xl ring-2 ring-white/20 shadow-[0_16px_40px_-10px_rgba(139,123,255,0.6)]">
+                  <Avatar className="w-18 h-18 rounded-2xl ring-2 ring-white/20 shadow-[0_16px_40px_-10px_rgba(77,99,255,0.6)]">
                     <AvatarImage src={coach.avatarUrl ?? undefined} alt={coach.name ?? coach.email} />
-                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] text-white font-display font-semibold text-xl">
+                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#4D63FF] to-[#162ED3] text-white font-display font-semibold text-xl">
                       {(coach.name ?? coach.email)[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#34d399] ring-3 ring-[#06070d] grid place-items-center">
+                  <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#34d399] ring-3 ring-[#010104] grid place-items-center">
                     <span className="w-2 h-2 rounded-full bg-white/90" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-widest text-[#a594ff] font-semibold mb-1.5">Twój trener</p>
+                  <p className="text-[11px] uppercase tracking-widest text-[#9DB4FF] font-semibold mb-1.5">Twój trener</p>
                   <h3 className="font-display text-2xl font-bold">{coach.name ?? coach.email}</h3>
                   <p className="text-white/40 text-sm mt-1">Skontaktuj się w razie pytań</p>
                 </div>
@@ -183,7 +183,7 @@ export function StudentDashboardClient({
                   href="/student/sessions"
                   className="shimmer-sweep relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-white glass hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
                 >
-                  <BookOpen className="w-4.5 h-4.5 text-[#a594ff]" />
+                  <BookOpen className="w-4.5 h-4.5 text-[#9DB4FF]" />
                   Przeglądaj sesje
                 </Link>
                 <Link
@@ -278,9 +278,9 @@ export function StudentDashboardClient({
                   />
                   <defs>
                     <linearGradient id="dashProgress" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#a594ff" />
-                      <stop offset="55%" stopColor="#7c6fff" />
-                      <stop offset="100%" stopColor="#5a4fff" />
+                      <stop offset="0%" stopColor="#9DB4FF" />
+                      <stop offset="55%" stopColor="#3B52FF" />
+                      <stop offset="100%" stopColor="#162ED3" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -301,7 +301,7 @@ export function StudentDashboardClient({
                     { v: pending, label: 'Do oglądania', color: '#fbbf24', key: 'pending' },
                     { v: watching, label: 'W trakcie', color: '#60a5fa', key: 'watching' },
                     { v: watched, label: 'Obejrzane', color: '#34d399', key: 'watched' },
-                    { v: implemented, label: 'Wdrożone', color: '#a855f7', key: 'implemented' },
+                    { v: implemented, label: 'Wdrożone', color: '#162ED3', key: 'implemented' },
                   ].map((b) => (
                     <div
                       key={b.key}
@@ -329,7 +329,7 @@ export function StudentDashboardClient({
           >
             <div className="flex items-center gap-2 mb-5 relative z-10">
               <div className="p-2 rounded-lg glass">
-                <Sparkles className="w-4 h-4 text-[#a594ff]" />
+                <Sparkles className="w-4 h-4 text-[#9DB4FF]" />
               </div>
               <h4 className="font-display text-lg font-bold">Szybkie akcje</h4>
             </div>
@@ -338,7 +338,7 @@ export function StudentDashboardClient({
                 { href: '/student/sessions', icon: BookOpen, label: 'Wszystkie sesje', sub: 'Przeglądaj swoje sesje', color: 'from-[#60a5fa] to-[#22d3ee]', ring: 'rgba(96,165,250,0.4)' },
                 { href: '/student/videos', icon: Film, label: 'Filmy do oglądania', sub: 'Twoja lista filmów', color: 'from-[#fbbf24] to-[#f97316]', ring: 'rgba(251,191,36,0.4)' },
                 { href: '/student/progress', icon: TrendingUp, label: 'Mój postęp', sub: 'Statystyki i wykresy', color: 'from-[#34d399] to-[#16a34a]', ring: 'rgba(52,211,153,0.4)' },
-                { href: '/student/settings', icon: Settings, label: 'Ustawienia', sub: 'Profil i preferencje', color: 'from-[#a855f7] to-[#d946ef]', ring: 'rgba(168,85,247,0.4)' },
+                { href: '/student/settings', icon: Settings, label: 'Ustawienia', sub: 'Profil i preferencje', color: 'from-[#162ED3] to-[#5E74FF]', ring: 'rgba(22,46,211,0.4)' },
               ].map((a) => {
                 const Icon = a.icon
                 return (
@@ -355,10 +355,10 @@ export function StudentDashboardClient({
                       <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white group-hover:text-[#a594ff] transition-colors truncate">{a.label}</p>
+                      <p className="text-sm font-semibold text-white group-hover:text-[#9DB4FF] transition-colors truncate">{a.label}</p>
                       <p className="text-[11px] text-white/45 truncate">{a.sub}</p>
                     </div>
-                    <ArrowRight className="w-4.5 h-4.5 text-white/30 group-hover:text-[#a594ff] group-hover:translate-x-1 transition-all duration-300" />
+                    <ArrowRight className="w-4.5 h-4.5 text-white/30 group-hover:text-[#9DB4FF] group-hover:translate-x-1 transition-all duration-300" />
                   </Link>
                 )
               })}
@@ -394,7 +394,7 @@ export function StudentDashboardClient({
                 <span
                   className={cn(
                     'text-[11px] px-2.5 py-1 rounded-full font-medium transition-colors duration-300',
-                    activeTab === t.key ? 'bg-[#7c6fff]/20 text-[#a594ff] border border-[#7c6fff]/30' : 'bg-white/[0.04] text-white/40 border border-white/[0.06]',
+                    activeTab === t.key ? 'bg-[#3B52FF]/20 text-[#9DB4FF] border border-[#3B52FF]/30' : 'bg-white/[0.04] text-white/40 border border-white/[0.06]',
                   )}
                 >
                   {t.count}
@@ -421,7 +421,7 @@ export function StudentDashboardClient({
                   upcomingSessions.map((session) => (
                     <div
                       key={session.id}
-                      className="group relative flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.03] hover:border-[#8b7bff]/25 transition-all duration-300"
+                      className="group relative flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.03] hover:border-[#4D63FF]/25 transition-all duration-300"
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className="relative p-4 rounded-2xl bg-gradient-to-br from-[#60a5fa] to-[#22d3ee] shadow-[0_12px_32px_-8px_rgba(96,165,250,0.5)] flex-shrink-0">
@@ -429,7 +429,7 @@ export function StudentDashboardClient({
                           <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-white group-hover:text-[#a594ff] transition-colors truncate">{session.title}</h4>
+                          <h4 className="font-semibold text-white group-hover:text-[#9DB4FF] transition-colors truncate">{session.title}</h4>
                           <p className="text-sm text-white/45 mt-1 flex items-center gap-1.5">
                             <Clock className="w-4 h-4" />
                             {session.scheduledAt ? formatDateTime(session.scheduledAt) : 'Bez terminu'}
@@ -460,7 +460,7 @@ export function StudentDashboardClient({
                         </Badge>
                         <Link
                           href={`/student/sessions/${session.id}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#7c6fff]/15 hover:border-[#7c6fff]/40 hover:text-[#a594ff] transition-all duration-300"
+                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#3B52FF]/15 hover:border-[#3B52FF]/40 hover:text-[#9DB4FF] transition-all duration-300"
                         >
                           Otwórz
                           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
@@ -487,7 +487,7 @@ export function StudentDashboardClient({
                   recentProgress.map((p) => (
                     <div
                       key={p.id}
-                      className="group relative flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.03] hover:border-[#8b7bff]/25 transition-all duration-300"
+                      className="group relative flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.03] hover:border-[#4D63FF]/25 transition-all duration-300"
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className="relative w-20 h-12 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/10">
@@ -498,15 +498,15 @@ export function StudentDashboardClient({
                               <Film className="w-5 h-5 text-white/40" />
                             </div>
                           )}
-                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-[#8b7bff]/40 to-transparent" />
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-[#4D63FF]/40 to-transparent" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-white group-hover:text-[#a594ff] transition-colors truncate">{p.video.title}</h4>
+                          <h4 className="font-semibold text-white group-hover:text-[#9DB4FF] transition-colors truncate">{p.video.title}</h4>
                           <p className="text-sm text-white/45 truncate">{p.session?.title}</p>
                           {typeof p.progress === 'number' && (
                             <div className="mt-2.5 h-1.5 rounded-full bg-white/[0.05] overflow-hidden max-w-xs">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] shadow-[0_0_12px_rgba(139,123,255,0.5)]"
+                                className="h-full rounded-full bg-gradient-to-r from-[#4D63FF] to-[#162ED3] shadow-[0_0_12px_rgba(77,99,255,0.5)]"
                                 style={{ width: `${p.progress}%`, transition: 'width 0.8s ease' }}
                               />
                             </div>
@@ -520,7 +520,7 @@ export function StudentDashboardClient({
                         {p.status !== 'IMPLEMENTED' && p.session && (
                           <Link
                             href={`/student/sessions/${p.session.id}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#7c6fff]/15 hover:border-[#7c6fff]/40 hover:text-[#a594ff] transition-all duration-300"
+                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#3B52FF]/15 hover:border-[#3B52FF]/40 hover:text-[#9DB4FF] transition-all duration-300"
                           >
                             Kontynuuj
                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
@@ -541,7 +541,7 @@ export function StudentDashboardClient({
             {totalSessions > 0 ? `Masz ${totalSessions} sesji łącznie` : 'Brak sesji — skontaktuj się z trenerem'}
           </p>
           <p className="hidden sm:flex items-center gap-1.5">
-            <Plus className="w-4 h-4 text-[#a594ff]" />
+            <Plus className="w-4 h-4 text-[#9DB4FF]" />
             Systematyczność to klucz do sukcesu
           </p>
         </div>

@@ -42,7 +42,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
   if (userRole !== 'STUDENT') return null
 
   return (
-    <div className="relative min-h-screen bg-[#060606] font-sans text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#010104] font-sans text-white overflow-x-hidden">
       <AuroraBackground />
 
       {/* Cursor follower glow */}
@@ -52,7 +52,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
           transform: `translate(-50%, -50%)`,
           left: `${mousePos.x}px`,
           top: `${mousePos.y}px`,
-          background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(22,46,211,0.2) 0%, transparent 70%)',
         }}
       />
 
@@ -62,11 +62,11 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
           'fixed inset-0 z-40 lg:hidden transition-opacity duration-300 backdrop-blur-sm',
           mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
-        style={{ background: 'rgba(6,6,6,0.85)' }}
+        style={{ background: 'rgba(1,1,4,0.45)' }}
         onClick={() => setMobileSidebarOpen(false)}
       />
 
-      <div className="relative z-10 flex min-h-screen">
+      <div className="relative flex min-h-screen">
         {/* Sidebar */}
         <aside
           className={cn(
@@ -74,18 +74,18 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
             sidebarOpen && mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
           style={{
-            background: 'linear-gradient(180deg, rgba(9,9,9,0.97) 0%, rgba(6,6,6,0.97) 100%)',
-            backdropFilter: 'blur(32px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-            borderRight: '1px solid rgba(255,255,255,0.06)',
+            background: 'linear-gradient(180deg, rgba(10,17,89,0.5) 0%, rgba(1,1,4,0.6) 100%)',
+            backdropFilter: 'blur(16px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(160%)',
+            borderRight: '1px solid rgba(255,255,255,0.07)',
           }}
         >
           <div className="flex h-full flex-col">
             {/* Logo */}
             <div className="flex h-18 items-center justify-between px-6 border-b border-white/[0.05]">
               <Link href="/student/dashboard" className="flex items-center gap-3 group">
-                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-white shadow-[0_10px_30px_-10px_rgba(255,255,255,0.25)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
-                  <GraduationCap className="w-5.5 h-5.5 text-[#060606]" strokeWidth={2.2} />
+                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-[#162ED3] shadow-[0_10px_30px_-8px_rgba(22,46,211,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+                  <GraduationCap className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/30" />
                 </div>
                 <div className="leading-tight">
@@ -115,8 +115,8 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
                       >
                         {active && (
                           <>
-                            <span className="absolute inset-0 rounded-xl bg-white/[0.06] border border-white/10" style={{ boxShadow: '0 0 24px -10px rgba(255,255,255,0.15)' }} />
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+                            <span className="absolute inset-0 rounded-xl bg-[#162ED3]/20 border border-[#5E74FF]/40" style={{ boxShadow: '0 0 24px -8px rgba(22,46,211,0.5)' }} />
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-[#5E74FF] shadow-[0_0_12px_rgba(22,46,211,0.9)]" />
                           </>
                         )}
                         {!active && <span className="absolute inset-0 rounded-xl bg-transparent group-hover:bg-white/[0.03] transition-colors" />}
@@ -135,7 +135,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center gap-3 mb-4">
                   <Avatar className="h-10 w-10 rounded-xl ring-1 ring-white/15">
                     <AvatarImage src={(user as any)?.avatarUrl || ''} alt={user?.name || ''} />
-                    <AvatarFallback className="rounded-xl bg-white text-[#060606] font-display font-semibold text-sm">
+                    <AvatarFallback className="rounded-xl bg-[#162ED3] text-white font-display font-semibold text-sm">
                       {user?.name?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -166,14 +166,14 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Main */}
-        <div className="flex-1 min-w-0 min-h-screen flex flex-col">
+        <div className="relative z-10 flex-1 min-w-0 min-h-screen flex flex-col">
           {/* Mobile top bar */}
-          <header className="lg:hidden sticky top-0 z-30 h-16 border-b border-white/[0.05] backdrop-blur-2xl bg-[#06070d]/70 px-4 flex items-center justify-between">
+          <header className="lg:hidden sticky top-0 z-30 h-16 border-b border-white/[0.05] backdrop-blur-xl bg-[#06070d]/70 px-4 flex items-center justify-between">
             <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-white/5" onClick={() => { setMobileSidebarOpen(true); setSidebarOpen(true) }}>
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff]">
+              <div className="w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br from-[#4D63FF] to-[#162ED3]">
                 <GraduationCap className="w-4 h-4 text-white" strokeWidth={2.2} />
               </div>
               <span className="font-display font-bold text-sm">CS2 Coaching</span>

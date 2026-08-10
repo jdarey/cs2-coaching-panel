@@ -34,7 +34,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
   const statCards = [
     { name: 'Uczniowie', value: studentsCount, icon: Users, href: '/coach/students', gradient: 'from-[#60a5fa] to-[#22d3ee]' },
     { name: 'Sesje', value: sessionsCount, icon: BookOpen, href: '/coach/sessions', gradient: 'from-[#34d399] to-[#16a34a]' },
-    { name: 'Filmy', value: videosCount, icon: Video, href: '/coach/videos', gradient: 'from-[#a855f7] to-[#7c3aed]' },
+    { name: 'Filmy', value: videosCount, icon: Video, href: '/coach/videos', gradient: 'from-[#162ED3] to-[#0C169C]' },
     { name: 'Tagi', value: tagsCount, icon: Tag, href: '/coach/tags', gradient: 'from-[#fbbf24] to-[#f97316]' },
   ]
 
@@ -46,17 +46,17 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* =========================== STICKY HEADER =========================== */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#06070d]/70 backdrop-blur-2xl border-b border-white/[0.06]">
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#010104]/70 backdrop-blur-xl border-b border-white/[0.06]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
             <div className="flex items-start gap-4">
               <div className="relative hidden sm:block">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] blur-xl opacity-40 animate-aurora-slow" />
-                <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] ring-1 ring-white/30 shadow-lg shadow-[#7c3aed]/30">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#5E74FF] to-[#0C169C] blur-xl opacity-40 animate-aurora-slow" />
+                <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#5E74FF] to-[#0C169C] ring-1 ring-white/30 shadow-lg shadow-[#0C169C]/30">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet leading-tight">
+                <h1 className="font-display text-display font-bold text-gradient-violet">
                   Dashboard trenera
                 </h1>
                 <p className="mt-1.5 text-sm text-white/55 max-w-md">
@@ -69,8 +69,8 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 href="/coach/sessions"
                 className={cn(
                   'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
-                  'btn-darey shadow-lg shadow-[#7c3aed]/30',
-                  'ring-1 ring-white/20 hover:shadow-xl hover:shadow-[#7c3aed]/40 hover:-translate-y-0.5 transition-all duration-300',
+                  'btn-darey shadow-lg shadow-[#0C169C]/30',
+                  'ring-1 ring-white/20 hover:shadow-xl hover:shadow-[#0C169C]/40 hover:-translate-y-0.5 transition-all duration-300',
                 )}
               >
                 <Plus className="h-4 w-4" />
@@ -80,7 +80,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 href="/coach/videos"
                 className={cn(
                   'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
-                  'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.07]',
+                  'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#5E74FF]/25 hover:bg-white/[0.07]',
                   'backdrop-blur-xl hover:-translate-y-0.5 transition-all duration-300',
                 )}
               >
@@ -98,18 +98,18 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
           className="glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8"
           maxTilt={6}
         >
-          <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#7c3aed]/20 blur-3xl animate-aurora pointer-events-none" />
-          <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-[#a855f7]/15 blur-3xl animate-aurora-slow pointer-events-none" />
+          <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#0C169C]/20 blur-3xl animate-aurora pointer-events-none" />
+          <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-[#162ED3]/15 blur-3xl animate-aurora-slow pointer-events-none" />
 
           <div className="relative grid lg:grid-cols-[auto_1fr] items-center gap-8">
             {/* SVG ring */}
             <div className="relative mx-auto lg:mx-0 grid place-items-center">
-              <svg width="160" height="160" viewBox="0 0 120 120" className="-rotate-90 drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
+              <svg width="160" height="160" viewBox="0 0 120 120" className="-rotate-90 drop-shadow-[0_0_24px_rgba(22,46,211,0.35)]">
                 <defs>
                   <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#d8b4fe" />
-                    <stop offset="50%" stopColor="#a855f7" />
-                    <stop offset="100%" stopColor="#7c3aed" />
+                    <stop offset="0%" stopColor="#9DB4FF" />
+                    <stop offset="50%" stopColor="#162ED3" />
+                    <stop offset="100%" stopColor="#0C169C" />
                   </linearGradient>
                 </defs>
                 <circle
@@ -144,7 +144,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
             {/* Text block */}
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/55 ring-1 ring-white/[0.08]">
-                <Activity className="h-3 w-3 text-[#d8b4fe]" />
+                <Activity className="h-3 w-3 text-[#9DB4FF]" />
                 Skuteczność treningowa
               </div>
               <h2 className="font-display mt-3 text-2xl sm:text-3xl font-semibold text-gradient-violet">
@@ -157,13 +157,13 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               <div className="mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2">
                 <Link
                   href="/coach/sessions"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#5E74FF]/25 hover:bg-white/[0.08] transition-all"
                 >
                   Szczegóły <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
                   href="/coach/students"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#5E74FF]/25 hover:bg-white/[0.08] transition-all"
                 >
                   Postępy uczniów <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
@@ -188,7 +188,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 className={cn(
                   'glass-liquid spotlight group relative flex h-full flex-col overflow-hidden rounded-3xl p-6',
                   'transition-all duration-500',
-                  'border border-white/[0.06] hover:border-[#c084fc]/25',
+                  'border border-white/[0.06] hover:border-[#5E74FF]/25',
                 )}
               >
                 <div className="layer-1 flex items-start justify-between">
@@ -196,7 +196,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                     <div className={cn('absolute inset-0 rounded-2xl bg-gradient-to-br opacity-95', stat.gradient)} />
                     <stat.icon className="relative h-5 w-5 text-white" />
                   </div>
-                  <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#d8b4fe] group-hover:translate-x-0.5 transition-all duration-300" />
+                  <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#9DB4FF] group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
                 <div className="layer-2 mt-5">
                   <p className="font-display text-3xl font-bold text-white count-glow tabular-nums">
@@ -230,7 +230,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               </div>
               <Link
                 href="/coach/sessions"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:text-white hover:bg-white/[0.07] transition-all"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#5E74FF]/25 hover:text-white hover:bg-white/[0.07] transition-all"
               >
                 Wszystkie <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -248,7 +248,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 <p className="text-sm text-white/55">Brak sesji. Utwórz swoją pierwszą sesję.</p>
                 <Link
                   href="/coach/sessions"
-                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
+                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#0C169C]/25 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Utwórz sesję
                 </Link>
@@ -319,7 +319,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               </div>
               <Link
                 href="/coach/students"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:text-white hover:bg-white/[0.07] transition-all"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#5E74FF]/25 hover:text-white hover:bg-white/[0.07] transition-all"
               >
                 Wszyscy <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -337,7 +337,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 <p className="text-sm text-white/55">Brak uczniów. Dodaj pierwszego ucznia.</p>
                 <Link
                   href="/coach/students"
-                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
+                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#0C169C]/25 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Dodaj ucznia
                 </Link>
@@ -365,7 +365,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                             className="h-11 w-11 rounded-xl object-cover ring-1 ring-white/15"
                           />
                         ) : (
-                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] text-sm font-semibold text-white ring-1 ring-white/30 shadow-lg shadow-[#7c3aed]/25">
+                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[#5E74FF] to-[#0C169C] text-sm font-semibold text-white ring-1 ring-white/30 shadow-lg shadow-[#0C169C]/25">
                             {initial}
                           </div>
                         )}
@@ -397,13 +397,13 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
           className="glass-tinted relative overflow-hidden rounded-3xl p-8 sm:p-10"
           maxTilt={5}
         >
-          <div className="absolute -top-20 -right-10 h-64 w-64 rounded-full bg-[#a855f7]/25 blur-3xl animate-aurora pointer-events-none" />
-          <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[#7c3aed]/20 blur-3xl animate-aurora-slow pointer-events-none" />
+          <div className="absolute -top-20 -right-10 h-64 w-64 rounded-full bg-[#162ED3]/25 blur-3xl animate-aurora pointer-events-none" />
+          <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[#0C169C]/20 blur-3xl animate-aurora-slow pointer-events-none" />
 
           <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/[0.08]">
-                <Sparkles className="h-3 w-3 text-[#d8b4fe]" /> Szybkie akcje
+                <Sparkles className="h-3 w-3 text-[#9DB4FF]" /> Szybkie akcje
               </div>
               <h3 className="font-display mt-3 text-2xl sm:text-3xl font-bold text-gradient-violet max-w-xl">
                 Rozbuduj swoją bibliotekę treningów
@@ -416,25 +416,25 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/coach/sessions"
-                className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/30 hover:-translate-y-0.5 transition-all"
+                className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#0C169C]/30 hover:-translate-y-0.5 transition-all"
               >
                 <Plus className="h-4 w-4" /> Nowa sesja
               </Link>
               <Link
                 href="/coach/videos"
-                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
+                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#5E74FF]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
               >
                 <Video className="h-4 w-4" /> Dodaj film
               </Link>
               <Link
                 href="/coach/tags"
-                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
+                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#5E74FF]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
               >
                 <Tag className="h-4 w-4" /> Dodaj tag
               </Link>
               <Link
                 href="/coach/students"
-                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
+                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#5E74FF]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
               >
                 <UserCheck className="h-4 w-4" /> Dodaj ucznia
               </Link>
