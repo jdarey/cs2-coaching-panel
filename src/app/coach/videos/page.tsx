@@ -13,13 +13,13 @@ export default async function CoachVideosPage() {
 
   const userId = (session.user as any).id
 
-  const [videos, tags] = await Promise.all([
+  const [videos, tags, students, sessions] = await Promise.all([
     prisma.video.findMany({
       where: { coachId: userId, isActive: true },
       orderBy: { createdAt: 'desc' },
       include: {
         tags: { include: { tag: true } },
-        _count: { select: { progress: true } },
+        _count: { select: { progress: true, sessionVideos: true } },
       },
     }),
     prisma.tag.findMany({
@@ -27,7 +27,17 @@ export default async function CoachVideosPage() {
       orderBy: { name: 'asc' },
       select: { id: true, name: true, color: true },
     }),
+    prisma.user.findMany({
+      where: { coachId: userId, role: 'STUDENT' },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.session.findMany({
+      where: { coachId: userId, status: { not: 'ARCHIVED' } },
+      select: { id: true, title: true, studentId: true, status: true },
+      orderBy: { updatedAt: 'desc' },
+    }),
   ])
 
-  return <CoachVideosClient initialVideos={videos} initialTags={tags} />
+  return <CoachVideosClient initialVideos={videos} initialTags={tags} initialStudents={students} initialSessions={sessions} />
 }

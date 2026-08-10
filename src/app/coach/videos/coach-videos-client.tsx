@@ -22,6 +22,11 @@ import {
   Tag as TagIcon,
   Layers,
   Sparkles,
+  UserPlus,
+  Check,
+  ChevronDown,
+  Copy,
+  BookOpen,
 } from 'lucide-react'
 
 interface Video {
@@ -34,7 +39,7 @@ interface Video {
   source: string
   isActive: boolean
   tags: { tag: { id: string; name: string; color: string } }[]
-  _count: { progress: number }
+  _count: { progress: number; sessionVideos: number }
 }
 
 interface Tag {
@@ -43,9 +48,24 @@ interface Tag {
   color: string
 }
 
+interface Student {
+  id: string
+  name: string | null
+  email: string
+}
+
+interface Session {
+  id: string
+  title: string
+  studentId: string
+  status: string
+}
+
 interface CoachVideosClientProps {
   initialVideos: Video[]
   initialTags: Tag[]
+  initialStudents: Student[]
+  initialSessions: Session[]
 }
 
 const SOURCE_META: Record<string, { label: string; Icon: typeof Youtube }> = {
@@ -55,12 +75,16 @@ const SOURCE_META: Record<string, { label: string; Icon: typeof Youtube }> = {
   other: { label: 'Link', Icon: LinkIcon },
 }
 
-export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosClientProps) {
+export function CoachVideosClient({ initialVideos, initialTags, initialStudents, initialSessions }: CoachVideosClientProps) {
   const [videos, setVideos] = useState<Video[]>(initialVideos)
   const [tags] = useState<Tag[]>(initialTags)
+  const [students] = useState<Student[]>(initialStudents)
+  const [sessions] = useState<Session[]>(initialSessions)
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [editingVideo, setEditingVideo] = useState<Video | null>(null)
+  const [assigningVideo, setAssigningVideo] = useState<Video | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'youtube' | 'vimeo' | 'drive' | 'other'>('all')
   const [formData, setFormData] = useState({
@@ -68,6 +92,12 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
     url: '',
     description: '',
     tagIds: [] as string[],
+  })
+  const [assignFormData, setAssignFormData] = useState({
+    studentId: '',
+    sessionId: '',
+    createNewSession: false,
+    newSessionTitle: '',
   })
   const { toast } = useToast()
 
@@ -107,7 +137,7 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
         toast({ title: 'Sukces', description: 'Film zaktualizowany' })
       } else {
         setVideos((prev) => [data, ...prev])
-        toast({ title: 'Sukces', description: 'Film dodany' })
+        toast({ title: 'Sukces', description: 'Film dodany do bazy' })
       }
 
       setDialogOpen(false)
@@ -119,8 +149,89 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
     }
   }
 
+  const handleAssign = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!assigningVideo || !assignFormData.studentId) return
+
+    setIsLoading(true)
+
+    try {
+      let sessionId = assignFormData.sessionId
+
+      // Create new session if requested
+      if (assignFormData.createNewSession && assignFormData.newSessionTitle.trim()) {
+        const res = await fetch('/api/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: assignFormData.newSessionTitle,
+            studentId: assignFormData.studentId,
+            status: 'DRAFT',
+            videoIds: [assigningVideo.id],
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
+          return
+        }
+        sessionId = data.id
+      }
+
+      // If no session selected and not creating new, find or create a session
+      if (!sessionId) {
+        const existingSession = sessions.find(
+          (s) => s.studentId === assignFormData.studentId && s.status !== 'ARCHIVED'
+        )
+        if (existingSession) {
+          sessionId = existingSession.id
+        } else {
+          const res = await fetch('/api/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: `Sesja z ${assigningVideo.title}`,
+              studentId: assignFormData.studentId,
+              status: 'DRAFT',
+              videoIds: [assigningVideo.id],
+            }),
+          })
+          const data = await res.json()
+          if (!res.ok) {
+            toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
+            return
+          }
+          sessionId = data.id
+        }
+      }
+
+      // Add video to session
+      const res = await fetch(`/api/coach/sessions/${sessionId}/videos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId: assigningVideo.id }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
+        return
+      }
+
+      toast({ title: 'Sukces', description: `Film przypisany do ucznia ${students.find(s => s.id === assignFormData.studentId)?.name || assignFormData.studentId}` })
+      setAssignDialogOpen(false)
+      resetAssignForm()
+    } catch {
+      toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleDelete = async (videoId: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć ten film?')) return
+    if (!confirm('Czy na pewno chcesz usunąć ten film? Usunie się on z bazy i ze wszystkich sesji.')) return
 
     try {
       const res = await fetch(`/api/videos/${videoId}`, { method: 'DELETE' })
@@ -155,8 +266,18 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
     setDialogOpen(true)
   }
 
+  const openAssignDialog = (video: Video) => {
+    setAssigningVideo(video)
+    resetAssignForm()
+    setAssignDialogOpen(true)
+  }
+
   const resetForm = () => {
     setFormData({ title: '', url: '', description: '', tagIds: [] })
+  }
+
+  const resetAssignForm = () => {
+    setAssignFormData({ studentId: '', sessionId: '', createNewSession: false, newSessionTitle: '' })
   }
 
   const toggleTag = (tagId: string) => {
@@ -173,6 +294,19 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const detectSource = (url: string) => {
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube'
+    if (url.includes('vimeo.com')) return 'vimeo'
+    if (url.includes('drive.google.com')) return 'drive'
+    return 'other'
+  }
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value
+    const source = detectSource(url)
+    setFormData((prev) => ({ ...prev, url, source }))
   }
 
   const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
@@ -196,7 +330,7 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
         <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-6 pt-4 bg-transparent">
           <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#06070d] via-[#06070d]/85 to-transparent" />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="rise-in">
+            <div className="animate-rise-in">
               <div className="flex items-center gap-3">
                 <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
                   <Film className="h-5 w-5 text-[#d8b4fe]" />
@@ -206,14 +340,14 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
                     Filmy
                   </h1>
                   <p className="text-sm text-white/45 mt-0.5">
-                    Baza filmów treningowych do przypisywania uczniom
+                    Baza filmów treningowych — dodawaj, taguj i przypisuj uczniom
                   </p>
                 </div>
               </div>
             </div>
             <button
               onClick={openAddDialog}
-              className="shimmer-line relative overflow-hidden group inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow"
+              className="shimmer-sweep relative overflow-hidden group inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow"
             >
               <Plus className="h-4 w-4" />
               Dodaj film
@@ -223,19 +357,20 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
 
         {/* Premium glass search + tabs */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="relative flex-1 max-w-md rise-in" style={{ animationDelay: '60ms' }}>
+          <div className="relative flex-1 max-w-md animate-rise-in" style={{ animationDelay: '60ms' }}>
             <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Szukaj filmu..."
+              placeholder="Szukaj filmu po tytule lub opisie..."
               className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#a855f7]/30 transition"
+              aria-label="Szukaj filmów"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition"
-                aria-label="Wyczyść"
+                aria-label="Wyczyść wyszukiwanie"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -243,7 +378,7 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
           </div>
 
           <div
-            className="glass-liquid relative flex items-center gap-1 rounded-2xl p-1 overflow-x-auto rise-in"
+            className="glass-liquid relative flex items-center gap-1 rounded-2xl p-1 overflow-x-auto animate-rise-in"
             style={{ animationDelay: '120ms' }}
           >
             {tabs.map((t) => {
@@ -270,18 +405,19 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
         {/* Videos grid */}
         {filteredVideos.length === 0 ? (
           <div
-            className="glass-liquid spotlight rise-in rounded-3xl p-16 text-center"
+            className="glass-liquid spotlight animate-rise-in rounded-3xl p-16 text-center"
             onMouseMove={handleCardMouse}
           >
             {search || activeTab !== 'all' ? (
               <>
                 <Search className="h-12 w-12 mx-auto mb-4 text-white/30" />
-                <p className="text-white/55">Nie znaleziono filmów</p>
+                <p className="text-white/55">Nie znaleziono filmów pasujących do kryteriów</p>
+                <p className="text-white/35 text-sm mt-1">Spróbuj zmienić filtr lub wyczyść wyszukiwanie</p>
               </>
             ) : (
               <>
                 <Play className="h-12 w-12 mx-auto mb-4 text-white/30" />
-                <p className="text-white/55 mb-5">Nie masz jeszcze żadnych filmów</p>
+                <p className="text-white/55 mb-5">Nie masz jeszcze żadnych filmów w bazie</p>
                 <button
                   onClick={openAddDialog}
                   className="inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed]"
@@ -300,7 +436,7 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
                 <article
                   key={video.id}
                   onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight rise-in group relative flex flex-col rounded-3xl overflow-hidden transition-transform duration-500 hover:-translate-y-1.5"
+                  className="glass-liquid spotlight animate-rise-in group relative flex flex-col rounded-3xl overflow-hidden transition-transform duration-500 hover:-translate-y-1.5"
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
                   {/* Thumbnail */}
@@ -334,6 +470,18 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
                       <Clock className="h-3 w-3" />
                       {formatDuration(video.duration)}
                     </div>
+
+                    {/* Quick assign button on hover */}
+                    <div className="absolute top-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-1 group-hover:translate-y-0">
+                      <button
+                        onClick={() => openAssignDialog(video)}
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_8px_24px_-8px_rgba(192,132,252,0.5)] hover:shadow-[0_12px_32px_-8px_rgba(192,132,252,0.7)] transition-all"
+                        aria-label={`Przypisz "${video.title}" do ucznia`}
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Przypisz
+                      </button>
+                    </div>
                   </div>
 
                   {/* Body */}
@@ -342,7 +490,7 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
                       href={video.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet transition-colors"
+                      className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a855f7]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06070d] rounded"
                     >
                       {video.title}
                     </a>
@@ -383,12 +531,18 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
                           <TagIcon className="h-3.5 w-3.5" />
                           {video.tags.length} tagów
                         </span>
+                        {video._count.sessionVideos > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <BookOpen className="h-3.5 w-3.5" />
+                            {video._count.sessionVideos} sesji
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => openEditDialog(video)}
                           className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#c084fc]/25 transition"
-                          aria-label="Edytuj"
+                          aria-label="Edytuj film"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -397,14 +551,23 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
                           target="_blank"
                           rel="noopener noreferrer"
                           className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#c084fc]/25 transition"
-                          aria-label="Odtwórz"
+                          aria-label="Odtwórz na zewnątrz"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                        <a
+                          href={video.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-[#a594ff] hover:border-[#a594ff]/25 transition"
+                          aria-label="Otwórz w YouTube/Vimeo"
                         >
                           <Play className="h-4 w-4" />
                         </a>
                         <button
                           onClick={() => handleDelete(video.id)}
                           className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-red-300 hover:border-red-500/30 transition"
-                          aria-label="Usuń"
+                          aria-label="Usuń film"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -416,169 +579,314 @@ export function CoachVideosClient({ initialVideos, initialTags }: CoachVideosCli
             })}
           </div>
         )}
-      </div>
 
-      {/* Custom glass add/edit dialog */}
-      {dialogOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center p-4">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-xl"
-            onClick={() => setDialogOpen(false)}
-          />
-          <div
-            className="glass-liquid spotlight relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-7 rise-in"
-            onMouseMove={handleCardMouse}
-          >
-            <div className="mb-6 flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                <Sparkles className="h-5 w-5 text-[#d8b4fe]" />
-              </span>
-              <div>
-                <h2 className="font-display text-xl font-bold text-gradient-violet">
-                  {editingVideo ? 'Edytuj film' : 'Nowy film treningowy'}
-                </h2>
-                <p className="text-xs text-white/45">
-                  {editingVideo ? 'Zaktualizuj dane filmu' : 'Dodaj nowy film do bazy'}
-                </p>
+        {/* Custom glass add/edit dialog */}
+        {dialogOpen && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4 animate-fade-up">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-xl"
+              onClick={() => setDialogOpen(false)}
+              aria-hidden="true"
+            />
+            <div
+              className="glass-liquid spotlight relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-7 animate-rise-in"
+              onMouseMove={handleCardMouse}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="video-dialog-title"
+            >
+              <div className="mb-6 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                  <Sparkles className="h-5 w-5 text-[#d8b4fe]" />
+                </span>
+                <div>
+                  <h2 id="video-dialog-title" className="font-display text-xl font-bold text-gradient-violet">
+                    {editingVideo ? 'Edytuj film' : 'Nowy film treningowy'}
+                  </h2>
+                  <p className="text-xs text-white/45">
+                    {editingVideo ? 'Zaktualizuj dane filmu w bazie' : 'Dodaj nowy film do bazy treningowej'}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Title */}
-              <div className="space-y-1.5">
-                <label htmlFor="title" className="text-xs font-medium text-white/55">
-                  Tytuł *
-                </label>
-                <div className="relative">
-                  <Film className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <input
-                    id="title"
-                    placeholder="np. Jak poprawić crosshair placement"
-                    value={formData.title}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                    required
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Title */}
+                <div className="space-y-1.5">
+                  <label htmlFor="title" className="text-xs font-medium text-white/55">
+                    Tytuł *
+                  </label>
+                  <div className="relative">
+                    <Film className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <input
+                      id="title"
+                      placeholder="np. Jak poprawić crosshair placement na Mirage"
+                      value={formData.title}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                      required
+                      disabled={isLoading}
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* URL */}
+                <div className="space-y-1.5">
+                  <label htmlFor="url" className="text-xs font-medium text-white/55">
+                    URL filmu *
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <input
+                      id="url"
+                      placeholder="https://youtube.com/watch?v=... lub vimeo.com/... lub drive.google.com/..."
+                      value={formData.url}
+                      onChange={handleUrlChange}
+                      required
+                      disabled={isLoading}
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
+                    />
+                  </div>
+                  <p className="text-xs text-white/40">
+                    Obsługiwane: YouTube, Vimeo, Google Drive, linki bezpośrednie. Źródło wykrywane automatycznie.
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label htmlFor="description" className="text-xs font-medium text-white/55">
+                    Opis (opcjonalnie)
+                  </label>
+                  <textarea
+                    id="description"
+                    placeholder="Krótki opis co uczeń się nauczy z tego filmu..."
+                    value={formData.description}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                    maxLength={2000}
                     disabled={isLoading}
-                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
+                    rows={3}
+                    className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition resize-none"
                   />
                 </div>
-              </div>
 
-              {/* URL */}
-              <div className="space-y-1.5">
-                <label htmlFor="url" className="text-xs font-medium text-white/55">
-                  URL filmu *
-                </label>
-                <div className="relative">
-                  <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <input
-                    id="url"
-                    placeholder="https://youtube.com/watch?v=... lub vimeo.com/... lub drive.google.com/..."
-                    value={formData.url}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, url: e.target.value }))}
-                    required
-                    disabled={isLoading}
-                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
-                  />
-                </div>
-                <p className="text-xs text-white/40">
-                  Obsługiwane: YouTube, Vimeo, Google Drive, linki bezpośrednie
-                </p>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1.5">
-                <label htmlFor="description" className="text-xs font-medium text-white/55">
-                  Opis (opcjonalnie)
-                </label>
-                <textarea
-                  id="description"
-                  placeholder="Krótki opis co uczeń się nauczy..."
-                  value={formData.description}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                  maxLength={2000}
-                  disabled={isLoading}
-                  rows={3}
-                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition resize-none"
-                />
-              </div>
-
-              {/* Tags */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-white/55">Tagi</label>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => {
-                    const selected = formData.tagIds.includes(tag.id)
-                    return (
-                      <button
-                        key={tag.id}
-                        type="button"
-                        onClick={() => toggleTag(tag.id)}
-                        className={cn(
-                          'rounded-lg px-2.5 h-8 text-xs font-medium transition-all',
-                          selected
-                            ? 'text-white ring-1'
-                            : 'glass-liquid text-white/65 hover:text-white'
-                        )}
-                        style={
-                          selected
-                            ? {
-                                backgroundColor: `${tag.color}26`,
-                                borderColor: tag.color,
-                                boxShadow: `0 0 0 1px ${tag.color}`,
-                              }
-                            : undefined
-                        }
-                      >
-                        <span
-                          className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
-                          style={{ backgroundColor: tag.color }}
-                        />
-                        {tag.name}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-end gap-2 pt-4 border-t border-white/[0.06]">
-                <button
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                  className="inline-flex items-center rounded-2xl px-5 h-11 text-sm font-medium text-white/65 hover:text-white glass-liquid transition"
-                >
-                  Anuluj
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4" />
+                {/* Tags */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/55">Tagi</label>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => {
+                      const selected = formData.tagIds.includes(tag.id)
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => toggleTag(tag.id)}
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-lg px-3 h-9 text-xs font-medium transition-all',
+                            selected
+                              ? 'text-white ring-1'
+                              : 'glass-liquid text-white/65 hover:text-white'
+                          )}
+                          style={
+                            selected
+                              ? {
+                                  backgroundColor: `${tag.color}26`,
+                                  borderColor: tag.color,
+                                  boxShadow: `0 0 0 1px ${tag.color}`,
+                                }
+                              : undefined
+                          }
+                        >
+                          <span
+                            className="h-2 w-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: tag.color }}
+                          />
+                          {tag.name}
+                          {selected && <Check className="h-3 w-3" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {tags.length === 0 && (
+                    <p className="text-xs text-white/40">Brak dostępnych tagów. Dodaj tagi w sekcji <a href="/coach/tags" className="text-[#a594ff] hover:underline">Tagi</a>.</p>
                   )}
-                  {editingVideo ? 'Zapisz' : 'Dodaj film'}
-                </button>
-              </div>
-            </form>
+                </div>
 
-            {/* External link hint */}
-            {editingVideo && (
-              <a
-                href={editingVideo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-1.5 text-xs text-white/45 hover:text-white/70 transition"
-              >
-                <ExternalLink className="h-3 w-3" />
-                Otwórz w nowej karcie
-              </a>
-            )}
+                {/* Footer */}
+                <div className="flex justify-end gap-2 pt-4 border-t border-white/[0.06]">
+                  <button
+                    type="button"
+                    onClick={() => setDialogOpen(false)}
+                    disabled={isLoading}
+                    className="inline-flex items-center rounded-2xl px-5 h-11 text-sm font-medium text-white/65 hover:text-white glass-liquid transition"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !formData.title.trim() || !formData.url.trim()}
+                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    {editingVideo ? 'Zapisz zmiany' : 'Dodaj film do bazy'}
+                  </button>
+                </div>
+              </form>
+
+              {/* External link hint for editing */}
+              {editingVideo && (
+                <a
+                  href={editingVideo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-1.5 text-xs text-white/45 hover:text-white/70 transition"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Otwórz oryginalny link w nowej karcie
+                </a>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Assign to student dialog */}
+        {assignDialogOpen && assigningVideo && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4 animate-fade-up">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-xl"
+              onClick={() => setAssignDialogOpen(false)}
+              aria-hidden="true"
+            />
+            <div
+              className="glass-liquid spotlight relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-7 animate-rise-in"
+              onMouseMove={handleCardMouse}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="assign-dialog-title"
+            >
+              <div className="mb-6 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                  <UserPlus className="h-5 w-5 text-[#d8b4fe]" />
+                </span>
+                <div>
+                  <h2 id="assign-dialog-title" className="font-display text-xl font-bold text-gradient-violet">
+                    Przypisz film do ucznia
+                  </h2>
+                  <p className="text-xs text-white/45 mt-1 line-clamp-1">{assigningVideo.title}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleAssign} className="space-y-4">
+                {/* Student select */}
+                <div className="space-y-1.5">
+                  <label htmlFor="studentId" className="text-xs font-medium text-white/55">
+                    Uczeń *
+                  </label>
+                  <div className="relative">
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <select
+                      id="studentId"
+                      value={assignFormData.studentId}
+                      onChange={(e) => setAssignFormData((prev) => ({ ...prev, studentId: e.target.value, sessionId: '' }))}
+                      required
+                      disabled={isLoading}
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
+                    >
+                      <option value="">Wybierz ucznia...</option>
+                      {students.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name || s.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Session select */}
+                <div className="space-y-1.5">
+                  <label htmlFor="sessionId" className="text-xs font-medium text-white/55">
+                    Sesja (opcjonalnie)
+                  </label>
+                  <div className="relative">
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <select
+                      id="sessionId"
+                      value={assignFormData.sessionId}
+                      onChange={(e) => setAssignFormData((prev) => ({ ...prev, sessionId: e.target.value }))}
+                      disabled={isLoading || !assignFormData.studentId}
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
+                    >
+                      <option value="">Automatycznie (znajdź lub utwórz)</option>
+                      {assignFormData.studentId &&
+                        sessions
+                          .filter((s) => s.studentId === assignFormData.studentId && s.status !== 'ARCHIVED')
+                          .map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.title} ({s.status})
+                            </option>
+                          ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-white/40">
+                    Jeśli nie wybierzesz, system znajdzie aktywną sesję ucznia lub stworzy nową.
+                  </p>
+                </div>
+
+                {/* Create new session option */}
+                <div className="space-y-2">
+                  <label className="inline-flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={assignFormData.createNewSession}
+                      onChange={(e) => setAssignFormData((prev) => ({ ...prev, createNewSession: e.target.checked }))}
+                      disabled={isLoading}
+                      className="h-4 w-4 rounded border-white/20 bg-white/[0.03] text-[#c084fc] focus:ring-2 focus:ring-[#a855f7]/30 transition"
+                    />
+                    <span className="text-xs font-medium text-white/75">Utwórz nową sesję</span>
+                  </label>
+                  {assignFormData.createNewSession && (
+                    <div className="space-y-1.5 ml-6">
+                      <label htmlFor="newSessionTitle" className="text-xs font-medium text-white/55">
+                        Tytuł nowej sesji
+                      </label>
+                      <input
+                        id="newSessionTitle"
+                        placeholder="np. Analiza demka - Mirage CT side"
+                        value={assignFormData.newSessionTitle}
+                        onChange={(e) => setAssignFormData((prev) => ({ ...prev, newSessionTitle: e.target.value }))}
+                        disabled={isLoading}
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-end gap-2 pt-4 border-t border-white/[0.06]">
+                  <button
+                    type="button"
+                    onClick={() => setAssignDialogOpen(false)}
+                    disabled={isLoading}
+                    className="inline-flex items-center rounded-2xl px-5 h-11 text-sm font-medium text-white/65 hover:text-white glass-liquid transition"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !assignFormData.studentId || (assignFormData.createNewSession && !assignFormData.newSessionTitle.trim())}
+                    className="shimmer-sweep relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                    Przypisz do ucznia
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </CoachLayout>
   )
 }

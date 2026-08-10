@@ -85,7 +85,7 @@ const SESSION_STATUSES: { value: string; label: string; color: string }[] = [
 ]
 
 export function CoachSessionDetailClient({ initialSession, initialProgress }: CoachSessionDetailClientProps) {
-  const session = initialSession
+  const [session, setSession] = useState<Session>(initialSession)
   const [progress, setProgress] = useState<Progress[]>(initialProgress)
   const [activeTab, setActiveTab] = useState<'overview' | 'videos' | 'notes'>('overview')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -93,8 +93,8 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
   const [isLoading, setIsLoading] = useState(false)
   const [newNote, setNewNote] = useState('')
   const [isPrivateNote, setIsPrivateNote] = useState(false)
-  const [currentVideoId, setCurrentVideoId] = useState<string>(session.videos[0]?.video.id || '')
-  const [sessionStatus, setSessionStatus] = useState<string>(session.status)
+  const [currentVideoId, setCurrentVideoId] = useState<string>(initialSession.videos[0]?.video.id || '')
+  const [sessionStatus, setSessionStatus] = useState<string>(initialSession.status)
   const [videoSearch, setVideoSearch] = useState('')
   const [newVideoUrl, setNewVideoUrl] = useState('')
   const { toast } = useToast()
@@ -126,6 +126,12 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
         return
       }
+
+      // Update local session state with new note
+      setSession((prev) => ({
+        ...prev,
+        notes: [data, ...prev.notes],
+      }))
 
       toast({ title: 'Sukces', description: 'Notatka dodana' })
       setNewNote('')

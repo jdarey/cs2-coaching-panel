@@ -85,7 +85,7 @@ const SECTION_TABS = [
 ] as const
 
 export function StudentSessionDetailClient({ initialSession, initialProgress }: StudentSessionDetailClientProps) {
-  const session = initialSession
+  const [session, setSession] = useState<Session>(initialSession)
   const [progress, setProgress] = useState<Progress[]>(initialProgress)
   const [activeTab, setActiveTab] = useState<'overview' | 'videos' | 'notes'>('overview')
   const [activeVideoId, setActiveVideoId] = useState<string | null>(
@@ -168,11 +168,17 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
         return
       }
 
+      // Update local session state with new note
+      setSession((prev) => ({
+        ...prev,
+        notes: [data, ...prev.notes],
+      }))
+
       toast({ title: 'Sukces', description: 'Notatka dodana' })
       setNewNote('')
-      setIsLoading(false)
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
+    } finally {
       setIsLoading(false)
     }
   }
