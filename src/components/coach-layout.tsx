@@ -28,8 +28,9 @@ export function CoachLayout({ children }: { children: ReactNode }) {
   const user = session?.user
   const userRole = (user as any)?.role
 
-  if (userRole !== 'COACH') return null
-
+  // All hooks must run unconditionally - an early return above this effect
+  // changed the hook count between renders and crashed the layout once the
+  // session loaded ("Rendered more hooks than during the previous render").
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY })
@@ -37,6 +38,8 @@ export function CoachLayout({ children }: { children: ReactNode }) {
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
+
+  if (userRole !== 'COACH') return null
 
   return (
     <div className="relative min-h-screen bg-[#06070d] font-sans text-white overflow-x-hidden">

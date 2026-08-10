@@ -66,5 +66,9 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  // Never use the https cookie prefix locally: NEXTAUTH_URL can point at the
+  // production domain while developing, which would otherwise produce a
+  // Secure `__Secure-` cookie that browsers refuse over plain http.
+  useSecureCookies: process.env.NODE_ENV !== 'development',
   secret: process.env.NEXTAUTH_SECRET,
 }

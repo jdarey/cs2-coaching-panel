@@ -436,7 +436,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                 <article
                   key={video.id}
                   onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight animate-rise-in group relative flex flex-col rounded-3xl overflow-hidden transition-transform duration-500 hover:-translate-y-1.5"
+                  className="glass-liquid spotlight rise-in tilt-hover group relative flex flex-col rounded-3xl overflow-hidden"
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
                   {/* Thumbnail */}

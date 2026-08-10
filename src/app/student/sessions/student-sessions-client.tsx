@@ -253,7 +253,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                 <div
                   key={session.id}
                   onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight shimmer-line rise-in group relative rounded-3xl p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[#8b7bff]/25"
+                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover group relative rounded-3xl p-6 hover:border-[#8b7bff]/25"
                   style={{ animationDelay: `${0.05 + i * 0.05}s` }}
                 >
                   <div className="flex items-start justify-between gap-4">

@@ -300,7 +300,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                 <article
                   key={tag.id}
                   onMouseMove={handleCardMouse}
-                  className="glass-liquid spotlight rise-in group relative flex flex-col rounded-3xl p-5 transition-transform duration-500 hover:-translate-y-1.5"
+                  className="glass-liquid spotlight rise-in tilt-hover group relative flex flex-col rounded-3xl p-5"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-start justify-between mb-4">

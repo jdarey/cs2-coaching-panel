@@ -275,7 +275,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
           {activeTab === 'profile' && (
             <section
               onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in rounded-3xl p-7"
+              className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7"
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
@@ -365,7 +365,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
           {activeTab === 'password' && (
             <section
               onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in rounded-3xl p-7"
+              className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7"
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
@@ -577,7 +577,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
           {activeTab === 'appearance' && (
             <section
               onMouseMove={handleCardMouse}
-              className="glass-liquid spotlight rise-in rounded-3xl p-7"
+              className="glass-liquid spotlight rise-in tilt-hover rounded-3xl p-7"
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">

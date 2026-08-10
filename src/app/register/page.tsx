@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
+import { Tilt3D } from '@/components/tilt-3d'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -133,14 +134,11 @@ export default function RegisterPage() {
           <p className="text-white/45 text-sm font-light">Utwórz nowe konto</p>
         </div>
 
-        {/* Card */}
-        <div
-          className="relative rounded-3xl glass-card p-7 md:p-10 animate-rise-in-delay-1 shimmer-sweep"
-          onMouseMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect()
-            e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-            e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-          }}
+        {/* Card — tilts in 3D toward the cursor */}
+        <Tilt3D
+          wrapperClassName="animate-rise-in animate-rise-in-delay-1"
+          className="relative rounded-3xl glass-card p-7 md:p-10 shimmer-sweep"
+          maxTilt={4}
         >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
             <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.4) 0%, transparent 70%)' }} />
@@ -289,7 +287,7 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="shimmer-sweep group relative w-full h-13 rounded-xl overflow-hidden font-display font-semibold text-sm btn-primary-gradient"
+                className="shimmer-sweep btn-3d group relative w-full h-13 rounded-xl overflow-hidden font-display font-semibold text-sm btn-primary-gradient"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -320,7 +318,7 @@ export default function RegisterPage() {
               </Link>
             </div>
           </div>
-        </div>
+        </Tilt3D>
 
         <p className="mt-8 text-center text-[11px] text-white/30 font-light tracking-wide">
           Tworząc konto akceptujesz regulamin i politykę prywatności

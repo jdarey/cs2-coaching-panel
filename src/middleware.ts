@@ -24,30 +24,50 @@ function rateLimit(key: string, limit: number, windowMs: number): boolean {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+  // In development the session cookie is a plain (non-Secure, non-`__Secure-`)
+  // cookie because auth.ts sets useSecureCookies:false. getToken must look for
+  // the same name or it won't find the session even though the user is logged in.
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+    ...(process.env.NODE_ENV === 'development'
+      ? { cookieName: 'next-auth.session-token', secureCookie: false }
+      : {}),
+  })
 
   // Security headers
   const response = NextResponse.next()
   response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
 
-  // CSP for API routes
+  // Frame protection: page routes must be embeddable (the app is previewed
+  // inside the Freebuff desktop client, whose origin differs from the app's),
+  // so they don't set frame-blocking headers. API routes keep a strict CSP
+  // since they return JSON only and are never meant to be framed.
   if (pathname.startsWith('/api/')) {
+    response.headers.set('X-Frame-Options', 'DENY')
     response.headers.set(
       'Content-Security-Policy',
       "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
     )
   }
 
-  // Rate limiting for auth endpoints
-  if (pathname.startsWith('/api/auth/') || pathname === '/login' || pathname === '/register') {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-               request.headers.get('x-real-ip') ||
-               'unknown'
-    const key = `auth:${ip}`
+  // Rate limiting for auth endpoints.
+  // Only enforced when a real client IP is present (behind a proxy) and never
+  // in local development: without x-forwarded-for / x-real-ip every request
+  // falls back to the same 'unknown' key and the limit is exhausted by a
+  // single page reload, which made login unusable locally and in previews.
+  const isDev = process.env.NODE_ENV === 'development'
+  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                   request.headers.get('x-real-ip') ||
+                   ''
+
+  const isAuthPath = pathname.startsWith('/api/auth/') || pathname === '/login' || pathname === '/register'
+
+  if (isAuthPath && !isDev && clientIp) {
+    const key = `auth:${clientIp}`
 
     if (!rateLimit(key, 10, 60 * 1000)) { // 10 requests per minute
       return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
@@ -58,11 +78,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Rate limiting for API endpoints
-  if (pathname.startsWith('/api/')) {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-               request.headers.get('x-real-ip') ||
-               'unknown'
-    const key = `api:${ip}`
+  if (pathname.startsWith('/api/') && !isDev && clientIp) {
+    const key = `api:${clientIp}`
 
     if (!rateLimit(key, 100, 60 * 1000)) { // 100 requests per minute
       return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {

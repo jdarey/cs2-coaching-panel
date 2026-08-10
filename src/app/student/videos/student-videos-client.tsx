@@ -402,7 +402,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               return (
                 <div
                   key={`${item.sessionId}-${video.id}`}
-                  className="glass-liquid spotlight shimmer-line rounded-3xl relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 hover:border-[#8b7bff]/25 rise-in"
+                  className="glass-liquid spotlight shimmer-line rise-in tilt-hover rounded-3xl relative overflow-hidden group hover:border-[#8b7bff]/25"
                   onMouseMove={handleCardMouse}
                   style={{
                     animationDelay: `${Math.min(idx * 60, 600)}ms`,

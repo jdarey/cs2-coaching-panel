@@ -2,6 +2,7 @@
 
 import { cn, formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { Tilt3D } from '@/components/tilt-3d'
 import { Plus, Users, BookOpen, Video, Tag, ArrowRight, UserCheck, Sparkles, Activity } from 'lucide-react'
 import Link from 'next/link'
 import type { MouseEvent } from 'react'
@@ -91,10 +92,11 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
         </div>
 
         {/* =========================== EFFECTIVENESS HERO RING =========================== */}
-        <div
-          className="glass-liquid spotlight relative overflow-hidden rounded-3xl rise-in p-6 sm:p-8 mb-8"
-          onMouseMove={handleCardMouse}
-          style={{ animationDelay: '0.04s' }}
+        <Tilt3D
+          wrapperClassName="rise-in mb-8"
+          wrapperStyle={{ animationDelay: '0.04s' }}
+          className="glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8"
+          maxTilt={6}
         >
           <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#7c3aed]/20 blur-3xl animate-aurora pointer-events-none" />
           <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-[#a855f7]/15 blur-3xl animate-aurora-slow pointer-events-none" />
@@ -168,49 +170,56 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               </div>
             </div>
           </div>
-        </div>
+        </Tilt3D>
 
         {/* =========================== STATS GRID =========================== */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {statCards.map((stat, i) => (
-            <Link
+            <Tilt3D
               key={stat.name}
-              href={stat.href}
-              onMouseMove={handleCardMouse}
-              className={cn(
-                'glass-liquid spotlight group relative overflow-hidden rounded-3xl p-6 rise-in',
-                'transition-all duration-500 hover:-translate-y-1',
-                'border border-white/[0.06] hover:border-[#c084fc]/25',
-              )}
-              style={{ animationDelay: `${0.08 + i * 0.06}s` }}
+              wrapperClassName="rise-in"
+              wrapperStyle={{ animationDelay: `${0.08 + i * 0.06}s` }}
+              className="h-full rounded-3xl"
+              maxTilt={10}
             >
-              <div className="flex items-start justify-between">
-                <div className="relative grid h-12 w-12 place-items-center rounded-2xl ring-1 ring-white/30 shadow-lg shadow-black/30">
-                  <div className={cn('absolute inset-0 rounded-2xl bg-gradient-to-br opacity-95', stat.gradient)} />
-                  <stat.icon className="relative h-5 w-5 text-white" />
+              <Link
+                href={stat.href}
+                onMouseMove={handleCardMouse}
+                className={cn(
+                  'glass-liquid spotlight group relative flex h-full flex-col overflow-hidden rounded-3xl p-6',
+                  'transition-all duration-500',
+                  'border border-white/[0.06] hover:border-[#c084fc]/25',
+                )}
+              >
+                <div className="layer-1 flex items-start justify-between">
+                  <div className="relative grid h-12 w-12 place-items-center rounded-2xl ring-1 ring-white/30 shadow-lg shadow-black/30">
+                    <div className={cn('absolute inset-0 rounded-2xl bg-gradient-to-br opacity-95', stat.gradient)} />
+                    <stat.icon className="relative h-5 w-5 text-white" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#d8b4fe] group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#d8b4fe] group-hover:translate-x-0.5 transition-all duration-300" />
-              </div>
-              <div className="mt-5">
-                <p className="font-display text-3xl font-bold text-white count-glow tabular-nums">
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-sm text-white/55 group-hover:text-white/70 transition-colors">
-                  {stat.name}
-                </p>
-              </div>
-              <div className={cn('pointer-events-none absolute -bottom-10 -right-8 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl transition-opacity duration-500 group-hover:opacity-40', stat.gradient)} />
-            </Link>
+                <div className="layer-2 mt-5">
+                  <p className="font-display text-3xl font-bold text-white count-glow tabular-nums">
+                    {stat.value}
+                  </p>
+                  <p className="mt-1 text-sm text-white/55 group-hover:text-white/70 transition-colors">
+                    {stat.name}
+                  </p>
+                </div>
+                <div className={cn('pointer-events-none absolute -bottom-10 -right-8 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl transition-opacity duration-500 group-hover:opacity-40', stat.gradient)} />
+              </Link>
+            </Tilt3D>
           ))}
         </div>
 
         {/* =========================== SESSIONS + STUDENTS =========================== */}
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
           {/* Recent Sessions */}
-          <div
-            className="glass-liquid spotlight relative overflow-hidden rounded-3xl p-6 rise-in lg:col-span-2"
-            onMouseMove={handleCardMouse}
-            style={{ animationDelay: '0.34s' }}
+          <Tilt3D
+            wrapperClassName="rise-in lg:col-span-2"
+            wrapperStyle={{ animationDelay: '0.34s' }}
+            className="glass-liquid relative overflow-hidden rounded-3xl p-6"
+            maxTilt={5}
           >
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
@@ -292,13 +301,14 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 ))}
               </div>
             )}
-          </div>
+          </Tilt3D>
 
           {/* Recent Students */}
-          <div
-            className="glass-liquid spotlight relative overflow-hidden rounded-3xl p-6 rise-in"
-            onMouseMove={handleCardMouse}
-            style={{ animationDelay: '0.42s' }}
+          <Tilt3D
+            wrapperClassName="rise-in"
+            wrapperStyle={{ animationDelay: '0.42s' }}
+            className="glass-liquid relative overflow-hidden rounded-3xl p-6"
+            maxTilt={5}
           >
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
@@ -377,14 +387,15 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 })}
               </div>
             )}
-          </div>
+          </Tilt3D>
         </div>
 
         {/* =========================== CTA CARD =========================== */}
-        <div
-          className="glass-tinted spotlight relative overflow-hidden rounded-3xl p-8 sm:p-10 rise-in"
-          onMouseMove={handleCardMouse}
-          style={{ animationDelay: '0.5s' }}
+        <Tilt3D
+          wrapperClassName="rise-in"
+          wrapperStyle={{ animationDelay: '0.5s' }}
+          className="glass-tinted relative overflow-hidden rounded-3xl p-8 sm:p-10"
+          maxTilt={5}
         >
           <div className="absolute -top-20 -right-10 h-64 w-64 rounded-full bg-[#a855f7]/25 blur-3xl animate-aurora pointer-events-none" />
           <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[#7c3aed]/20 blur-3xl animate-aurora-slow pointer-events-none" />
@@ -429,7 +440,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               </Link>
             </div>
           </div>
-        </div>
+        </Tilt3D>
       </div>
     </CoachLayout>
   )

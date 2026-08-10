@@ -94,6 +94,22 @@
       0 0 60px -20px rgba(139,123,255,0.1);
   }
   
+  /* Liquid glass — richer, deeper version of .glass used by dashboard & list cards.
+     (Restored: the previous redesign dropped this class while components kept using it.) */
+  .glass-liquid {
+    background:
+      linear-gradient(160deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.015) 100%),
+      radial-gradient(ellipse at 25% 15%, rgba(139,123,255,0.1) 0%, transparent 55%);
+    backdrop-filter: blur(32px) saturate(185%);
+    -webkit-backdrop-filter: blur(32px) saturate(185%);
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03),
+      0 1px 1px rgba(255,255,255,0.05) inset,
+      0 28px 56px -14px rgba(0,0,0,0.55),
+      0 0 90px -24px rgba(139,123,255,0.1);
+  }
+
   .glass-tinted {
     background: 
       linear-gradient(160deg, rgba(139,123,255,0.15) 0%, rgba(192,132,252,0.08) 50%, rgba(255,255,255,0.02) 100%),
@@ -303,6 +319,29 @@
   }
   .spotlight:hover::after { opacity: 1; }
 
+  /* Shimmer line — sweeping highlight used on primary buttons & cards.
+     (Restored: components reference it but the class was dropped.) */
+  .shimmer-line {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-line::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.22) 45%, rgba(255,255,255,0.06) 60%, transparent 100%);
+    transform: translateX(-150%) skewX(-18deg);
+    pointer-events: none;
+    animation: shimmer-line 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  @keyframes shimmer-line {
+    0% { transform: translateX(-150%) skewX(-18deg); opacity: 0; }
+    12% { opacity: 1; }
+    55% { opacity: 1; }
+    100% { transform: translateX(320%) skewX(-18deg); opacity: 0; }
+  }
+
   /* Shimmer sweep - premium */
   .shimmer-sweep {
     position: relative;
@@ -332,6 +371,12 @@
   .animate-rise-in {
     animation: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
     opacity: 0;
+  }
+  /* Alias used across pages — restored for compatibility.
+     Uses `backwards` fill (not `both`) so entrance animations don't pin the
+     transform and lock out hover effects like .tilt-hover afterwards. */
+  .rise-in {
+    animation: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   .animate-rise-in-delay-1 { animation-delay: 50ms; }
   .animate-rise-in-delay-2 { animation-delay: 100ms; }
@@ -374,6 +419,10 @@
     to { opacity: 1; transform: translateX(0); filter: blur(0); }
   }
 
+  /* Alias used across pages — restored for compatibility */
+  .count-glow {
+    animation: count-glow 5s ease-in-out infinite;
+  }
   .animate-count-glow {
     animation: count-glow 5s ease-in-out infinite;
   }
@@ -466,11 +515,13 @@
   @media (prefers-reduced-motion: reduce) {
     .animate-aurora, .animate-aurora-slow, .animate-aurora-reverse,
     .animate-float, .animate-float-delayed, .animate-float-slow,
-    .animate-count-glow, .animate-rise-in, .animate-fade-up,
+    .animate-count-glow, .count-glow, .animate-rise-in, .rise-in, .animate-fade-up,
     .animate-scale-in, .animate-slide-in-right, .animate-pulse-glow,
-    .animate-rotate-slow, .animate-orbit, .shimmer-sweep::after { animation: none !important; }
-    .btn-magnetic { transition: none; }
-    .card-premium:hover { transform: none; }
+    .animate-rotate-slow, .animate-orbit, .animate-float-3d,
+    .animate-enter-3d, .shimmer-sweep::after, .shimmer-line::after,
+    .shape-3d-cube, .shape-3d-ring, .shape-3d-pyramid { animation: none !important; }
+    .btn-magnetic, .btn-3d, .tilt-3d { transition: none; }
+    .card-premium:hover, .tilt-3d:hover { transform: none; }
     .spotlight::after { display: none; }
     .text-gradient-premium { animation: none; }
   }
@@ -500,6 +551,190 @@
   .text-gradient-animate {
     background-size: 200% 200%;
     animation: gradient-shift 6s ease-in-out infinite;
+  }
+
+  /* ===== 3D SCENE DESIGN SYSTEM ===== */
+
+  /* Perspective stage — wrap tilt cards in this */
+  .scene-3d {
+    perspective: 1400px;
+    perspective-origin: 50% 30%;
+  }
+
+  /* A card that tilts in 3D toward the cursor. Rotation is driven by the
+     --rx / --ry custom properties (set by the Tilt3D component or derived
+     from --mx / --my for cards that already track the pointer). */
+  .tilt-3d {
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+    will-change: transform;
+  }
+  .tilt-3d:hover {
+    box-shadow:
+      0 0 0 1px rgba(139,123,255,0.18),
+      0 40px 80px -24px rgba(0,0,0,0.65),
+      0 0 90px -20px rgba(139,123,255,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  /* Depth layers — children popped toward the viewer inside a tilt card */
+  .tilt-3d .layer-1 { transform: translateZ(24px); }
+  .tilt-3d .layer-2 { transform: translateZ(44px); }
+  .tilt-3d .layer-3 { transform: translateZ(64px); }
+  .tilt-3d .layer-1, .tilt-3d .layer-2, .tilt-3d .layer-3 {
+    transform-style: preserve-3d;
+  }
+
+  /* CSS-only 3D hover for list cards — lifts the card toward the viewer with
+     depth shadow and pops .layer-1 content forward. No JS required. */
+  .tilt-hover {
+    transform-style: preserve-3d;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+    will-change: transform;
+  }
+  .tilt-hover:hover {
+    transform: perspective(1000px) rotateX(5deg) translateY(-6px) scale(1.015);
+    box-shadow:
+      0 0 0 1px rgba(139,123,255,0.16),
+      0 36px 64px -20px rgba(0,0,0,0.65),
+      0 0 80px -24px rgba(139,123,255,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .tilt-hover:hover .layer-1 { transform: translateZ(28px); }
+  .tilt-hover:hover .layer-2 { transform: translateZ(44px); }
+  .tilt-hover .layer-1, .tilt-hover .layer-2 { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+
+  /* Specular glare that slides with the tilt */
+  .tilt-3d .glare-3d {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      115deg,
+      rgba(255,255,255,0.14) 0%,
+      rgba(255,255,255,0.04) 30%,
+      transparent 55%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    transform: translateZ(1px);
+  }
+  .tilt-3d:hover .glare-3d { opacity: 1; }
+
+  /* Extruded 3D buttons — solid thickness with a press-down */
+  .btn-3d {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, filter 0.25s ease;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.25) inset,
+      0 6px 0 0 rgba(0,0,0,0.35),
+      0 10px 24px -8px rgba(139,123,255,0.55),
+      0 22px 44px -16px rgba(0,0,0,0.5);
+  }
+  .btn-3d:hover {
+    transform: translateY(-3px) rotateX(6deg);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.3) inset,
+      0 9px 0 0 rgba(0,0,0,0.35),
+      0 16px 32px -10px rgba(139,123,255,0.7),
+      0 32px 64px -20px rgba(0,0,0,0.6);
+  }
+  .btn-3d:active {
+    transform: translateY(3px) rotateX(-2deg);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.2) inset,
+      0 2px 0 0 rgba(0,0,0,0.35),
+      0 6px 16px -6px rgba(139,123,255,0.5);
+  }
+
+  /* Depth-float — slow vertical bobbing with a 3D rotation for hero emblems */
+  .animate-float-3d {
+    animation: float-3d 7s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+  @keyframes float-3d {
+    0%, 100% { transform: translateY(0) rotateX(10deg) rotateY(0deg); }
+    50% { transform: translateY(-14px) rotateX(16deg) rotateY(6deg); }
+  }
+
+  /* Wireframe 3D shapes drifting in the background scene */
+  .shape-3d {
+    position: absolute;
+    transform-style: preserve-3d;
+    pointer-events: none;
+  }
+  .shape-3d-cube {
+    width: 64px;
+    height: 64px;
+    animation: spin-3d-cube 26s linear infinite;
+  }
+  .shape-3d-cube .face {
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(168,150,255,0.22);
+    background: rgba(139,123,255,0.05);
+    box-shadow: 0 0 24px -6px rgba(139,123,255,0.25) inset;
+    border-radius: 6px;
+    backface-visibility: visible;
+  }
+  .shape-3d-cube .face.front  { transform: translateZ(32px); }
+  .shape-3d-cube .face.back   { transform: rotateY(180deg) translateZ(32px); }
+  .shape-3d-cube .face.right  { transform: rotateY(90deg) translateZ(32px); }
+  .shape-3d-cube .face.left   { transform: rotateY(-90deg) translateZ(32px); }
+  .shape-3d-cube .face.top    { transform: rotateX(90deg) translateZ(32px); }
+  .shape-3d-cube .face.bottom { transform: rotateX(-90deg) translateZ(32px); }
+  @keyframes spin-3d-cube {
+    from { transform: rotateX(0deg) rotateY(0deg); }
+    to   { transform: rotateX(360deg) rotateY(360deg); }
+  }
+
+  .shape-3d-ring {
+    width: 90px;
+    height: 90px;
+    border: 1.5px solid rgba(139,123,255,0.28);
+    border-radius: 50%;
+    box-shadow: 0 0 40px -8px rgba(139,123,255,0.3), inset 0 0 24px -10px rgba(139,123,255,0.35);
+    animation: spin-3d-ring 20s ease-in-out infinite;
+  }
+  @keyframes spin-3d-ring {
+    0%, 100% { transform: rotateX(68deg) rotateZ(0deg); }
+    50% { transform: rotateX(68deg) rotateZ(180deg); }
+  }
+
+  .shape-3d-pyramid {
+    width: 0;
+    height: 0;
+    border-left: 34px solid transparent;
+    border-right: 34px solid transparent;
+    border-bottom: 58px solid rgba(192,132,252,0.16);
+    filter: drop-shadow(0 0 24px rgba(192,132,252,0.35));
+    animation: spin-3d-pyramid 18s ease-in-out infinite;
+  }
+  @keyframes spin-3d-pyramid {
+    0%, 100% { transform: rotateY(0deg) translateY(0); }
+    50% { transform: rotateY(180deg) translateY(-12px); }
+  }
+
+  /* 3D entrance — cards rise out of the screen */
+  .animate-enter-3d {
+    opacity: 0;
+    animation: enter-3d 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    transform-style: preserve-3d;
+  }
+  @keyframes enter-3d {
+    0% { opacity: 0; transform: perspective(1200px) translateY(60px) rotateX(24deg); filter: blur(6px); }
+    60% { filter: blur(0); }
+    100% { opacity: 1; transform: perspective(1200px) translateY(0) rotateX(0deg); filter: blur(0); }
+  }
+
+  /* Page-level 3D perspective environment */
+  .page-3d {
+    perspective: 1600px;
+    perspective-origin: 50% -10%;
+    transform-style: preserve-3d;
   }
 }
 

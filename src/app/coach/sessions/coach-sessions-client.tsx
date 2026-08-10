@@ -361,8 +361,8 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   key={session.id}
                   onMouseMove={handleCardMouse}
                   className={cn(
-                    'glass-liquid spotlight shimmer-line group relative flex flex-col rounded-3xl p-5',
-                    'transition-all duration-500 hover:-translate-y-1.5 hover:border-[#c084fc]/25',
+                    'glass-liquid spotlight shimmer-line tilt-hover group relative flex flex-col rounded-3xl p-5',
+                    'hover:border-[#c084fc]/25',
                     'rise-in'
                   )}
                   style={{ animationDelay: `${Math.min(idx, 8) * 70}ms` }}

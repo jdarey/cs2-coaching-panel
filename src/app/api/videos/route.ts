@@ -70,13 +70,17 @@ export async function POST(request: NextRequest) {
     // Auto-fetch thumbnail for YouTube
     const thumbnail = getVideoThumbnail(validated.url) || undefined
 
+    // tagIds is a validation-layer field, not a Prisma column - it must be
+    // handled through the relation create below instead of being spread into data.
+    const { tagIds, ...videoData } = validated
+
     const video = await prisma.video.create({
       data: {
-        ...validated,
+        ...videoData,
         coachId: userId,
         thumbnail,
         tags: {
-          create: validated.tagIds.map((tagId) => ({ tagId })),
+          create: tagIds.map((tagId) => ({ tagId })),
         },
       },
       include: { tags: { include: { tag: true } } },

@@ -50,6 +50,33 @@ export function AuroraBackground({
         ))}
       </div>
 
+      {/* ===== 3D Scene — drifting wireframe shapes in perspective ===== */}
+      <div className="absolute inset-0" style={{ perspective: '1200px' }}>
+        <div className="shape-3d left-[6%] top-[18%]" style={{ animation: 'drift-3d 34s ease-in-out infinite' }}>
+          <div className="shape-3d-cube" style={{ opacity: 0.5 }}>
+            <div className="face front" /><div className="face back" />
+            <div className="face right" /><div className="face left" />
+            <div className="face top" /><div className="face bottom" />
+          </div>
+        </div>
+        <div className="shape-3d right-[8%] top-[28%]" style={{ animation: 'drift-3d 42s ease-in-out infinite 6s' }}>
+          <div className="shape-3d-ring" style={{ opacity: 0.45 }} />
+        </div>
+        <div className="shape-3d left-[14%] bottom-[16%]" style={{ animation: 'drift-3d 38s ease-in-out infinite 12s' }}>
+          <div className="shape-3d-pyramid" style={{ opacity: 0.35 }} />
+        </div>
+        <div className="shape-3d right-[18%] bottom-[24%]" style={{ animation: 'drift-3d 46s ease-in-out infinite 3s' }}>
+          <div className="shape-3d-ring" style={{ opacity: 0.3, width: 60, height: 60, borderWidth: 1 }} />
+        </div>
+        <div className="shape-3d left-[46%] top-[64%]" style={{ animation: 'drift-3d 40s ease-in-out infinite 9s' }}>
+          <div className="shape-3d-cube" style={{ opacity: 0.3, width: 40, height: 40 }}>
+            <div className="face front" /><div className="face back" />
+            <div className="face right" /><div className="face left" />
+            <div className="face top" /><div className="face bottom" />
+          </div>
+        </div>
+      </div>
+
       {/* ===== Aurora Blobs - Organic, living gradients ===== */}
       <div
         className={`absolute ${variant === 'auth' ? '-top-32' : '-top-40 -left-32'} w-[700px] h-[700px] rounded-full blur-[160px] opacity-60 animate-aurora`}
@@ -154,6 +181,12 @@ export function AuroraBackground({
         @keyframes noise-shift {
           0% { background-position: 0 0; }
           100% { background-position: 10px 10px; }
+        }
+        @keyframes drift-3d {
+          0%, 100% { transform: translate3d(0, 0, 0) rotateZ(0deg); }
+          25% { transform: translate3d(30px, -24px, 40px) rotateZ(6deg); }
+          50% { transform: translate3d(-20px, 18px, -30px) rotateZ(-5deg); }
+          75% { transform: translate3d(16px, -10px, 24px) rotateZ(4deg); }
         }
       `}</style>
     </div>

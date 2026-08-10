@@ -71,16 +71,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Uczeń nie należy do tego trenera' }, { status: 400 })
     }
 
+    // tagIds/videoIds are validation-layer fields, not Prisma columns - they
+    // are handled through the relation creates below instead of being spread
+    // into data.
+    const { tagIds, videoIds, ...sessionData } = validated
+
     const newSession = await prisma.session.create({
       data: {
-        ...validated,
+        ...sessionData,
         coachId: userId,
-        scheduledAt: validated.scheduledAt ? new Date(validated.scheduledAt) : null,
+        scheduledAt: sessionData.scheduledAt ? new Date(sessionData.scheduledAt) : null,
         tags: {
-          create: validated.tagIds.map((tagId, index) => ({ tagId, order: index })),
+          create: tagIds.map((tagId, index) => ({ tagId, order: index })),
         },
         videos: {
-          create: validated.videoIds.map((videoId, index) => ({ videoId, order: index })),
+          create: videoIds.map((videoId, index) => ({ videoId, order: index })),
         },
       },
       include: {
@@ -92,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Create initial video progress records for student
     await prisma.videoProgress.createMany({
-      data: validated.videoIds.map((videoId) => ({
+      data: videoIds.map((videoId) => ({
         userId: validated.studentId,
         videoId,
         sessionId: newSession.id,

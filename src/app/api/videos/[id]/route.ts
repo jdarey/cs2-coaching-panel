@@ -30,14 +30,17 @@ export async function PUT(
     // Update thumbnail if URL changed
     const thumbnail = validated.url ? getVideoThumbnail(validated.url) : undefined
 
-    const updateData: any = { ...validated }
+    // tagIds is a validation-layer field, not a Prisma column - it is handled
+    // through the relation update below instead of being spread into data.
+    const { tagIds, ...videoData } = validated
+    const updateData: any = { ...videoData }
     if (thumbnail) updateData.thumbnail = thumbnail
 
     // Handle tag updates
-    if (validated.tagIds) {
+    if (tagIds) {
       updateData.tags = {
         deleteMany: {},
-        create: validated.tagIds.map((tagId) => ({ tagId })),
+        create: tagIds.map((tagId) => ({ tagId })),
       }
     }
 

@@ -80,25 +80,30 @@ export async function PUT(
       return NextResponse.json({ error: 'Sesja nie znaleziona lub brak uprawnień' }, { status: 404 })
     }
 
-    const updateData: any = { ...validated }
-    if (validated.scheduledAt) updateData.scheduledAt = new Date(validated.scheduledAt)
-    if (validated.status === 'COMPLETED' && !existingSession.completedAt) {
+    // tagIds/videoIds are validation-layer fields, not Prisma columns - they
+    // are handled through the relation updates below instead of being spread
+    // into data.
+    const { tagIds, videoIds, ...sessionData } = validated
+
+    const updateData: any = { ...sessionData }
+    if (sessionData.scheduledAt) updateData.scheduledAt = new Date(sessionData.scheduledAt)
+    if (sessionData.status === 'COMPLETED' && !existingSession.completedAt) {
       updateData.completedAt = new Date()
     }
 
     // Handle tags update
-    if (validated.tagIds) {
+    if (tagIds) {
       updateData.tags = {
         deleteMany: {},
-        create: validated.tagIds.map((tagId, index) => ({ tagId, order: index })),
+        create: tagIds.map((tagId, index) => ({ tagId, order: index })),
       }
     }
 
     // Handle videos update
-    if (validated.videoIds) {
+    if (videoIds) {
       updateData.videos = {
         deleteMany: {},
-        create: validated.videoIds.map((videoId, index) => ({ videoId, order: index })),
+        create: videoIds.map((videoId, index) => ({ videoId, order: index })),
       }
     }
 
