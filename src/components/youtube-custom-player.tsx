@@ -533,6 +533,15 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
       {/* 3b. Base cover layer - always present to block any YouTube UI bleed-through */}
       <div className="absolute inset-0 z-15 bg-black/0 pointer-events-none" />
+      {/* 3c. Targeted YouTube UI covers (transparent but block native elements) */}
+      {/* Top: video title + Watch on YouTube button */}
+      <div className="absolute top-0 left-0 right-0 z-25 h-10 bg-black/0 pointer-events-none" />
+      {/* Left: Share/udostępnij button (appears on hover) */}
+      <div className="absolute left-0 top-10 bottom-10 z-25 w-10 bg-black/0 pointer-events-none" />
+      {/* Right: Playlist / next video button */}
+      <div className="absolute right-0 top-10 bottom-10 z-25 w-12 bg-black/0 pointer-events-none" />
+      {/* Bottom-right: YouTube logo (appears on hover) */}
+      <div className="absolute bottom-0 right-0 z-25 w-20 h-10 bg-black/0 pointer-events-none" />
 
       {/* 4. Paused cinematic dim */}
       {!isPlaying && isReady && !isEnded && hasPlayed && !showThumbnail && !isReinitialising && (
