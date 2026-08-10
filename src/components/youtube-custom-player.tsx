@@ -534,6 +534,11 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
       )}
 
+      {/* 3b. Permanent overlay to hide YouTube logo in bottom-right corner (appears on hover/start) */}
+      <div className="absolute bottom-0 right-0 z-25 w-24 h-14 bg-gradient-to-tr from-black/90 via-black/50 to-transparent pointer-events-none" />
+      {/* 3c. Top-right corner cover for "Watch on YouTube" button */}
+      <div className="absolute top-0 right-0 z-25 w-32 h-10 bg-gradient-to-bl from-black/80 via-black/40 to-transparent pointer-events-none" />
+
       {/* 4. Paused cinematic dim */}
       {!isPlaying && isReady && !isEnded && hasPlayed && !showThumbnail && !isReinitialising && (
         <div className="absolute inset-0 z-21 bg-black/40 backdrop-blur-[2px] pointer-events-none transition-all duration-500" />
