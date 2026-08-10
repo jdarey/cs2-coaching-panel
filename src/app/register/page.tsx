@@ -8,7 +8,7 @@ import { AuroraBackground } from '@/components/aurora-background'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Mail, Lock, User, AlertCircle, GraduationCap, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react'
+import { Loader2, Mail, Lock, User, AlertCircle, GraduationCap, ShieldCheck, Sparkles, ArrowRight, ChevronRight, GraduationCap as GraduationCapIcon, ShieldCheck as ShieldCheckIcon } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -103,77 +103,88 @@ export default function RegisterPage() {
     }
   }
 
-  const roles: { key: 'STUDENT' | 'COACH'; label: string; sub: string; icon: typeof User; color: string; ring: string }[] = [
-    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', icon: GraduationCap, color: 'from-[#60a5fa] to-[#22d3ee]', ring: 'rgba(59,130,246,0.45)' },
-    { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', icon: ShieldCheck, color: 'from-[#a855f7] to-[#d946ef]', ring: 'rgba(168,85,247,0.45)' },
+  const roles: { key: 'STUDENT' | 'COACH'; label: string; sub: string; Icon: typeof GraduationCapIcon; color: string; ring: string }[] = [
+    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#60a5fa] to-[#22d3ee]', ring: 'rgba(96,165,250,0.4)' },
+    { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', Icon: ShieldCheckIcon, color: 'from-[#a855f7] to-[#d946ef]', ring: 'rgba(168,85,247,0.4)' },
   ]
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
       <AuroraBackground variant="auth" />
 
-      <div className="w-full max-w-md rise-in">
+      {/* Floating decorative elements */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(139,123,255,0.5) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.4) 0%, transparent 70%)' }} />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-5">
-            <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.7)]">
-              <GraduationCap className="w-6 h-6 text-white" strokeWidth={2.2} />
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#8b7bff] to-[#5a4fff] shadow-[0_16px_40px_-10px_rgba(139,123,255,0.7)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+              <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/30" />
             </div>
-          </div>
-          <h1 className="font-display text-[2.6rem] leading-none font-bold tracking-tight text-gradient-violet mb-2">
+          </Link>
+          <h1 className="font-display text-3xl md:text-4xl leading-none font-bold tracking-tight text-gradient-premium mb-3">
             CS2 Coaching
           </h1>
           <p className="text-white/45 text-sm font-light">Utwórz nowe konto</p>
         </div>
 
         {/* Card */}
-        <div className="relative rounded-3xl glass-liquid p-7 md:p-8">
+        <div
+          className="relative rounded-3xl glass-card p-7 md:p-10 animate-rise-in-delay-1 shimmer-sweep"
+          onMouseMove={(e) => {
+            const r = e.currentTarget.getBoundingClientRect()
+            e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+            e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+          }}
+        >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-            <div
-              className="absolute -top-20 -left-16 w-44 h-44 rounded-full opacity-40 blur-3xl"
-              style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)' }}
-            />
+            <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.4) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-4 h-4 text-[#a594ff]" />
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#a594ff] font-semibold">Rejestracja</p>
+              <p className="text-[11px] uppercase tracking-widest text-[#a594ff] font-semibold">Rejestracja</p>
             </div>
-            <h2 className="font-display text-2xl font-bold mb-5">Załóż konto</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">Załóż konto</h2>
 
             {formError && (
-              <div className="mb-4 flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-sm text-red-300 bg-red-500/10 border border-red-500/20">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div className="mb-5 flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-sm text-red-300 bg-red-500/10 border border-red-500/20 animate-rise-in-delay-2">
+                <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
                 <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5 animate-rise-in-delay-2" style={{ animationDelay: '100ms' }}>
               {/* Role selector */}
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold tracking-wide text-white/70">Kim chcesz być?</Label>
+              <div className="space-y-3">
+                <Label className="label-premium">Kim chcesz być?</Label>
                 <div className="grid grid-cols-2 gap-3">
                   {roles.map((r) => {
-                    const Icon = r.icon
+                    const Icon = r.Icon
                     const active = formData.role === r.key
                     return (
                       <button
                         type="button"
                         key={r.key}
                         onClick={() => setFormData((prev) => ({ ...prev, role: r.key }))}
-                        className={`relative group flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all duration-300 overflow-hidden ${
+                        className={cn(
+                          'relative group flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border transition-all duration-300 overflow-hidden',
                           active
-                            ? 'border-[#8b7bff]/50 bg-[#8b7bff]/10 shadow-[0_0_24px_-6px_rgba(124,111,255,0.5)]'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.15]'
-                        }`}
+                            ? 'border-[#8b7bff]/50 bg-[#8b7bff]/10 shadow-[0_0_28px_-8px_rgba(139,123,255,0.5)]'
+                            : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]',
+                        )}
                       >
                         <div
-                          className={`relative p-2.5 rounded-xl bg-gradient-to-br grid place-items-center ${r.color}`}
-                          style={{ boxShadow: active ? `0 10px 28px -8px ${r.ring}` : 'none' }}
+                          className={cn('relative p-3.5 rounded-xl bg-gradient-to-br grid place-items-center', r.color)}
+                          style={{ boxShadow: active ? `0 12px 32px -8px ${r.ring}` : 'none' }}
                         >
-                          <Icon className="w-5 h-5 text-white" strokeWidth={2.2} />
+                          <Icon className="w-6 h-6 text-white" strokeWidth={2.2} />
                           <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
                         </div>
                         <div className="text-center">
@@ -181,7 +192,7 @@ export default function RegisterPage() {
                           <p className="text-[11px] text-white/45">{r.sub}</p>
                         </div>
                         {active && (
-                          <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#8b7bff] shadow-[0_0_10px_rgba(124,111,255,0.8)]" />
+                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#8b7bff] shadow-[0_0_12px_rgba(139,123,255,0.8)]" />
                         )}
                       </button>
                     )
@@ -190,10 +201,10 @@ export default function RegisterPage() {
               </div>
 
               {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-semibold tracking-wide text-white/70">Email</Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="email" className="label-premium">Email</Label>
                 <div className="relative group">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
                   <Input
                     id="email"
                     name="email"
@@ -205,17 +216,17 @@ export default function RegisterPage() {
                     disabled={isLoading}
                     autoComplete="email"
                     aria-invalid={!!fieldErrors.email}
-                    className="h-12 pl-11 pr-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#8b7bff]/50 focus-visible:ring-2 focus-visible:ring-[#7c6fff]/25 transition-all duration-300"
+                    className="input-premium pl-12"
                   />
                 </div>
                 {fieldErrors.email && <p className="text-xs text-red-300 mt-1">{fieldErrors.email}</p>}
               </div>
 
               {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-xs font-semibold tracking-wide text-white/70">Imię <span className="text-white/30 normal-case">(opcjonalnie)</span></Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="name" className="label-premium">Imię <span className="text-white/30 normal-case font-normal">(opcjonalnie)</span></Label>
                 <div className="relative group">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
                   <Input
                     id="name"
                     name="name"
@@ -226,17 +237,17 @@ export default function RegisterPage() {
                     disabled={isLoading}
                     autoComplete="name"
                     aria-invalid={!!fieldErrors.name}
-                    className="h-12 pl-11 pr-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#8b7bff]/50 focus-visible:ring-2 focus-visible:ring-[#7c6fff]/25 transition-all duration-300"
+                    className="input-premium pl-12"
                   />
                 </div>
                 {fieldErrors.name && <p className="text-xs text-red-300 mt-1">{fieldErrors.name}</p>}
               </div>
 
               {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-semibold tracking-wide text-white/70">Hasło</Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="password" className="label-premium">Hasło</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
                   <Input
                     id="password"
                     name="password"
@@ -248,17 +259,17 @@ export default function RegisterPage() {
                     disabled={isLoading}
                     autoComplete="new-password"
                     aria-invalid={!!fieldErrors.password}
-                    className="h-12 pl-11 pr-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#8b7bff]/50 focus-visible:ring-2 focus-visible:ring-[#7c6fff]/25 transition-all duration-300"
+                    className="input-premium pl-12"
                   />
                 </div>
                 {fieldErrors.password && <p className="text-xs text-red-300 mt-1">{fieldErrors.password}</p>}
               </div>
 
               {/* Confirm password */}
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-xs font-semibold tracking-wide text-white/70">Potwierdź hasło</Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="confirmPassword" className="label-premium">Potwierdź hasło</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#a594ff]" />
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -270,7 +281,7 @@ export default function RegisterPage() {
                     disabled={isLoading}
                     autoComplete="new-password"
                     aria-invalid={!!fieldErrors.confirmPassword}
-                    className="h-12 pl-11 pr-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#8b7bff]/50 focus-visible:ring-2 focus-visible:ring-[#7c6fff]/25 transition-all duration-300"
+                    className="input-premium pl-12"
                   />
                 </div>
                 {fieldErrors.confirmPassword && <p className="text-xs text-red-300 mt-1">{fieldErrors.confirmPassword}</p>}
@@ -278,43 +289,47 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="shimmer-line group relative w-full h-12 rounded-xl overflow-hidden font-display font-semibold text-sm bg-gradient-to-r from-[#8b7bff] to-[#5a4fff] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.6)] hover:shadow-[0_18px_40px_-8px_rgba(124,111,255,0.8)] hover:-translate-y-0.5 transition-all duration-300 border-0"
+                className="shimmer-sweep group relative w-full h-13 rounded-xl overflow-hidden font-display font-semibold text-sm btn-primary-gradient"
                 disabled={isLoading}
-                size="lg"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     Tworzenie konta…
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
                     Utwórz konto
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </span>
                 )}
               </Button>
             </form>
 
-            <div className="mt-6 relative flex items-center">
-              <span className="flex-1 h-px bg-white/10" />
-              <span className="px-3 text-xs text-white/35 uppercase tracking-[0.18em]">lub</span>
-              <span className="flex-1 h-px bg-white/10" />
+            <div className="mt-8 animate-rise-in-delay-3" style={{ animationDelay: '160ms' }}>
+              <div className="relative flex items-center">
+                <span className="flex-1 h-px bg-white/10" />
+                <span className="px-4 text-[11px] text-white/30 uppercase tracking-widest">lub</span>
+                <span className="flex-1 h-px bg-white/10" />
+              </div>
+              <Link
+                href="/login"
+                className="mt-4 shimmer-sweep relative block w-full text-center px-5 py-3.5 rounded-xl text-sm font-medium text-white glass hover:bg-white/[0.06] hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
+              >
+                Masz już konto? Zaloguj się
+              </Link>
             </div>
-
-            <Link
-              href="/login"
-              className="mt-4 shimmer-line relative block w-full text-center px-4 py-3 rounded-xl text-sm font-medium text-white bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
-            >
-              Masz już konto? Zaloguj się
-            </Link>
           </div>
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-white/30 font-light">
-          Akceptując rejestrację otrzymujesz pełen dostęp do panelu
+        <p className="mt-8 text-center text-[11px] text-white/30 font-light tracking-wide">
+          Tworząc konto akceptujesz regulamin i politykę prywatności
         </p>
       </div>
     </div>
   )
+}
+
+function cn(...classes: (string | undefined | null | false)[]) {
+  return classes.filter(Boolean).join(' ')
 }
