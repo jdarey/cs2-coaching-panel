@@ -356,9 +356,9 @@ export function StudentDashboardClient({
         </div>
 
         {/* ===== Progress Overview ===== */}
-        <div className="grid gap-6 lg:grid-cols-3 mb-10">
+        <div className="mb-10">
           {/* Progress Ring + Breakdown */}
-          <div className="animate-rise-in lg:col-span-2 relative rounded-3xl p-7 md:p-8 glass-card overflow-hidden" style={{ animationDelay: '180ms' }}>
+          <div className="animate-rise-in relative rounded-3xl p-7 md:p-8 glass-card overflow-hidden" style={{ animationDelay: '180ms' }}>
             <div className="flex flex-col md:flex-row md:items-center gap-7 md:gap-10 relative z-10">
               {/* Circular Progress */}
               <div className="relative w-[160px] h-[160px] flex-shrink-0 mx-auto md:mx-0">
@@ -418,16 +418,17 @@ export function StudentDashboardClient({
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Quick Actions */}
-          <div className="animate-rise-in relative rounded-3xl p-7 glass-card overflow-hidden" style={{ animationDelay: '240ms' }}>
+        {/* ===== Quick Actions ===== */}
+        <div className="animate-rise-in relative rounded-3xl p-7 glass-card overflow-hidden mb-10" style={{ animationDelay: '240ms' }}>
             <div className="flex items-center gap-2 mb-5 relative z-10">
               <div className="p-2 rounded-lg glass">
                 <Sparkles className="w-4 h-4 text-[#8cffef]" />
               </div>
               <h4 className="font-display text-lg font-bold">Szybkie akcje</h4>
             </div>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 relative z-10">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 relative z-10">
               {[
                 { href: '/student/messages', icon: MessageSquare, label: 'Wiadomości', sub: 'Czat z trenerem' },
                 { href: '/student/feedback', icon: MessageSquareHeart, label: 'Moja opinia', sub: 'Podziel się spostrzeżeniami' },
@@ -454,7 +455,6 @@ export function StudentDashboardClient({
                   </Link>
                 )
               })}
-            </div>
           </div>
         </div>
 

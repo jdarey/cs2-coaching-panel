@@ -10,6 +10,7 @@ import {
   VIDEO_STATUS_LABELS,
   VIDEO_STATUS_COLORS,
   cn,
+  getVideoId,
   getVideoEmbedUrl,
 } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
@@ -194,7 +195,14 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
   const completionPct = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0
 
   const activeVideo = session.videos.find((sv) => sv.video.id === activeVideoId)?.video ?? null
-  const activeEmbedUrl = activeVideo ? getVideoEmbedUrl(activeVideo.url) : null
+  // In-app embed: YouTube via youtube-nocookie (no tracking cookies, no
+  // direct link in the address bar), Vimeo via player.vimeo.com.
+  const buildEmbedUrl = (url: string) => {
+    const ytId = getVideoId(url)
+    if (ytId) return `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1`
+    return getVideoEmbedUrl(url)
+  }
+  const activeEmbedUrl = activeVideo ? buildEmbedUrl(activeVideo.url) : null
 
   const statusAccent: Record<string, string> = {
     DRAFT: 'text-white/55 bg-white/[0.06] border-white/[0.10]',
@@ -267,15 +275,25 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
             className="lg:col-span-2 relative rounded-3xl glass-liquid overflow-hidden rise-in"
             style={{ animationDelay: '0.1s' }} >
             {/* Player */}
-            <div className="relative aspect-video w-full bg-[#060606]">
+            <div
+              className="relative aspect-video w-full bg-[#060606] select-none"
+              onContextMenu={(e) => e.preventDefault()}
+            >
               {activeEmbedUrl ? (
-                <iframe
-                  src={activeEmbedUrl}
-                  title={activeVideo?.title || 'Wideo'}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                <>
+                  <iframe
+                    src={activeEmbedUrl}
+                    title={activeVideo?.title || 'Wideo'}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                  {/* Watermark: ties the video to this student so a leak is traceable */}
+                  <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/90 bg-black/45 backdrop-blur-md ring-1 ring-white/15">
+                    <Lock className="h-3.5 w-3.5 text-[#8cffef]" />
+                    <span className="max-w-[180px] truncate">{session.student.name || 'Uczeń'}</span>
+                  </div>
+                </>
               ) : activeVideo ? (
                 <a
                   href={activeVideo.url}
@@ -686,25 +704,14 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
                             <div className="flex items-center gap-2">
                               {embedUrl && (
-                                <a
-                                  href={embedUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <Link
+                                  href={`/student/videos/${video.id}`}
                                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white/75 hover:text-white bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/[0.12] transition-all duration-300"
                                 >
                                   <Play className="w-3.5 h-3.5" />
-                                  Podgląd
-                                </a>
+                                  Oglądaj
+                                </Link>
                               )}
-                              <a
-                                href={video.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white/75 hover:text-white bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/[0.12] transition-all duration-300"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                Źródło
-                              </a>
                               <button
                                 onClick={() => setVideoProgressDialog({ video: sv, progress: videoProgress })}
                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300"

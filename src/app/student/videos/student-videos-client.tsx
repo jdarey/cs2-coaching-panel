@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { formatDate, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
@@ -16,7 +17,6 @@ import {
   Loader2,
   RefreshCw,
   Play,
-  ExternalLink,
   CheckCircle2,
   Hourglass,
   CircleDot,
@@ -439,17 +439,15 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
 
                     {/* Play overlay (center) — only when playable embed URL */}
                     {embedUrl && (
-                      <a
-                        href={embedUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/student/videos/${video.id}`}
                         className="absolute inset-0 grid place-items-center"
                         aria-label={`Odtwórz: ${video.title}`}
                       >
                         <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
                           <Play className="h-6 w-6 text-white translate-x-0.5" fill="currentColor" />
                         </span>
-                      </a>
+                      </Link>
                     )}
                   </div>
 
@@ -536,18 +534,6 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       </button>
                     </div>
 
-                    {/* Quick external link */}
-                    <div className="mt-2.5 pt-2.5 border-t border-white/[0.05]">
-                      <a
-                        href={video.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[11px] text-white/45 hover:text-[#8cffef] transition-colors"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Otwórz źródło
-                      </a>
-                    </div>
                   </div>
                 </div>
               )
