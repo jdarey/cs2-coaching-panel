@@ -529,17 +529,15 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         <span className="text-[11px] font-semibold text-white/90 truncate max-w-[200px]">{studentName}</span>
       </div>
 
-      {/* 3. Click-capture overlay (always after thumbnail gone) — covers YouTube native play button */}
-      {!showThumbnail && (
-        <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
-      )}
+      {/* 3. Click-capture overlay (ALWAYS) — covers YouTube native play button at all times */}
+      <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
 
       {/* 3b. Permanent overlay to hide YouTube logo in bottom-right corner (appears on hover/start) */}
-      <div className="absolute bottom-0 right-0 z-25 w-24 h-14 bg-gradient-to-tr from-black/90 via-black/50 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 right-0 z-25 w-24 h-14 bg-black/80 pointer-events-none" />
       {/* 3c. Top-right corner cover for "Watch on YouTube" button */}
-      <div className="absolute top-0 right-0 z-25 w-32 h-10 bg-gradient-to-bl from-black/80 via-black/40 to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 z-25 w-32 h-10 bg-black/80 pointer-events-none" />
       {/* 3d. Top bar cover to hide video title during load/thumbnail */}
-      <div className="absolute top-0 left-0 right-0 z-25 h-12 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 z-25 h-12 bg-black/80 pointer-events-none" />
       {/* 3e. Base cover layer - always present to block any YouTube UI bleed-through */}
       <div className="absolute inset-0 z-15 bg-black/0 pointer-events-none" />
 
