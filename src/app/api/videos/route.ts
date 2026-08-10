@@ -83,7 +83,10 @@ export async function POST(request: NextRequest) {
           create: tagIds.map((tagId) => ({ tagId })),
         },
       },
-      include: { tags: { include: { tag: true } } },
+      include: {
+        tags: { include: { tag: true } },
+        _count: { select: { progress: true, sessionVideos: true } },
+      },
     })
 
     return NextResponse.json(video, { status: 201 })

@@ -47,7 +47,10 @@ export async function PUT(
     const video = await prisma.video.update({
       where: { id },
       data: updateData,
-      include: { tags: { include: { tag: true } } },
+      include: {
+        tags: { include: { tag: true } },
+        _count: { select: { progress: true, sessionVideos: true } },
+      },
     })
 
     return NextResponse.json(video)
