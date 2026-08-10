@@ -89,6 +89,7 @@ function LoginForm() {
           wrapperClassName="animate-rise-in animate-rise-in-delay-1"
           className="relative rounded-3xl glass-card p-7 md:p-10 shimmer-sweep"
           maxTilt={5}
+          glare={false}
         >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
             <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.45) 0%, transparent 70%)' }} />

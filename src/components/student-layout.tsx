@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
 export function StudentLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const glowRef = useRef<HTMLDivElement>(null)
@@ -62,6 +63,18 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
       if (raf) cancelAnimationFrame(raf)
     }
   }, [])
+
+  // Client-side signout — never follows NextAuth's server redirect (built from
+  // NEXTAUTH_URL, which on Vercel can point at a removed deployment and 404).
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirect: false, callbackUrl: '/login' })
+    } catch {
+      /* cookie may already be gone — continue anyway */
+    }
+    router.push('/login')
+    router.refresh()
+  }
 
   if (userRole !== 'STUDENT') return null
 
@@ -207,7 +220,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
                     Ustawienia
                   </Link>
                   <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    onClick={handleSignOut}
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium text-red-300/85 hover:text-red-200 bg-red-500/[0.08] border border-red-500/15 hover:bg-red-500/15 hover:border-red-500/30 transition-colors duration-300"
                   >
                     <LogOut className="w-4 h-4" />

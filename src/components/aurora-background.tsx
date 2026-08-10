@@ -109,19 +109,24 @@ export function AuroraBackground({
         }}
       />
 
-      {/* ===== Dynamic cursor-following glow (rAF, no re-renders) ===== */}
-      <div
-        ref={glowRef}
-        className="absolute rounded-full blur-[200px] opacity-30 will-change-transform"
-        style={{
-          width: '420px',
-          height: '420px',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(45,229,202,0.25) 0%, rgba(45,229,202,0.12) 40%, transparent 80%)',
-        }}
-      />
+      {/* ===== Dynamic cursor-following glow (rAF, no re-renders) =====
+          Skipped on auth pages: the big moving glow clips/glitches against the
+          3D login card's stacking context (light "doesn't pass through" and
+          stutters on hover). Dashboards keep it. */}
+      {variant !== 'auth' && variant !== 'minimal' && (
+        <div
+          ref={glowRef}
+          className="absolute rounded-full blur-[200px] opacity-30 will-change-transform"
+          style={{
+            width: '420px',
+            height: '420px',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(45,229,202,0.25) 0%, rgba(45,229,202,0.12) 40%, transparent 80%)',
+          }}
+        />
+      )}
 
       {/* ===== Fine Grid with Radial Mask ===== */}
       <div
