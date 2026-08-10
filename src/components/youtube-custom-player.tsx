@@ -151,7 +151,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         rel:            0,
         showinfo:       0,
         iv_load_policy: 3,
-        cc_load_policy: 0, // disable captions by default
+        cc_load_policy: 0,
+        cc_lang_pref: 'off',
+        hl: 'pl',
         playsinline:    1,
         wmode:          'opaque',
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
@@ -164,6 +166,13 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
           setDuration(event.target.getDuration() || 0)
           setVolume(event.target.getVolume())
           setIsMuted(event.target.isMuted())
+          
+          // Force disable captions programmatically
+          try {
+            event.target.loadModule('captions')
+            event.target.setOption('captions', 'track', { lang: 'off' })
+          } catch (_) {}
+
           const qualities: string[] = event.target.getAvailableQualityLevels?.() ?? []
           if (qualities.length > 0) setAvailableQualities(qualities)
           const playbackQuality = event.target.getPlaybackQuality?.() ?? qualityVq
@@ -520,9 +529,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         <span className="text-[11px] font-semibold text-white/90 truncate max-w-[200px]">{studentName}</span>
       </div>
 
-      {/* 3. Click-capture overlay (only after thumbnail gone) */}
+      {/* 3. Click-capture overlay (always after thumbnail gone) — covers YouTube native play button */}
       {!showThumbnail && (
-        <div className="absolute inset-0 z-20 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
+        <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
       )}
 
       {/* 4. Paused cinematic dim */}
