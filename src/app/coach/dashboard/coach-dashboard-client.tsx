@@ -2,6 +2,7 @@
 
 import { cn, formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { Plus, Users, BookOpen, Video, Tag, ArrowRight, UserCheck, Sparkles, Activity } from 'lucide-react'
 import Link from 'next/link'
 
@@ -38,51 +39,35 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
   return (
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* =========================== STICKY HEADER =========================== */}
-        <div className="sticky top-16 lg:top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#0a0a0a] border-b border-white/[0.06]">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-            <div className="flex items-start gap-4">
-              <div className="relative hidden sm:block">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] blur-xl opacity-40 animate-aurora-slow" />
-                <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] ring-1 ring-white/30">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-              </div>
-              <div>
-                <h1 className="font-display text-display font-bold text-gradient-vantor">
-                  Dashboard trenera
-                </h1>
-                <p className="mt-1.5 text-sm text-white/55 max-w-md">
-                  Przegląd Twojego panelu — uczniowie, sesje i materiały w&nbsp;jednym miejscu.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/coach/sessions"
-                className={cn(
-                  ' group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
-                  'btn-darey',
-                  'ring-1 ring-white/20 hover:-translate-y-0.5 transition-all duration-300',
-                )}
-              >
-                <Plus className="h-4 w-4" />
-                Nowa sesja
-              </Link>
-              <Link
-                href="/coach/videos"
-                className={cn(
-                  ' group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
-                  'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#2de5ca]/25 hover:bg-white/[0.07]',
-                  'backdrop-blur-xl hover:-translate-y-0.5 transition-all duration-300',
-                )}
-              >
-                <Plus className="h-4 w-4" />
-                Dodaj film
-              </Link>
-            </div>
-          </div>
-        </div>
+        {/* =========================== PAGE HEADER =========================== */}
+        <PageHeader
+          icon={Sparkles}
+          title="Dashboard trenera"
+          subtitle="Przegląd Twojego panelu — uczniowie, sesje i materiały w jednym miejscu."
+        >
+          <Link
+            href="/coach/sessions"
+            className={cn(
+              'group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
+              'btn-darey',
+              'ring-1 ring-white/20 hover:-translate-y-0.5 transition-all duration-300',
+            )}
+          >
+            <Plus className="h-4 w-4" />
+            Nowa sesja
+          </Link>
+          <Link
+            href="/coach/videos"
+            className={cn(
+              'group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
+              'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#2de5ca]/25 hover:bg-white/[0.07]',
+              'backdrop-blur-xl hover:-translate-y-0.5 transition-all duration-300',
+            )}
+          >
+            <Plus className="h-4 w-4" />
+            Dodaj film
+          </Link>
+        </PageHeader>
 
         {/* =========================== MARQUEE BAND =========================== */}
         <div className="marquee rise-in mb-8 py-3 border-y border-white/[0.06]" style={{ animationDelay: '0.02s' }}>

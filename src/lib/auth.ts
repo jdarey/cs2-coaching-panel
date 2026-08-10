@@ -51,32 +51,31 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    // Keep the JWT (and therefore the session cookie) tiny: only stable,
+    // non-binary claims live in the token. Avatar data URIs can reach hundreds
+    // of KB — embedding them here inflated the cookie past the 16KB request
+    // header limit on Vercel, which made every request fail with
+    // REQUEST_HEADER_TOO_LARGE (494). Name/avatar are read fresh from the DB
+    // in the session callback instead, so they are always up to date too.
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
-        token.avatarUrl = (user as any).avatarUrl
       }
-      // When the client calls session.update() (e.g. after changing the
-      // avatar/name in settings), re-read the user so the sidebar and pages
-      // reflect the change without requiring a full re-login.
-      if (trigger === 'update' && token.id) {
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string
+        session.user.role = token.role as string
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
           select: { name: true, avatarUrl: true },
         })
         if (dbUser) {
-          token.name = dbUser.name
-          token.avatarUrl = dbUser.avatarUrl
+          session.user.name = dbUser.name
+          session.user.avatarUrl = dbUser.avatarUrl
         }
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role as string
-        session.user.avatarUrl = token.avatarUrl as string | null
       }
       return session
     },

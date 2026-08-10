@@ -434,9 +434,21 @@
 .light .bg-\[\#0a0a0a\] { background-color: #ffffff !important; }
 .light .bg-\[\#181818\] { background-color: #ffffff !important; }
 .light .bg-\[\#0b0c16\] { background-color: #eef0f3 !important; }
+.light .bg-\[\#050607\] { background-color: #f4f5f7 !important; }
+.light .bg-\[\#0a0c0e\] { background-color: #ffffff !important; }
+.light .bg-\[\#101316\] { background-color: #f8f9fa !important; }
 .light .bg-\[\#06070d\] { background-color: #eef0f3 !important; }
 .light .bg-\[\#0a0a12\] { background-color: #eef0f3 !important; }
 .light .text-white { color: rgba(13, 17, 23, 1) !important; }
+.light .text-\[\#f4f6f7\] { color: rgb(13, 17, 23) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.9\] { color: rgba(13, 17, 23, 0.9) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.8\] { color: rgba(13, 17, 23, 0.8) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.75\] { color: rgba(13, 17, 23, 0.75) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.55\] { color: rgba(13, 17, 23, 0.55) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.5\] { color: rgba(13, 17, 23, 0.5) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.45\] { color: rgba(13, 17, 23, 0.45) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.4\] { color: rgba(13, 17, 23, 0.4) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.3\] { color: rgba(13, 17, 23, 0.3) !important; }
 .light .text-white\/5 { color: rgba(13, 17, 23, 0.05) !important; }
 .light .text-white\/10 { color: rgba(13, 17, 23, 0.10) !important; }
 .light .text-white\/15 { color: rgba(13, 17, 23, 0.15) !important; }

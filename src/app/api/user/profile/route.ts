@@ -4,9 +4,9 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
-// Avatar URLs land inside the NextAuth JWT, so they must stay small — a huge
-// base64 data URI (e.g. an uncompressed photo) inflates the token past the
-// cookie-chunking threshold and breaks the session (401s everywhere).
+// Avatars are stored as base64 data URIs in the DB (no file storage). The
+// limit keeps the DB lean; the value itself never lands in the session cookie
+// anymore (auth.ts reads it fresh from the DB), so it cannot break requests.
 const avatarSchema = z
   .string()
   .refine(
