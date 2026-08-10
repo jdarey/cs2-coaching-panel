@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/login" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_16px_40px_-10px_rgba(20,184,166,0.6)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
               <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>

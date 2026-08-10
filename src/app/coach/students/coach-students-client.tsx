@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -175,44 +176,21 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
   return (
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#0a0a0a]">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] shrink-0">
-                  <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet leading-none">
-                    Uczniowie
-                  </h1>
-                  <p className="mt-1.5 text-sm text-white/45">Zarządzaj swoimi uczniami i śledź ich postępy</p>
-                </div>
-              </div>
-
-              {/* Gradient add-student button */}
-              <button
-                onClick={openAddDialog}
-                className=" relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(20,184,166,0.55)] active:scale-[0.98]"
-                style={{
-                  background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
-                  boxShadow: '0 8px 24px -10px rgba(20,184,166,0.5)',
-                }}
-              >
-                <Plus className="relative w-4 h-4" strokeWidth={2.5} />
-                <span className="relative hidden sm:inline">Dodaj ucznia</span>
-                <span className="relative sm:hidden">Dodaj</span>
-              </button>
-            </div>
-
-            <div className="relative mt-3">
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-40 h-2 rounded-full bg-[#2de5ca]/25 blur-xl animate-aurora-slow" />
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          icon={UserPlus}
+          label="Twoja drużyna"
+          title="Uczniowie"
+          subtitle="Zarządzaj swoimi uczniami i śledź ich postępy"
+        >
+          <button
+            onClick={openAddDialog}
+            className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white btn-primary-gradient"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Dodaj ucznia</span>
+            <span className="sm:hidden">Dodaj</span>
+          </button>
+        </PageHeader>
 
         {/* ===== Stats strip ===== */}
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -297,10 +275,9 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
             {!search && (
               <button
                 onClick={openAddDialog}
-                className=" relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(20,184,166,0.55)] active:scale-[0.98]"
+                className=" relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 active:scale-[0.98]"
                 style={{
                   background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
-                  boxShadow: '0 8px 24px -10px rgba(20,184,166,0.5)',
                 }}
               >
                 <UserPlus className="relative w-4 h-4" strokeWidth={2.4} />
@@ -421,7 +398,6 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                             style={{
                               width: `${completion}%`,
                               background: 'linear-gradient(90deg, #34d399 0%, #14b8a6 100%)',
-                              boxShadow: '0 0 12px rgba(20,184,166,0.5)',
                             }}
                           />
                         </div>
@@ -448,7 +424,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
 
             <DialogHeader className="relative">
               <div className="flex items-center gap-3 mb-1">
-                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b] shadow-[0_8px_24px_-8px_rgba(20,184,166,0.6)]">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#147a6b]">
                   <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                 </div>
@@ -532,11 +508,10 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className=" relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(20,184,166,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                  className=" relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                   style={{
                     background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)',
-                    boxShadow: '0 8px 24px -10px rgba(20,184,166,0.5)',
-                  }}
+                    }}
                 >
                   {isLoading ? <Loader2 className="relative w-4 h-4 animate-spin" /> : null}
                   <span className="relative">{editingStudent ? 'Zapisz' : 'Dodaj ucznia'}</span>

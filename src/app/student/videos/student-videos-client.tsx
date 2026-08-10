@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { formatDate, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
+import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import {
   Video,
@@ -161,29 +162,12 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
   return (
     <StudentLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* ===== Sticky premium header ===== */}
-        <div
-          className="sticky top-16 lg:top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-6 bg-[#0a0a0a]"
-          style={{
-            background: 'linear-gradient(180deg, rgba(6,7,13,0.92) 0%, rgba(6,7,13,0.72) 60%, rgba(6,7,13,0) 100%)',
-            borderBottom: '1px solid rgba(255,255,255,0.04)',
-          }}
-        >
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] ring-1 ring-white/20">
-                <Video className="h-4 w-4 text-white" strokeWidth={2.4} />
-              </span>
-              <span className="text-[11px] uppercase tracking-[0.22em] text-white/40 font-semibold">Biblioteka</span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet leading-[1.05]">
-              Filmy do oglądania
-            </h1>
-            <p className="text-sm text-white/55 max-w-xl">
-              Wszystkie filmy przypisane przez Twojego trenera. Jedno kliknięcie dzieli Cię od kolejnego wniosku.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          icon={Video}
+          label="Biblioteka"
+          title="Filmy do oglądania"
+          subtitle="Wszystkie filmy przypisane przez Twojego trenera. Jedno kliknięcie dzieli Cię od kolejnego wniosku."
+        />
 
         {/* ===== Stats glass strip ===== */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -372,7 +356,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
             {(search || activeTab !== 'all') && (
               <button
                 onClick={() => { setSearch(''); setActiveTab('all'); setSelectedSessionId(null) }}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white btn-darey hover:shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] transition-shadow"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white btn-darey transition-shadow"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Wyczyść filtry
@@ -429,7 +413,6 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         style={{
                           background: `${meta.color}1f`,
                           color: meta.color,
-                          boxShadow: `0 0 14px -4px ${meta.glow}`,
                           borderColor: `${meta.color}55`,
                           ['--tw-ring-color' as string]: `${meta.color}40`,
                         }}
@@ -463,7 +446,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         className="absolute inset-0 grid place-items-center"
                         aria-label={`Odtwórz: ${video.title}`}
                       >
-                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_18px_40px_-10px_rgba(124,111,255,0.75)] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
+                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
                           <Play className="h-6 w-6 text-white translate-x-0.5" fill="currentColor" />
                         </span>
                       </a>
@@ -522,7 +505,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                                 strokeLinecap="round"
                                 strokeDasharray={circumference}
                                 strokeDashoffset={ringOffset}
-                                style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.16,1,0.3,1)', filter: `drop-shadow(0 0 4px ${meta.glow})` }}
+                                style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.16,1,0.3,1)' }}
                               />
                             </svg>
                             <span className="absolute text-[9px] font-bold tabular-nums text-white">{prog}%</span>
@@ -697,7 +680,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                 {/* Close */}
                 <button
                   onClick={() => setVideoProgressDialog(null)}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white btn-darey hover:shadow-[0_14px_36px_-10px_rgba(124,111,255,0.55)] transition-shadow"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white btn-darey transition-shadow"
                 >
                   Zamknij
                   <ArrowRight className="h-4 w-4" />

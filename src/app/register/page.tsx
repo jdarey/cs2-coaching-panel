@@ -116,7 +116,7 @@ export default function RegisterPage() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_16px_40px_-10px_rgba(20,184,166,0.6)] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
               <GraduationCapIcon className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
@@ -167,7 +167,7 @@ export default function RegisterPage() {
                         className={cn(
                           'relative group flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border transition-all duration-300 overflow-hidden',
                           active
-                            ? 'border-[#2de5ca]/50 bg-[#2de5ca]/10 shadow-[0_0_28px_-8px_rgba(45,229,202,0.5)]'
+                            ? 'border-[#2de5ca]/50 bg-[#2de5ca]/10'
                             : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]',
                         )}
                       >
@@ -183,7 +183,7 @@ export default function RegisterPage() {
                           <p className="text-[11px] text-white/45">{r.sub}</p>
                         </div>
                         {active && (
-                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#2de5ca] shadow-[0_0_12px_rgba(45,229,202,0.8)]" />
+                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#2de5ca]" />
                         )}
                       </button>
                     )

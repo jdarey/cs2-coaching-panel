@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
 import {
   Plus,
@@ -321,34 +322,20 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   return (
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* Sticky gradient header */}
-        <div className="sticky top-16 lg:top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-6 pt-4 bg-transparent">
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#060606] via-[#060606]/85 to-transparent" />
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="animate-rise-in">
-              <div className="flex items-center gap-3">
-                <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
-                  <Film className="h-5 w-5 text-[#8cffef]" />
-                </span>
-                <div>
-                  <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
-                    Filmy
-                  </h1>
-                  <p className="text-sm text-white/45 mt-0.5">
-                    Baza filmów treningowych — dodawaj, taguj i przypisuj uczniom
-                  </p>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={openAddDialog}
-              className=" relative overflow-hidden group inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow"
-            >
-              <Plus className="h-4 w-4" />
-              Dodaj film
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          icon={Film}
+          label="Biblioteka"
+          title="Filmy"
+          subtitle="Baza filmów treningowych — dodawaj, taguj i przypisuj uczniom"
+        >
+          <button
+            onClick={openAddDialog}
+            className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white btn-primary-gradient"
+          >
+            <Plus className="h-4 w-4" />
+            Dodaj film
+          </button>
+        </PageHeader>
 
         {/* Premium glass search + tabs */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -466,7 +453,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-1 group-hover:translate-y-0">
                       <button
                         onClick={() => openAssignDialog(video)}
-                        className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white btn-darey shadow-[0_8px_24px_-8px_rgba(45,229,202,0.5)] hover:shadow-[0_12px_32px_-8px_rgba(45,229,202,0.7)] transition-all"
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white btn-darey transition-all"
                         aria-label={`Przypisz "${video.title}" do ucznia`}
                       >
                         <UserPlus className="h-3.5 w-3.5" />
@@ -512,8 +499,8 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     )}
 
                     {/* Stats + actions */}
-                    <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-4">
-                      <div className="flex items-center gap-3 text-xs text-white/45">
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-white/[0.06] pt-4">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45">
                         <span className="inline-flex items-center gap-1">
                           <Layers className="h-3.5 w-3.5" />
                           {video._count.progress} przypisań

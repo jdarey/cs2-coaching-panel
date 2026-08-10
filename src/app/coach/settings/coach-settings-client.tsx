@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { applyStoredTheme } from '@/components/providers'
 import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
@@ -260,22 +261,12 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
   return (
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* Gradient header */}
-        <div className="mb-8 rise-in">
-          <div className="flex items-center gap-3">
-            <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
-              <Shield className="h-5 w-5 text-[#8cffef]" />
-            </span>
-            <div>
-              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
-                Ustawienia trenera
-              </h1>
-              <p className="text-sm text-white/45 mt-0.5">
-                Zarządzaj swoim kontem i preferencjami panelu
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          icon={Shield}
+          label="Konto i panel"
+          title="Ustawienia trenera"
+          subtitle="Zarządzaj swoim kontem i preferencjami panelu"
+        />
 
         {/* Tabs with .tab-underline */}
         <div className="relative rise-in mb-8" style={{ animationDelay: '60ms' }}>
@@ -528,7 +519,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         className={cn(
                           'relative h-9 w-16 shrink-0 rounded-full transition-all',
                           on
-                            ? 'btn-darey shadow-[0_0_18px_-2px_rgba(20,184,166,0.6)]'
+                            ? 'btn-darey'
                             : 'glass-tinted'
                         )}
                         aria-pressed={on}
@@ -569,7 +560,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     className={cn(
                       'relative h-9 w-16 shrink-0 rounded-full transition-all',
                       notifications.discord
-                        ? 'btn-darey shadow-[0_0_18px_-2px_rgba(20,184,166,0.6)]'
+                        ? 'btn-darey'
                         : 'glass-tinted'
                     )}
                     aria-pressed={notifications.discord}

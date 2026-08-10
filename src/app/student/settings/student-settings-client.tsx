@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
+import { PageHeader } from '@/components/page-header'
 import { applyStoredTheme } from '@/components/providers'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -209,19 +210,12 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
   return (
     <StudentLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* ===== Page header ===== */}
-        <div className="rise-in mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-white/65 bg-white/[0.04] border border-white/[0.07] mb-5 backdrop-blur-xl">
-            <Settings className="w-3.5 h-3.5 text-[#8cffef]" />
-            Panel ucznia
-          </div>
-          <h1 className="font-display text-4xl md:text-[3.4rem] leading-[1.05] font-bold tracking-tight mb-3 text-gradient-violet">
-            Ustawienia
-          </h1>
-          <p className="text-white/45 text-lg max-w-2xl font-light">
-            Zarządzaj swoim profilem, hasłem i preferencjami powiadomień.
-          </p>
-        </div>
+        <PageHeader
+          icon={Settings}
+          label="Panel ucznia"
+          title="Ustawienia"
+          subtitle="Zarządzaj swoim profilem, hasłem i preferencjami powiadomień."
+        />
 
         {/* ===== Tabs with animated underline ===== */}
         <div
@@ -334,7 +328,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                    className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Zapisz zmiany
@@ -425,7 +419,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Zmień hasło

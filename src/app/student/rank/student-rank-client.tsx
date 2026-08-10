@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { StudentLayout } from '@/components/student-layout'
+import { PageHeader } from '@/components/page-header'
 import { cn } from '@/lib/utils'
 import { RANKS, getRank, nextRank, getLevel, getStreak, getAchievements } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
@@ -72,15 +74,14 @@ export function StudentRankClient() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-semibold text-white/70 mb-3">
-          <Trophy className="w-3.5 h-3.5 text-[#2de5ca]" />
-          TWOJA KARIERA
-        </div>
-        <h1 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-gradient-vantor">Moja ranga</h1>
-        <p className="mt-2 text-white/50 text-sm">Każdy obejrzany i wdrożony film przybliża Cię do kolejnej rangi. Jak w grze — ale na serio.</p>
-      </div>
+    <StudentLayout>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
+        <PageHeader
+          icon={Trophy}
+          label="Twoja kariera"
+          title="Moja ranga"
+          subtitle="Każdy obejrzany i wdrożony film przybliża Cię do kolejnej rangi. Jak w grze — ale na serio."
+        />
 
       {/* Current rank hero */}
       <div className="bento-card p-6 md:p-8 relative overflow-hidden mb-8">
@@ -184,6 +185,7 @@ export function StudentRankClient() {
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </StudentLayout>
   )
 }

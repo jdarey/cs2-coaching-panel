@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { formatDate, formatDateTime, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
+import { PageHeader } from '@/components/page-header'
 import {
   TrendingUp,
   Trophy,
@@ -173,22 +174,12 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
   return (
     <StudentLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 space-y-8">
-        {/* Header */}
-        <header className="rise-in pt-2">
-          <div className="flex items-center gap-2.5 mb-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium text-[#8cffef] bg-[#2de5ca]/10 border border-[#2de5ca]/20">
-              <Sparkles className="w-3 h-3" />
-              Panel postępu
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.2em] text-white/30 font-semibold">Mój postęp</span>
-          </div>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-gradient-violet">
-            Mój postęp
-          </h1>
-          <p className="mt-2 text-white/45 max-w-2xl">
-            Przegląd Twoich osiągnięć i obszarów do poprawy — śledź każdy krok na drodze do mistrzostwa.
-          </p>
-        </header>
+        <PageHeader
+          icon={TrendingUp}
+          label="Panel postępu"
+          title="Mój postęp"
+          subtitle="Przegląd Twoich osiągnięć i obszarów do poprawy — śledź każdy krok na drodze do mistrzostwa."
+        />
 
         {/* Hero stats row */}
         <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -197,7 +188,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '0ms' }}
           >
             <div className="flex items-start justify-between">
-              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
+              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/30">
                 <Video className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
               <TrendingUp className="w-4 h-4 text-white/30" />
@@ -213,7 +204,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '80ms' }}
           >
             <div className="flex items-start justify-between">
-              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#14b8a6] to-[#2de5ca] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(45,229,202,0.6)]">
+              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#14b8a6] to-[#2de5ca] ring-1 ring-white/30">
                 <Trophy className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
               <Award className="w-4 h-4 text-white/30" />
@@ -227,7 +218,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '160ms' }}
           >
             <div className="flex items-start justify-between">
-              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#14b8a6] to-[#2de5ca] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(90,79,255,0.6)]">
+              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#14b8a6] to-[#2de5ca] ring-1 ring-white/30">
                 <Target className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
               <span className="text-[10px] uppercase tracking-wider text-white/30">cel</span>
@@ -244,7 +235,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             style={{ animationDelay: '240ms' }}
           >
             <div className="flex items-start justify-between">
-              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/30 shadow-[0_8px_24px_-8px_rgba(251,191,36,0.6)]">
+              <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/30">
                 <Flame className="w-5 h-5 text-white" strokeWidth={2.2} />
               </div>
               <Activity className="w-4 h-4 text-white/30" />
@@ -267,7 +258,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             </div>
 
             <div className="relative my-2">
-              <svg width="220" height="220" viewBox="0 0 220 220" className="-rotate-90 drop-shadow-[0_0_30px_rgba(124,111,255,0.25)]">
+              <svg width="220" height="220" viewBox="0 0 220 220" className="-rotate-90">
                 <defs>
                   <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#8cffef" />
@@ -553,7 +544,6 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                       className="relative w-11 h-11 rounded-2xl grid place-items-center flex-shrink-0 ring-1 ring-white/20"
                       style={{
                         background: `linear-gradient(135deg, ${item.tag?.color || '#14b8a6'}40, ${item.tag?.color || '#14b8a6'}10)`,
-                        boxShadow: `0 8px 24px -10px ${item.tag?.color || 'rgba(124,111,255,0.5)'}80`,
                       }}
                     >
                       <Target className="w-5 h-5" style={{ color: item.tag?.color || '#8cffef' }} strokeWidth={2.2} />

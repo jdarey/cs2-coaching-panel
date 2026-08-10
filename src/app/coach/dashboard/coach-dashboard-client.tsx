@@ -44,7 +44,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
             <div className="flex items-start gap-4">
               <div className="relative hidden sm:block">
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] blur-xl opacity-40 animate-aurora-slow" />
-                <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] ring-1 ring-white/30 shadow-lg shadow-[#147a6b]/30">
+                <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] ring-1 ring-white/30">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
               </div>
@@ -62,8 +62,8 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 href="/coach/sessions"
                 className={cn(
                   ' group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
-                  'btn-darey shadow-lg shadow-[#147a6b]/30',
-                  'ring-1 ring-white/20 hover:shadow-xl hover:shadow-[#147a6b]/40 hover:-translate-y-0.5 transition-all duration-300',
+                  'btn-darey',
+                  'ring-1 ring-white/20 hover:-translate-y-0.5 transition-all duration-300',
                 )}
               >
                 <Plus className="h-4 w-4" />
@@ -107,7 +107,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
           <div className="relative grid lg:grid-cols-[auto_1fr] items-center gap-8">
             {/* SVG ring */}
             <div className="relative mx-auto lg:mx-0 grid place-items-center">
-              <svg width="160" height="160" viewBox="0 0 120 120" className="-rotate-90 drop-shadow-[0_0_24px_rgba(20,184,166,0.35)]">
+              <svg width="160" height="160" viewBox="0 0 120 120" className="-rotate-90">
                 <defs>
                   <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#8cffef" />
@@ -238,7 +238,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 <p className="text-sm text-white/55">Brak sesji. Utwórz swoją pierwszą sesję.</p>
                 <Link
                   href="/coach/sessions"
-                  className=" relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#147a6b]/25 hover:-translate-y-0.5 transition-all"
+                  className=" relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Utwórz sesję
                 </Link>
@@ -255,7 +255,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                       'hover:bg-white/[0.04] transition-all duration-300',
                     )}
                   >
-                    <div className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/30 shadow-lg shadow-[#16a34a]/20">
+                    <div className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/30">
                       <BookOpen className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -322,7 +322,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 <p className="text-sm text-white/55">Brak uczniów. Dodaj pierwszego ucznia.</p>
                 <Link
                   href="/coach/students"
-                  className=" relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 shadow-lg shadow-[#147a6b]/25 hover:-translate-y-0.5 transition-all"
+                  className=" relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 hover:-translate-y-0.5 transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" /> Dodaj ucznia
                 </Link>
@@ -350,7 +350,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                             className="h-11 w-11 rounded-xl object-cover ring-1 ring-white/15"
                           />
                         ) : (
-                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] text-sm font-semibold text-white ring-1 ring-white/30 shadow-lg shadow-[#147a6b]/25">
+                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] text-sm font-semibold text-white ring-1 ring-white/30">
                             {initial}
                           </div>
                         )}
@@ -380,7 +380,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
           <div className="flex items-center gap-2 mb-4">
             <span className="section-pill"><Sparkles className="w-3.5 h-3.5" /> Szybkie akcje</span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
             {[
               {
                 name: 'Wiadomości',
@@ -417,10 +417,9 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                   </div>
                   <p className="font-display text-base font-semibold text-white group-hover:text-white">{a.name}</p>
                   <p className="mt-1 text-xs text-white/45 leading-relaxed">{a.desc}</p>
-                  <span className="mt-auto pt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#8FA3FF] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+                  <span className="mt-auto pt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#2de5ca] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
                     Otwórz <ArrowRight className="w-3.5 h-3.5" />
                   </span>
-                  <div className="pointer-events-none absolute -bottom-12 -right-10 w-36 h-36 rounded-full bg-[#14b8a6]/25 blur-2xl transition-opacity duration-500 opacity-0 group-hover:opacity-100" />
                 </Link>
               </div>
             ))}

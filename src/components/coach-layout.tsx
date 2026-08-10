@@ -11,7 +11,7 @@ import { AuroraBackground } from '@/components/aurora-background'
 import { UnreadBadge } from '@/components/unread-badge'
 import {
   LayoutDashboard, Users, BookOpen, Video, Tag, Settings, LogOut, Menu, X,
-  ShieldCheck, MessageSquare, MessageSquareHeart, ChevronLeft,
+  ShieldCheck, MessageSquare, MessageSquareHeart,
 } from 'lucide-react'
 
 type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback' }
@@ -36,41 +36,11 @@ const navSections: { label: string; items: NavItem[] }[] = [
   },
 ]
 
-function NavLink({ item, pathname, onNavigate }: { item: NavItem; pathname: string; onNavigate?: () => void }) {
-  const active = pathname === item.href || pathname.startsWith(item.href + '/')
-  return (
-    <li>
-      <Link
-        href={item.href}
-        onClick={onNavigate}
-        className={cn(
-          'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
-          active ? 'text-white bg-[#2de5ca]/[0.08]' : 'text-[#f4f6f7]/[0.55] hover:text-[#f4f6f7]/[0.9] hover:bg-white/[0.04]',
-        )}
-      >
-        <span
-          className={cn(
-            'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full transition-opacity duration-200',
-            active ? 'bg-[#2de5ca] opacity-100' : 'opacity-0',
-          )}
-        />
-        <item.icon
-          className={cn('relative w-[18px] h-[18px] transition-colors duration-200', active ? 'text-[#2de5ca]' : 'text-[#f4f6f7]/[0.5] group-hover:text-[#f4f6f7]/[0.8]')}
-          strokeWidth={2.1}
-        />
-        <span className="relative">{item.name}</span>
-        {item.badge && <UnreadBadge kind={item.badge} />}
-      </Link>
-    </li>
-  )
-}
-
 export function CoachLayout({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const router = useRouter()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
 
   const user = session?.user
 
@@ -108,8 +78,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'fixed lg:sticky top-0 z-50 h-screen flex-shrink-0 transition-all duration-300 ease-out',
-            collapsed ? 'lg:w-[72px]' : 'lg:w-[264px] w-[264px]',
+            'fixed lg:sticky top-0 z-50 h-screen w-[264px] flex-shrink-0 transition-transform duration-300 ease-out',
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
           style={{
@@ -122,14 +91,14 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             <div className="flex h-[72px] items-center justify-between px-4 lg:px-5 border-b border-white/[0.06]">
               <Link
                 href="/coach/dashboard"
-                className={cn('flex items-center gap-3 group', collapsed && 'lg:justify-center lg:w-full')}
+                className="flex items-center gap-3 group"
                 onClick={() => setMobileSidebarOpen(false)}
               >
-                <div className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_8px_24px_-8px_rgba(20,184,166,0.6)]">
+                <div className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6]">
                   <ShieldCheck className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
                 </div>
-                <div className={cn('leading-tight min-w-0', collapsed && 'lg:hidden')}>
+                <div className="leading-tight min-w-0">
                   <p className="font-display font-bold text-sm tracking-tight">CS2 Coaching</p>
                   <p className="text-[10px] text-[#f4f6f7]/[0.45] font-medium tracking-wider uppercase">Panel trenera</p>
                 </div>
@@ -143,7 +112,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             <nav className="flex-1 overflow-y-auto py-5 px-3">
               {navSections.map((section) => (
                 <div key={section.label} className="mb-5">
-                  <p className={cn('px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold', collapsed && 'lg:hidden')}>{section.label}</p>
+                  <p className="px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold">{section.label}</p>
                   <ul className="space-y-0.5">
                     {section.items.map((item) => (
                       <li key={item.name}>
@@ -152,7 +121,6 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                           onClick={() => setMobileSidebarOpen(false)}
                           className={cn(
                             'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
-                            collapsed && 'lg:justify-center lg:px-0',
                             pathname === item.href || pathname.startsWith(item.href + '/')
                               ? 'text-white bg-[#2de5ca]/[0.08]'
                               : 'text-[#f4f6f7]/[0.55] hover:text-[#f4f6f7]/[0.9] hover:bg-white/[0.04]',
@@ -173,8 +141,8 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                             )}
                             strokeWidth={2.1}
                           />
-                          <span className={cn('relative', collapsed && 'lg:hidden')}>{item.name}</span>
-                          {item.badge && !collapsed && <UnreadBadge kind={item.badge} />}
+                          <span className="relative">{item.name}</span>
+                          {item.badge && <UnreadBadge kind={item.badge} />}
                         </Link>
                       </li>
                     ))}
@@ -182,7 +150,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                 </div>
               ))}
               <div className="mb-2">
-                <p className={cn('px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold', collapsed && 'lg:hidden')}>Konto</p>
+                <p className="px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold">Konto</p>
                 <ul className="space-y-0.5">
                   <li>
                     <Link
@@ -190,7 +158,6 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                       onClick={() => setMobileSidebarOpen(false)}
                       className={cn(
                         'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
-                        collapsed && 'lg:justify-center lg:px-0',
                         pathname === '/coach/settings'
                           ? 'text-white bg-[#2de5ca]/[0.08]'
                           : 'text-[#f4f6f7]/[0.55] hover:text-[#f4f6f7]/[0.9] hover:bg-white/[0.04]',
@@ -209,7 +176,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                         )}
                         strokeWidth={2.1}
                       />
-                      <span className={cn('relative', collapsed && 'lg:hidden')}>Ustawienia</span>
+                      <span className="relative">Ustawienia</span>
                     </Link>
                   </li>
                 </ul>
@@ -218,20 +185,20 @@ export function CoachLayout({ children }: { children: ReactNode }) {
 
             {/* User card */}
             <div className="p-3 border-t border-white/[0.06]">
-              <div className={cn('rounded-2xl p-3 bg-[#101316] border border-white/[0.07]', collapsed && 'lg:p-2')}>
-                <div className={cn('flex items-center gap-3 mb-3', collapsed && 'lg:justify-center lg:mb-0')}>
+              <div className="rounded-2xl p-3 bg-[#101316] border border-white/[0.07]">
+                <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-9 w-9 shrink-0 rounded-lg ring-1 ring-white/15">
                     <AvatarImage src={(user as any)?.avatarUrl || ''} alt={user?.name || ''} />
                     <AvatarFallback className="rounded-lg bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white font-display font-semibold text-sm">
                       {user?.name?.[0] || 'T'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className={cn('flex-1 min-w-0', collapsed && 'lg:hidden')}>
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{user?.name || 'Trener'}</p>
                     <p className="text-[11px] text-[#f4f6f7]/[0.4] truncate">{(user as any)?.email || '—'}</p>
                   </div>
                 </div>
-                <div className={cn('grid grid-cols-2 gap-2', collapsed && 'lg:hidden')}>
+                <div className="grid grid-cols-2 gap-2">
                   <Link
                     href="/coach/settings"
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#f4f6f7]/[0.75] hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-colors duration-200"
@@ -267,16 +234,6 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="w-10" />
           </header>
-
-          {/* Desktop collapse toggle */}
-          <button
-            onClick={() => setCollapsed((v) => !v)}
-            className="hidden lg:flex absolute top-6 z-40 items-center justify-center w-7 h-12 rounded-r-xl bg-white/[0.04] border border-l-0 border-white/[0.07] hover:bg-white/[0.08] transition-colors duration-300 text-[#f4f6f7]/[0.4] hover:text-white"
-            style={{ left: collapsed ? 72 : 264 }}
-            aria-label="Przełącz sidebar"
-          >
-            <ChevronLeft className={cn('w-4 h-4 transition-transform duration-300', collapsed && 'rotate-180')} />
-          </button>
 
           <main className="flex-1 min-h-screen pt-6 lg:pt-8">
             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
+import { PageHeader } from '@/components/page-header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -135,28 +136,12 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
   return (
     <StudentLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#0a0a0a]">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)]">
-                <BookOpen className="w-5 h-5 text-white" strokeWidth={2.2} />
-                <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
-              </div>
-              <div>
-                <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet leading-none">
-                  Moje sesje
-                </h1>
-                <p className="mt-1.5 text-sm text-white/45">Wszystkie sesje treningowe z trenerem</p>
-              </div>
-            </div>
-
-            <div className="relative mt-4">
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-40 h-2 rounded-full bg-[#2de5ca]/25 blur-xl animate-aurora-slow" />
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          icon={BookOpen}
+          label="Twoje treningi"
+          title="Moje sesje"
+          subtitle="Wszystkie sesje treningowe z trenerem"
+        />
 
         {/* ===== Controls: glass search + segmented status filter ===== */}
         <div className="mt-6 flex flex-col lg:flex-row gap-4">

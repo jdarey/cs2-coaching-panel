@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
@@ -103,15 +105,14 @@ export function CoachMessagesClient() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-semibold text-white/70 mb-3">
-          <MessageSquare className="w-3.5 h-3.5 text-[#2de5ca]" />
-          KOMUNIKACJA
-        </div>
-        <h1 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-white">Wiadomości</h1>
-        <p className="mt-2 text-white/50 text-sm">Pisz bezpośrednio ze swoimi uczniami — szybko, prosto i w jednym miejscu.</p>
-      </div>
+    <CoachLayout>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
+        <PageHeader
+          icon={MessageSquare}
+          label="Komunikacja"
+          title="Wiadomości"
+          subtitle="Pisz bezpośrednio ze swoimi uczniami — szybko, prosto i w jednym miejscu."
+        />
 
       {loading ? (
         <div className="flex items-center justify-center py-24 text-white/40">
@@ -211,7 +212,7 @@ export function CoachMessagesClient() {
                           className={cn(
                             'max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed',
                             mine
-                              ? 'bg-gradient-to-br from-[#14b8a6] to-[#14b8a6] text-white rounded-br-md shadow-[0_8px_24px_-8px_rgba(20,184,166,0.6)]'
+                              ? 'bg-gradient-to-br from-[#14b8a6] to-[#14b8a6] text-white rounded-br-md'
                               : 'bg-white/[0.06] border border-white/[0.08] text-white/90 rounded-bl-md',
                           )}
                         >
@@ -255,6 +256,7 @@ export function CoachMessagesClient() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </CoachLayout>
   )
 }

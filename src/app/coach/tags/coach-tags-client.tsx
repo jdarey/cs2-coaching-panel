@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
 import {
   Plus,
@@ -192,32 +193,20 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
   return (
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* Gradient header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div className="rise-in">
-            <div className="flex items-center gap-3">
-              <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
-                <TagIcon className="h-5 w-5 text-[#8cffef]" />
-              </span>
-              <div>
-                <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
-                  Tagi
-                </h1>
-                <p className="text-sm text-white/45 mt-0.5">
-                  Zarządzaj kategoriami błędów do przypisywania filmów
-                </p>
-              </div>
-            </div>
-          </div>
+        <PageHeader
+          icon={TagIcon}
+          label="Kategorie błędów"
+          title="Tagi"
+          subtitle="Zarządzaj kategoriami błędów do przypisywania filmów"
+        >
           <button
             onClick={openAddDialog}
-            className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow rise-in"
-            style={{ animationDelay: '80ms' }}
+            className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white btn-primary-gradient"
           >
             <Plus className="h-4 w-4" />
             Nowy tag
           </button>
-        </div>
+        </PageHeader>
 
         {/* Stat strip */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
@@ -297,7 +286,6 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                       className="grid h-12 w-12 place-items-center rounded-2xl text-white shadow-lg ring-1 ring-white/15"
                       style={{
                         background: `linear-gradient(135deg, ${tag.color} 0%, ${accent} 100%)`,
-                        boxShadow: `0 10px 30px -10px ${tag.color}90`,
                       }}
                     >
                       {ResolvedIcon ? <ResolvedIcon className="h-6 w-6" /> : <TagIcon className="h-6 w-6" />}
@@ -440,7 +428,6 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                         )}
                         style={{
                           backgroundColor: color,
-                          boxShadow: selected ? `0 6px 20px -4px ${color}` : undefined,
                         }}
                         aria-label={color}
                         aria-pressed={selected}

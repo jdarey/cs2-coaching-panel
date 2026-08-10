@@ -600,7 +600,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <button
                   type="submit"
                   disabled={isLoading || !newVideoUrl.trim()}
-                  className=" relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/25 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className=" relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold text-white btn-darey transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Dodaj film
@@ -655,7 +655,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <button
                   type="submit"
                   disabled={isLoading || !newNote.trim()}
-                  className=" relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-5 h-10 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/20 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className=" relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-5 h-10 text-sm font-semibold text-white btn-darey transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   Dodaj notatkę
@@ -751,7 +751,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     className={cn(
                       'group relative overflow-hidden rounded-2xl px-4 py-3.5 text-sm font-medium transition-all duration-300',
                       isActive
-                        ? ' text-white btn-darey shadow-lg shadow-[#147a6b]/25'
+                        ? ' text-white btn-darey'
                         : 'border border-white/[0.06] bg-white/[0.02] text-white/65 hover:text-white hover:border-white/[0.1] hover:bg-white/[0.04]'
                     )}
                   >
@@ -779,7 +779,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 type="button"
                 onClick={handleSaveStatus}
                 disabled={isLoading || sessionStatus === session.status}
-                className=" relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white btn-darey shadow-lg shadow-[#147a6b]/25 hover:shadow-[#147a6b]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className=" relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white btn-darey transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Zapisz status

@@ -270,7 +270,7 @@ export function StudentDashboardClient({
             <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 md:gap-6">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Avatar className="w-18 h-18 rounded-2xl ring-2 ring-white/20 shadow-[0_16px_40px_-10px_rgba(45,229,202,0.6)]">
+                  <Avatar className="w-18 h-18 rounded-2xl ring-2 ring-white/20">
                     <AvatarImage src={coach.avatarUrl ?? undefined} alt={coach.name ?? coach.email} />
                     <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white font-display font-semibold text-xl">
                       {(coach.name ?? coach.email)[0]?.toUpperCase()}
@@ -335,7 +335,7 @@ export function StudentDashboardClient({
                       'relative p-4 rounded-2xl bg-gradient-to-br shadow-lg grid place-items-center',
                       meta.accent,
                     )}
-                    style={{ boxShadow: `0 14px 36px -10px ${meta.ring}` }}
+                    style={{}}
                   >
                     <Icon className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
                     <div className="absolute inset-0 rounded-2xl ring-1 ring-white/30" />
@@ -427,34 +427,30 @@ export function StudentDashboardClient({
               </div>
               <h4 className="font-display text-lg font-bold">Szybkie akcje</h4>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 relative z-10">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 relative z-10">
               {[
-                { href: '/student/messages', icon: MessageSquare, label: 'Wiadomości', sub: 'Czat z trenerem', color: 'from-[#2de5ca] to-[#14b8a6]', ring: 'rgba(45,229,202,0.4)' },
-                { href: '/student/feedback', icon: MessageSquareHeart, label: 'Moja opinia', sub: 'Podziel się spostrzeżeniami', color: 'from-[#8cffef] to-[#2de5ca]', ring: 'rgba(45,229,202,0.4)' },
-                { href: '/student/sessions', icon: BookOpen, label: 'Wszystkie sesje', sub: 'Przeglądaj swoje sesje', color: 'from-[#2de5ca] to-[#8cffef]', ring: 'rgba(45,229,202,0.4)' },
-                { href: '/student/videos', icon: Film, label: 'Filmy do oglądania', sub: 'Twoja lista filmów', color: 'from-[#fbbf24] to-[#f97316]', ring: 'rgba(251,191,36,0.4)' },
-                { href: '/student/progress', icon: TrendingUp, label: 'Mój postęp', sub: 'Statystyki i wykresy', color: 'from-[#34d399] to-[#16a34a]', ring: 'rgba(52,211,153,0.4)' },
-                { href: '/student/settings', icon: Settings, label: 'Ustawienia', sub: 'Profil i preferencje', color: 'from-[#14b8a6] to-[#2de5ca]', ring: 'rgba(20,184,166,0.4)' },
+                { href: '/student/messages', icon: MessageSquare, label: 'Wiadomości', sub: 'Czat z trenerem' },
+                { href: '/student/feedback', icon: MessageSquareHeart, label: 'Moja opinia', sub: 'Podziel się spostrzeżeniami' },
+                { href: '/student/sessions', icon: BookOpen, label: 'Wszystkie sesje', sub: 'Przeglądaj swoje sesje' },
+                { href: '/student/videos', icon: Film, label: 'Filmy do oglądania', sub: 'Twoja lista filmów' },
+                { href: '/student/progress', icon: TrendingUp, label: 'Mój postęp', sub: 'Statystyki i wykresy' },
+                { href: '/student/settings', icon: Settings, label: 'Ustawienia', sub: 'Profil i preferencje' },
               ].map((a) => {
                 const Icon = a.icon
                 return (
                   <Link
                     key={a.href}
                     href={a.href}
-                    className="group relative flex items-center gap-4 p-4 rounded-2xl glass hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
+                    className="group relative flex items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
                   >
-                    <div
-                      className={cn('relative p-3 rounded-xl bg-gradient-to-br grid place-items-center', a.color)}
-                      style={{ boxShadow: `0 10px 28px -8px ${a.ring}` }}
-                    >
-                      <Icon className="w-4.5 h-4.5 text-white" strokeWidth={2.2} />
-                      <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
+                    <div className="icon-tile w-11 h-11 shrink-0">
+                      <Icon className="w-5 h-5" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold leading-snug text-white group-hover:text-[#8cffef] transition-colors">{a.label}</p>
-                      <p className="text-[11px] leading-snug text-white/45">{a.sub}</p>
+                      <p className="text-xs text-white/45 leading-relaxed mt-0.5">{a.sub}</p>
                     </div>
-                    <ArrowRight className="w-4.5 h-4.5 text-white/30 group-hover:text-[#8cffef] group-hover:translate-x-1 transition-all duration-300" />
+                    <ArrowRight className="w-4 h-4 shrink-0 text-white/30 group-hover:text-[#8cffef] group-hover:translate-x-1 transition-all duration-300" />
                   </Link>
                 )
               })}
@@ -515,7 +511,7 @@ export function StudentDashboardClient({
                       className="group relative flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.03] hover:border-[#2de5ca]/25 transition-all duration-300"
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="relative p-4 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#8cffef] shadow-[0_12px_32px_-8px_rgba(45,229,202,0.5)] flex-shrink-0">
+                        <div className="relative p-4 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#8cffef] flex-shrink-0">
                           <CalendarClock className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
                           <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                         </div>
@@ -597,7 +593,7 @@ export function StudentDashboardClient({
                           {typeof p.progress === 'number' && (
                             <div className="mt-2.5 h-1.5 rounded-full bg-white/[0.05] overflow-hidden max-w-xs">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-[#2de5ca] to-[#14b8a6] shadow-[0_0_12px_rgba(45,229,202,0.5)]"
+                                className="h-full rounded-full bg-gradient-to-r from-[#2de5ca] to-[#14b8a6]"
                                 style={{ width: `${p.progress}%`, transition: 'width 0.8s ease' }}
                               />
                             </div>

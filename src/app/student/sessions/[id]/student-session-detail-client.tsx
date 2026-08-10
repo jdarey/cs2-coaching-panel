@@ -283,7 +283,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   rel="noopener noreferrer"
                   className="group w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-white/[0.03] to-transparent"
                 >
-                  <div className="relative grid place-items-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] shadow-[0_12px_32px_-8px_rgba(124,111,255,0.6)]">
+                  <div className="relative grid place-items-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6]">
                     <Play className="w-7 h-7 text-white" />
                     <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                   </div>
@@ -486,7 +486,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   className={cn(
                     'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300',
                     active
-                      ? 'btn-darey text-white shadow-[0_10px_24px_-8px_rgba(124,111,255,0.55)]'
+                      ? 'btn-darey text-white'
                       : 'text-white/55 hover:text-white hover:bg-white/[0.04]',
                   )}
                 >
@@ -671,7 +671,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                                     className={cn(
                                       'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300',
                                       active
-                                        ? 'btn-darey text-white shadow-[0_8px_20px_-8px_rgba(124,111,255,0.55)]'
+                                        ? 'btn-darey text-white'
                                         : 'text-white/55 hover:text-white hover:bg-white/[0.05]',
                                     )}
                                   >
@@ -739,7 +739,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                 <button
                   type="submit"
                   disabled={isLoading || !newNote.trim()}
-                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey shadow-[0_12px_32px_-8px_rgba(124,111,255,0.55)] hover:shadow-[0_16px_40px_-8px_rgba(124,111,255,0.7)] disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   Dodaj notatkę
@@ -836,7 +836,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                           className={cn(
                             'flex-1 px-2 py-2 rounded-xl text-xs font-medium transition-all duration-300',
                             active
-                              ? 'btn-darey text-white shadow-[0_8px_20px_-8px_rgba(124,111,255,0.55)]'
+                              ? 'btn-darey text-white'
                               : 'text-white/60 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07]',
                           )}
                         >

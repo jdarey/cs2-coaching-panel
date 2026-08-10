@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
@@ -99,15 +101,14 @@ export function CoachFeedbackClient() {
   ]
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-semibold text-white/70 mb-3">
-          <MessageSquareHeart className="w-3.5 h-3.5 text-[#2de5ca]" />
-          OPINIE UCZNIÓW
-        </div>
-        <h1 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-white">Opinie uczniów</h1>
-        <p className="mt-2 text-white/50 text-sm">Twoi uczniowie dzielą się tu swoimi spostrzeżeniami — odpowiadaj i buduj zaufanie.</p>
-      </div>
+    <CoachLayout>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
+        <PageHeader
+          icon={MessageSquareHeart}
+          label="Głos uczniów"
+          title="Opinie uczniów"
+          subtitle="Twoi uczniowie dzielą się tu swoimi spostrzeżeniami — odpowiadaj i buduj zaufanie."
+        />
 
       <div className="flex flex-wrap items-center gap-2 mb-6">
         {tabs.map((t) => (
@@ -223,6 +224,7 @@ export function CoachFeedbackClient() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </CoachLayout>
   )
 }

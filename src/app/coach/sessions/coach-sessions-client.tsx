@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import {
@@ -229,42 +230,27 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
   return (
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* ===== Sticky premium header ===== */}
-        <div className="sticky top-16 lg:top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#0a0a0a] border-b border-white/[0.06]">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-3">
-                <span className="relative inline-flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#2de5ca] opacity-60 animate-ping" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#14b8a6]" />
-                </span>
-                <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-violet-300/70">Coach · Przestrzeń sesji</span>
-              </div>
-              <h1 className="font-display text-3xl sm:text-[2.6rem] font-bold leading-tight text-gradient-violet">
-                Sesje
-              </h1>
-              <p className="text-sm text-white/50 max-w-xl">
-                Zarządzaj sesjami coachingowymi dla swoich uczniów. Twórz, edytuj i analizuj każde spotkanie.
-              </p>
-            </div>
-            <button
-              onClick={openAddDialog}
-              className=" group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-2xl px-6 text-sm font-semibold text-white shadow-[0_8px_40px_-10px_rgba(20,184,166,0.55)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
-            >
-              <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
-              <Plus className="relative h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
-              <span className="relative">Nowa sesja</span>
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          icon={BookOpen}
+          label="Coach · Przestrzeń sesji"
+          title="Sesje"
+          subtitle="Zarządzaj sesjami coachingowymi dla swoich uczniów. Twórz, edytuj i analizuj każde spotkanie."
+        >
+          <button
+            onClick={openAddDialog}
+            className="group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-full px-6 text-sm font-semibold text-white btn-primary-gradient"
+          >
+            <Plus className="h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
+            Nowa sesja
+          </button>
+        </PageHeader>
 
         {/* ===== Search + segmented status pills ===== */}
         <div className="mt-8 space-y-4 rise-in">
           {/* Search */}
           <div className="relative group">
             <div className="glass-liquid rounded-2xl flex items-center gap-2 pl-4 pr-2 h-14" >
-              <Filter className="h-4 w-4 shrink-0 text-violet-300/70" />
+              <Filter className="h-4 w-4 shrink-0 text-[#2de5ca]/70" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -303,7 +289,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   {active && (
                     <span
                       className="absolute inset-0 rounded-xl ring-1 ring-inset"
-                      style={{ background: `linear-gradient(135deg, ${f.color}40 0%, ${f.color}10 100%)`, borderColor: `${f.color}55`, boxShadow: `0 0 24px -6px ${f.color}99` }}
+                      style={{ background: `linear-gradient(135deg, ${f.color}40 0%, ${f.color}10 100%)`, borderColor: `${f.color}55` }}
                     />
                   )}
                   <span
@@ -323,9 +309,9 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
             <div className="glass-liquid rounded-3xl p-12 text-center" >
               <div className="mx-auto mb-5 grid place-items-center h-20 w-20 rounded-3xl bg-gradient-to-br from-[#2de5ca]/15 to-[#147a6b]/5 ring-1 ring-inset ring-[#2de5ca]/20">
                 {search || statusFilter !== 'all' ? (
-                  <Search className="h-9 w-9 text-violet-300/70" />
+                  <Search className="h-9 w-9 text-[#2de5ca]/70" />
                 ) : (
-                  <ListVideo className="h-9 w-9 text-violet-300/70" />
+                  <ListVideo className="h-9 w-9 text-[#2de5ca]/70" />
                 )}
               </div>
               {search || statusFilter !== 'all' ? (
@@ -387,7 +373,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={session.student.avatarUrl} alt={session.student.name || ''} className="h-full w-full object-cover" />
                       ) : (
-                        <span className="text-xs font-semibold text-violet-200">{getInitials(session.student.name || 'U')}</span>
+                        <span className="text-xs font-semibold text-white/90">{getInitials(session.student.name || 'U')}</span>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -405,7 +391,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   {session.scheduledAt && (
                     <div className="relative mt-3">
                       <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] px-2.5 py-1.5 text-xs text-white/70">
-                        <Calendar className="h-3.5 w-3.5 text-violet-300/80" />
+                        <Calendar className="h-3.5 w-3.5 text-[#2de5ca]/80" />
                         {formatDateTime(session.scheduledAt)}
                       </span>
                     </div>
@@ -437,11 +423,11 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   {/* Stats row */}
                   <div className="relative mt-5 flex items-center gap-4 text-xs text-white/50">
                     <span className="inline-flex items-center gap-1.5">
-                      <Video className="h-3.5 w-3.5 text-violet-300/70" />
+                      <Video className="h-3.5 w-3.5 text-[#2de5ca]/70" />
                       {session.videos.length} filmów
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Tag className="h-3.5 w-3.5 text-violet-300/70" />
+                      <Tag className="h-3.5 w-3.5 text-[#2de5ca]/70" />
                       {session.tags.length} tagów
                     </span>
                     <span className="ml-auto inline-flex items-center gap-1.5 text-white/35">
@@ -464,7 +450,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
 
                     <Link
                       href={`/coach/sessions/${session.id}`}
-                      className=" group/btn relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-white shadow-[0_6px_24px_-10px_rgba(20,184,166,0.6)] transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                      className=" group/btn relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-white transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
                       style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                     >
                       <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />
@@ -513,7 +499,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
               <div className="relative px-6 sm:px-8 pt-6 pb-5 border-b border-white/[0.06]">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-violet-300/70">
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[#2de5ca]/70">
                       <span className="h-1 w-1 rounded-full bg-[#14b8a6]" />
                       {editingSession ? 'Edycja sesji' : 'Zakładanie sesji'}
                     </div>
@@ -549,7 +535,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                         {active && (
                           <span
                             className="absolute inset-0 rounded-xl ring-1 ring-inset"
-                            style={{ background: 'linear-gradient(135deg, #2de5ca33 0%, #147a6b1a 100%)', borderColor: '#2de5ca55', boxShadow: '0 0 20px -6px #14b8a6' }}
+                            style={{ background: 'linear-gradient(135deg, #2de5ca33 0%, #147a6b1a 100%)', borderColor: '#2de5ca55' }}
                           />
                         )}
                         <t.icon className="relative h-3.5 w-3.5" />
@@ -563,9 +549,9 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                 {activeTab === 'details' && (
                   <div className="space-y-5 rise-in">
                     <div>
-                      <label htmlFor="title" className="block mb-2 text-sm font-medium text-white/80">Tytuł sesji <span className="text-violet-400">*</span></label>
+                      <label htmlFor="title" className="block mb-2 text-sm font-medium text-white/80">Tytuł sesji <span className="text-[#2de5ca]">*</span></label>
                       <div className="relative">
-                        <BookOpen className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-violet-300/60" />
+                        <BookOpen className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2de5ca]/60" />
                         <input
                           id="title"
                           placeholder="np. Analiza demka z 15.01"
@@ -579,9 +565,9 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                     </div>
 
                     <div>
-                      <label htmlFor="student" className="block mb-2 text-sm font-medium text-white/80">Uczeń <span className="text-violet-400">*</span></label>
+                      <label htmlFor="student" className="block mb-2 text-sm font-medium text-white/80">Uczeń <span className="text-[#2de5ca]">*</span></label>
                       <div className="relative">
-                        <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-violet-300/60 z-10" />
+                        <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2de5ca]/60 z-10" />
                         <select
                           id="student"
                           value={formData.studentId}
@@ -618,7 +604,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                       <div>
                         <label htmlFor="scheduledAt" className="block mb-2 text-sm font-medium text-white/80">Data sesji</label>
                         <div className="relative">
-                          <Calendar className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-violet-300/60" />
+                          <Calendar className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2de5ca]/60" />
                           <input
                             id="scheduledAt"
                             type="datetime-local"
@@ -666,7 +652,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                             className={cn(
                               'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-300 ring-1 ring-inset',
                               selected
-                                ? 'bg-[#2de5ca]/15 ring-[#2de5ca]/40 text-violet-100 shadow-[0_0_18px_-6px_#14b8a6]'
+                                ? 'bg-[#2de5ca]/15 ring-[#2de5ca]/40 text-[#8cffef]'
                                 : 'bg-white/[0.03] ring-white/[0.06] text-white/60 hover:text-white hover:ring-white/[0.12]'
                             )}
                           >
@@ -704,7 +690,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                               className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#14b8a6] focus:ring-[#14b8a6]/40 focus:ring-2"
                             />
                             <div className="grid place-items-center h-9 w-9 rounded-lg bg-gradient-to-br from-[#2de5ca]/20 to-[#147a6b]/5 ring-1 ring-inset ring-white/10">
-                              <Video className="h-4 w-4 text-violet-300/80" />
+                              <Video className="h-4 w-4 text-[#2de5ca]/80" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium truncate text-white/85 text-sm">{video.title}</p>
@@ -721,7 +707,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <div className="space-y-4 rise-in">
                     <p className="text-sm text-white/50">Notatki do sesji zostaną dodane po utworzeniu.</p>
                     <div className="glass-liquid rounded-2xl p-5 text-center">
-                      <Eye className="h-8 w-8 mx-auto mb-2 text-violet-300/60" />
+                      <Eye className="h-8 w-8 mx-auto mb-2 text-[#2de5ca]/60" />
                       <p className="text-xs text-white/45">Po zapisaniu sesji będziesz mógł dodawać notatki do każdego tagu i filmu.</p>
                     </div>
                   </div>
@@ -740,7 +726,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className=" relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-semibold text-white shadow-[0_8px_30px_-10px_rgba(20,184,166,0.6)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                    className=" relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-semibold text-white transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                     style={{ background: 'linear-gradient(135deg, #2de5ca 0%, #147a6b 100%)' }}
                   >
                     <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />

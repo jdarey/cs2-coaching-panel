@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { StudentLayout } from '@/components/student-layout'
+import { PageHeader } from '@/components/page-header'
 import { cn } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageSquareHeart, Loader2, Send, CheckCircle2, MessageSquare, CalendarDays, Lightbulb, AlertTriangle, Trash2 } from 'lucide-react'
@@ -100,15 +102,14 @@ export function StudentFeedbackClient() {
   const typeMeta = (t: string) => TYPE_OPTIONS.find((o) => o.value === t) ?? TYPE_OPTIONS[0]
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-semibold text-white/70 mb-3">
-          <MessageSquareHeart className="w-3.5 h-3.5 text-[#2de5ca]" />
-          TWOJA OPINIA
-        </div>
-        <h1 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-white">Opinie i sugestie</h1>
-        <p className="mt-2 text-white/50 text-sm">Twoje zdanie się liczy — podziel się nim z trenerem, a on odpowie bezpośrednio tutaj.</p>
-      </div>
+    <StudentLayout>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
+        <PageHeader
+          icon={MessageSquareHeart}
+          label="Twoja opinia"
+          title="Opinie i sugestie"
+          subtitle="Twoje zdanie się liczy — podziel się nim z trenerem, a on odpowie bezpośrednio tutaj."
+        />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Form */}
@@ -237,6 +238,7 @@ export function StudentFeedbackClient() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </StudentLayout>
   )
 }
