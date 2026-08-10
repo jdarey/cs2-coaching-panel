@@ -39,7 +39,7 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* =========================== STICKY HEADER =========================== */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#0a0a0a] border-b border-white/[0.06]">
+        <div className="sticky top-16 lg:top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#0a0a0a] border-b border-white/[0.06]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
             <div className="flex items-start gap-4">
               <div className="relative hidden sm:block">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendDiscordNotification } from '@/lib/discord'
 
 export async function GET(request: NextRequest) {
   try {
@@ -94,6 +95,14 @@ export async function POST(request: NextRequest) {
         sessionId: sessionId || null,
       },
       select: { id: true, studentId: true, coachId: true, sessionId: true, type: true, content: true, status: true, createdAt: true },
+    })
+
+    // Discord notification to the coach (fire-and-forget).
+    await sendDiscordNotification({
+      coachId: me.coachId,
+      title: '💬 Nowa opinia od ucznia',
+      description: `Typ: ${feedback.type}`,
+      fields: [{ name: 'Opinia', value: feedback.content.slice(0, 1024) }],
     })
 
     return NextResponse.json({ feedback }, { status: 201 })

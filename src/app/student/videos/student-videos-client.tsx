@@ -163,7 +163,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Sticky premium header ===== */}
         <div
-          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-6 bg-[#0a0a0a]"
+          className="sticky top-16 lg:top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-6 bg-[#0a0a0a]"
           style={{
             background: 'linear-gradient(180deg, rgba(6,7,13,0.92) 0%, rgba(6,7,13,0.72) 60%, rgba(6,7,13,0) 100%)',
             borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -506,7 +506,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                     <div className="mt-4 flex items-center justify-between gap-3">
                       {/* Progress indicator */}
                       {status !== 'PENDING' ? (
-                        <div className="flex items-center gap-2."
+                        <div className="flex items-center gap-2"
                           title={`Postęp: ${prog}%`}
                         >
                           <div className="relative grid place-items-center">

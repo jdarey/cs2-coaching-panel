@@ -58,8 +58,26 @@ model User {
   feedbackGiven    Feedback[] @relation("FeedbackStudent")
   feedbackReceived Feedback[] @relation("FeedbackCoach")
 
+  // Password reset tokens
+  passwordResetTokens PasswordResetToken[]
+
   @@index([coachId])
   @@index([email])
+}
+
+// One-time password reset tokens (hashed at rest).
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // Direct messages between a coach and one of their students.

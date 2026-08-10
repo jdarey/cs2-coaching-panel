@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
+import { applyStoredTheme } from '@/components/providers'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Settings,
@@ -63,7 +64,9 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     progressUpdates: true,
     newVideos: true,
   })
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() =>
+    (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | 'system')) || 'system'
+  )
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '')
   const [avatarDirty, setAvatarDirty] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -195,13 +198,9 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme)
-    document.documentElement.classList.remove('light', 'dark')
-    if (newTheme === 'system') {
-      document.documentElement.classList.add(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    } else {
-      document.documentElement.classList.add(newTheme)
-    }
     localStorage.setItem('theme', newTheme)
+    // Re-apply through the shared initializer so system === current OS preference
+    applyStoredTheme()
   }
 
   const inputBase =

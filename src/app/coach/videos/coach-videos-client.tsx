@@ -322,7 +322,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* Sticky gradient header */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-6 pt-4 bg-transparent">
+        <div className="sticky top-16 lg:top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-6 pt-4 bg-transparent">
           <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#060606] via-[#060606]/85 to-transparent" />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="animate-rise-in">
@@ -431,8 +431,8 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
                   {/* Thumbnail */}
-                  <div className="relative aspect-video overflow-hidden">
-                    <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10 overflow-hidden m-3">
+                  <div className="relative aspect-video overflow-hidden rounded-3xl ring-1 ring-white/10">
+                    <div className="absolute inset-0">
                       {video.thumbnail ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -451,19 +451,19 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     </div>
 
                     {/* Source badge top-left */}
-                    <div className="absolute top-5 left-5 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/40 ring-1 ring-white/15 text-white/85">
+                    <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/40 ring-1 ring-white/15 text-white/85">
                       <Src.Icon className="h-3.5 w-3.5" />
                       {Src.label}
                     </div>
 
                     {/* Duration pill bottom-right */}
-                    <div className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/50 ring-1 ring-white/15 text-white">
+                    <div className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/50 ring-1 ring-white/15 text-white">
                       <Clock className="h-3 w-3" />
                       {formatDuration(video.duration)}
                     </div>
 
                     {/* Quick assign button on hover */}
-                    <div className="absolute top-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-1 group-hover:translate-y-0">
+                    <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-1 group-hover:translate-y-0">
                       <button
                         onClick={() => openAssignDialog(video)}
                         className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 text-xs font-medium text-white btn-darey shadow-[0_8px_24px_-8px_rgba(45,229,202,0.5)] hover:shadow-[0_12px_32px_-8px_rgba(45,229,202,0.7)] transition-all"

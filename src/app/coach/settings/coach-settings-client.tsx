@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { applyStoredTheme } from '@/components/providers'
 import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -71,7 +72,9 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     progressUpdates: true,
   })
   const [discordWebhook, setDiscordWebhook] = useState(initialSettings?.discordWebhook || '')
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() =>
+    (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | 'system')) || 'system'
+  )
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '')
   const [avatarDirty, setAvatarDirty] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -228,15 +231,9 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme)
-    document.documentElement.classList.remove('light', 'dark')
-    if (newTheme === 'system') {
-      document.documentElement.classList.add(
-        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      )
-    } else {
-      document.documentElement.classList.add(newTheme)
-    }
     localStorage.setItem('theme', newTheme)
+    // Re-apply through the shared initializer so system === current OS preference
+    applyStoredTheme()
   }
 
   

@@ -451,8 +451,8 @@ export function StudentDashboardClient({
                       <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white group-hover:text-[#8cffef] transition-colors truncate">{a.label}</p>
-                      <p className="text-[11px] text-white/45 truncate">{a.sub}</p>
+                      <p className="text-sm font-semibold leading-snug text-white group-hover:text-[#8cffef] transition-colors">{a.label}</p>
+                      <p className="text-[11px] leading-snug text-white/45">{a.sub}</p>
                     </div>
                     <ArrowRight className="w-4.5 h-4.5 text-white/30 group-hover:text-[#8cffef] group-hover:translate-x-1 transition-all duration-300" />
                   </Link>

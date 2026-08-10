@@ -59,7 +59,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
   if (userRole !== 'COACH') return null
 
   return (
-    <div className="relative min-h-screen bg-[#060606] font-sans text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#060606] font-sans text-white overflow-x-clip">
       <AuroraBackground />
 
       {/* Mobile overlay */}
@@ -68,7 +68,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
           'fixed inset-0 z-40 lg:hidden transition-opacity duration-300',
           mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
-        style={{ background: 'rgba(6,6,6,0.8)' }}
+        style={{ background: 'var(--overlay-bg, rgba(6,6,6,0.8))' }}
         onClick={() => setMobileSidebarOpen(false)}
       />
 
@@ -80,15 +80,15 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
           style={{
-            background: '#0a0a0a',
-            borderRight: '1px solid rgba(255,255,255,0.07)',
+            background: 'var(--sidebar-bg, #0a0a0a)',
+            borderRight: '1px solid var(--sidebar-border, rgba(255,255,255,0.07))',
           }}
         >
           <div className="flex h-full flex-col">
             {/* Logo */}
             <div className="flex h-18 items-center justify-between px-6 border-b border-white/[0.05]">
               <Link href="/coach/dashboard" className="flex items-center gap-3 group">
-                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-[#2fb6a2] shadow-[0_10px_30px_-8px_rgba(47,182,162,0.7)] transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
+                <div className="relative w-10 h-10 rounded-xl grid place-items-center bg-[#2fb6a2] shadow-[0_10px_30px_-8px_rgba(47,182,162,0.7)] transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3 -translate-y-1.5">
                   <ShieldCheck className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/30" />
                 </div>

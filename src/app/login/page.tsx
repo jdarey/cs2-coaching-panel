@@ -58,12 +58,6 @@ function LoginForm() {
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
       <AuroraBackground variant="auth" />
 
-      {/* Floating decorative elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.5) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.4) 0%, transparent 70%)' }} />
-      </div>
-
       <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
         <div className="text-center mb-10">
@@ -132,18 +126,12 @@ function LoginForm() {
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="label-premium mb-0">Hasło</Label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      toast({
-                        title: 'Nie pamiętasz hasła?',
-                        description: 'Skontaktuj się ze swoim trenerem lub administratorem, aby je zresetować.',
-                      })
-                    }
+                  <Link
+                    href="/forgot-password"
                     className="text-xs text-white/45 hover:text-[#8cffef] transition-colors font-medium"
                   >
                     Zapomniałeś hasła?
-                  </button>
+                  </Link>
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
@@ -207,23 +195,6 @@ function LoginForm() {
         <p className="mt-8 text-center text-[11px] text-white/30 font-light tracking-wide">
           Bezpieczne logowanie · Twoje dane są szyfrowane end-to-end
         </p>
-      </div>
-
-      {/* Vantor-style marquee band */}
-      <div className="fixed bottom-0 left-0 right-0 z-0 border-t border-white/[0.06] bg-[#060606]/70 backdrop-blur-md py-4">
-        <div className="marquee">
-          <div className="marquee-track text-sm font-display font-semibold text-white/25">
-            {[0, 1].map((n) => (
-              <span key={n} className="flex items-center gap-10">
-                <span>PODNOSIMY TWÓJ LEVEL</span><span className="text-[#2de5ca]">✦</span>
-                <span>AIM TRAINING</span><span className="text-[#2de5ca]">✦</span>
-                <span>ANALIZA MECZÓW</span><span className="text-[#2de5ca]">✦</span>
-                <span>GRANIE W ZESPOLE</span><span className="text-[#2de5ca]">✦</span>
-                <span>MIKRO I MAKRO</span><span className="text-[#2de5ca]">✦</span>
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   )

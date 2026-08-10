@@ -112,12 +112,6 @@ export default function RegisterPage() {
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
       <AuroraBackground variant="auth" />
 
-      {/* Floating decorative elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full blur-3xl opacity-20 animate-aurora" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.5) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-10 w-64 h-64 rounded-full blur-3xl opacity-15 animate-aurora-reverse" style={{ background: 'radial-gradient(circle, rgba(47,182,162,0.4) 0%, transparent 70%)' }} />
-      </div>
-
       <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
         <div className="text-center mb-10">
@@ -322,23 +316,6 @@ export default function RegisterPage() {
         <p className="mt-8 text-center text-[11px] text-white/30 font-light tracking-wide">
           Tworząc konto akceptujesz regulamin i politykę prywatności
         </p>
-      </div>
-
-      {/* Vantor-style marquee band */}
-      <div className="fixed bottom-0 left-0 right-0 z-0 border-t border-white/[0.06] bg-[#060606]/70 backdrop-blur-md py-4">
-        <div className="marquee">
-          <div className="marquee-track text-sm font-display font-semibold text-white/25">
-            {[0, 1].map((n) => (
-              <span key={n} className="flex items-center gap-10">
-                <span>PODNOSIMY TWÓJ LEVEL</span><span className="text-[#2de5ca]">✦</span>
-                <span>AIM TRAINING</span><span className="text-[#2de5ca]">✦</span>
-                <span>ANALIZA MECZÓW</span><span className="text-[#2de5ca]">✦</span>
-                <span>GRANIE W ZESPOLE</span><span className="text-[#2de5ca]">✦</span>
-                <span>MIKRO I MAKRO</span><span className="text-[#2de5ca]">✦</span>
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   )
