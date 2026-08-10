@@ -3,16 +3,29 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Plus, Search, MoreHorizontal, Trash2, Edit, Loader2, Palette, Tag } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import {
+  Plus,
+  Search,
+  Trash2,
+  Pencil,
+  Loader2,
+  Tag as TagIcon,
+  Hash,
+  Palette,
+  Layers,
+  Film,
+  BookOpen,
+  AlertTriangle,
+  Target,
+  Crosshair,
+  Zap,
+  Eye,
+  Shield,
+  Flame,
+  Sparkles,
+  X,
+} from 'lucide-react'
 
 interface Tag {
   id: string
@@ -29,9 +42,44 @@ interface CoachTagsClientProps {
 }
 
 const DEFAULT_COLORS = [
-  '#3B82F6', '#EF4444', '#22C55E', '#F59E0B', '#8B5CF6',
-  '#EC4899', '#06B6D4', '#F97316', '#84CC16', '#6366F1',
+  '#a855f7', '#c084fc', '#d946ef', '#ec4899',
+  '#fbbf24', '#60a5fa', '#34d399', '#22d3ee',
+  '#f97316', '#6366f1',
 ]
+
+const ICON_OPTIONS = [
+  { name: 'AlertTriangle', Icon: AlertTriangle },
+  { name: 'Target', Icon: Target },
+  { name: 'Crosshair', Icon: Crosshair },
+  { name: 'Zap', Icon: Zap },
+  { name: 'Eye', Icon: Eye },
+  { name: 'Shield', Icon: Shield },
+  { name: 'Flame', Icon: Flame },
+  { name: 'Tag', Icon: TagIcon },
+  { name: 'Hash', Icon: Hash },
+  { name: 'Layers', Icon: Layers },
+  { name: 'BookOpen', Icon: BookOpen },
+  { name: 'Film', Icon: Film },
+]
+
+function resolveIcon(name: string | null) {
+  if (!name) return null
+  const found = ICON_OPTIONS.find((o) => o.name.toLowerCase() === name.toLowerCase())
+  return found ? found.Icon : null
+}
+
+function lighten(hex: string, amt = 60) {
+  const c = hex.replace('#', '')
+  if (c.length !== 6) return hex
+  const num = parseInt(c, 16)
+  let r = (num >> 16) + amt
+  let g = ((num >> 8) & 0x00ff) + amt
+  let b = (num & 0x0000ff) + amt
+  r = Math.min(255, Math.max(0, r))
+  g = Math.min(255, Math.max(0, g))
+  b = Math.min(255, Math.max(0, b))
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
+}
 
 export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
   const [tags, setTags] = useState<Tag[]>(initialTags)
@@ -39,12 +87,21 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTag, setEditingTag] = useState<Tag | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({ name: '', description: '', color: DEFAULT_COLORS[0], icon: '' })
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    color: DEFAULT_COLORS[0],
+    icon: '',
+  })
   const { toast } = useToast()
 
   const filteredTags = tags.filter(
-    (t) => t.name.toLowerCase().includes(search.toLowerCase()) || t.description?.toLowerCase().includes(search.toLowerCase())
+    (t) =>
+      t.name.toLowerCase().includes(search.toLowerCase()) ||
+      t.description?.toLowerCase().includes(search.toLowerCase())
   )
+
+  const usedCount = tags.filter((t) => t._count.videos > 0 || t._count.sessions > 0).length
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,7 +142,8 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
   }
 
   const handleDelete = async (tagId: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć ten tag? Zostanie usunięty z wszystkich sesji i filmów.')) return
+    if (!confirm('Czy na pewno chcesz usunąć ten tag? Zostanie usunięty z wszystkich sesji i filmów.'))
+      return
 
     try {
       const res = await fetch(`/api/tags/${tagId}`, { method: 'DELETE' })
@@ -105,7 +163,12 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
 
   const openEditDialog = (tag: Tag) => {
     setEditingTag(tag)
-    setFormData({ name: tag.name, description: tag.description || '', color: tag.color, icon: tag.icon || '' })
+    setFormData({
+      name: tag.name,
+      description: tag.description || '',
+      color: tag.color,
+      icon: tag.icon || '',
+    })
     setDialogOpen(true)
   }
 
@@ -119,30 +182,228 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
     setFormData({ name: '', description: '', color: DEFAULT_COLORS[0], icon: '' })
   }
 
+  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+  }
+
+  const stats = [
+    { label: 'Wszystkie tagi', value: tags.length, Icon: Hash },
+    { label: 'Używane', value: usedCount, Icon: Layers },
+    { label: 'Dostępne kolory', value: DEFAULT_COLORS.length, Icon: Palette },
+  ]
+
   return (
     <CoachLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Tagi błędów</h1>
-            <p className="text-muted-foreground mt-1">Zarządzaj kategoriami błędów do przypisywania filmów</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+        {/* Gradient header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="rise-in">
+            <div className="flex items-center gap-3">
+              <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
+                <TagIcon className="h-5 w-5 text-[#d8b4fe]" />
+              </span>
+              <div>
+                <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
+                  Tagi
+                </h1>
+                <p className="text-sm text-white/45 mt-0.5">
+                  Zarządzaj kategoriami błędów do przypisywania filmów
+                </p>
+              </div>
+            </div>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openAddDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Dodaj tag
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>{editingTag ? 'Edytuj tag' : 'Nowy tag błędu'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nazwa *</Label>
-                  <Input
+          <button
+            onClick={openAddDialog}
+            className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-12 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_10px_40px_-12px_rgba(124,58,237,0.6)] hover:shadow-[0_14px_50px_-12px_rgba(124,58,237,0.85)] transition-shadow rise-in"
+            style={{ animationDelay: '80ms' }}
+          >
+            <Plus className="h-4 w-4" />
+            Nowy tag
+          </button>
+        </div>
+
+        {/* Stat strip */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
+          {stats.map((s, i) => (
+            <div
+              key={s.label}
+              onMouseMove={handleCardMouse}
+              className="glass-liquid spotlight rise-in flex items-center gap-3 rounded-2xl p-4"
+              style={{ animationDelay: `${i * 70}ms` }}
+            >
+              <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                <s.Icon className="h-5 w-5 text-[#d8b4fe]" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-display text-2xl font-bold leading-none count-glow text-white">
+                  {s.value}
+                </p>
+                <p className="text-xs text-white/45 mt-1 truncate">{s.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative max-w-md mb-8 rise-in" style={{ animationDelay: '180ms' }}>
+          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+          <input
+            placeholder="Szukaj tagu..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#a855f7]/30 transition"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition"
+              aria-label="Wyczyść"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Tag grid */}
+        {filteredTags.length === 0 ? (
+          <div
+            className="glass-liquid spotlight rise-in rounded-3xl p-16 text-center"
+            onMouseMove={handleCardMouse}
+          >
+            {search ? (
+              <>
+                <Search className="h-12 w-12 mx-auto mb-4 text-white/30" />
+                <p className="text-white/55">Nie znaleziono tagów</p>
+              </>
+            ) : (
+              <>
+                <TagIcon className="h-12 w-12 mx-auto mb-4 text-white/30" />
+                <p className="text-white/55 mb-5">Nie masz jeszcze żadnych tagów</p>
+                <button
+                  onClick={openAddDialog}
+                  className="inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed]"
+                >
+                  <Plus className="h-4 w-4" />
+                  Dodaj pierwszy tag
+                </button>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredTags.map((tag, i) => {
+              const ResolvedIcon = resolveIcon(tag.icon)
+              const accent = lighten(tag.color, 60)
+              return (
+                <article
+                  key={tag.id}
+                  onMouseMove={handleCardMouse}
+                  className="glass-liquid spotlight rise-in group relative flex flex-col rounded-3xl p-5 transition-transform duration-500 hover:-translate-y-1.5"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className="grid h-12 w-12 place-items-center rounded-2xl text-white shadow-lg ring-1 ring-white/15"
+                      style={{
+                        background: `linear-gradient(135deg, ${tag.color} 0%, ${accent} 100%)`,
+                        boxShadow: `0 10px 30px -10px ${tag.color}90`,
+                      }}
+                    >
+                      {ResolvedIcon ? <ResolvedIcon className="h-6 w-6" /> : <TagIcon className="h-6 w-6" />}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => openEditDialog(tag)}
+                        className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#c084fc]/25 transition"
+                        aria-label="Edytuj"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(tag.id)}
+                        className="grid h-9 w-9 place-items-center rounded-xl text-red-300/70 hover:text-red-200 transition border border-red-500/15 hover:border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+                        aria-label="Usuń"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 className="font-display text-lg font-bold text-white/90 group-hover:text-gradient-violet transition-colors line-clamp-1">
+                    {tag.name}
+                  </h3>
+
+                  {tag.description && (
+                    <p className="mt-1 text-sm text-white/45 line-clamp-2">{tag.description}</p>
+                  )}
+
+                  {/* Usage badge */}
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 rounded-lg px-2 h-6 text-[11px] font-medium glass-liquid text-white/65">
+                      <Film className="h-3 w-3" />
+                      {tag._count.videos} filmów
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-lg px-2 h-6 text-[11px] font-medium glass-liquid text-white/65">
+                      <BookOpen className="h-3 w-3" />
+                      {tag._count.sessions} sesji
+                    </span>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                    <span
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium"
+                      style={{ color: tag.isGlobal ? '#d8b4fe' : '#94a3b8' }}
+                    >
+                      <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: tag.isGlobal ? '#a855f7' : '#64748b' }}
+                      />
+                      {tag.isGlobal ? 'Globalny' : 'Prywatny'}
+                    </span>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Custom glass add/edit dialog */}
+      {dialogOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-xl"
+            onClick={() => setDialogOpen(false)}
+          />
+          <div
+            className="glass-liquid spotlight relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-7 rise-in"
+            onMouseMove={handleCardMouse}
+          >
+            <div className="mb-6 flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                <Sparkles className="h-5 w-5 text-[#d8b4fe]" />
+              </span>
+              <div>
+                <h2 className="font-display text-xl font-bold text-gradient-violet">
+                  {editingTag ? 'Edytuj tag' : 'Nowy tag błędu'}
+                </h2>
+                <p className="text-xs text-white/45">
+                  {editingTag ? 'Zaktualizuj kategorię' : 'Utwórz nową kategorię błędów'}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="name" className="text-xs font-medium text-white/55">
+                  Nazwa *
+                </label>
+                <div className="relative">
+                  <TagIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                  <input
                     id="name"
                     name="name"
                     placeholder="np. Peeking bez info"
@@ -151,166 +412,141 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     required
                     maxLength={50}
                     disabled={isLoading}
+                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Opis (opcjonalnie)</Label>
-                  <Input
-                    id="description"
-                    name="description"
-                    placeholder="Opis błędu..."
-                    value={formData.description}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                    maxLength={500}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Kolor</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {DEFAULT_COLORS.map((color) => (
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="description" className="text-xs font-medium text-white/55">
+                  Opis (opcjonalnie)
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  placeholder="Opis błędu..."
+                  value={formData.description}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                  maxLength={500}
+                  disabled={isLoading}
+                  rows={2}
+                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 pl-11 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#c084fc]/40 focus:ring-2 focus:ring-[#a855f7]/25 transition resize-none"
+                />
+              </div>
+
+              {/* Color picker */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-white/55">Kolor</label>
+                <div className="flex flex-wrap gap-2">
+                  {DEFAULT_COLORS.map((color) => {
+                    const selected = formData.color === color
+                    return (
                       <button
                         key={color}
                         type="button"
                         onClick={() => setFormData((prev) => ({ ...prev, color }))}
                         className={cn(
-                          'w-8 h-8 rounded-lg border-2 transition-all',
-                          formData.color === color ? 'border-foreground scale-110' : 'border-transparent hover:scale-105',
-                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                          'h-9 w-9 rounded-xl ring-1 ring-white/15 transition-all',
+                          selected
+                            ? 'ring-2 ring-white scale-110 shadow-lg'
+                            : 'hover:scale-105 hover:ring-white/30'
                         )}
-                        style={{ backgroundColor: color }}
+                        style={{
+                          backgroundColor: color,
+                          boxShadow: selected ? `0 6px 20px -4px ${color}` : undefined,
+                        }}
                         aria-label={color}
-                        aria-pressed={formData.color === color}
+                        aria-pressed={selected}
                       />
-                    ))}
-                  </div>
-                  <Input
-                    type="color"
-                    value={formData.color}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, color: e.target.value }))}
-                    className="w-12 h-12 rounded-lg border cursor-pointer"
-                  />
+                    )
+                  })}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="icon">Ikona Lucide (opcjonalnie)</Label>
-                  <Input
-                    id="icon"
-                    name="icon"
-                    placeholder="np. AlertTriangle, Target, Crosshair"
-                    value={formData.icon}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, icon: e.target.value }))}
-                    disabled={isLoading}
+                <div className="flex items-center gap-3 mt-2">
+                  <label
+                    className="relative grid h-12 w-12 cursor-pointer place-items-center overflow-hidden rounded-xl glass-liquid ring-1 ring-white/[0.08]"
+                    title="Wybierz własny kolor"
+                  >
+                    <Palette className="h-5 w-5 text-white/50 pointer-events-none" />
+                    <input
+                      type="color"
+                      value={formData.color}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, color: e.target.value }))}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    />
+                  </label>
+                  <div
+                    className="h-3 w-24 rounded-full"
+                    style={{
+                      background: `linear-gradient(90deg, ${formData.color}, ${lighten(formData.color, 60)})`,
+                    }}
                   />
-                  <p className="text-xs text-muted-foreground">Nazwa ikony z <a href="https://lucide.dev/icons/" target="_blank" rel="noopener" className="underline">lucide.dev</a></p>
+                  <span className="text-xs font-mono text-white/55">{formData.color}</span>
                 </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Anuluj
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {editingTag ? 'Zapisz' : 'Dodaj tag'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Szukaj tagu..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+              {/* Icon picker */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-white/55">
+                  Ikona Lucide (opcjonalnie)
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {ICON_OPTIONS.map((opt) => {
+                    const selected = formData.icon === opt.name
+                    return (
+                      <button
+                        key={opt.name}
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            icon: selected ? '' : opt.name,
+                          }))
+                        }
+                        className={cn(
+                          'grid h-11 w-full place-items-center rounded-xl transition-all',
+                          selected
+                            ? 'glass-tinted text-white'
+                            : 'glass-liquid text-white/55 hover:text-white'
+                        )}
+                        aria-label={opt.name}
+                        aria-pressed={selected}
+                      >
+                        <opt.Icon className="h-5 w-5" />
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="text-xs text-white/40">
+                  Wybrana: <span className="text-white/65">{formData.icon || 'brak'}</span>
+                </p>
+              </div>
 
-        {/* Tags Grid */}
-        {filteredTags.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              {search ? (
-                <>
-                  <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground">Nie znaleziono tagów</p>
-                </>
-              ) : (
-                <>
-                  <Tag className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground mb-4">Nie masz jeszcze żadnych tagów</p>
-                  <Button onClick={openAddDialog}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Dodaj pierwszy tag
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredTags.map((tag) => (
-              <Card key={tag.id} className="overflow-hidden transition-shadow hover:shadow-lg">
-                <CardContent className="p-0">
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                          style={{ backgroundColor: tag.color }}
-                        >
-                          {tag.icon && (
-                            <span className="text-lg">{tag.icon}</span>
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{tag.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {tag._count.videos} filmów · {tag._count.sessions} sesji
-                          </p>
-                        </div>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDialog(tag)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edytuj
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(tag.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Usuń
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    {tag.description && (
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{tag.description}</p>
-                    )}
-
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="secondary" className={tag.isGlobal ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}>
-                        {tag.isGlobal ? 'Globalny' : 'Prywatny'}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+              {/* Footer */}
+              <div className="flex justify-end gap-2 pt-4 border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(false)}
+                  className="inline-flex items-center rounded-2xl px-5 h-11 text-sm font-medium text-white/65 hover:text-white glass-liquid transition"
+                >
+                  Anuluj
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  {editingTag ? 'Zapisz' : 'Dodaj tag'}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </CoachLayout>
   )
 }

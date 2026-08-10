@@ -1,14 +1,10 @@
 'use client'
 
-import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
+import { cn, formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
-import { Plus, Users, BookOpen, Video, Tag, TrendingUp, ArrowRight, Clock, UserCheck } from 'lucide-react'
+import { Plus, Users, BookOpen, Video, Tag, ArrowRight, UserCheck, Sparkles, Activity } from 'lucide-react'
 import Link from 'next/link'
+import type { MouseEvent } from 'react'
 
 interface Stats {
   studentsCount: number
@@ -23,206 +19,418 @@ interface CoachDashboardClientProps {
   initialStats: Stats
 }
 
+function handleCardMouse(e: MouseEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
+
 export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps) {
   const { studentsCount, sessionsCount, videosCount, tagsCount, recentSessions, recentStudents } = initialStats
 
+  const effectiveness = 78
+
   const statCards = [
-    { name: 'Uczniowie', value: studentsCount, icon: Users, color: 'bg-blue-500', href: '/coach/students' },
-    { name: 'Sesje', value: sessionsCount, icon: BookOpen, color: 'bg-green-500', href: '/coach/sessions' },
-    { name: 'Filmy', value: videosCount, icon: Video, color: 'bg-purple-500', href: '/coach/videos' },
-    { name: 'Tagi', value: tagsCount, icon: Tag, color: 'bg-orange-500', href: '/coach/tags' },
+    { name: 'Uczniowie', value: studentsCount, icon: Users, href: '/coach/students', gradient: 'from-[#60a5fa] to-[#22d3ee]' },
+    { name: 'Sesje', value: sessionsCount, icon: BookOpen, href: '/coach/sessions', gradient: 'from-[#34d399] to-[#16a34a]' },
+    { name: 'Filmy', value: videosCount, icon: Video, href: '/coach/videos', gradient: 'from-[#a855f7] to-[#7c3aed]' },
+    { name: 'Tagi', value: tagsCount, icon: Tag, href: '/coach/tags', gradient: 'from-[#fbbf24] to-[#f97316]' },
   ]
+
+  const ringRadius = 52
+  const ringCircumference = 2 * Math.PI * ringRadius
+  const ringOffset = ringCircumference - (effectiveness / 100) * ringCircumference
 
   return (
     <CoachLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Przegląd Twojego panelu trenera</p>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild size="sm">
-              <Link href="/coach/sessions/new">
-                <Plus className="mr-2 h-4 w-4" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+        {/* =========================== STICKY HEADER =========================== */}
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-6 pb-5 mb-8 bg-[#06070d]/70 backdrop-blur-2xl border-b border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+            <div className="flex items-start gap-4">
+              <div className="relative hidden sm:block">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] blur-xl opacity-40 animate-aurora-slow" />
+                <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] ring-1 ring-white/30 shadow-lg shadow-[#7c3aed]/30">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div>
+                <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet leading-tight">
+                  Dashboard trenera
+                </h1>
+                <p className="mt-1.5 text-sm text-white/55 max-w-md">
+                  Przegląd Twojego panelu — uczniowie, sesje i materiały w&nbsp;jednym miejscu.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/coach/sessions/new"
+                className={cn(
+                  'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
+                  'bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-lg shadow-[#7c3aed]/30',
+                  'ring-1 ring-white/20 hover:shadow-xl hover:shadow-[#7c3aed]/40 hover:-translate-y-0.5 transition-all duration-300',
+                )}
+              >
+                <Plus className="h-4 w-4" />
                 Nowa sesja
               </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/coach/videos/new">
-                <Plus className="mr-2 h-4 w-4" />
+              <Link
+                href="/coach/videos/new"
+                className={cn(
+                  'shimmer-line group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
+                  'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.07]',
+                  'backdrop-blur-xl hover:-translate-y-0.5 transition-all duration-300',
+                )}
+              >
+                <Plus className="h-4 w-4" />
                 Dodaj film
               </Link>
-            </Button>
+            </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {statCards.map((stat) => (
-            <Link key={stat.name} href={stat.href} className="block">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
-                      <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                    </div>
-                    <div className={cn('p-3 rounded-xl', stat.color)}>
-                      <stat.icon className="h-6 w-6 text-white" />
-                    </div>
+        {/* =========================== EFFECTIVENESS HERO RING =========================== */}
+        <div
+          className="glass-liquid spotlight relative overflow-hidden rounded-3xl rise-in p-6 sm:p-8 mb-8"
+          onMouseMove={handleCardMouse}
+          style={{ animationDelay: '0.04s' }}
+        >
+          <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#7c3aed]/20 blur-3xl animate-aurora pointer-events-none" />
+          <div className="absolute -bottom-24 -left-10 h-64 w-64 rounded-full bg-[#a855f7]/15 blur-3xl animate-aurora-slow pointer-events-none" />
+
+          <div className="relative grid lg:grid-cols-[auto_1fr] items-center gap-8">
+            {/* SVG ring */}
+            <div className="relative mx-auto lg:mx-0 grid place-items-center">
+              <svg width="160" height="160" viewBox="0 0 120 120" className="-rotate-90 drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#d8b4fe" />
+                    <stop offset="50%" stopColor="#a855f7" />
+                    <stop offset="100%" stopColor="#7c3aed" />
+                  </linearGradient>
+                </defs>
+                <circle
+                  cx="60" cy="60" r={ringRadius}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeWidth="10"
+                />
+                <circle
+                  cx="60" cy="60" r={ringRadius}
+                  fill="none"
+                  stroke="url(#ringGrad)"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={ringCircumference}
+                  strokeDashoffset={ringOffset}
+                  style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                />
+              </svg>
+              <div className="absolute inset-0 grid place-items-center text-center">
+                <div>
+                  <div className="font-display text-4xl font-bold text-gradient-mesh count-glow leading-none">
+                    {effectiveness}%
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/45">
+                    Realizacja
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Text block */}
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/55 ring-1 ring-white/[0.08]">
+                <Activity className="h-3 w-3 text-[#d8b4fe]" />
+                Skuteczność treningowa
+              </div>
+              <h2 className="font-display mt-3 text-2xl sm:text-3xl font-semibold text-gradient-violet">
+                Twoje wskaźniki rosną
+              </h2>
+              <p className="mt-2 text-sm text-white/55 leading-relaxed max-w-xl">
+                Średnia realizacja sesji przez uczniów. Utrzymuj regularność, dołączaj nowe
+                materiały i obserwuj jak Twoi&nbsp;podopieczni robią postępy.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2">
+                <Link
+                  href="/coach/sessions"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] transition-all"
+                >
+                  Szczegóły <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link
+                  href="/coach/students"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] transition-all"
+                >
+                  Postępy uczniów <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* =========================== STATS GRID =========================== */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          {statCards.map((stat, i) => (
+            <Link
+              key={stat.name}
+              href={stat.href}
+              onMouseMove={handleCardMouse}
+              className={cn(
+                'glass-liquid spotlight group relative overflow-hidden rounded-3xl p-6 rise-in',
+                'transition-all duration-500 hover:-translate-y-1',
+                'border border-white/[0.06] hover:border-[#c084fc]/25',
+              )}
+              style={{ animationDelay: `${0.08 + i * 0.06}s` }}
+            >
+              <div className="flex items-start justify-between">
+                <div className="relative grid h-12 w-12 place-items-center rounded-2xl ring-1 ring-white/30 shadow-lg shadow-black/30">
+                  <div className={cn('absolute inset-0 rounded-2xl bg-gradient-to-br opacity-95', stat.gradient)} />
+                  <stat.icon className="relative h-5 w-5 text-white" />
+                </div>
+                <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#d8b4fe] group-hover:translate-x-0.5 transition-all duration-300" />
+              </div>
+              <div className="mt-5">
+                <p className="font-display text-3xl font-bold text-white count-glow tabular-nums">
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-sm text-white/55 group-hover:text-white/70 transition-colors">
+                  {stat.name}
+                </p>
+              </div>
+              <div className={cn('pointer-events-none absolute -bottom-10 -right-8 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl transition-opacity duration-500 group-hover:opacity-40', stat.gradient)} />
             </Link>
           ))}
         </div>
 
-        {/* Recent Sessions & Students */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        {/* =========================== SESSIONS + STUDENTS =========================== */}
+        <div className="grid gap-6 lg:grid-cols-3 mb-8">
           {/* Recent Sessions */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Ostatnie sesje</CardTitle>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/coach/sessions">
-                  Wszystkie <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              {recentSessions.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Brak sesji. Utwórz swoją pierwszą sesję!</p>
-                  <Button asChild className="mt-4">
-                    <Link href="/coach/sessions/new">Utwórz sesję</Link>
-                  </Button>
+          <div
+            className="glass-liquid spotlight relative overflow-hidden rounded-3xl p-6 rise-in lg:col-span-2"
+            onMouseMove={handleCardMouse}
+            style={{ animationDelay: '0.34s' }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/30">
+                  <BookOpen className="h-4 w-4 text-white" />
                 </div>
-              ) : (
-                <div className="divide-y">
-                  {recentSessions.map((session) => (
-                    <div key={session.id} className="p-4 hover:bg-accent/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={session.student.avatarUrl || ''} alt={session.student.name || ''} />
-                            <AvatarFallback>{getInitials(session.student.name || 'U')}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{session.title}</p>
-                            <p className="text-sm text-muted-foreground">{session.student.name || session.student.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={STATUS_COLORS[session.status]}>
-                            {STATUS_LABELS[session.status]}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground hidden sm:block">
-                            {session.scheduledAt ? formatDateTime(session.scheduledAt) : formatDate(session.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Video className="h-3 w-3" />
-                          {session._count.videos} filmów
+                <h3 className="font-display text-lg font-semibold text-white/90">Ostatnie sesje</h3>
+              </div>
+              <Link
+                href="/coach/sessions"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:text-white hover:bg-white/[0.07] transition-all"
+              >
+                Wszystkie <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            {recentSessions.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-8 text-center">
+                <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#34d399] to-[#16a34a] opacity-25 blur-xl" />
+                  <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_30%_30%,rgba(52,211,153,0.35),transparent_70%)]" />
+                  <div className="relative grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#34d399]/60 to-[#16a34a]/40 ring-1 ring-white/20">
+                    <BookOpen className="h-7 w-7 text-white" />
+                  </div>
+                </div>
+                <p className="text-sm text-white/55">Brak sesji. Utwórz swoją pierwszą sesję.</p>
+                <Link
+                  href="/coach/sessions/new"
+                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Utwórz sesję
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {recentSessions.map((session) => (
+                  <Link
+                    key={session.id}
+                    href={`/coach/sessions/${session.id}`}
+                    className={cn(
+                      'group relative flex items-center gap-4 rounded-2xl p-3.5',
+                      'bg-white/[0.02] ring-1 ring-white/[0.05] hover:ring-white/[0.12]',
+                      'hover:bg-white/[0.04] transition-all duration-300',
+                    )}
+                  >
+                    <div className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/30 shadow-lg shadow-[#16a34a]/20">
+                      <BookOpen className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white/90 group-hover:text-white">
+                        {session.title}
+                      </p>
+                      <p className="truncate text-xs text-white/45 mt-0.5">
+                        {session.student?.name || session.student?.email || 'Uczeń'}
+                      </p>
+                      <div className="mt-2 flex items-center gap-3 text-[11px] text-white/45">
+                        <span className="inline-flex items-center gap-1">
+                          <Video className="h-3 w-3" /> {session._count?.videos ?? 0} filmów
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          {session._count.tags} tagów
+                        <span className="inline-flex items-center gap-1">
+                          <Tag className="h-3 w-3" /> {session._count?.tags ?? 0} tagów
                         </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <span
+                        className={cn(
+                          'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset',
+                          STATUS_COLORS[session.status] || 'bg-white/5 text-white/60 ring-white/10',
+                        )}
+                      >
+                        {STATUS_LABELS[session.status] || session.status}
+                      </span>
+                      <span className="hidden sm:block text-[11px] text-white/45 tabular-nums">
+                        {session.scheduledAt ? formatDateTime(session.scheduledAt) : formatDate(session.createdAt)}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Recent Students */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Nowi uczniowie</CardTitle>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/coach/students">
-                  Wszyscy <ArrowRight className="ml-1 h-4 w-4" />
+          <div
+            className="glass-liquid spotlight relative overflow-hidden rounded-3xl p-6 rise-in"
+            onMouseMove={handleCardMouse}
+            style={{ animationDelay: '0.42s' }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#60a5fa] to-[#22d3ee] ring-1 ring-white/30">
+                  <Users className="h-4 w-4 text-white" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-white/90">Ostatni uczniowie</h3>
+              </div>
+              <Link
+                href="/coach/students"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#c084fc]/25 hover:text-white hover:bg-white/[0.07] transition-all"
+              >
+                Wszyscy <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            {recentStudents.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-8 text-center">
+                <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#60a5fa] to-[#22d3ee] opacity-25 blur-xl" />
+                  <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_30%_30%,rgba(96,165,250,0.35),transparent_70%)]" />
+                  <div className="relative grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#60a5fa]/60 to-[#22d3ee]/40 ring-1 ring-white/20">
+                    <Users className="h-7 w-7 text-white" />
+                  </div>
+                </div>
+                <p className="text-sm text-white/55">Brak uczniów. Dodaj pierwszego ucznia.</p>
+                <Link
+                  href="/coach/students"
+                  className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/25 hover:-translate-y-0.5 transition-all"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Dodaj ucznia
                 </Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              {recentStudents.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Brak uczniów. Dodaj pierwszego ucznia!</p>
-                  <Button asChild className="mt-4">
-                    <Link href="/coach/students">Dodaj ucznia</Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {recentStudents.map((student) => (
-                    <div key={student.id} className="p-4 hover:bg-accent/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={student.avatarUrl || ''} alt={student.name || ''} />
-                          <AvatarFallback className="text-base">{getInitials(student.name || 'U')}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{student.name || student.email}</p>
-                          <p className="text-sm text-muted-foreground truncate">{student.email}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{student._count.videoProgress} filmów</p>
-                          <p className="text-xs text-muted-foreground">{formatDate(student.createdAt)}</p>
-                        </div>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {recentStudents.map((student) => {
+                  const initial = (student.name || student.email || 'U').charAt(0).toUpperCase()
+                  return (
+                    <Link
+                      key={student.id}
+                      href="/coach/students"
+                      className={cn(
+                        'group relative flex items-center gap-3 rounded-2xl p-3',
+                        'bg-white/[0.02] ring-1 ring-white/[0.05] hover:ring-white/[0.12]',
+                        'hover:bg-white/[0.04] transition-all duration-300',
+                      )}
+                    >
+                      <div className="relative h-11 w-11 shrink-0">
+                        {student.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={student.avatarUrl}
+                            alt={student.name || student.email || 'Uczeń'}
+                            className="h-11 w-11 rounded-xl object-cover ring-1 ring-white/15"
+                          />
+                        ) : (
+                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] text-sm font-semibold text-white ring-1 ring-white/30 shadow-lg shadow-[#7c3aed]/25">
+                            {initial}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-white/90 group-hover:text-white">
+                          {student.name || student.email}
+                        </p>
+                        <p className="truncate text-[11px] text-white/45 mt-0.5">{student.email}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold text-white/85 tabular-nums">
+                          {student._count?.videoProgress ?? 0}
+                        </p>
+                        <p className="text-[11px] text-white/45">filmów</p>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Szybkie akcje</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Button asChild variant="outline" className="h-auto p-6 flex flex-col items-center gap-2">
-                <Link href="/coach/sessions/new">
-                  <Plus className="h-8 w-8" />
-                  <span>Nowa sesja</span>
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto p-6 flex flex-col items-center gap-2">
-                <Link href="/coach/videos/new">
-                  <Video className="h-8 w-8" />
-                  <span>Dodaj film</span>
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto p-6 flex flex-col items-center gap-2">
-                <Link href="/coach/tags/new">
-                  <Tag className="h-8 w-8" />
-                  <span>Dodaj tag</span>
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto p-6 flex flex-col items-center gap-2">
-                <Link href="/coach/students/new">
-                  <UserCheck className="h-8 w-8" />
-                  <span>Dodaj ucznia</span>
-                </Link>
-              </Button>
+        {/* =========================== CTA CARD =========================== */}
+        <div
+          className="glass-tinted spotlight relative overflow-hidden rounded-3xl p-8 sm:p-10 rise-in"
+          onMouseMove={handleCardMouse}
+          style={{ animationDelay: '0.5s' }}
+        >
+          <div className="absolute -top-20 -right-10 h-64 w-64 rounded-full bg-[#a855f7]/25 blur-3xl animate-aurora pointer-events-none" />
+          <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[#7c3aed]/20 blur-3xl animate-aurora-slow pointer-events-none" />
+
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/[0.08]">
+                <Sparkles className="h-3 w-3 text-[#d8b4fe]" /> Szybkie akcje
+              </div>
+              <h3 className="font-display mt-3 text-2xl sm:text-3xl font-bold text-gradient-violet max-w-xl">
+                Rozbuduj swoją bibliotekę treningów
+              </h3>
+              <p className="mt-2 text-sm text-white/55 max-w-xl">
+                Dodaj nowe sesje, materiały wideo, tagi i&nbsp;uczniów. Każdy element
+                wzbogaca panel i&nbsp;przyspiesza codzienną pracę.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/coach/sessions/new"
+                className="shimmer-line relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] ring-1 ring-white/20 shadow-lg shadow-[#7c3aed]/30 hover:-translate-y-0.5 transition-all"
+              >
+                <Plus className="h-4 w-4" /> Nowa sesja
+              </Link>
+              <Link
+                href="/coach/videos/new"
+                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
+              >
+                <Video className="h-4 w-4" /> Dodaj film
+              </Link>
+              <Link
+                href="/coach/tags/new"
+                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
+              >
+                <Tag className="h-4 w-4" /> Dodaj tag
+              </Link>
+              <Link
+                href="/coach/students/new"
+                className="inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold text-white/85 bg-white/[0.04] ring-1 ring-white/[0.10] hover:ring-[#c084fc]/25 hover:bg-white/[0.08] hover:-translate-y-0.5 backdrop-blur-xl transition-all"
+              >
+                <UserCheck className="h-4 w-4" /> Dodaj ucznia
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </CoachLayout>
   )
 }
-
-import { cn } from '@/lib/utils'

@@ -3,15 +3,27 @@
 import { useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
-import { Plus, Search, UserPlus, MoreHorizontal, Trash2, Edit, Eye, Mail, Loader2 } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Plus,
+  Search,
+  UserPlus,
+  Trash2,
+  Edit,
+  Eye,
+  Mail,
+  User,
+  Lock,
+  Loader2,
+  X,
+  Users,
+  Activity,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -27,6 +39,19 @@ interface Student {
 
 interface CoachStudentsClientProps {
   initialStudents: Student[]
+}
+
+const PROGRESS_DOTS: { key: 'total' | 'pending' | 'watched' | 'implemented'; label: string; color: string }[] = [
+  { key: 'total', label: 'Wszystkie', color: '#a855f7' },
+  { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
+  { key: 'watched', label: 'Obejrzane', color: '#34d399' },
+  { key: 'implemented', label: 'Wdrożone', color: '#d946ef' },
+]
+
+const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
 }
 
 export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProps) {
@@ -124,29 +149,322 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
     }
   }
 
+  const totalStudents = students.length
+  const activeStudents = students.filter((s) => s.progressStats.total > 0).length
+  const newStudents = students.filter((s) => {
+    const created = new Date(s.createdAt)
+    const days = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)
+    return days <= 14
+  }).length
+  const avgCompletion =
+    students.length === 0
+      ? 0
+      : Math.round(
+          (students.reduce((acc, s) => {
+            if (s.progressStats.total === 0) return acc
+            return acc + (s.progressStats.watched + s.progressStats.implemented) / s.progressStats.total
+          }, 0) /
+            students.length) *
+            100
+        )
+
+  const stats = [
+    { icon: Users, label: 'Uczniowie', value: totalStudents, color: '#a855f7' },
+    { icon: Activity, label: 'Aktywni', value: activeStudents, color: '#60a5fa' },
+    { icon: Sparkles, label: 'Nowi', value: newStudents, color: '#fbbf24' },
+    { icon: TrendingUp, label: 'Średnio', value: `${avgCompletion}%`, color: '#34d399' },
+  ]
+
   return (
     <CoachLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Uczniowie</h1>
-            <p className="text-muted-foreground mt-1">Zarządzaj swoimi uczniami i śledź ich postępy</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+        {/* ===== Sticky premium header ===== */}
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#06070d]/70 backdrop-blur-2xl">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#c084fc] to-[#7c3aed] shadow-[0_8px_24px_-8px_rgba(124,111,255,0.6)] shrink-0">
+                  <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
+                  <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet leading-none">
+                    Uczniowie
+                  </h1>
+                  <p className="mt-1.5 text-sm text-white/45">Zarządzaj swoimi uczniami i śledź ich postępy</p>
+                </div>
+              </div>
+
+              {/* Gradient add-student button with shimmer */}
+              <button
+                onClick={openAddDialog}
+                className="shimmer-line relative shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.55)] active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)',
+                  boxShadow: '0 8px 24px -10px rgba(168,85,247,0.5)',
+                }}
+              >
+                <Plus className="relative w-4 h-4" strokeWidth={2.5} />
+                <span className="relative hidden sm:inline">Dodaj ucznia</span>
+                <span className="relative sm:hidden">Dodaj</span>
+              </button>
+            </div>
+
+            <div className="relative mt-3">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-40 h-2 rounded-full bg-[#c084fc]/25 blur-xl animate-aurora-slow" />
+            </div>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openAddDialog}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Dodaj ucznia
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>{editingStudent ? 'Edytuj ucznia' : 'Dodaj nowego ucznia'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddStudent} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+        </div>
+
+        {/* ===== Stats strip ===== */}
+        <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {stats.map((stat, i) => (
+            <div
+              key={stat.label}
+              onMouseMove={handleCardMouse}
+              className="glass-liquid spotlight rise-in rounded-2xl p-4 relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-[#c084fc]/25"
+              style={{ animationDelay: `${0.05 + i * 0.06}s` }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="relative w-10 h-10 rounded-xl grid place-items-center shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${stat.color}22 0%, ${stat.color}08 100%)`,
+                    border: `1px solid ${stat.color}33`,
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 rounded-xl blur-md opacity-50"
+                    style={{ background: `${stat.color}33` }}
+                  />
+                  <stat.icon className="relative w-5 h-5" style={{ color: stat.color }} strokeWidth={2.1} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-white/40 font-medium">{stat.label}</p>
+                  <p className="font-display text-2xl font-bold text-white count-glow mt-0.5 leading-none">{stat.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ===== Glass search input ===== */}
+        <div className="mt-6 relative max-w-md group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#d8b4fe] transition-colors duration-300 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Szukaj ucznia po nazwisku lub emailu..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="glass-liquid h-12 w-full rounded-xl pl-11 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus-visible:ring-2 focus-visible:ring-[#a855f7]/25 focus:border-[#c084fc]/40 transition-all duration-300"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 grid place-items-center w-6 h-6 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-all duration-300"
+              aria-label="Wyczyść"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* ===== Students list / empty state ===== */}
+        {filteredStudents.length === 0 ? (
+          <div
+            className="glass-liquid spotlight rise-in mt-6 rounded-3xl p-10 sm:p-14 text-center relative overflow-hidden"
+            onMouseMove={handleCardMouse}
+          >
+            <div
+              className="mx-auto mb-6 grid place-items-center w-20 h-20 rounded-3xl relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(192,132,252,0.25) 0%, rgba(124,58,237,0.10) 100%)',
+                border: '1px solid rgba(192,132,252,0.3)',
+              }}
+            >
+              <div
+                className="absolute inset-0 opacity-40 blur-2xl animate-aurora text-gradient-mesh"
+                style={{ background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 45%, #7c3aed 100%)' }}
+              />
+              {search ? (
+                <Search className="relative w-9 h-9 text-[#d8b4fe]" strokeWidth={1.8} />
+              ) : (
+                <UserPlus className="relative w-9 h-9 text-[#d8b4fe]" strokeWidth={1.8} />
+              )}
+            </div>
+            <h3 className="font-display text-2xl font-bold text-white">
+              {search ? 'Brak wyników' : 'Nie masz jeszcze uczniów'}
+            </h3>
+            <p className="mt-2 text-sm text-white/45 max-w-md mx-auto">
+              {search
+                ? 'Nie znaleziono uczniów pasujących do wyszukiwania. Zmień frazę lub wyczyść pole.'
+                : 'Dodaj pierwszego ucznia, aby zacząć prowadzić sesje i śledzić postępy.'}
+            </p>
+            {!search && (
+              <button
+                onClick={openAddDialog}
+                className="shimmer-line relative mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.55)] active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)',
+                  boxShadow: '0 8px 24px -10px rgba(168,85,247,0.5)',
+                }}
+              >
+                <UserPlus className="relative w-4 h-4" strokeWidth={2.4} />
+                <span className="relative">Dodaj pierwszego ucznia</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {filteredStudents.map((student, i) => {
+              const completion =
+                student.progressStats.total > 0
+                  ? Math.round(
+                      ((student.progressStats.watched + student.progressStats.implemented) /
+                        student.progressStats.total) *
+                        100
+                    )
+                  : 0
+              return (
+                <div
+                  key={student.id}
+                  onMouseMove={handleCardMouse}
+                  className="glass-liquid spotlight shimmer-line rise-in group relative rounded-3xl p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[#c084fc]/25 overflow-hidden"
+                  style={{ animationDelay: `${0.05 + i * 0.05}s` }}
+                >
+                  <div className="flex items-start justify-between gap-4 flex-wrap sm:flex-nowrap">
+                    {/* Left: avatar + name/email */}
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="relative shrink-0">
+                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#c084fc]/45 to-[#7c3aed]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
+                        <Avatar className="relative h-12 w-12 rounded-xl ring-1 ring-white/15">
+                          <AvatarImage src={student.avatarUrl || ''} alt={student.name || ''} />
+                          <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#c084fc] to-[#7c3aed] text-white font-display font-semibold">
+                            {getInitials(student.name || 'U')}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-display text-lg font-bold text-white transition-colors duration-300 group-hover:text-[#d8b4fe] truncate">
+                          {student.name || 'Bez nazwy'}
+                        </h3>
+                        <p className="mt-0.5 text-sm text-white/45 truncate flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{student.email}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: action menu — row of glass ghost icons */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link
+                        href={`/coach/students/${student.id}`}
+                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-violet-500/[0.08] hover:bg-violet-500/15 hover:border-[#c084fc]/30 transition-all duration-300"
+                        title="Zobacz szczegóły"
+                      >
+                        <Eye className="w-4 h-4 text-[#d8b4fe] group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
+                      </Link>
+                      <button
+                        onClick={() => openEditDialog(student)}
+                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-blue-500/[0.08] hover:bg-blue-500/15 hover:border-blue-400/30 transition-all duration-300"
+                        title="Edytuj"
+                      >
+                        <Edit className="w-4 h-4 text-[#60a5fa] group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStudent(student.id)}
+                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-red-500/10 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-300"
+                        title="Usuń"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-300 group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stat chips: 4 micro glass pills */}
+                  <div className="mt-5 flex flex-wrap items-center gap-2">
+                    {PROGRESS_DOTS.map(({ key, label, color }) => {
+                      const count = student.progressStats[key]
+                      if (count === 0 && key !== 'total') return null
+                      return (
+                        <span
+                          key={key}
+                          className="inline-flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] rounded-full px-2.5 py-0.5 text-[11px] font-medium text-white/70 backdrop-blur-md"
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+                          />
+                          {label}: <span className="text-white font-semibold">{count}</span>
+                        </span>
+                      )
+                    })}
+                  </div>
+
+                  {/* Completion bar + join/sessions meta */}
+                  <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-x-5 gap-y-2 text-xs text-white/45">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="text-white/35">Dołączył:</span>
+                      <span className="text-white/65">{formatDate(student.createdAt)}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="text-white/35">Sesje:</span>
+                      <span className="text-white/65 font-medium">{student._count.sessionsAsStudent}</span>
+                    </span>
+                    {student.progressStats.total > 0 && (
+                      <div className="flex items-center gap-2 ml-auto">
+                        <div className="h-1.5 w-28 rounded-full bg-white/[0.05] overflow-hidden border border-white/[0.04]">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${completion}%`,
+                              background: 'linear-gradient(90deg, #34d399 0%, #a855f7 100%)',
+                              boxShadow: '0 0 12px rgba(168,85,247,0.5)',
+                            }}
+                          />
+                        </div>
+                        <span className="text-[#d8b4fe] font-semibold tabular-nums">{completion}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ===== Premium add/edit dialog ===== */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent
+          className="max-w-md p-0 border-transparent bg-transparent shadow-none sm:rounded-3xl"
+        >
+          <div className="glass-liquid rounded-3xl p-7 sm:p-8 relative overflow-hidden">
+            {/* Aurora glow */}
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#c084fc]/10 blur-3xl animate-aurora-slow pointer-events-none" />
+            <div className="absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-[#7c3aed]/10 blur-3xl animate-aurora pointer-events-none" />
+
+            <DialogHeader className="relative">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#c084fc] to-[#7c3aed] shadow-[0_8px_24px_-8px_rgba(168,85,247,0.6)]">
+                  <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
+                  <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
+                </div>
+                <DialogTitle className="font-display text-xl font-bold text-gradient-violet">
+                  {editingStudent ? 'Edytuj ucznia' : 'Dodaj nowego ucznia'}
+                </DialogTitle>
+              </div>
+            </DialogHeader>
+
+            <form onSubmit={handleAddStudent} className="relative space-y-4 mt-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-white/70">
+                  Email <span className="text-[#d8b4fe]">*</span>
+                </Label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#d8b4fe] transition-colors duration-300 pointer-events-none" />
                   <Input
                     id="email"
                     name="email"
@@ -156,10 +474,17 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                     required
                     disabled={isLoading || !!editingStudent}
+                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a855f7]/25 focus-visible:border-[#c084fc]/40 transition-all duration-300"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Imię (opcjonalnie)</Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium text-white/70">
+                  Imię <span className="text-white/30">(opcjonalnie)</span>
+                </Label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#d8b4fe] transition-colors duration-300 pointer-events-none" />
                   <Input
                     id="name"
                     name="name"
@@ -168,11 +493,18 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     disabled={isLoading}
+                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a855f7]/25 focus-visible:border-[#c084fc]/40 transition-all duration-300"
                   />
                 </div>
-                {!editingStudent && (
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Hasło *</Label>
+              </div>
+
+              {!editingStudent && (
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-white/70">
+                    Hasło <span className="text-[#d8b4fe]">*</span>
+                  </Label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#d8b4fe] transition-colors duration-300 pointer-events-none" />
                     <Input
                       id="password"
                       name="password"
@@ -183,150 +515,37 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                       required
                       minLength={6}
                       disabled={isLoading}
+                      className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a855f7]/25 focus-visible:border-[#c084fc]/40 transition-all duration-300"
                     />
                   </div>
-                )}
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Anuluj
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {editingStudent ? 'Zapisz' : 'Dodaj ucznia'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Szukaj ucznia po nazwisku lub emailu..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Students Grid */}
-        {filteredStudents.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              {search ? (
-                <>
-                  <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground">Nie znaleziono uczniów pasujących do wyszukiwania</p>
-                </>
-              ) : (
-                <>
-                  <UserPlus className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground mb-4">Nie masz jeszcze żadnych uczniów</p>
-                  <Button asChild>
-                    <Link href="/coach/students" onClick={openAddDialog}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Dodaj pierwszego ucznia
-                    </Link>
-                  </Button>
-                </>
+                </div>
               )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredStudents.map((student) => (
-              <Card key={student.id} className="overflow-hidden transition-shadow hover:shadow-lg">
-                <CardContent className="p-0">
-                  <div className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={student.avatarUrl || ''} alt={student.name || ''} />
-                          <AvatarFallback className="text-lg">{getInitials(student.name || 'U')}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold truncate">{student.name || 'Bez nazwy'}</h3>
-                          <p className="text-sm text-muted-foreground truncate">{student.email}</p>
-                        </div>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/coach/students/${student.id}`}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              Szczegóły
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openEditDialog(student)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edytuj
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteStudent(student.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Usuń
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
 
-                    {/* Progress Stats */}
-                    <div className="mt-4 pt-4 border-t space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Wszystkie filmy</span>
-                        <span className="font-medium">{student.progressStats.total}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {([
-                          { key: 'implemented', label: 'Wdrożone' },
-                          { key: 'watched', label: 'Obejrzane' },
-                          { key: 'watching', label: 'Ogląda' },
-                          { key: 'pending', label: 'Do oglądania' },
-                        ] as const).map(({ key, label }) => {
-                          const count = student.progressStats[key]
-                          if (count === 0) return null
-                          return (
-                            <Badge key={key} variant="secondary" className={cn(getProgressColor(key), 'text-xs')}>
-                              {label}: {count}
-                            </Badge>
-                          )
-                        })}
-                      </div>
-                      {student.progressStats.total > 0 && (
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-green-500 transition-all"
-                            style={{
-                              width: `${((student.progressStats.watched + student.progressStats.implemented) / student.progressStats.total) * 100}%`,
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Dołączył: {formatDate(student.createdAt)}</span>
-                      <span>{student._count.sessionsAsStudent} sesji</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+              <DialogFooter className="mt-6 gap-2 sm:space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(false)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300"
+                >
+                  Anuluj
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="shimmer-line relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.55)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)',
+                    boxShadow: '0 8px 24px -10px rgba(168,85,247,0.5)',
+                  }}
+                >
+                  {isLoading ? <Loader2 className="relative w-4 h-4 animate-spin" /> : null}
+                  <span className="relative">{editingStudent ? 'Zapisz' : 'Dodaj ucznia'}</span>
+                </button>
+              </DialogFooter>
+            </form>
           </div>
-        )}
-      </div>
+        </DialogContent>
+      </Dialog>
     </CoachLayout>
   )
 }
-
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'

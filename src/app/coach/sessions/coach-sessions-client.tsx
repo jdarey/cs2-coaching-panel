@@ -3,20 +3,24 @@
 import { useState } from 'react'
 import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Plus, Search, MoreHorizontal, Trash2, Edit, Eye, Calendar, Tag, Video, Loader2, ArrowRight, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import {
+  Plus,
+  Filter,
+  Search,
+  X,
+  BookOpen,
+  Calendar,
+  Video,
+  Tag,
+  Pencil,
+  Trash2,
+  ArrowRight,
+  Loader2,
+  Eye,
+  ListVideo,
+} from 'lucide-react'
 
 interface Session {
   id: string
@@ -41,6 +45,41 @@ interface CoachSessionsClientProps {
   initialStudents: Student[]
   initialTags: Tag[]
   initialVideos: Video[]
+}
+
+const STATUS_FILTERS = [
+  { value: 'all', label: 'Wszystkie', color: '#a855f7' },
+  { value: 'DRAFT', label: 'Szkic', color: '#fbbf24' },
+  { value: 'ACTIVE', label: 'Aktywna', color: '#60a5fa' },
+  { value: 'COMPLETED', label: 'Zakończona', color: '#34d399' },
+  { value: 'ARCHIVED', label: 'Zarchiwizowana', color: '#d946ef' },
+] as const
+
+const STATUS_PILL_STYLES: Record<string, { dot: string; text: string; ring: string; bg: string }> = {
+  DRAFT: { dot: 'bg-amber-400', text: 'text-amber-300', ring: 'ring-amber-400/30', bg: 'bg-amber-400/10' },
+  ACTIVE: { dot: 'bg-blue-400', text: 'text-blue-300', ring: 'ring-blue-400/30', bg: 'bg-blue-400/10' },
+  COMPLETED: { dot: 'bg-emerald-400', text: 'text-emerald-300', ring: 'ring-emerald-400/30', bg: 'bg-emerald-400/10' },
+  ARCHIVED: { dot: 'bg-fuchsia-400', text: 'text-fuchsia-300', ring: 'ring-fuchsia-400/30', bg: 'bg-fuchsia-400/10' },
+  PENDING: { dot: 'bg-amber-400', text: 'text-amber-300', ring: 'ring-amber-400/30', bg: 'bg-amber-400/10' },
+  WATCHING: { dot: 'bg-blue-400', text: 'text-blue-300', ring: 'ring-blue-400/30', bg: 'bg-blue-400/10' },
+  WATCHED: { dot: 'bg-emerald-400', text: 'text-emerald-300', ring: 'ring-emerald-400/30', bg: 'bg-emerald-400/10' },
+  IMPLEMENTED: { dot: 'bg-purple-400', text: 'text-purple-300', ring: 'ring-purple-400/30', bg: 'bg-purple-400/10' },
+}
+
+const TAG_DOT: Record<string, string> = {
+  '#fbbf24': 'bg-amber-400',
+  '#60a5fa': 'bg-blue-400',
+  '#34d399': 'bg-emerald-400',
+  '#d946ef': 'bg-fuchsia-400',
+  '#a855f7': 'bg-purple-400',
+  '#f472b6': 'bg-pink-400',
+  '#fb7185': 'bg-rose-400',
+  '#22d3ee': 'bg-cyan-400',
+}
+
+function getTagDot(color: string | undefined): string {
+  if (!color) return 'bg-violet-400'
+  return TAG_DOT[color.toLowerCase()] || 'bg-violet-400'
 }
 
 export function CoachSessionsClient({ initialSessions, initialStudents, initialTags, initialVideos }: CoachSessionsClientProps) {
@@ -177,301 +216,552 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
     }))
   }
 
+  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+  }
+
+  const statusPillFor = (status: string) => STATUS_PILL_STYLES[status] || STATUS_PILL_STYLES.DRAFT
+
+  const TABS: { id: 'details' | 'tags' | 'videos' | 'notes'; label: string; icon: typeof BookOpen }[] = [
+    { id: 'details', label: 'Szczegóły', icon: BookOpen },
+    { id: 'tags', label: 'Tagi', icon: Tag },
+    { id: 'videos', label: 'Filmy', icon: ListVideo },
+    { id: 'notes', label: 'Notatki', icon: Eye },
+  ]
+
   return (
     <CoachLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Sesje treningowe</h1>
-            <p className="text-muted-foreground mt-1">Zarządzaj sesjami coachingowymi dla swoich uczniów</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+        {/* ===== Sticky premium header ===== */}
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 pb-5 bg-[#06070d]/60 backdrop-blur-xl border-b border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-3">
+                <span className="relative inline-flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#c084fc] opacity-60 animate-ping" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#a855f7]" />
+                </span>
+                <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-violet-300/70">Coach · Przestrzeń sesji</span>
+              </div>
+              <h1 className="font-display text-3xl sm:text-[2.6rem] font-bold leading-tight text-gradient-violet">
+                Sesje
+              </h1>
+              <p className="text-sm text-white/50 max-w-xl">
+                Zarządzaj sesjami coachingowymi dla swoich uczniów. Twórz, edytuj i analizuj każde spotkanie.
+              </p>
+            </div>
+            <button
+              onClick={openAddDialog}
+              className="shimmer-line group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-2xl px-6 text-sm font-semibold text-white shadow-[0_8px_40px_-10px_rgba(168,85,247,0.55)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)' }}
+            >
+              <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
+              <Plus className="relative h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
+              <span className="relative">Nowa sesja</span>
+            </button>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openAddDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nowa sesja
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingSession ? 'Edytuj sesję' : 'Nowa sesja treningowa'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'details' | 'tags' | 'videos' | 'notes')}>
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="details">Szczegóły</TabsTrigger>
-                    <TabsTrigger value="tags">Tagi</TabsTrigger>
-                    <TabsTrigger value="videos">Filmy</TabsTrigger>
-                    <TabsTrigger value="notes">Notatki</TabsTrigger>
-                  </TabsList>
+        </div>
 
-                  <TabsContent value="details" className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Tytuł sesji *</Label>
-                      <Input
-                        id="title"
-                        placeholder="np. Analiza demka z 15.01"
-                        value={formData.title}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                        required
-                        disabled={isLoading}
-                      />
+        {/* ===== Search + segmented status pills ===== */}
+        <div className="mt-8 space-y-4 rise-in">
+          {/* Search */}
+          <div className="relative group">
+            <div className="glass-liquid spotlight rounded-2xl flex items-center gap-2 pl-4 pr-2 h-14" onMouseMove={handleCardMouse}>
+              <Filter className="h-4 w-4 shrink-0 text-violet-300/70" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Szukaj sesji, ucznia lub e-mailu..."
+                className="w-full h-full bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none"
+              />
+              {search ? (
+                <button
+                  onClick={() => setSearch('')}
+                  className="shrink-0 grid place-items-center h-10 w-10 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                  aria-label="Wyczyść"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              ) : (
+                <span className="shrink-0 grid place-items-center h-10 w-10 rounded-xl text-white/30">
+                  <Search className="h-4 w-4" />
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Segmented status pills */}
+          <div className="glass-liquid rounded-2xl p-1.5 flex flex-wrap gap-1">
+            {STATUS_FILTERS.map((f) => {
+              const active = statusFilter === f.value
+              return (
+                <button
+                  key={f.value}
+                  onClick={() => setStatusFilter(f.value)}
+                  className={cn(
+                    'relative inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium transition-all duration-300',
+                    active ? 'text-white' : 'text-white/55 hover:text-white/85'
+                  )}
+                >
+                  {active && (
+                    <span
+                      className="absolute inset-0 rounded-xl ring-1 ring-inset"
+                      style={{ background: `linear-gradient(135deg, ${f.color}40 0%, ${f.color}10 100%)`, borderColor: `${f.color}55`, boxShadow: `0 0 24px -6px ${f.color}99` }}
+                    />
+                  )}
+                  <span
+                    className="relative h-1.5 w-1.5 rounded-full transition-transform duration-300"
+                    style={{ background: f.color, boxShadow: active ? `0 0 10px ${f.color}` : 'none', transform: active ? 'scale(1.2)' : 'scale(1)' }}
+                  />
+                  <span className="relative">{f.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* ===== Sessions grid ===== */}
+        {filteredSessions.length === 0 ? (
+          <div className="mt-8 rise-in">
+            <div className="glass-liquid spotlight rounded-3xl p-12 text-center" onMouseMove={handleCardMouse}>
+              <div className="mx-auto mb-5 grid place-items-center h-20 w-20 rounded-3xl bg-gradient-to-br from-[#c084fc]/15 to-[#7c3aed]/5 ring-1 ring-inset ring-[#c084fc]/20">
+                {search || statusFilter !== 'all' ? (
+                  <Search className="h-9 w-9 text-violet-300/70" />
+                ) : (
+                  <ListVideo className="h-9 w-9 text-violet-300/70" />
+                )}
+              </div>
+              {search || statusFilter !== 'all' ? (
+                <p className="text-white/60 text-sm">Nie znaleziono sesji spełniających kryteria.</p>
+              ) : (
+                <>
+                  <h3 className="font-display text-lg font-semibold text-gradient-violet">Brak sesji</h3>
+                  <p className="mt-1.5 text-sm text-white/50 mb-6">Nie masz jeszcze żadnych sesji. Stwórz pierwszą już teraz.</p>
+                  <button
+                    onClick={openAddDialog}
+                    className="shimmer-line group relative inline-flex h-11 items-center gap-2 overflow-hidden rounded-2xl px-5 text-sm font-semibold text-white transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{ background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)' }}
+                  >
+                    <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/15" />
+                    <Plus className="relative h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
+                    <span className="relative">Utwórz pierwszą sesję</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredSessions.map((session, idx) => {
+              const pill = statusPillFor(session.status)
+              return (
+                <article
+                  key={session.id}
+                  onMouseMove={handleCardMouse}
+                  className={cn(
+                    'glass-liquid spotlight shimmer-line group relative flex flex-col rounded-3xl p-5',
+                    'transition-all duration-500 hover:-translate-y-1.5 hover:border-[#c084fc]/25',
+                    'rise-in'
+                  )}
+                  style={{ animationDelay: `${Math.min(idx, 8) * 70}ms` }}
+                >
+                  {/* Top row: title + status pill */}
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-white/35">
+                        <span className="h-1 w-1 rounded-full bg-[#a855f7]" />
+                        Sesja
+                      </div>
+                      <h3 className="font-display text-lg font-bold leading-snug text-white/90 transition-colors duration-300 group-hover:text-gradient-violet group-hover:text-transparent">
+                        {session.title}
+                      </h3>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="student">Uczeń *</Label>
-                      <Select value={formData.studentId} onValueChange={(v) => setFormData((prev) => ({ ...prev, studentId: v }))} disabled={isLoading || !!editingSession}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Wybierz ucznia" />
-                        </SelectTrigger>
-                        <SelectContent>
+                    <span className={cn(
+                      'shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset',
+                      pill.bg, pill.text, pill.ring
+                    )}>
+                      <span className={cn('h-1.5 w-1.5 rounded-full', pill.dot)} />
+                      {STATUS_LABELS[session.status] || session.status}
+                    </span>
+                  </div>
+
+                  {/* Student row */}
+                  <div className="relative mt-4 flex items-center gap-3">
+                    <div className="grid place-items-center h-10 w-10 rounded-2xl bg-gradient-to-br from-[#c084fc]/20 to-[#7c3aed]/10 ring-1 ring-inset ring-white/10 overflow-hidden">
+                      {session.student.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={session.student.avatarUrl} alt={session.student.name || ''} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-semibold text-violet-200">{getInitials(session.student.name || 'U')}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 text-xs text-white/45">
+                        <BookOpen className="h-3 w-3" />
+                        <span>Uczeń</span>
+                      </div>
+                      <p className="truncate text-sm font-medium text-white/85">
+                        {session.student.name || session.student.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Date pill */}
+                  {session.scheduledAt && (
+                    <div className="relative mt-3">
+                      <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] px-2.5 py-1.5 text-xs text-white/70">
+                        <Calendar className="h-3.5 w-3.5 text-violet-300/80" />
+                        {formatDateTime(session.scheduledAt)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {session.tags.length > 0 && (
+                    <div className="relative mt-3 flex flex-wrap gap-1.5">
+                      {session.tags.slice(0, 4).map((t) => (
+                        <span
+                          key={t.tag.id}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] px-2 py-1 text-[11px] text-white/70"
+                        >
+                          <span className={cn('h-1.5 w-1.5 rounded-full', getTagDot(t.tag.color))} />
+                          {t.tag.name}
+                        </span>
+                      ))}
+                      {session.tags.length > 4 && (
+                        <span className="inline-flex items-center rounded-lg bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] px-2 py-1 text-[11px] text-white/45">
+                          +{session.tags.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Spacer */}
+                  <div className="relative flex-1" />
+
+                  {/* Stats row */}
+                  <div className="relative mt-5 flex items-center gap-4 text-xs text-white/50">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Video className="h-3.5 w-3.5 text-violet-300/70" />
+                      {session.videos.length} filmów
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5 text-violet-300/70" />
+                      {session.tags.length} tagów
+                    </span>
+                    <span className="ml-auto inline-flex items-center gap-1.5 text-white/35">
+                      {formatDate(session.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative my-4 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+
+                  {/* Action row */}
+                  <div className="relative flex items-center gap-2">
+                    <button
+                      onClick={() => openEditDialog(session)}
+                      className="grid place-items-center h-10 w-10 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] text-white/60 hover:text-white hover:ring-[#c084fc]/25 hover:bg-[#c084fc]/10 transition-all duration-300"
+                      aria-label="Edytuj"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+
+                    <Link
+                      href={`/coach/sessions/${session.id}`}
+                      className="shimmer-line group/btn relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-white shadow-[0_6px_24px_-10px_rgba(168,85,247,0.6)] transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                      style={{ background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)' }}
+                    >
+                      <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />
+                      <span className="relative inline-flex items-center gap-2">
+                        Otwórz
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                      </span>
+                    </Link>
+
+                    <button
+                      onClick={() => handleDelete(session.id)}
+                      className="grid place-items-center h-10 w-10 rounded-xl bg-transparent ring-1 ring-inset ring-rose-400/15 text-rose-300/70 hover:text-rose-200 hover:bg-rose-400/10 hover:ring-rose-400/30 transition-all duration-300"
+                      aria-label="Usuń sesję"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Hint "Zobacz szczegóły" */}
+                  <Link
+                    href={`/coach/sessions/${session.id}`}
+                    className="sr-only"
+                  >
+                    <Eye className="h-4 w-4" /> Zobacz szczegóły
+                  </Link>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ===== New-session / edit dialog ===== */}
+      {dialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-[#06070d]/80 backdrop-blur-md"
+            onClick={() => !isLoading && setDialogOpen(false)}
+            aria-hidden
+          />
+          {/* Modal */}
+          <div className="relative w-full max-w-3xl mt-4 rise-in">
+            <div className="glass-liquid rounded-3xl overflow-hidden">
+              {/* Modal header */}
+              <div className="relative px-6 sm:px-8 pt-6 pb-5 border-b border-white/[0.06]">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-violet-300/70">
+                      <span className="h-1 w-1 rounded-full bg-[#a855f7]" />
+                      {editingSession ? 'Edycja sesji' : 'Zakładanie sesji'}
+                    </div>
+                    <h2 className="font-display text-2xl font-bold text-gradient-violet">
+                      {editingSession ? 'Edytuj sesję' : 'Nowa sesja treningowa'}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => !isLoading && setDialogOpen(false)}
+                    className="grid place-items-center h-10 w-10 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.08] transition-all"
+                    aria-label="Zamknij"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="px-6 sm:px-8 py-6">
+                {/* Premium segmented tabs */}
+                <div className="relative mb-6 grid grid-cols-4 gap-1 glass-liquid rounded-2xl p-1.5">
+                  {TABS.map((t) => {
+                    const active = activeTab === t.id
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setActiveTab(t.id)}
+                        className={cn(
+                          'relative inline-flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium transition-all duration-300',
+                          active ? 'text-white' : 'text-white/55 hover:text-white/85'
+                        )}
+                      >
+                        {active && (
+                          <span
+                            className="absolute inset-0 rounded-xl ring-1 ring-inset"
+                            style={{ background: 'linear-gradient(135deg, #c084fc33 0%, #7c3aed1a 100%)', borderColor: '#c084fc55', boxShadow: '0 0 20px -6px #a855f7' }}
+                          />
+                        )}
+                        <t.icon className="relative h-3.5 w-3.5" />
+                        <span className="relative">{t.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* === Details tab === */}
+                {activeTab === 'details' && (
+                  <div className="space-y-5 rise-in">
+                    <div>
+                      <label htmlFor="title" className="block mb-2 text-sm font-medium text-white/80">Tytuł sesji <span className="text-violet-400">*</span></label>
+                      <div className="relative">
+                        <BookOpen className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-violet-300/60" />
+                        <input
+                          id="title"
+                          placeholder="np. Analiza demka z 15.01"
+                          value={formData.title}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                          required
+                          disabled={isLoading}
+                          className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#a855f7]/40 transition-all duration-300"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="student" className="block mb-2 text-sm font-medium text-white/80">Uczeń <span className="text-violet-400">*</span></label>
+                      <div className="relative">
+                        <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-violet-300/60 z-10" />
+                        <select
+                          id="student"
+                          value={formData.studentId}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, studentId: e.target.value }))}
+                          disabled={isLoading || !!editingSession}
+                          required
+                          className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#a855f7]/40 transition-all duration-300 disabled:opacity-50"
+                        >
+                          <option value="" className="bg-[#0b0c16]">Wybierz ucznia</option>
                           {students.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
+                            <option key={s.id} value={s.id} className="bg-[#0b0c16]">
                               {s.name || s.email}
-                            </SelectItem>
+                            </option>
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </select>
+                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/40">▾</span>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Opis sesji</Label>
-                      <Textarea
+
+                    <div>
+                      <label htmlFor="description" className="block mb-2 text-sm font-medium text-white/80">Opis sesji</label>
+                      <textarea
                         id="description"
                         placeholder="Cel sesji, uwagi wstępne..."
                         value={formData.description}
                         onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                         rows={3}
                         disabled={isLoading}
+                        className="w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#a855f7]/40 transition-all duration-300 resize-none"
                       />
                     </div>
+
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="scheduledAt">Data sesji</Label>
-                        <Input
-                          id="scheduledAt"
-                          type="datetime-local"
-                          value={formData.scheduledAt}
-                          onChange={(e) => setFormData((prev) => ({ ...prev, scheduledAt: e.target.value }))}
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
-                        <Select value={formData.status} onValueChange={(v) => setFormData((prev) => ({ ...prev, status: v as any }))} disabled={isLoading}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="DRAFT">Szkic</SelectItem>
-                            <SelectItem value="ACTIVE">Aktywna</SelectItem>
-                            <SelectItem value="COMPLETED">Zakończona</SelectItem>
-                            <SelectItem value="ARCHIVED">Zarchiwizowana</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="tags" className="space-y-4">
-                    <p className="text-sm text-muted-foreground">Wybierz tagi błędów do tej sesji. Możesz dodać notatkę do każdego tagu po zapisaniu.</p>
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          variant={formData.tagIds.includes(tag.id) ? 'default' : 'outline'}
-                          className={cn('cursor-pointer', tag.color && `bg-[${tag.color}] text-white border-[${tag.color}]`)}
-                          onClick={() => toggleTag(tag.id)}
-                          style={tag.color && !formData.tagIds.includes(tag.id) ? { borderColor: tag.color, color: tag.color } : undefined}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="videos" className="space-y-4">
-                    <p className="text-sm text-muted-foreground">Wybierz filmy do przypisania do tej sesji. System zaproponuje filmy na podstawie tagów.</p>
-                    <div className="max-h-60 overflow-y-auto space-y-2">
-                      {videos.map((video) => (
-                        <label key={video.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer transition-colors">
+                      <div>
+                        <label htmlFor="scheduledAt" className="block mb-2 text-sm font-medium text-white/80">Data sesji</label>
+                        <div className="relative">
+                          <Calendar className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-violet-300/60" />
                           <input
-                            type="checkbox"
-                            checked={formData.videoIds.includes(video.id)}
-                            onChange={() => toggleVideo(video.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            id="scheduledAt"
+                            type="datetime-local"
+                            value={formData.scheduledAt}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, scheduledAt: e.target.value }))}
+                            disabled={isLoading}
+                            className="h-12 w-full rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#a855f7]/40 transition-all duration-300 [color-scheme:dark]"
                           />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{video.title}</p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="notes" className="space-y-4">
-                    <p className="text-sm text-muted-foreground">Notatki do sesji zostaną dodane po utworzeniu.</p>
-                  </TabsContent>
-                </Tabs>
-
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Anuluj
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {editingSession ? 'Zapisz' : 'Utwórz sesję'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Search & Filter */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Szukaj sesji..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Wszystkie statusy" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Wszystkie</SelectItem>
-              <SelectItem value="DRAFT">Szkic</SelectItem>
-              <SelectItem value="ACTIVE">Aktywna</SelectItem>
-              <SelectItem value="COMPLETED">Zakończona</SelectItem>
-              <SelectItem value="ARCHIVED">Zarchiwizowana</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Sessions List */}
-        {filteredSessions.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              {search || statusFilter !== 'all' ? (
-                <>
-                  <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground">Nie znaleziono sesji</p>
-                </>
-              ) : (
-                <>
-                  <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground mb-4">Nie masz jeszcze żadnych sesji</p>
-                  <Button onClick={openAddDialog}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Utwórz pierwszą sesję
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {filteredSessions.map((session) => (
-              <Card key={session.id} className="overflow-hidden transition-shadow hover:shadow-lg">
-                <CardContent className="p-0">
-                  <div className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={session.student.avatarUrl || ''} alt={session.student.name || ''} />
-                            <AvatarFallback>{getInitials(session.student.name || 'U')}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-semibold truncate">{session.title}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{session.student.name || session.student.email}</p>
-                          </div>
-                        </div>
-                        <div className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
-                          <Badge variant="outline" className={cn(STATUS_COLORS[session.status], 'gap-1')}>
-                            {STATUS_LABELS[session.status]}
-                          </Badge>
-                          {session.scheduledAt && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {formatDateTime(session.scheduledAt)}
-                            </span>
-                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/coach/sessions/${session.id}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Zobacz szczegóły
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditDialog(session)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edytuj
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(session.id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Usuń
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/coach/sessions/${session.id}`}>
-                            <ArrowRight className="mr-2 h-4 w-4" />
-                            Otwórz
-                          </Link>
-                        </Button>
+                      <div>
+                        <label htmlFor="status" className="block mb-2 text-sm font-medium text-white/80">Status</label>
+                        <div className="relative">
+                          <select
+                            id="status"
+                            value={formData.status}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value as any }))}
+                            disabled={isLoading}
+                            className="h-12 w-full appearance-none rounded-xl bg-white/[0.04] backdrop-blur-xl ring-1 ring-inset ring-white/[0.06] px-4 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#a855f7]/40 transition-all duration-300 disabled:opacity-50"
+                          >
+                            <option value="DRAFT" className="bg-[#0b0c16]">Szkic</option>
+                            <option value="ACTIVE" className="bg-[#0b0c16]">Aktywna</option>
+                            <option value="COMPLETED" className="bg-[#0b0c16]">Zakończona</option>
+                            <option value="ARCHIVED" className="bg-[#0b0c16]">Zarchiwizowana</option>
+                          </select>
+                          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/40">▾</span>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Tags & Videos Preview */}
-                    <div className="mt-4 pt-4 border-t flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Tag className="h-4 w-4" />
-                        <span>{session.tags.length} tagów</span>
-                        {session.tags.length > 0 && (
-                          <div className="flex items-center gap-1 ml-2">
-                            {session.tags.slice(0, 3).map((t) => (
-                              <Badge key={t.tag.id} variant="secondary" className={cn('text-xs', t.tag.color && `bg-[${t.tag.color}] text-white border-[${t.tag.color}]`)}>
-                                {t.tag.name}
-                              </Badge>
-                            ))}
-                            {session.tags.length > 3 && (
-                              <Badge variant="outline" className="text-xs">+{session.tags.length - 3}</Badge>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Video className="h-4 w-4" />
-                        <span>{session.videos.length} filmów</span>
-                      </div>
-                      <span className="flex-1" />
-                      <span>{formatDate(session.createdAt)}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                )}
+
+                {/* === Tags tab === */}
+                {activeTab === 'tags' && (
+                  <div className="space-y-4 rise-in">
+                    <p className="text-sm text-white/50">Wybierz tagi błędów do tej sesji. Możesz dodać notatkę do każdego tagu po zapisaniu.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => {
+                        const selected = formData.tagIds.includes(tag.id)
+                        return (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => toggleTag(tag.id)}
+                            className={cn(
+                              'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-300 ring-1 ring-inset',
+                              selected
+                                ? 'bg-[#c084fc]/15 ring-[#c084fc]/40 text-violet-100 shadow-[0_0_18px_-6px_#a855f7]'
+                                : 'bg-white/[0.03] ring-white/[0.06] text-white/60 hover:text-white hover:ring-white/[0.12]'
+                            )}
+                          >
+                            <span className={cn('h-1.5 w-1.5 rounded-full', getTagDot(tag.color))} />
+                            {tag.name}
+                            {selected && <X className="h-3 w-3 opacity-60" />}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* === Videos tab === */}
+                {activeTab === 'videos' && (
+                  <div className="space-y-4 rise-in">
+                    <p className="text-sm text-white/50">Wybierz filmy do przypisania do tej sesji. System zaproponuje filmy na podstawie tagów.</p>
+                    <div className="max-h-72 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
+                      {videos.map((video) => {
+                        const selected = formData.videoIds.includes(video.id)
+                        return (
+                          <label
+                            key={video.id}
+                            className={cn(
+                              'flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ring-1 ring-inset',
+                              selected
+                                ? 'bg-[#c084fc]/10 ring-[#c084fc]/30'
+                                : 'bg-white/[0.03] ring-white/[0.06] hover:bg-white/[0.05]'
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleVideo(video.id)}
+                              className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#a855f7] focus:ring-[#a855f7]/40 focus:ring-2"
+                            />
+                            <div className="grid place-items-center h-9 w-9 rounded-lg bg-gradient-to-br from-[#c084fc]/20 to-[#7c3aed]/5 ring-1 ring-inset ring-white/10">
+                              <Video className="h-4 w-4 text-violet-300/80" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate text-white/85 text-sm">{video.title}</p>
+                            </div>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* === Notes tab === */}
+                {activeTab === 'notes' && (
+                  <div className="space-y-4 rise-in">
+                    <p className="text-sm text-white/50">Notatki do sesji zostaną dodane po utworzeniu.</p>
+                    <div className="glass-liquid rounded-2xl p-5 text-center">
+                      <Eye className="h-8 w-8 mx-auto mb-2 text-violet-300/60" />
+                      <p className="text-xs text-white/45">Po zapisaniu sesji będziesz mógł dodawać notatki do każdego tagu i filmu.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer */}
+                <div className="mt-7 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDialogOpen(false)}
+                    disabled={isLoading}
+                    className="h-11 inline-flex items-center gap-1.5 rounded-xl px-5 text-sm font-medium text-white/65 bg-white/[0.03] ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.06] hover:text-white transition-all disabled:opacity-50"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="shimmer-line relative inline-flex h-11 items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-semibold text-white shadow-[0_8px_30px_-10px_rgba(168,85,247,0.6)] transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                    style={{ background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)' }}
+                  >
+                    <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/15" />
+                    {isLoading ? (
+                      <Loader2 className="relative h-4 w-4 animate-spin" />
+                    ) : null}
+                    <span className="relative">{editingSession ? 'Zapisz' : 'Utwórz sesję'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </CoachLayout>
   )
 }

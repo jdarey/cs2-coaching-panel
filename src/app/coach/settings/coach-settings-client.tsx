@@ -3,16 +3,24 @@
 import { useState } from 'react'
 import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Switch } from '@/components/ui/switch'
-import { User, Mail, Lock, Shield, Bell, Palette, Moon, Sun, Loader2, Save, Globe, MessageCircle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import {
+  User,
+  Mail,
+  Lock,
+  Bell,
+  Globe,
+  Save,
+  Loader2,
+  Shield,
+  Trash2,
+  Moon,
+  Sun,
+  Monitor,
+  MessageCircle,
+  Sparkles,
+  Camera,
+} from 'lucide-react'
 
 interface User {
   id: string
@@ -43,7 +51,9 @@ interface CoachSettingsClientProps {
 
 export function CoachSettingsClient({ initialUser, initialSettings }: CoachSettingsClientProps) {
   const user = initialUser
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'appearance' | 'integrations' | 'account'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'notifications' | 'appearance'>(
+    'profile'
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: user.name || '',
@@ -91,12 +101,12 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (formData.newPassword !== formData.confirmPassword) {
       toast({ title: 'Błąd', description: 'Hasła nie są identyczne', variant: 'destructive' })
       return
     }
-    
+
     if (formData.newPassword.length < 6) {
       toast({ title: 'Błąd', description: 'Nowe hasło musi mieć minimum 6 znaków', variant: 'destructive' })
       return
@@ -164,263 +174,447 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     setTheme(newTheme)
     document.documentElement.classList.remove('light', 'dark')
     if (newTheme === 'system') {
-      document.documentElement.classList.add(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      document.documentElement.classList.add(
+        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      )
     } else {
       document.documentElement.classList.add(newTheme)
     }
     localStorage.setItem('theme', newTheme)
   }
 
+  const handleCardMouse = (e: React.MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+  }
+
+  const tabs = [
+    { value: 'profile', label: 'Profil', Icon: User },
+    { value: 'password', label: 'Hasło', Icon: Lock },
+    { value: 'notifications', label: 'Powiadomienia', Icon: Bell },
+    { value: 'appearance', label: 'Wygląd', Icon: Globe },
+  ] as const
+
+  const toggleItems = [
+    { key: 'email', label: 'Włącz powiadomienia emailowe', desc: 'Główny przełącznik' },
+    { key: 'sessionReminders', label: 'Przypomnienia o sesjach', desc: '24h i 1h przed sesją' },
+    { key: 'newStudents', label: 'Nowi uczniowie', desc: 'Gdy dodasz nowego ucznia' },
+    { key: 'progressUpdates', label: 'Aktualizacje postępu', desc: 'Gdy uczeń obejrzy film lub zmieni status' },
+  ] as const
+
+  const themeOptions: { value: 'light' | 'dark' | 'system'; label: string; desc: string; Icon: typeof Sun }[] = [
+    { value: 'light', label: 'Jasny', desc: 'Zawsze jasny', Icon: Sun },
+    { value: 'dark', label: 'Ciemny', desc: 'Zawsze ciemny', Icon: Moon },
+    { value: 'system', label: 'System', desc: 'Zgodny z systemem', Icon: Monitor },
+  ]
+
   return (
     <CoachLayout>
-      <div className="space-y-6 max-w-3xl">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ustawienia</h1>
-          <p className="text-muted-foreground mt-1">Zarządzaj swoim kontem i preferencjami panelu</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+        {/* Gradient header */}
+        <div className="mb-8 rise-in">
+          <div className="flex items-center gap-3">
+            <span className="relative grid h-11 w-11 place-items-center rounded-2xl glass-tinted">
+              <Shield className="h-5 w-5 text-[#d8b4fe]" />
+            </span>
+            <div>
+              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-violet">
+                Ustawienia trenera
+              </h1>
+              <p className="text-sm text-white/45 mt-0.5">
+                Zarządzaj swoim kontem i preferencjami panelu
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'notifications' | 'appearance' | 'integrations' | 'account')} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="profile"><User className="mr-2 h-4 w-4" /> Profil</TabsTrigger>
-            <TabsTrigger value="notifications"><Bell className="mr-2 h-4 w-4" /> Powiadomienia</TabsTrigger>
-            <TabsTrigger value="appearance"><Palette className="mr-2 h-4 w-4" /> Wygląd</TabsTrigger>
-            <TabsTrigger value="integrations"><Globe className="mr-2 h-4 w-4" /> Integracje</TabsTrigger>
-            <TabsTrigger value="account"><Shield className="mr-2 h-4 w-4" /> Konto</TabsTrigger>
-          </TabsList>
+        {/* Tabs with .tab-underline */}
+        <div className="relative rise-in mb-8" style={{ animationDelay: '60ms' }}>
+          <div className="glass-liquid relative flex items-center gap-1 rounded-2xl p-1 overflow-x-auto">
+            {tabs.map((t) => {
+              const active = activeTab === t.value
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => setActiveTab(t.value)}
+                  className={cn(
+                    'relative inline-flex items-center gap-2 h-12 px-4 sm:px-5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors',
+                    active ? 'text-white' : 'text-white/55 hover:text-white/80'
+                  )}
+                >
+                  <t.Icon className="h-4 w-4" />
+                  {t.label}
+                  {active && (
+                    <span className="tab-underline absolute left-3 right-3" style={{ left: '12px', right: '12px' }} />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informacje o profilu</CardTitle>
-                <CardDescription>Zarządzaj swoimi danymi osobowymi</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage src={user.avatarUrl || ''} alt={user.name || ''} />
-                    <AvatarFallback className="text-2xl">{getInitials(user.name || 'T')}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-lg font-medium">{user.name || 'Bez nazwy'}</p>
-                    <p className="text-muted-foreground">{user.email}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Trener od {formatDate(user.createdAt)}</p>
-                  </div>
+        {/* Tab content */}
+        <div className="max-w-3xl space-y-6">
+          {/* Profile tab */}
+          {activeTab === 'profile' && (
+            <section
+              onMouseMove={handleCardMouse}
+              className="glass-liquid spotlight rise-in rounded-3xl p-7"
+            >
+              <div className="mb-6 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                  <User className="h-5 w-5 text-[#d8b4fe]" />
+                </span>
+                <div>
+                  <h2 className="font-display text-xl font-bold text-gradient-violet">Profil</h2>
+                  <p className="text-xs text-white/45">Zarządzaj swoimi danymi osobowymi</p>
                 </div>
+              </div>
 
-                <form onSubmit={handleProfileUpdate} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Imię i nazwisko</Label>
-                    <Input
+              {/* Avatar preview */}
+              <div className="mb-6 flex items-center gap-4">
+                <div className="relative">
+                  {user.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name || ''}
+                      className="h-20 w-20 rounded-xl object-cover ring-1 ring-white/15"
+                    />
+                  ) : (
+                    <div className="grid h-20 w-20 place-items-center rounded-xl glass-tinted ring-1 ring-white/15 text-2xl font-bold text-white">
+                      {getInitials(user.name || 'T')}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl glass-tinted ring-1 ring-white/15">
+                    <Camera className="h-4 w-4 text-[#d8b4fe]" />
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-lg font-medium text-white truncate">{user.name || 'Bez nazwy'}</p>
+                  <p className="text-sm text-white/55 truncate">{user.email}</p>
+                  <p className="text-xs text-white/40 mt-1">Trener od {formatDate(user.createdAt)}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleProfileUpdate} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="name" className="text-xs font-medium text-white/55">
+                    Imię i nazwisko
+                  </label>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                       placeholder="Twoje imię"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#c084fc]/40 transition"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="email" className="text-xs font-medium text-white/55">Email</label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <input
                       id="email"
                       type="email"
                       value={formData.email}
                       disabled
-                      className="bg-muted"
+                      className="h-12 w-full rounded-xl bg-white/[0.02] border border-white/[0.08] pl-11 pr-4 text-sm text-white/45 cursor-not-allowed"
                     />
-                    <p className="text-xs text-muted-foreground">Zmiana emaila wymaga weryfikacji</p>
                   </div>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  <p className="text-xs text-white/40">Zmiana emaila wymaga weryfikacji</p>
+                </div>
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
                     Zapisz zmiany
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </button>
+                </div>
+              </form>
+            </section>
+          )}
 
-          {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Emailowe powiadomienia</CardTitle>
-                <CardDescription>Otrzymuj powiadomienia na email</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          {/* Password tab */}
+          {activeTab === 'password' && (
+            <section
+              onMouseMove={handleCardMouse}
+              className="glass-liquid spotlight rise-in rounded-3xl p-7"
+            >
+              <div className="mb-6 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                  <Lock className="h-5 w-5 text-[#d8b4fe]" />
+                </span>
+                <div>
+                  <h2 className="font-display text-xl font-bold text-gradient-violet">Hasło</h2>
+                  <p className="text-xs text-white/45">Zaktualizuj swoje hasło dostępu</p>
+                </div>
+              </div>
+
+              <form onSubmit={handlePasswordChange} className="space-y-4">
                 {[
-                  { key: 'email', label: 'Włącz powiadomienia emailowe', desc: 'Główny przełącznik' },
-                  { key: 'sessionReminders', label: 'Przypomnienia o sesjach', desc: '24h i 1h przed sesją' },
-                  { key: 'newStudents', label: 'Nowi uczniowie', desc: 'Gdy dodasz nowego ucznia' },
-                  { key: 'progressUpdates', label: 'Aktualizacje postępu', desc: 'Gdy uczeń obejrzy film lub zmieni status' },
-                ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{item.label}</p>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  { id: 'currentPassword', label: 'Obecne hasło' },
+                  { id: 'newPassword', label: 'Nowe hasło' },
+                  { id: 'confirmPassword', label: 'Potwierdź nowe hasło' },
+                ].map((f) => (
+                  <div key={f.id} className="space-y-1.5">
+                    <label htmlFor={f.id} className="text-xs font-medium text-white/55">{f.label}</label>
+                    <div className="relative">
+                      <Lock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                      <input
+                        id={f.id}
+                        type="password"
+                        value={formData[f.id as 'currentPassword' | 'newPassword' | 'confirmPassword']}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, [f.id]: e.target.value }))
+                        }
+                        required
+                        minLength={f.id === 'newPassword' ? 6 : undefined}
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#c084fc]/40 transition"
+                      />
                     </div>
-                    <Switch
-                      checked={notifications[item.key as keyof typeof notifications]}
-                      onCheckedChange={(checked) => handleNotificationChange(item.key, checked)}
-                    />
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    Zmień hasło
+                  </button>
+                </div>
+              </form>
 
-          {/* Appearance Tab */}
-          <TabsContent value="appearance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Motyw</CardTitle>
-                <CardDescription>Wybierz preferowany motyw interfejsu</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {(['light', 'dark', 'system'] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => handleThemeChange(t)}
+              {/* Danger zone */}
+              <div className="mt-8 rounded-2xl p-5 bg-red-500/[0.07] border border-red-500/20 backdrop-blur-2xl ring-1 ring-red-500/10">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-500/15 ring-1 ring-red-500/25">
+                    <Trash2 className="h-5 w-5 text-red-300" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-red-200">Strefa niebezpieczeństwa</p>
+                    <p className="text-sm text-white/50 mt-0.5">
+                      Nieodwracalne akcje. Trwale usunę swoje konto, uczniów, sesje i wszystkie dane.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => alert('Funkcja do zaimplementowania')}
+                    className="inline-flex items-center gap-2 rounded-xl px-4 h-10 text-sm font-medium text-red-200 border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 transition"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Usuń konto
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Notifications tab */}
+          {activeTab === 'notifications' && (
+            <section
+              onMouseMove={handleCardMouse}
+              className="glass-liquid spotlight rise-in rounded-3xl p-7 space-y-7"
+            >
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                  <Bell className="h-5 w-5 text-[#d8b4fe]" />
+                </span>
+                <div>
+                  <h2 className="font-display text-xl font-bold text-gradient-violet">Powiadomienia</h2>
+                  <p className="text-xs text-white/45">Otrzymuj powiadomienia o aktywności</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {toggleItems.map((item) => {
+                  const on = notifications[item.key as keyof typeof notifications]
+                  return (
+                    <div
+                      key={item.key}
+                      className="flex items-center justify-between gap-4 rounded-2xl p-4 glass-liquid"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-white">{item.label}</p>
+                        <p className="text-sm text-white/45">{item.desc}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleNotificationChange(item.key, !on)}
+                        className={cn(
+                          'relative h-9 w-16 shrink-0 rounded-full transition-all',
+                          on
+                            ? 'bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_0_18px_-2px_rgba(168,85,247,0.6)]'
+                            : 'glass-tinted'
+                        )}
+                        aria-pressed={on}
+                        role="switch"
+                        aria-checked={on}
+                      >
+                        <span
+                          className={cn(
+                            'absolute top-1 grid h-7 w-7 place-items-center rounded-full transition-all',
+                            on
+                              ? 'left-8 bg-white text-[#7c3aed]'
+                              : 'left-1 bg-white/80 text-white/40'
+                          )}
+                        >
+                          <span className="h-2 w-2 rounded-full bg-current" />
+                        </span>
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Discord integration */}
+              <div className="rounded-2xl p-5 glass-liquid">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                    <MessageCircle className="h-5 w-5 text-[#d8b4fe]" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white">Powiadomienia Discord</p>
+                    <p className="text-sm text-white/45">Włącz, aby otrzymywać webhook powiadomienia</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleNotificationChange('discord', !notifications.discord)
+                    }}
+                    className={cn(
+                      'relative h-9 w-16 shrink-0 rounded-full transition-all',
+                      notifications.discord
+                        ? 'bg-gradient-to-r from-[#c084fc] to-[#7c3aed] shadow-[0_0_18px_-2px_rgba(168,85,247,0.6)]'
+                        : 'glass-tinted'
+                    )}
+                    aria-pressed={notifications.discord}
+                    role="switch"
+                    aria-checked={notifications.discord}
+                  >
+                    <span
                       className={cn(
-                        'p-4 rounded-lg border-2 transition-all text-left',
-                        theme === t
-                          ? 'border-primary bg-primary/5'
-                          : 'border-input hover:border-primary/50'
+                        'absolute top-1 grid h-7 w-7 place-items-center rounded-full transition-all',
+                        notifications.discord
+                          ? 'left-8 bg-white text-[#7c3aed]'
+                          : 'left-1 bg-white/80 text-white/40'
                       )}
                     >
-                      <div className="flex items-center gap-3">
-                        {t === 'light' && <Sun className="h-6 w-6 text-yellow-500" />}
-                        {t === 'dark' && <Moon className="h-6 w-6 text-blue-500" />}
-                        {t === 'system' && <Shield className="h-6 w-6 text-gray-500" />}
-                        <div>
-                          <p className="font-medium capitalize">{t}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {t === 'light' ? 'Zawsze jasny' : t === 'dark' ? 'Zawsze ciemny' : 'Zgodny z systemem'}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Integrations Tab */}
-          <TabsContent value="integrations" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Discord Webhook</CardTitle>
-                <CardDescription>Otrzymuj powiadomienia na Discordu o aktywności uczniów</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <MessageCircle className="h-10 w-10 text-purple-600 bg-purple-100 rounded-lg p-2" />
-                  <div className="flex-1">
-                    <Switch
-                      checked={notifications.discord}
-                      onCheckedChange={(checked) => {
-                        handleNotificationChange('discord', checked)
-                        setNotifications((prev) => ({ ...prev, discord: checked }))
-                      }}
-                    />
-                    <div className="ml-3">
-                      <p className="font-medium">Powiadomienia Discord</p>
-                      <p className="text-sm text-muted-foreground">Włącz, aby otrzymywać webhook powiadomienia</p>
-                    </div>
-                  </div>
+                      <span className="h-2 w-2 rounded-full bg-current" />
+                    </span>
+                  </button>
                 </div>
 
                 {notifications.discord && (
                   <div className="space-y-2">
-                    <Label htmlFor="discordWebhook">Webhook URL</Label>
-                    <Input
-                      id="discordWebhook"
-                      placeholder="https://discord.com/api/webhooks/..."
-                      value={discordWebhook}
-                      onChange={(e) => setDiscordWebhook(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Utwórz webhook w ustawieniach kanału Discorda: Ustawienia kanału → Integracje → Webhooki
+                    <label htmlFor="discordWebhook" className="text-xs font-medium text-white/55">
+                      Webhook URL
+                    </label>
+                    <div className="relative">
+                      <Globe className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                      <input
+                        id="discordWebhook"
+                        placeholder="https://discord.com/api/webhooks/..."
+                        value={discordWebhook}
+                        onChange={(e) => setDiscordWebhook(e.target.value)}
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#a855f7]/25 focus:border-[#c084fc]/40 transition"
+                      />
+                    </div>
+                    <p className="text-xs text-white/40">
+                      Utwórz webhook w ustawieniach kanału Discorda: Ustawienia kanału → Integracje →
+                      Webhooki
                     </p>
-                    <Button onClick={handleDiscordSave} disabled={isLoading}>
-                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    <button
+                      onClick={handleDiscordSave}
+                      disabled={isLoading}
+                      className="shimmer-line relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-[#c084fc] to-[#7c3aed] disabled:opacity-60 transition"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
                       Zapisz webhook
-                    </Button>
+                    </button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </section>
+          )}
 
-          {/* Account Tab */}
-          <TabsContent value="account" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Zmień hasło</CardTitle>
-                <CardDescription>Zaktualizuj swoje hasło dostępu</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Obecne hasło</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      value={formData.currentPassword}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">Nowe hasło</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={formData.newPassword}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, newPassword: e.target.value }))}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Potwierdź nowe hasło</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Zmień hasło
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card className="border-destructive/50">
-              <CardHeader>
-                <CardTitle className="text-destructive">Strefa niebezpieczeństwa</CardTitle>
-                <CardDescription>Nieodwracalne akcje</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-destructive/5">
-                  <div>
-                    <p className="font-medium text-destructive">Usuń konto</p>
-                    <p className="text-sm text-muted-foreground">Trwale usunę swoje konto, uczniów, sesje i wszystkie dane</p>
-                  </div>
-                  <Button variant="destructive" onClick={() => alert('Funkcja do zaimplementowania')}>
-                    Usuń konto
-                  </Button>
+          {/* Appearance tab */}
+          {activeTab === 'appearance' && (
+            <section
+              onMouseMove={handleCardMouse}
+              className="glass-liquid spotlight rise-in rounded-3xl p-7"
+            >
+              <div className="mb-6 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                  <Globe className="h-5 w-5 text-[#d8b4fe]" />
+                </span>
+                <div>
+                  <h2 className="font-display text-xl font-bold text-gradient-violet">Wygląd</h2>
+                  <p className="text-xs text-white/45">Wybierz preferowany motyw interfejsu</p>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                {themeOptions.map((opt) => {
+                  const active = theme === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleThemeChange(opt.value)}
+                      className={cn(
+                        'relative overflow-hidden rounded-2xl p-5 text-left transition-all',
+                        active
+                          ? 'glass-tinted ring-1 ring-[#c084fc]/40'
+                          : 'glass-liquid hover:border-white/[0.12]'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'grid h-11 w-11 place-items-center rounded-xl transition',
+                          active ? 'glass-tinted' : 'glass-liquid'
+                        )}
+                      >
+                        <opt.Icon
+                          className={cn(
+                            'h-5 w-5',
+                            active ? 'text-[#d8b4fe]' : 'text-white/55'
+                          )}
+                        />
+                      </span>
+                      <p className="mt-3 font-medium text-white">{opt.label}</p>
+                      <p className="text-xs text-white/45 mt-0.5">{opt.desc}</p>
+                      {active && (
+                        <span className="absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-r from-[#c084fc] to-[#7c3aed]">
+                          <Sparkles className="h-3 w-3 text-white" />
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+        </div>
       </div>
     </CoachLayout>
   )
