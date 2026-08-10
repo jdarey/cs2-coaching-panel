@@ -91,6 +91,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
 
   // Stable player DOM id (per videoId)
   const playerId = useRef(`yt-player-${videoId}`)
+  const resizeObserverRef = useRef<ResizeObserver | null>(null)
 
   // 1. Load YouTube IFrame API
   useEffect(() => {
@@ -166,6 +167,14 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
           const playbackQuality = event.target.getPlaybackQuality?.() ?? qualityVq
           setCurrentQuality(playbackQuality)
 
+          // Force highest available quality on initial load
+          if (qualities.length > 0) {
+            const highest = qualities[0] // YouTube returns highest first
+            if (highest !== playbackQuality) {
+              try { event.target.setPlaybackQuality?.(highest) } catch (_) {}
+            }
+          }
+
           // Force quality via API in case vq param was ignored
           if (qualityVq !== 'auto' && playbackQuality !== qualityVq) {
             try { event.target.setPlaybackQuality?.(qualityVq) } catch (_) {}
@@ -174,6 +183,23 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
           // If this was a quality-change reinit, hide the overlay now
           if (isReinitialising) {
             setIsReinitialising(false)
+          }
+
+          // Setup resize observer to force quality when player grows
+          if (containerRef.current && !resizeObserverRef.current) {
+            resizeObserverRef.current = new ResizeObserver(() => {
+              if (playerRef.current?.getPlaybackQuality) {
+                const current = playerRef.current.getPlaybackQuality()
+                const available = playerRef.current.getAvailableQualityLevels?.() ?? []
+                if (available.length > 0) {
+                  const highest = available[0]
+                  if (current !== highest) {
+                    try { playerRef.current.setPlaybackQuality(highest) } catch (_) {}
+                  }
+                }
+              }
+            })
+            resizeObserverRef.current.observe(containerRef.current)
           }
         },
         onStateChange: (event: any) => {
@@ -211,6 +237,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       if (playerRef.current) {
         try { playerRef.current.destroy() } catch (_) {}
         playerRef.current = null
+      }
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect()
+        resizeObserverRef.current = null
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
