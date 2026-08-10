@@ -239,6 +239,23 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     }
   }, [isReady, vq, currentQuality])
 
+  // 3c. Periodic quality enforcement - YouTube often ignores first request
+  useEffect(() => {
+    if (!isReady || !playerRef.current?.getPlaybackQuality) return
+    let interval: NodeJS.Timeout
+    interval = setInterval(() => {
+      if (!playerRef.current) return
+      const actual = playerRef.current.getPlaybackQuality()
+      if (actual && actual !== vq && vq !== 'auto') {
+        // Quality didn't stick, force it again
+        try {
+          playerRef.current.setPlaybackQuality(vq)
+        } catch (_) {}
+      }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [isReady, vq])
+
   // 4. Controls auto-hide
   const resetControlsTimer = useCallback(() => {
     setShowControls(true)
@@ -316,8 +333,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   }
 
   /**
-   * Quality change via setPlaybackQuality + loadVideoById for immediate effect.
-   * No player remount needed - avoids removeChild errors.
+   * Quality change - uses multiple methods for reliability.
+   * 1. setPlaybackQuality (instant suggestion)
+   * 2. loadVideoById with suggestedQuality object (reloads at quality)
+   * 3. cueVideoById as fallback (more reliable for quality)
    */
   const setQuality = (q: string) => {
     if (!playerRef.current) return
@@ -325,7 +344,6 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     const t          = playerRef.current.getCurrentTime?.() ?? 0
     const wasPlaying = isPlaying
 
-    // Store params in case we need to reinit
     reinitStartRef.current = t
     reinitPlayRef.current  = wasPlaying
     reinitVqRef.current    = q
@@ -334,29 +352,38 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     setVq(q)
     setShowQualityMenu(false)
 
-    // Show buffering overlay
     setIsReinitialising(true)
 
-    // Method 1: Try setPlaybackQuality (instant, no reload)
-    const didSet = forceQuality(q)
+    // Method 1: setPlaybackQuality (instant, but YouTube may ignore)
+    forceQuality(q)
 
-    // Method 2: If that didn't work, use loadVideoById with suggestedQuality
-    // This reloads the video at the new quality without destroying the player
+    // Method 2: loadVideoById with suggestedQuality - more reliable
+    // Signature: loadVideoById(videoId, startSeconds, suggestedQuality)
     if (playerRef.current.loadVideoById) {
       try {
         playerRef.current.loadVideoById(videoId, t, q)
       } catch (_) {}
     }
 
-    // If video was playing, ensure it resumes (loadVideoById may pause)
+    // Method 3: Fallback to cueVideoById (often more reliable for quality)
+    setTimeout(() => {
+      const actualQuality = playerRef.current?.getPlaybackQuality?.()
+      if (actualQuality && actualQuality !== q && playerRef.current.cueVideoById) {
+        try {
+          playerRef.current.cueVideoById(videoId, t, q)
+          if (wasPlaying) {
+            setTimeout(() => playerRef.current?.playVideo(), 50)
+          }
+        } catch (_) {}
+      }
+    }, 200)
+
+    // Ensure resume if playing
     if (wasPlaying) {
-      setTimeout(() => {
-        playerRef.current?.playVideo()
-      }, 100)
+      setTimeout(() => playerRef.current?.playVideo(), 150)
     }
 
-    // Hide reinit overlay after a short delay
-    setTimeout(() => setIsReinitialising(false), 800)
+    setTimeout(() => setIsReinitialising(false), 1000)
 
     resetControlsTimer()
   }
