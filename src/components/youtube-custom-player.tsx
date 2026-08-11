@@ -159,6 +159,11 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
         // vq sets quality at the URL level - force 4K
         vq:             qualityVq || 'hd2160',
+        // Additional UI hiding parameters
+        color:          'white',
+        loop:           0,
+        enablejsapi:    1,
+        origin:         window.location.origin,
       },
       events: {
         onReady: (event: any) => {
@@ -512,10 +517,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       onMouseLeave={() => { isPlaying && !isEnded && setShowControls(false); setShowQualityMenu(false) }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. YouTube iframe — render at 4x resolution so YouTube ABR picks 4K quality.
-           Visually crop to normal size via overflow:hidden on wrapper.
-           pointer-events:none blocks the native center play button. */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef} style={{ transform: 'scale(0.25)', transformOrigin: 'top left', width: '400%', height: '400%' }}>
+      {/* 1. YouTube iframe — render at 6x resolution so YouTube ABR picks 4K quality.
+           Aggressive crop (overflow:hidden) pushes title, share, playlist, logo completely out of view.
+           pointer-events:none on wrapper blocks native center play button. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef} style={{ transform: 'scale(0.1667)', transformOrigin: 'top left', width: '600%', height: '600%' }}>
         <div
           id={mountId}
           className="absolute inset-0"
@@ -533,15 +538,6 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
       {/* 3b. Base cover layer - always present to block any YouTube UI bleed-through */}
       <div className="absolute inset-0 z-15 bg-black/0 pointer-events-none" />
-      {/* 3c. Targeted YouTube UI covers (transparent but block native elements) */}
-      {/* Top: video title + Watch on YouTube button */}
-      <div className="absolute top-0 left-0 right-0 z-25 h-10 bg-black/0 pointer-events-none" />
-      {/* Left: Share/udostępnij button (appears on hover) */}
-      <div className="absolute left-0 top-10 bottom-10 z-25 w-10 bg-black/0 pointer-events-none" />
-      {/* Right: Playlist / next video button */}
-      <div className="absolute right-0 top-10 bottom-10 z-25 w-12 bg-black/0 pointer-events-none" />
-      {/* Bottom-right: YouTube logo (appears on hover) */}
-      <div className="absolute bottom-0 right-0 z-25 w-20 h-10 bg-black/0 pointer-events-none" />
 
       {/* 4. Paused cinematic dim */}
       {!isPlaying && isReady && !isEnded && hasPlayed && !showThumbnail && !isReinitialising && (
