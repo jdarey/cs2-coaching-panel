@@ -509,21 +509,38 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       onMouseLeave={() => { isPlaying && !isEnded && setShowControls(false); setShowQualityMenu(false) }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. YouTube iframe — render at 6x resolution so YouTube ABR picks 4K quality.
-           Aggressive crop (overflow:hidden) pushes title, share, playlist, logo completely out of view.
-           pointer-events:none on wrapper blocks native center play button. */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" ref={iframeWrapRef} style={{ transform: 'scale(0.1667)', transformOrigin: 'top left', width: '600%', height: '600%' }}>
+      {/* 1. YouTube iframe — two nested wrappers:
+           inner renders the player on a 6x canvas (so YouTube's ABR picks the
+           highest available quality), scaled back to exactly the container size;
+           outer applies a ~1.15x centered overscan zoom. Net effect: the video
+           fills the player at 1.15x, while every YouTube edge element (title,
+           "Watch on YouTube" link, share, playlist pill, logo watermark, channel
+           row) is pushed fully outside the viewport. pointer-events:none blocks
+           the native center play button. */}
+      <div className="absolute inset-0 pointer-events-none z-0" ref={iframeWrapRef} style={{ transform: 'scale(1.15)', transformOrigin: 'center center' }}>
         <div
-          id={mountId}
           className="absolute inset-0"
-          style={{ width: '100%', height: '100%' }}
-        />
+          style={{ transform: 'scale(0.1667)', transformOrigin: 'top left', width: '600%', height: '600%' }}
+        >
+          <div
+            id={mountId}
+            className="absolute inset-0"
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
       </div>
 
-      {/* 2. Student badge */}
-      <div className="pointer-events-none absolute top-4 left-4 z-20 flex items-center gap-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 ring-1 ring-white/5">
-        <span className="h-2 w-2 rounded-full bg-[#2de5ca] animate-pulse" />
-        <span className="text-[11px] font-semibold text-white/90 truncate max-w-[200px]">{studentName}</span>
+      {/* 2. Opaque top strip — covers the whole top edge so no YouTube
+           title / logo / link can ever bleed through, at any scale. */}
+      <div className="pointer-events-none absolute top-0 left-0 right-0 z-20 h-12 flex items-center justify-between gap-3 px-3 bg-[#060606]">
+        <span className="inline-flex items-center gap-2 rounded-full bg-black/50 border border-white/10 px-3.5 py-1 ring-1 ring-white/5">
+          <span className="h-2 w-2 rounded-full bg-[#2de5ca] animate-pulse" />
+          <span className="text-[11px] font-semibold text-white/90 truncate max-w-[200px]">{studentName}</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/40 ring-1 ring-white/10">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#2de5ca]/80" />
+          Wideo treningowe
+        </span>
       </div>
 
       {/* 3. Click-capture overlay (ALWAYS) — covers YouTube native play button at all times */}
