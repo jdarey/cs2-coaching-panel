@@ -538,6 +538,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
       {/* 3b. Base cover layer - always present to block any YouTube UI bleed-through */}
       <div className="absolute inset-0 z-15 bg-black/0 pointer-events-none" />
+      {/* 3c. SOLID COVER - blocks ALL YouTube UI until video is actually playing */}
+      {!isPlaying && (
+        <div className="absolute inset-0 z-35 bg-black pointer-events-none" />
+      )}
 
       {/* 4. Paused cinematic dim */}
       {!isPlaying && isReady && !isEnded && hasPlayed && !showThumbnail && !isReinitialising && (
