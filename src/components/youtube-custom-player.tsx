@@ -47,6 +47,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const [availableQualities, setAvailableQualities] = useState<string[]>([])
   const [currentQuality,     setCurrentQuality]     = useState<string>(DEFAULT_VQ)
   const [showQualityMenu,    setShowQualityMenu]    = useState(false)
+  // Bumped on quality change -> rebuilds the player with the vq URL param,
+  // the only quality mechanism YouTube embeds reliably honor.
+  const [playerEpoch, setPlayerEpoch] = useState(0)
   // vq tracks the URL parameter for the current player instance
   const [vq, setVq] = useState<string>(DEFAULT_VQ)
   // Mirror of vq readable from closures (resize observer) that would otherwise capture stale state
@@ -66,6 +69,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const reinitStartRef  = useRef(0)
   const reinitPlayRef   = useRef(false)
   const reinitVqRef     = useRef(DEFAULT_VQ)
+  const reinitActiveRef = useRef(false)
 
   // Removed playerKey remount - causes removeChild errors
 
@@ -193,7 +197,12 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
             
             // Prefer specific high-quality codes over generic "first"
             const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
-            const targetQuality = preferredOrder.find(q => available.includes(q)) || available[0]
+            const highest = preferredOrder.find(q => available.includes(q)) || available[0]
+            // An explicit user choice is authoritative; only auto-pick the
+            // highest available when nothing has been selected (default).
+            const desired = reinitVqRef.current
+            const userChose = desired !== DEFAULT_VQ && desired !== 'auto'
+            const targetQuality = userChose ? desired : highest
             const current = player.getPlaybackQuality?.()
             
             if (current !== targetQuality) {
@@ -223,7 +232,8 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
           forceHighQuality(event.target)
 
           // If this was a quality-change reinit, hide the overlay now
-          if (isReinitialising) {
+          if (reinitActiveRef.current) {
+            reinitActiveRef.current = false
             setIsReinitialising(false)
           }
 
@@ -236,10 +246,11 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
                 if (available.length > 0) {
                   const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
                   const highest = preferredOrder.find(q => available.includes(q)) || available[0]
-                  // Respect the user's chosen quality; only auto-pick the best
-                  // when nothing has been selected yet (default).
+                  // An explicit user choice is authoritative; only auto-pick
+                  // the best when nothing has been selected yet (default).
                   const desired = vqRef.current
-                  const target = desired !== 'auto' && available.includes(desired) ? desired : highest
+                  const userChose = desired !== DEFAULT_VQ && desired !== 'auto'
+                  const target = userChose ? desired : highest
                   if (current !== target) {
                     try { 
                       if (playerRef.current.setPlaybackQualityRange) {
@@ -296,7 +307,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isApiReady, videoId])
+  }, [isApiReady, videoId, playerEpoch])
 
   // 3. Time polling
   useEffect(() => {
@@ -331,12 +342,17 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       if (!playerRef.current) return
       const actual = playerRef.current.getPlaybackQuality()
       const available = playerRef.current.getAvailableQualityLevels?.() ?? []
-      if (available.length === 0) return
-      // Desired = user's explicit choice, otherwise the highest available level
+      // An explicit user choice is authoritative — force it even when the
+      // available list is incomplete (YouTube sometimes reports a partial set).
       const desired = vqRef.current
-      const target = desired !== 'auto' && available.includes(desired)
-        ? desired
-        : preferredOrder.find(q => available.includes(q)) || available[0]
+      const userChose = desired !== DEFAULT_VQ && desired !== 'auto'
+      let target: string
+      if (userChose) {
+        target = desired
+      } else {
+        if (available.length === 0) return
+        target = preferredOrder.find(q => available.includes(q)) || available[0]
+      }
       if (actual && actual !== target) {
         // Quality didn't stick, force it again with both methods
         try {
@@ -451,59 +467,20 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     setShowQualityMenu(false)
 
     setIsReinitialising(true)
+    reinitActiveRef.current = true
 
-    const player = playerRef.current
-    // The user picked a concrete quality from the menu (which lists only
-    // available levels) — apply exactly that choice. The "best available"
-    // logic belongs only to the initial auto-select (forceHighQuality).
-    const targetQuality = q
+    // Rebuild the player with vq=<choice> in the URL. setPlaybackQuality is
+    // only a soft request that YouTube's ABR often overrides; the vq URL
+    // parameter is honored at player load, so the chosen quality sticks.
+    setPlayerEpoch(e => e + 1)
 
-    // Method 1: setPlaybackQualityRange (newer API) - locks min/max quality
-    if (player.setPlaybackQualityRange) {
-      try { player.setPlaybackQualityRange({ min: targetQuality, max: targetQuality }) } catch (_) {}
-    }
-
-    // Method 2: setPlaybackQuality
-    try { player.setPlaybackQuality?.(targetQuality) } catch (_) {}
-
-    // Method 3: loadVideoById with suggestedQuality
-    if (player.loadVideoById) {
-      try { player.loadVideoById(videoId, t, targetQuality) } catch (_) {}
-    }
-
-    // Method 4: cueVideoById fallback (after delay)
+    // Fallback: never leave the reinit overlay stuck if the rebuild stalls
     setTimeout(() => {
-      const actualQuality = player.getPlaybackQuality?.()
-      if (actualQuality && actualQuality !== targetQuality && player.cueVideoById) {
-        try {
-          player.cueVideoById(videoId, t, targetQuality)
-          if (wasPlaying) setTimeout(() => player.playVideo(), 50)
-        } catch (_) {}
+      if (reinitActiveRef.current) {
+        reinitActiveRef.current = false
+        setIsReinitialising(false)
       }
-    }, 200)
-
-    // Ensure resume if playing
-    if (wasPlaying) {
-      setTimeout(() => player?.playVideo(), 150)
-    }
-
-    // Retry loop - YouTube often ignores first few attempts
-    let retries = 0
-    const retryForce = () => {
-      if (retries >= 3) return
-      const current = player.getPlaybackQuality?.()
-      if (current && current !== targetQuality) {
-        retries++
-        if (player.setPlaybackQualityRange) {
-          try { player.setPlaybackQualityRange({ min: targetQuality, max: targetQuality }) } catch (_) {}
-        }
-        try { player.setPlaybackQuality?.(targetQuality) } catch (_) {}
-        setTimeout(retryForce, 500 * retries)
-      }
-    }
-    setTimeout(retryForce, 500)
-
-    setTimeout(() => setIsReinitialising(false), 1000)
+    }, 8000)
 
     resetControlsTimer()
   }
