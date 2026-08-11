@@ -55,6 +55,12 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   // Mirror of vq readable from closures (resize observer) that would otherwise capture stale state
   const vqRef = useRef<string>(DEFAULT_VQ)
 
+  // Canvas scale for the iframe: 6x makes YouTube's ABR stream the highest
+  // available quality (used for the default / Auto mode). When the user picks
+  // a specific quality, the player is rebuilt at true 1x size so YouTube
+  // honors the vq URL parameter exactly instead of ABR overriding it.
+  const canvasScale = vq === DEFAULT_VQ || vq === 'auto' ? 6 : 1
+
   // Thumbnail
   const [showThumbnail,   setShowThumbnail]   = useState(true)
   const [thumbnailFading, setThumbnailFading] = useState(false)
@@ -314,6 +320,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     let interval: NodeJS.Timeout
     if (isPlaying && playerRef.current?.getCurrentTime) {
       interval = setInterval(() => {
+        // Guard against the player being destroyed mid-rebuild (quality
+        // change) — the ref may briefly point at a stale/destroyed object.
+        if (!playerRef.current?.getCurrentTime) return
         setCurrentTime(playerRef.current.getCurrentTime())
         if (duration === 0) setDuration(playerRef.current.getDuration() || 0)
       }, 250)
@@ -339,7 +348,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
     let interval: NodeJS.Timeout
     interval = setInterval(() => {
-      if (!playerRef.current) return
+      // Skip while a rebuild is in flight (player destroyed mid quality change)
+      if (!playerRef.current || reinitActiveRef.current) return
+      if (!playerRef.current.getPlaybackQuality) return
       const actual = playerRef.current.getPlaybackQuality()
       const available = playerRef.current.getAvailableQualityLevels?.() ?? []
       // An explicit user choice is authoritative — force it even when the
@@ -509,39 +520,27 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       onMouseLeave={() => { isPlaying && !isEnded && setShowControls(false); setShowQualityMenu(false) }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. YouTube iframe — two nested wrappers:
-           inner renders the player on a 6x canvas (so YouTube's ABR picks the
-           highest available quality), scaled back to exactly the container size;
-           outer applies a ~1.15x centered overscan zoom. Net effect: the video
-           fills the player at 1.15x, while every YouTube edge element (title,
-           "Watch on YouTube" link, share, playlist pill, logo watermark, channel
-           row) is pushed fully outside the viewport. pointer-events:none blocks
-           the native center play button. */}
-      <div className="absolute inset-0 pointer-events-none z-0" ref={iframeWrapRef} style={{ transform: 'scale(1.15)', transformOrigin: 'center center' }}>
+      {/* 1. YouTube iframe — rendered on a ${canvasScale}x canvas and scaled
+           back to exactly the container size: full frame, no zoom, no crop.
+           6x drives YouTube's ABR to the highest available quality (default /
+           Auto mode); at 1x (specific quality chosen) YouTube honors the vq
+           URL parameter exactly, so a lower choice actually sticks. The YouTube
+           UI is hidden by the layers above (hover never reaches the iframe —
+           the click-capture overlay at z-30 blocks all pointer events — and
+           the soft top gradient masks the title / "Watch on YouTube" / share
+           corner). pointer-events:none blocks the native center play button. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" ref={iframeWrapRef} style={{ transform: `scale(${1 / canvasScale})`, transformOrigin: 'top left', width: `${canvasScale * 100}%`, height: `${canvasScale * 100}%` }}>
         <div
+          id={mountId}
           className="absolute inset-0"
-          style={{ transform: 'scale(0.1667)', transformOrigin: 'top left', width: '600%', height: '600%' }}
-        >
-          <div
-            id={mountId}
-            className="absolute inset-0"
-            style={{ width: '100%', height: '100%' }}
-          />
-        </div>
+          style={{ width: '100%', height: '100%' }}
+        />
       </div>
 
-      {/* 2. Opaque top strip — covers the whole top edge so no YouTube
-           title / logo / link can ever bleed through, at any scale. */}
-      <div className="pointer-events-none absolute top-0 left-0 right-0 z-20 h-12 flex items-center justify-between gap-3 px-3 bg-[#060606]">
-        <span className="inline-flex items-center gap-2 rounded-full bg-black/50 border border-white/10 px-3.5 py-1 ring-1 ring-white/5">
-          <span className="h-2 w-2 rounded-full bg-[#2de5ca] animate-pulse" />
-          <span className="text-[11px] font-semibold text-white/90 truncate max-w-[200px]">{studentName}</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/40 ring-1 ring-white/10">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#2de5ca]/80" />
-          Wideo treningowe
-        </span>
-      </div>
+      {/* 2. Soft top gradient — masks the YouTube title / "Watch on YouTube" /
+           share corner (which overlay the top of the video frame) with a
+           gentle fade that blends into the footage. Not a hard bar. */}
+      <div className="pointer-events-none absolute top-0 left-0 right-0 z-20 h-16 bg-gradient-to-b from-black/85 via-black/35 to-transparent" />
 
       {/* 3. Click-capture overlay (ALWAYS) — covers YouTube native play button at all times */}
       <div className="absolute inset-0 z-30 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
@@ -552,14 +551,15 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         <div className="absolute inset-0 z-50 bg-black pointer-events-none" />
       )}
 
-      {/* 4. Paused cinematic dim */}
+      {/* 4. Paused cinematic dim — opaque enough that YouTube's paused
+           overlay (native play button / title) can never show through. */}
       {!isPlaying && isReady && !isEnded && hasPlayed && !showThumbnail && !isReinitialising && (
-        <div className="absolute inset-0 z-35 bg-black/40 backdrop-blur-[2px] pointer-events-none transition-all duration-500" />
+        <div className="absolute inset-0 z-35 bg-black/75 backdrop-blur-sm pointer-events-none transition-all duration-500" />
       )}
 
       {/* 5. Buffering spinner */}
       {isBuffering && !isEnded && !showThumbnail && !isReinitialising && (
-        <div className="absolute inset-0 z-35 flex items-center justify-center bg-black/40 backdrop-blur-[2px] pointer-events-none">
+        <div className="absolute inset-0 z-35 flex items-center justify-center bg-black/75 backdrop-blur-sm pointer-events-none">
           <Loader2 className="w-10 h-10 text-[#2de5ca] animate-spin" />
         </div>
       )}
@@ -620,9 +620,11 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         </button>
       )}
 
-      {/* 9. Custom end screen */}
+      {/* 9. Custom end screen — above the click-capture overlay so its button
+           stays clickable and the YouTube endscreen (related videos on the
+           right) is fully covered. */}
       {isEnded && (
-        <div className="absolute inset-0 z-25 bg-[#0a0a0a]/95 flex flex-col items-center justify-center gap-4 text-center px-6 transition-all duration-500">
+        <div className="absolute inset-0 z-45 bg-[#0a0a0a]/95 flex flex-col items-center justify-center gap-4 text-center px-6 transition-all duration-500">
           <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-[#2de5ca] mb-2">
             <RotateCcw className="w-8 h-8" />
           </div>
