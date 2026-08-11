@@ -49,6 +49,8 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const [showQualityMenu,    setShowQualityMenu]    = useState(false)
   // vq tracks the URL parameter for the current player instance
   const [vq, setVq] = useState<string>(DEFAULT_VQ)
+  // Mirror of vq readable from closures (resize observer) that would otherwise capture stale state
+  const vqRef = useRef<string>(DEFAULT_VQ)
 
   // Thumbnail
   const [showThumbnail,   setShowThumbnail]   = useState(true)
@@ -84,6 +86,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     setAvailableQualities([])
     setCurrentQuality(DEFAULT_VQ)
     setVq(DEFAULT_VQ)
+    vqRef.current = DEFAULT_VQ
     setIsReinitialising(false)
     setThumbSrc(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
     if (overlayTimeoutRef.current) clearTimeout(overlayTimeoutRef.current)
@@ -233,12 +236,16 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
                 if (available.length > 0) {
                   const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
                   const highest = preferredOrder.find(q => available.includes(q)) || available[0]
-                  if (current !== highest) {
+                  // Respect the user's chosen quality; only auto-pick the best
+                  // when nothing has been selected yet (default).
+                  const desired = vqRef.current
+                  const target = desired !== 'auto' && available.includes(desired) ? desired : highest
+                  if (current !== target) {
                     try { 
                       if (playerRef.current.setPlaybackQualityRange) {
-                        playerRef.current.setPlaybackQualityRange({ min: highest, max: highest })
+                        playerRef.current.setPlaybackQualityRange({ min: target, max: target })
                       }
-                      playerRef.current.setPlaybackQuality(highest) 
+                      playerRef.current.setPlaybackQuality(target) 
                     } catch (_) {}
                   }
                 }
@@ -305,6 +312,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
 
   // 3b. Sync quality via setPlaybackQuality when player is ready and vq changes
   useEffect(() => {
+    vqRef.current = vq
     if (!isReady || !playerRef.current?.setPlaybackQuality) return
     // vq state tracks the desired quality
     if (vq !== 'auto' && currentQuality !== vq) {
@@ -317,17 +325,25 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   // 3c. Periodic quality enforcement - YouTube often ignores first request
   useEffect(() => {
     if (!isReady || !playerRef.current?.getPlaybackQuality) return
+    const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
     let interval: NodeJS.Timeout
     interval = setInterval(() => {
       if (!playerRef.current) return
       const actual = playerRef.current.getPlaybackQuality()
-      if (actual && actual !== vq && vq !== 'auto') {
+      const available = playerRef.current.getAvailableQualityLevels?.() ?? []
+      if (available.length === 0) return
+      // Desired = user's explicit choice, otherwise the highest available level
+      const desired = vqRef.current
+      const target = desired !== 'auto' && available.includes(desired)
+        ? desired
+        : preferredOrder.find(q => available.includes(q)) || available[0]
+      if (actual && actual !== target) {
         // Quality didn't stick, force it again with both methods
         try {
           if (playerRef.current.setPlaybackQualityRange) {
-            playerRef.current.setPlaybackQualityRange({ min: vq, max: vq })
+            playerRef.current.setPlaybackQualityRange({ min: target, max: target })
           }
-          playerRef.current.setPlaybackQuality(vq)
+          playerRef.current.setPlaybackQuality(target)
         } catch (_) {}
       }
     }, 3000)
@@ -437,11 +453,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     setIsReinitialising(true)
 
     const player = playerRef.current
-    const available = player.getAvailableQualityLevels?.() ?? []
-    
-    // Use preferred quality order to find the best match
-    const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
-    const targetQuality = preferredOrder.find(q => available.includes(q)) || q
+    // The user picked a concrete quality from the menu (which lists only
+    // available levels) — apply exactly that choice. The "best available"
+    // logic belongs only to the initial auto-select (forceHighQuality).
+    const targetQuality = q
 
     // Method 1: setPlaybackQualityRange (newer API) - locks min/max quality
     if (player.setPlaybackQualityRange) {
@@ -520,7 +535,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       {/* 1. YouTube iframe — render at 6x resolution so YouTube ABR picks 4K quality.
            Aggressive crop (overflow:hidden) pushes title, share, playlist, logo completely out of view.
            pointer-events:none on wrapper blocks native center play button. */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" ref={iframeWrapRef} style={{ transform: 'scale(0.1667)', transformOrigin: 'top left', width: '600%', height: '600%' }}>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" ref={iframeWrapRef} style={{ transform: 'scale(0.1667)', transformOrigin: 'top left', width: '600%', height: '600%' }}>
         <div
           id={mountId}
           className="absolute inset-0"
@@ -535,22 +550,22 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       </div>
 
       {/* 3. Click-capture overlay (ALWAYS) — covers YouTube native play button at all times */}
-      <div className="absolute inset-0 z-20 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
+      <div className="absolute inset-0 z-30 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
       {/* 3b. Base cover layer - always present to block any YouTube UI bleed-through */}
-      <div className="absolute inset-0 z-15 bg-black/0 pointer-events-none" />
+      <div className="absolute inset-0 z-25 bg-black/0 pointer-events-none" />
       {/* 3c. SOLID COVER - blocks ALL YouTube UI until video has actually played frames */}
       {!hasPlayed && (
-        <div className="absolute inset-0 z-35 bg-black pointer-events-none" />
+        <div className="absolute inset-0 z-50 bg-black pointer-events-none" />
       )}
 
       {/* 4. Paused cinematic dim */}
       {!isPlaying && isReady && !isEnded && hasPlayed && !showThumbnail && !isReinitialising && (
-        <div className="absolute inset-0 z-21 bg-black/40 backdrop-blur-[2px] pointer-events-none transition-all duration-500" />
+        <div className="absolute inset-0 z-35 bg-black/40 backdrop-blur-[2px] pointer-events-none transition-all duration-500" />
       )}
 
       {/* 5. Buffering spinner */}
       {isBuffering && !isEnded && !showThumbnail && !isReinitialising && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[2px] pointer-events-none">
+        <div className="absolute inset-0 z-35 flex items-center justify-center bg-black/40 backdrop-blur-[2px] pointer-events-none">
           <Loader2 className="w-10 h-10 text-[#2de5ca] animate-spin" />
         </div>
       )}
@@ -565,10 +580,15 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         </div>
       )}
 
-      {/* 7. Thumbnail overlay */}
+      {/* 6b. SOLID COVER - blocks ALL YouTube UI until video has actually played frames */}
+      {!hasPlayed && !showThumbnail && (
+        <div className="absolute inset-0 z-45 bg-black pointer-events-none" />
+      )}
+
+      {/* 7. Thumbnail overlay (above solid cover initially) */}
       {showThumbnail && (
         <div
-          className="absolute inset-0 z-40 overflow-hidden cursor-pointer"
+          className="absolute inset-0 z-50 overflow-hidden cursor-pointer"
           style={{ opacity: thumbnailFading ? 0 : 1, transition: 'opacity 600ms ease-in-out' }}
           onClick={togglePlay}
           onDoubleClick={toggleFullscreen}

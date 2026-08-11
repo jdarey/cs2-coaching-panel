@@ -10,9 +10,11 @@ import {
   VIDEO_STATUS_LABELS,
   VIDEO_STATUS_COLORS,
   cn,
+  getVideoId,
   getVideoEmbedUrl,
 } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
+import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import {
@@ -319,8 +321,14 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 )}
               </div>
               <div className="p-5 sm:p-6">
-                <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-black/40 shadow-2xl shadow-black/40">
-                  {currentVideo && getVideoEmbedUrl(currentVideo.url) ? (
+                <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-black/40 shadow-2xl shadow-black/40 select-none" onContextMenu={(e) => e.preventDefault()}>
+                  {currentVideo && getVideoId(currentVideo.url) ? (
+                    <YoutubeCustomPlayer
+                      videoId={getVideoId(currentVideo.url) as string}
+                      title={currentVideo.title}
+                      studentName={session.student.name || 'Uczeń'}
+                    />
+                  ) : currentVideo && getVideoEmbedUrl(currentVideo.url) ? (
                     <iframe
                       src={getVideoEmbedUrl(currentVideo.url) as string}
                       className="h-full w-full"
@@ -356,7 +364,6 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                       <Clock className="h-3 w-3" />
                       {formatDuration(currentVideo.duration)}
                     </span>
-                    <span className="text-xs text-white/30 capitalize">{currentVideo.source}</span>
                   </div>
                 )}
               </div>
