@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
-import { cn } from '@/lib/utils'
+import { cn, spotlightHandler } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageSquare, Send, Loader2, GraduationCap } from 'lucide-react'
@@ -117,7 +117,10 @@ export function StudentMessagesClient() {
           <p className="text-sm text-white/40 mt-1">Gdy trener doda Cię do swojego panelu, pojawi się tutaj czat.</p>
         </div>
       ) : (
-        <div className="glass rounded-2xl overflow-hidden h-[calc(100vh-240px)] flex flex-col">
+        <div
+          className="glass border-glow spotlight-card rounded-2xl overflow-hidden h-[calc(100vh-240px)] flex flex-col"
+          onMouseMove={spotlightHandler}
+        >
           <div className="px-5 py-4 border-b border-white/[0.06] flex items-center gap-3">
             <Avatar className="h-10 w-10 rounded-full ring-1 ring-white/10">
               <AvatarImage src={coach.avatarUrl || ''} alt={coach.name || ''} />
@@ -129,9 +132,7 @@ export function StudentMessagesClient() {
               <p className="text-sm font-semibold text-white">{coach.name || 'Twój trener'}</p>
               <p className="text-[11px] text-white/40">Trener • odpowiada zwykle szybko</p>
             </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-5 py-5 space-y-3 bg-black/10">
+          </div>            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-3 bg-black/10">
             {messages.length === 0 && (
               <p className="text-center text-sm text-white/35 py-10">Brak wiadomości — napisz do trenera!</p>
             )}

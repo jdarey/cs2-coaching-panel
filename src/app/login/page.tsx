@@ -78,7 +78,14 @@ function LoginForm() {
         </div>
 
         {/* Auth card */}
-        <div className="animate-rise-in animate-rise-in-delay-1 relative rounded-3xl glass-card p-7 md:p-10">
+        <div
+          className="animate-rise-in animate-rise-in-delay-1 relative rounded-3xl glass-card p-7 md:p-10 border-glow spotlight-card overflow-hidden"
+          onMouseMove={(e) => {
+            const r = e.currentTarget.getBoundingClientRect()
+            e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+            e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+          }}
+        >
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
             <div className="absolute -top-24 -right-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(45,229,202,0.4) 0%, transparent 70%)' }} />
           </div>
@@ -192,7 +199,22 @@ function LoginForm() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-[11px] text-white/30 font-light tracking-wide">
+        {/* Feature strip — what makes the panel premium */}
+        <div className="mt-8 grid grid-cols-3 gap-3 animate-rise-in animate-rise-in-delay-3" style={{ animationDelay: '220ms' }}>
+          {[
+            { icon: Sparkles, title: '4K+ Adaptive', sub: 'Jakość dopasowana do łącza' },
+            { icon: ShieldCheck, title: 'Analiza 1:1', sub: 'Demka, tagi i notatki' },
+            { icon: ArrowRight, title: 'Postęp', sub: 'Rangi i osiągnięcia' },
+          ].map((f) => (
+            <div key={f.title} className="rounded-2xl glass p-3.5 text-center">
+              <f.icon className="w-4 h-4 mx-auto mb-1.5 text-[#8cffef]" />
+              <p className="text-[11px] font-semibold text-white/85 leading-tight">{f.title}</p>
+              <p className="text-[10px] text-white/40 mt-0.5 leading-tight">{f.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-6 text-center text-[11px] text-white/30 font-light tracking-wide">
           Bezpieczne logowanie · Twoje dane są szyfrowane end-to-end
         </p>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ArrowLeft,
   Calendar,
@@ -10,6 +11,12 @@ import {
   MessageSquare,
   Plus,
   Inbox,
+  CheckCircle2,
+  Check,
+  Trash2,
+  Loader2,
+  Film,
+  Target,
 } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -37,6 +44,22 @@ interface SessionSummary {
   tags: { name: string; color: string }[]
 }
 
+interface CoachVideo {
+  id: string
+  title: string
+  thumbnail: string | null
+}
+
+interface Assignment {
+  id: string
+  title: string
+  description: string | null
+  dueDate: string | null
+  status: string
+  completedAt: string | null
+  video?: { id: string; title: string } | null
+}
+
 const PROGRESS_DOTS = [
   { key: 'total', label: 'Filmy', color: '#14b8a6' },
   { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
@@ -49,11 +72,106 @@ export function CoachStudentDetailClient({
   student,
   progressStats,
   sessions,
+  coachVideos,
 }: {
   student: StudentDetail
   progressStats: Record<string, number>
   sessions: SessionSummary[]
+  coachVideos: CoachVideo[]
 }) {
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [assignmentsLoading, setAssignmentsLoading] = useState(true)
+  const [form, setForm] = useState({ title: '', description: '', videoId: '', dueDate: '' })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadAssignments = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/assignments?studentId=${student.id}`)
+      if (res.ok) {
+        setAssignments(await res.json())
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setAssignmentsLoading(false)
+    }
+  }, [student.id])
+
+  useEffect(() => {
+    loadAssignments()
+  }, [loadAssignments])
+
+  const createAssignment = async () => {
+    if (!form.title.trim()) {
+      setError('Podaj tytuł zadania')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: student.id,
+          title: form.title.trim(),
+          description: form.description.trim() || null,
+          videoId: form.videoId || null,
+          dueDate: form.dueDate || null,
+        }),
+      })
+      if (res.ok) {
+        const created = await res.json()
+        setAssignments((prev) => [created, ...prev])
+        setForm({ title: '', description: '', videoId: '', dueDate: '' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || 'Nie udało się dodać zadania')
+      }
+    } catch {
+      setError('Błąd sieci')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggleAssignment = async (a: Assignment) => {
+    const next = a.status === 'DONE' ? 'PENDING' : 'DONE'
+    try {
+      const res = await fetch(`/api/assignments/${a.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next }),
+      })
+      if (res.ok) {
+        setAssignments((prev) =>
+          prev.map((x) =>
+            x.id === a.id
+              ? { ...x, status: next, completedAt: next === 'DONE' ? new Date().toISOString() : null }
+              : x,
+          ),
+        )
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const deleteAssignment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/assignments/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setAssignments((prev) => prev.filter((x) => x.id !== id))
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const pendingCount = assignments.filter((a) => a.status === 'PENDING').length
+  const doneCount = assignments.length - pendingCount
+
   return (
     <CoachLayout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -216,6 +334,144 @@ export function CoachStudentDetailClient({
             ))}
           </div>
         )}
+
+        {/* Zadania treningowe */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight">Zadania treningowe</h2>
+              <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-full bg-white/[0.06] border border-white/10 text-xs font-semibold text-white/70">
+                {assignments.length}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/45">
+              <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-300" /> {pendingCount} otwartych</span>
+              <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {doneCount} zrobionych</span>
+            </div>
+          </div>
+
+          {/* Create form */}
+          <div className="glass-card rounded-3xl p-5 md:p-6 mb-5 relative overflow-hidden">
+            <p className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+              <Plus className="w-4 h-4 text-[#8cffef]" />
+              Nowe zadanie dla ucznia
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <input
+                value={form.title}
+                onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
+                placeholder="Tytuł zadania (np. 30 min praktyki strafe'ów)"
+                className="md:col-span-2 rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+              />
+              <input
+                value={form.description}
+                onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
+                placeholder="Opis / instrukcja (opcjonalnie)"
+                className="md:col-span-2 rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+              />
+              <select
+                value={form.videoId}
+                onChange={(e) => setForm((s) => ({ ...s, videoId: e.target.value }))}
+                className="rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white focus:outline-none focus:border-[#2de5ca]/40 transition-colors [&>option]:bg-[#0a0c0e]"
+              >
+                <option value="">Bez filmu</option>
+                {coachVideos.map((v) => (
+                  <option key={v.id} value={v.id}>{v.title}</option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm((s) => ({ ...s, dueDate: e.target.value }))}
+                className="rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white focus:outline-none focus:border-[#2de5ca]/40 transition-colors [color-scheme:dark]"
+              />
+            </div>
+            {error && <p className="mt-3 text-xs text-red-300">{error}</p>}
+            <button
+              onClick={createAssignment}
+              disabled={saving}
+              className="btn-darey relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold mt-4 disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Dodaj zadanie
+            </button>
+          </div>
+
+          {/* Assignments list */}
+          {assignmentsLoading ? (
+            <div className="flex items-center justify-center py-12 text-white/40">
+              <Loader2 className="w-5 h-5 animate-spin mr-3" /> Ładowanie zadań…
+            </div>
+          ) : assignments.length === 0 ? (
+            <div className="glass-card rounded-3xl p-10 text-center">
+              <Target className="w-9 h-9 text-white/25 mx-auto mb-3" />
+              <p className="text-sm text-white/60 font-medium">Brak zadań</p>
+              <p className="text-xs text-white/40 mt-1">Przypisz pierwszemu zadanie, aby uczeń miał plan treningowy.</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {assignments.map((a) => {
+                const done = a.status === 'DONE'
+                return (
+                  <li
+                    key={a.id}
+                    className={cn('glass-card rounded-2xl p-4 md:p-5 flex items-start gap-4', done && 'opacity-70')}
+                  >
+                    <button
+                      onClick={() => toggleAssignment(a)}
+                      aria-label={done ? 'Oznacz jako otwarte' : 'Oznacz jako zrobione'}
+                      className={cn(
+                        'relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300',
+                        done
+                          ? 'bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white ring-1 ring-white/25'
+                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#2de5ca]/40 hover:text-[#8cffef]',
+                      )}
+                    >
+                      {done ? <Check className="w-4 h-4" strokeWidth={3} /> : <ClipboardList className="w-4 h-4" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className={cn('font-display font-semibold text-white truncate', done && 'line-through decoration-white/30 text-white/50')}>
+                          {a.title}
+                        </h3>
+                        {done && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-2 py-0.5">
+                            <CheckCircle2 className="w-3 h-3" /> Zrobione
+                          </span>
+                        )}
+                      </div>
+                      {a.description && <p className="mt-1 text-sm text-white/50">{a.description}</p>}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/45">
+                        {a.video && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Film className="w-3.5 h-3.5" /> {a.video.title}
+                          </span>
+                        )}
+                        {a.dueDate && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5" /> Termin: {formatDate(a.dueDate)}
+                          </span>
+                        )}
+                        {a.completedAt && (
+                          <span className="inline-flex items-center gap-1.5 text-emerald-300/80">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> {formatDate(a.completedAt)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deleteAssignment(a.id)}
+                      aria-label="Usuń zadanie"
+                      className="shrink-0 grid place-items-center w-8 h-8 rounded-lg text-white/30 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
       </div>
     </CoachLayout>
   )

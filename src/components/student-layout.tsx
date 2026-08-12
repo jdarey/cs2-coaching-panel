@@ -11,7 +11,7 @@ import { AuroraBackground } from '@/components/aurora-background'
 import { UnreadBadge } from '@/components/unread-badge'
 import {
   LayoutDashboard, BookOpen, Video, BarChart2, Settings, LogOut, Menu, X,
-  GraduationCap, MessageSquare, MessageSquareHeart, Trophy,
+  GraduationCap, MessageSquare, MessageSquareHeart, Trophy, ClipboardList,
 } from 'lucide-react'
 
 type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback' }
@@ -24,6 +24,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { name: 'Moje sesje', href: '/student/sessions', icon: BookOpen },
       { name: 'Filmy do oglądania', href: '/student/videos', icon: Video },
       { name: 'Mój postęp', href: '/student/progress', icon: BarChart2 },
+      { name: 'Zadania treningowe', href: '/student/tasks', icon: ClipboardList },
       { name: 'Moja ranga', href: '/student/rank', icon: Trophy },
     ],
   },

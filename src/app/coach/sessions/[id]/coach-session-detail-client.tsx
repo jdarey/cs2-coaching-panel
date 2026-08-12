@@ -315,7 +315,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
 
         {/* Hero header */}
         <div
-          className="glass-liquid rise-in relative overflow-hidden rounded-3xl p-7 sm:p-9 mb-8" style={{ animationDelay: '70ms' }}
+          className="glass-liquid border-glow rise-in relative overflow-hidden rounded-3xl p-7 sm:p-9 mb-8" style={{ animationDelay: '70ms' }}
         >
           <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-gradient-to-br from-[#2de5ca]/25 to-[#147a6b]/10 blur-3xl animate-aurora-slow" />
           <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">

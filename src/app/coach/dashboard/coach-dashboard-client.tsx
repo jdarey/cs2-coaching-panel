@@ -395,7 +395,12 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               <div key={a.name} className="rise-in h-full" style={{ animationDelay: `${0.5 + i * 0.06}s` }}>
                 <Link
                   href={a.href}
-                  className="bento-card group flex h-full flex-col p-6"
+                  className="bento-card spotlight-card group flex h-full flex-col p-6"
+                  onMouseMove={(e) => {
+                    const r = e.currentTarget.getBoundingClientRect()
+                    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+                    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+                  }}
                 >
                   <div className="icon-tile w-12 h-12 mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                     <a.icon className="w-5 h-5" />

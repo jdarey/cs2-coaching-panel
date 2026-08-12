@@ -52,6 +52,13 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
     implemented: progress.filter((p) => p.status === 'IMPLEMENTED').length,
   }
 
+  const coachVideos = await prisma.video.findMany({
+    where: { coachId: userId, isActive: true },
+    select: { id: true, title: true, thumbnail: true },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  })
+
   return (
     <CoachStudentDetailClient
       student={{
@@ -72,6 +79,7 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
         notesCount: s._count.notes,
         tags: s.tags.map((t) => ({ name: t.tag.name, color: t.tag.color })),
       }))}
+      coachVideos={coachVideos.map((v) => ({ id: v.id, title: v.title, thumbnail: v.thumbnail }))}
     />
   )
 }

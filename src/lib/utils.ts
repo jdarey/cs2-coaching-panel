@@ -1,8 +1,20 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import type { MouseEvent } from 'react'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+/**
+ * Mouse-follow spotlight: feed the cursor position into --mx/--my CSS vars
+ * used by the .spotlight-card glow. Attach as onMouseMove on any element
+ * that carries the `spotlight-card` class.
+ */
+export function spotlightHandler(e: MouseEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
 }
 
 export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOptions) {

@@ -93,9 +93,11 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   const { toast } = useToast()
 
   const filteredVideos = videos.filter((v) => {
+    const q = search.toLowerCase()
     const matchesSearch =
-      v.title.toLowerCase().includes(search.toLowerCase()) ||
-      v.description?.toLowerCase().includes(search.toLowerCase())
+      v.title.toLowerCase().includes(q) ||
+      v.description?.toLowerCase().includes(q) ||
+      v.tags.some((t) => t.tag.name.toLowerCase().includes(q))
     const matchesTab = activeTab === 'all' || v.source === activeTab
     const matchesTag = !activeTag || v.tags.some((t) => t.tag.id === activeTag)
     return matchesSearch && matchesTab && matchesTag
@@ -446,8 +448,14 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             {filteredVideos.map((video, i) => {
               return (
                 <article
-                  key={video.id} className="glass-liquid rise-in group relative flex flex-col rounded-3xl overflow-hidden"
+                  key={video.id}
+                  className="glass-liquid rise-in spotlight-card group relative flex flex-col rounded-3xl overflow-hidden"
                   style={{ animationDelay: `${i * 70}ms` }}
+                  onMouseMove={(e) => {
+                    const r = e.currentTarget.getBoundingClientRect()
+                    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+                    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+                  }}
                 >
                   {/* Thumbnail */}
                   <div className="relative aspect-video overflow-hidden rounded-3xl ring-1 ring-white/10">

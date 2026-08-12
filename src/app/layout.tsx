@@ -28,6 +28,8 @@ export default function RootLayout({
   return (
     <html lang="pl" suppressHydrationWarning>
       <body className={`${lexend.variable} ${lexendDisplay.variable} font-sans antialiased`}>
+        {/* Cinematic film grain over the whole app (pointer-transparent) */}
+        <div className="grain" aria-hidden />
         <Providers>{children}</Providers>
       </body>
     </html>

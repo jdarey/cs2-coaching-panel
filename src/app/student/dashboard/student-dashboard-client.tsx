@@ -442,7 +442,12 @@ export function StudentDashboardClient({
                   <Link
                     key={a.href}
                     href={a.href}
-                    className="group relative flex items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
+                    className="group spotlight-card relative flex items-center gap-4 p-5 rounded-2xl glass overflow-hidden hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
+                    onMouseMove={(e) => {
+                      const r = e.currentTarget.getBoundingClientRect()
+                      e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+                      e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+                    }}
                   >
                     <div className="icon-tile w-11 h-11 shrink-0">
                       <Icon className="w-5 h-5" strokeWidth={2.2} />

@@ -58,6 +58,13 @@ model User {
   feedbackGiven    Feedback[] @relation("FeedbackStudent")
   feedbackReceived Feedback[] @relation("FeedbackCoach")
 
+  // Training assignments (homework) given by coach / received by student
+  assignmentsGiven    Assignment[] @relation("AssignmentCoach")
+  assignmentsReceived Assignment[] @relation("AssignmentStudent")
+
+  // Rank / ELO tracking over time
+  rankEntries RankEntry[]
+
   // Password reset tokens
   passwordResetTokens PasswordResetToken[]
 
@@ -155,6 +162,7 @@ model Video {
   tags        VideoTag[]
   progress    VideoProgress[]
   sessionVideos SessionVideo[]
+  assignments Assignment[]
 
   @@index([coachId])
   @@index([isActive])
@@ -258,6 +266,50 @@ model VideoProgress {
   @@index([userId])
   @@index([videoId])
   @@index([sessionId])
+}
+
+// Training assignment (homework/drill) a coach gives a student.
+// This is the accountability engine competitors lack: structured tasks
+// with due dates, linked to a video, that the student checks off.
+model Assignment {
+  id          String    @id @default(cuid())
+  coachId     String
+  studentId   String
+  title       String
+  description String?
+  videoId     String? // optional linked video to watch/practice
+  dueDate     DateTime?
+  status      String    @default("PENDING") // PENDING | DONE
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  coach   User   @relation("AssignmentCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student User   @relation("AssignmentStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  video   Video? @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@index([coachId])
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// A student's in-game rank / ELO logged over time (Premier, Faceit...).
+// Lets the coach and student watch real progression, not just video completion.
+model RankEntry {
+  id         String   @id @default(cuid())
+  studentId  String
+  mode       String   @default("PREMIER") // PREMIER | FACEIT
+  rank       String   // e.g. 15000 ELO, Level 7, Global Elite...
+  elo        Int?
+  note       String?
+  recordedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([recordedAt])
 }
 
 // Coach-specific settings (fully customizable)

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
-import { cn } from '@/lib/utils'
+import { cn, spotlightHandler } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageSquare, Send, ArrowLeft, Inbox, Loader2 } from 'lucide-react'
@@ -121,7 +121,7 @@ export function CoachMessagesClient() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           {/* Conversation list */}
-          <div className="glass rounded-2xl overflow-hidden lg:h-[calc(100vh-220px)] flex flex-col">
+          <div className="glass border-glow rounded-2xl overflow-hidden lg:h-[calc(100vh-220px)] flex flex-col">
             <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
               <span className="text-sm font-semibold text-white/80">Rozmowy</span>
               <span className="text-[11px] text-white/40">{conversations.length} uczniów</span>
@@ -173,7 +173,10 @@ export function CoachMessagesClient() {
           </div>
 
           {/* Thread */}
-          <div className="glass rounded-2xl overflow-hidden lg:h-[calc(100vh-220px)] flex flex-col">
+          <div
+            className="glass border-glow spotlight-card rounded-2xl overflow-hidden lg:h-[calc(100vh-220px)] flex flex-col"
+            onMouseMove={spotlightHandler}
+          >
             {!active ? (
               <div className="flex-1 flex flex-col items-center justify-center p-10 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-[#14b8a6]/15 border border-[#2de5ca]/30 grid place-items-center mb-4">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, cn } from '@/lib/utils'
+import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, cn, spotlightHandler } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
@@ -340,11 +340,12 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
               return (
                 <article
                   key={session.id} className={cn(
-                    'glass-liquid group relative flex flex-col rounded-3xl p-5',
+                    'glass-liquid spotlight-card group relative flex flex-col overflow-hidden rounded-3xl p-5',
                     'hover:border-[#2de5ca]/25',
                     'rise-in'
                   )}
                   style={{ animationDelay: `${Math.min(idx, 8) * 70}ms` }}
+                  onMouseMove={spotlightHandler}
                 >
                   {/* Top row: title + status pill */}
                   <div className="relative flex items-start justify-between gap-3">

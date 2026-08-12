@@ -3,10 +3,19 @@
 import { useEffect, useState, useCallback } from 'react'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
-import { cn } from '@/lib/utils'
+import { cn, formatDate, spotlightHandler } from '@/lib/utils'
 import { RANKS, getRank, nextRank, getLevel, getStreak, getAchievements } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
-import { Trophy, Flame, Zap, Loader2, Crown } from 'lucide-react'
+import { Trophy, Flame, Zap, Loader2, Crown, TrendingUp, Plus, Trash2, BarChart3 } from 'lucide-react'
+
+interface RankEntry {
+  id: string
+  mode: string
+  rank: string
+  elo: number | null
+  note: string | null
+  recordedAt: string
+}
 
 type P = {
   id: string
@@ -22,14 +31,18 @@ export function StudentRankClient() {
   const [feedbackCount, setFeedbackCount] = useState(0)
   const [messagesSent, setMessagesSent] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [rankEntries, setRankEntries] = useState<RankEntry[]>([])
+  const [newRank, setNewRank] = useState({ mode: 'PREMIER', rank: '', elo: '' as string, note: '' })
+  const [savingRank, setSavingRank] = useState(false)
 
   const load = useCallback(async () => {
     try {
-      const [pRes, sRes, fRes, mRes] = await Promise.all([
+      const [pRes, sRes, fRes, mRes, rRes] = await Promise.all([
         fetch('/api/progress'),
         fetch('/api/sessions'),
         fetch('/api/feedback'),
         fetch('/api/messages'),
+        fetch('/api/ranks'),
       ])
       const p = pRes.ok ? await pRes.json() : []
       setProgress(p ?? [])
@@ -39,12 +52,49 @@ export function StudentRankClient() {
       setFeedbackCount(f.feedback?.length ?? 0)
       const m = mRes.ok ? await mRes.json() : { conversations: [] }
       setMessagesSent((m.conversations?.[0]?.lastMessage?.senderId === undefined ? 0 : 0))
+      const r = rRes.ok ? await rRes.json() : []
+      setRankEntries(r ?? [])
     } catch {
       /* ignore */
     } finally {
       setLoading(false)
     }
   }, [])
+
+  const addRank = async () => {
+    if (!newRank.rank.trim()) return
+    setSavingRank(true)
+    try {
+      const res = await fetch('/api/ranks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: newRank.mode,
+          rank: newRank.rank.trim(),
+          elo: newRank.elo ? Number(newRank.elo) : null,
+          note: newRank.note || null,
+        }),
+      })
+      if (res.ok) {
+        const entry = await res.json()
+        setRankEntries((prev) => [...prev, entry])
+        setNewRank({ mode: 'PREMIER', rank: '', elo: '', note: '' })
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setSavingRank(false)
+    }
+  }
+
+  const deleteRank = async (id: string) => {
+    try {
+      await fetch(`/api/ranks/${id}`, { method: 'DELETE' })
+      setRankEntries((prev) => prev.filter((e) => e.id !== id))
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
     load()
@@ -158,6 +208,131 @@ export function StudentRankClient() {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      {/* Rank tracking — real in-game rank / ELO over time */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="section-pill"><TrendingUp className="w-3.5 h-3.5" /> Twoja ranga w grze</span>
+        </div>
+        <div className="glass-card rounded-3xl p-6 md:p-7 relative overflow-hidden">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Add entry form */}
+            <div className="lg:w-72 shrink-0">
+              <p className="text-sm font-semibold text-white mb-3">Zapisz swój postęp</p>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  {(['PREMIER', 'FACEIT'] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setNewRank((s) => ({ ...s, mode: m }))}
+                      className={cn(
+                        'px-3 py-2 rounded-xl text-xs font-semibold border transition-all duration-200',
+                        newRank.mode === m
+                          ? 'text-white border-[#2de5ca]/40 bg-[#2de5ca]/[0.1]'
+                          : 'text-white/50 border-white/[0.08] bg-white/[0.02] hover:text-white/80',
+                      )}
+                    >
+                      {m === 'PREMIER' ? 'Premier' : 'Faceit'}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  value={newRank.rank}
+                  onChange={(e) => setNewRank((s) => ({ ...s, rank: e.target.value }))}
+                  placeholder="Ranga / poziom (np. 15000 ELO, Lvl 7)"
+                  className="w-full rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                />
+                <input
+                  value={newRank.elo}
+                  onChange={(e) => setNewRank((s) => ({ ...s, elo: e.target.value }))}
+                  placeholder="ELO / liczba punktów (opcjonalnie)"
+                  inputMode="numeric"
+                  className="w-full rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                />
+                <input
+                  value={newRank.note}
+                  onChange={(e) => setNewRank((s) => ({ ...s, note: e.target.value }))}
+                  placeholder="Notatka (opcjonalnie)"
+                  className="w-full rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                />
+                <button
+                  onClick={addRank}
+                  disabled={savingRank || !newRank.rank.trim()}
+                  className="btn-darey relative inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+                >
+                  {savingRank ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Zapisz rangę
+                </button>
+              </div>
+            </div>
+
+            {/* Chart + history */}
+            <div className="flex-1 min-w-0">
+              {rankEntries.length >= 2 && rankEntries.some((e) => e.elo != null) ? (
+                <div className="mb-6">
+                  <p className="text-xs uppercase tracking-widest text-white/40 font-semibold mb-3">Trend ELO</p>
+                  <div className="h-32 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-4 flex items-end gap-1.5">
+                    {(() => {
+                      const withElo = rankEntries.filter((e) => e.elo != null)
+                      const min = Math.min(...withElo.map((e) => e.elo!))
+                      const max = Math.max(...withElo.map((e) => e.elo!))
+                      const range = Math.max(1, max - min)
+                      return withElo.map((e) => (
+                        <div key={e.id} className="flex-1 flex flex-col items-center gap-1 group/bar">
+                          <span className="text-[9px] text-white/40 opacity-0 group-hover/bar:opacity-100 transition-opacity">{e.elo}</span>
+                          <div
+                            className="w-full rounded-t-md bg-gradient-to-t from-[#14b8a6] to-[#2de5ca] transition-all duration-500"
+                            style={{ height: `${18 + ((e.elo! - min) / range) * 82}%`, minHeight: 12 }}
+                          />
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                </div>
+              ) : null}
+
+              {rankEntries.length === 0 ? (
+                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] px-6 py-10 text-center">
+                  <BarChart3 className="w-8 h-8 text-white/25 mx-auto mb-3" />
+                  <p className="text-sm text-white/60 font-medium">Brak wpisów</p>
+                  <p className="text-xs text-white/40 mt-1">Zapisz swoją pierwszą rangę, aby śledzić realny postęp w grze.</p>
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {[...rankEntries].reverse().map((e) => (
+                    <li
+                      key={e.id}
+                      className="group flex items-center gap-3 rounded-xl px-4 py-3 bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all"
+                      onMouseMove={spotlightHandler}
+                    >
+                      <div className="relative w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/20 shrink-0">
+                        <TrendingUp className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{e.rank}</p>
+                        <p className="text-[11px] text-white/40">
+                          {e.mode === 'PREMIER' ? 'Premier' : 'Faceit'} · {formatDate(e.recordedAt)}
+                          {e.note ? ` · ${e.note}` : ''}
+                        </p>
+                      </div>
+                      {e.elo != null && (
+                        <span className="font-display text-sm font-bold text-[#8cffef]">{e.elo}</span>
+                      )}
+                      <button
+                        onClick={() => deleteRank(e.id)}
+                        aria-label="Usuń wpis"
+                        className="grid place-items-center w-8 h-8 rounded-lg text-white/30 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

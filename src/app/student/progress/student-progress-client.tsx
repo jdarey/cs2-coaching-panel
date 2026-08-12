@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { formatDate, formatDateTime, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn } from '@/lib/utils'
+import { formatDate, formatDateTime, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, spotlightHandler } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import {
@@ -184,8 +184,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Hero stats row */}
         <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {/* Obejrzane */}
-          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '0ms' }}
+            onMouseMove={spotlightHandler}
           >
             <div className="flex items-start justify-between">
               <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/30">
@@ -200,8 +201,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {/* Wdrożone */}
-          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '80ms' }}
+            onMouseMove={spotlightHandler}
           >
             <div className="flex items-start justify-between">
               <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#14b8a6] to-[#2de5ca] ring-1 ring-white/30">
@@ -214,8 +216,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {/* % ukończenia */}
-          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '160ms' }}
+            onMouseMove={spotlightHandler}
           >
             <div className="flex items-start justify-between">
               <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#14b8a6] to-[#2de5ca] ring-1 ring-white/30">
@@ -231,8 +234,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {/* Aktywne dni */}
-          <div className="glass-liquid rise-in rounded-3xl p-6 relative overflow-hidden cursor-default"
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-6 relative overflow-hidden cursor-default"
             style={{ animationDelay: '240ms' }}
+            onMouseMove={spotlightHandler}
           >
             <div className="flex items-start justify-between">
               <div className="relative w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/30">
@@ -248,7 +252,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
         {/* Circular + status breakdown + sessions card */}
         <section className="grid gap-5 lg:grid-cols-3">
           {/* Big circular progress */}
-          <div className="glass-liquid rise-in rounded-3xl p-8 relative overflow-hidden lg:col-span-1 flex flex-col items-center justify-center"
+          <div className="glass-liquid border-glow rise-in rounded-3xl p-8 relative overflow-hidden lg:col-span-1 flex flex-col items-center justify-center"
             style={{ animationDelay: '120ms' }}
           >
             <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-[#14b8a6]/15 blur-3xl animate-aurora-slow pointer-events-none" />
@@ -536,8 +540,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
             <div className="grid gap-4 md:grid-cols-2">
               {tagProgress.map((item, i) => (
                 <div
-                  key={item.tag?.id || item.tag?.name} className="glass-liquid rise-in rounded-3xl p-5 relative overflow-hidden"
+                  key={item.tag?.id || item.tag?.name} className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden"
                   style={{ animationDelay: `${i * 60}ms` }}
+                  onMouseMove={spotlightHandler}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div
@@ -621,8 +626,9 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
                           : 'from-[#fbbf24] to-[#f59e0b]'
                   return (
                     <li
-                      key={p.id} className="group glass-liquid rise-in rounded-3xl p-5 relative overflow-hidden"
+                      key={p.id} className="group glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden"
                       style={{ animationDelay: `${i * 50}ms` }}
+                      onMouseMove={spotlightHandler}
                     >
                       <div className="flex items-start gap-4">
                         {/* node */}

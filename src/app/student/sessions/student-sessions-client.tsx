@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl } from '@/lib/utils'
+import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl, spotlightHandler } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -231,8 +231,9 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
               const videoCount = session.videos.length
               return (
                 <div
-                  key={session.id} className="glass-liquid rise-in group relative rounded-3xl p-6 hover:border-[#2de5ca]/25"
+                  key={session.id} className="glass-liquid rise-in spotlight-card group relative overflow-hidden rounded-3xl p-6 hover:border-[#2de5ca]/25"
                   style={{ animationDelay: `${0.05 + i * 0.05}s` }}
+                  onMouseMove={spotlightHandler}
                 >
                   <div className="flex items-start justify-between gap-4">
                     {/* Left: avatar + title block */}

@@ -232,7 +232,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
         {/* ===== Hero header ===== */}
         <div
-          className=" relative rounded-3xl glass-liquid p-6 sm:p-8 overflow-hidden rise-in mb-8"
+          className=" relative rounded-3xl glass-liquid border-glow p-6 sm:p-8 overflow-hidden rise-in mb-8"
           style={{ animationDelay: '0.05s' }} >
           <div className="flex flex-col gap-5">
             <div className="flex flex-wrap items-center gap-3">
