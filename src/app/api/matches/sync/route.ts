@@ -88,6 +88,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Purge matches synced from a DIFFERENT Steam account (or pre-tagging
+    // legacy rows with a NULL account), so a student who changed their Steam
+    // link never keeps another player's matches in the log. Note: Prisma's
+    // `not` does not match NULL, so legacy rows must be matched explicitly.
+    const purged = await prisma.matchLog.deleteMany({
+      where: {
+        studentId,
+        OR: [{ syncedSteamId: null }, { syncedSteamId: { not: steamId } }],
+      },
+    })
+
     // Save only new matches (dedupe by externalId)
     const created: any[] = []
     let skipped = 0
@@ -118,6 +129,7 @@ export async function POST(request: NextRequest) {
           source: isFaceit ? 'FACEIT' : 'PREMIER',
           externalId: m.externalId,
           platformMatchId,
+          syncedSteamId: steamId,
           createdAt: new Date(m.finishedAt),
           // Accurate per-match stats straight from Leetify
           leetifyRating: m.leetifyRating,
@@ -134,6 +146,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       created,
       skipped,
+      purged: purged.count,
       summary: created.map((c) => ({
         id: c.id,
         map: c.map,
