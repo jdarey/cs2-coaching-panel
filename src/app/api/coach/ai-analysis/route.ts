@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyProfile } from '@/lib/gaming'
+import { fetchLeetifyProfile, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 import { analyzeWeaknesses, suggestRoutineForWeakness, recordSkillSnapshot } from '@/lib/ai-coach'
 
 export const dynamic = 'force-dynamic'
@@ -25,19 +25,30 @@ export async function GET(request: NextRequest) {
 
     const student = await prisma.user.findFirst({
       where: { id: studentId, coachId: userId },
-      select: { id: true, name: true, email: true, steamId: true },
+      select: { id: true, name: true, email: true, steamId: true, steamVanity: true },
     })
     if (!student) {
       return NextResponse.json({ error: 'Uczeń nie należy do Ciebie' }, { status: 403 })
     }
-    if (!student.steamId) {
+
+    // Resolve a saved Steam link/vanity to a numeric steam64 if needed.
+    let steamId = student.steamId ?? null
+    if (!steamId && student.steamVanity) {
+      const parsed = parseSteamIdentifier(student.steamVanity)
+      if (parsed.type === 'steam64') {
+        steamId = parsed.value
+      } else if (parsed.type === 'vanity') {
+        steamId = await resolveSteamVanity(parsed.value)
+      }
+    }
+    if (!steamId) {
       return NextResponse.json(
         { error: 'Uczeń nie ma ustawionego Steam ID — dodaj je w ustawieniach ucznia, aby AI mogło analizować jego grę.' },
         { status: 400 },
       )
     }
 
-    const profile = await fetchLeetifyProfile(student.steamId)
+    const profile = await fetchLeetifyProfile(steamId)
     if (!profile?.raw) {
       return NextResponse.json(
         { error: 'Nie udało się pobrać profilu Leetify. Sprawdź, czy profil Steam jest publiczny i ma zintegrowane Leetify.' },

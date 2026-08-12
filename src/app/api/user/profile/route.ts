@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 import { z } from 'zod'
 
 // Avatars are stored as base64 data URIs in the DB (no file storage). The
@@ -73,9 +74,32 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const validated = profileSchema.parse(body)
 
+    const data: any = { ...validated }
+
+    // Resolve a Steam profile URL / vanity / steam64 to a numeric steam64 ID
+    // so match sync + AI analysis can use it directly, no matter how the user
+    // pasted it (link, name, or ID).
+    if (typeof validated.steamVanity === 'string' && validated.steamVanity.trim()) {
+      const raw = validated.steamVanity.trim()
+      const parsed = parseSteamIdentifier(raw)
+      let steamId: string | null = parsed.type === 'steam64' ? parsed.value : null
+      if (!steamId && parsed.type === 'vanity') {
+        steamId = await resolveSteamVanity(parsed.value)
+      }
+      if (steamId) {
+        data.steamId = steamId
+        data.steamVanity = raw
+      } else {
+        data.steamId = null
+      }
+    } else if (validated.steamVanity === null || validated.steamVanity === '') {
+      // Explicitly cleared — keep steamId in sync
+      data.steamId = null
+    }
+
     const user = await prisma.user.update({
       where: { id: userId },
-      data: validated,
+      data,
       select: {
         id: true,
         email: true,

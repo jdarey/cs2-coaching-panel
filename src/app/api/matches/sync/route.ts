@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyProfile, fetchLeetifyRecentMatches } from '@/lib/gaming'
+import { fetchLeetifyProfile, fetchLeetifyRecentMatches, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 import { analyzeMatch, matchVerdict, recordSkillSnapshot } from '@/lib/ai-coach'
 
 export const dynamic = 'force-dynamic'
@@ -34,9 +34,25 @@ export async function POST(request: NextRequest) {
 
     const student = await prisma.user.findUnique({
       where: { id: studentId },
-      select: { steamId: true, faceitNickname: true },
+      select: { steamId: true, steamVanity: true, faceitNickname: true },
     })
-    if (!student?.steamId) {
+
+    // Resolve a saved Steam link/vanity to a numeric steam64 if needed
+    // (older profiles may only have steamVanity stored).
+    let steamId = student?.steamId ?? null
+    if (!steamId && student?.steamVanity) {
+      const parsed = parseSteamIdentifier(student.steamVanity)
+      if (parsed.type === 'steam64') {
+        steamId = parsed.value
+      } else if (parsed.type === 'vanity') {
+        steamId = await resolveSteamVanity(parsed.value)
+      }
+      if (steamId) {
+        await prisma.user.update({ where: { id: studentId }, data: { steamId } })
+      }
+    }
+
+    if (!steamId) {
       return NextResponse.json(
         { error: 'Uczeń nie ma ustawionego Steam ID. Dodaj je w ustawieniach (link do profilu Steam), aby zsynchronizować mecze.' },
         { status: 400 },
@@ -44,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Profile (season stats + rating) — used by the AI analysis
-    const profile = await fetchLeetifyProfile(student.steamId)
+    const profile = await fetchLeetifyProfile(steamId)
     if (!profile?.raw) {
       return NextResponse.json(
         { error: 'Nie udało się pobrać profilu Leetify dla tego Steam ID. Sprawdź, czy profil jest publiczny i czy włączona jest integracja Leetify.' },
@@ -64,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Sample skills so the weakness-progress chart grows with each sync
     await recordSkillSnapshot(studentId, aiProfile)
 
-    const matches = await fetchLeetifyRecentMatches(student.steamId, 5)
+    const matches = await fetchLeetifyRecentMatches(steamId, 5)
     if (matches.length === 0) {
       return NextResponse.json(
         { error: 'Nie znaleziono meczów dla tego Steam ID w Leetify. Zaloguj się na Leetify, aby mecze zaczęły się tam pojawiać (integracja automatyczna).' },

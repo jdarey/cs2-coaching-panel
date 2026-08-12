@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyProfile, fetchFaceitLegacy } from '@/lib/gaming'
+import { fetchLeetifyProfile, fetchFaceitLegacy, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,20 +35,11 @@ export async function GET(request: Request) {
       details: [] as string[],
     }
 
-    const resolveSteam64 = async (vanity: string): Promise<string | null> => {
-      try {
-        const url = `https://steamcommunity.com/id/${encodeURIComponent(vanity)}?xml=1`
-        const res = await fetch(url, {
-          headers: { 'User-Agent': 'CS2-Coaching-Panel/1.0' },
-          cache: 'no-store',
-        })
-        if (!res.ok) return null
-        const xml = await res.text()
-        const m = xml.match(/<steamID64>\s*(\d{17})\s*<\/steamID64>/)
-        return m ? m[1] : null
-      } catch {
-        return null
-      }
+    const resolveSteam64 = async (value: string): Promise<string | null> => {
+      const parsed = parseSteamIdentifier(value)
+      if (parsed.type === 'steam64') return parsed.value
+      if (parsed.type === 'vanity') return resolveSteamVanity(parsed.value)
+      return null
     }
 
     for (const student of students) {
