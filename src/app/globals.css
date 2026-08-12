@@ -119,6 +119,11 @@
     background: var(--surface-2);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .glass-liquid:hover {
+    border-color: rgba(167, 139, 250, 0.22);
+    box-shadow: 0 12px 48px -20px rgba(139, 92, 246, 0.25);
   }
 
   /* ===== TYPOGRAPHY ===== */
@@ -163,20 +168,24 @@
     @apply inline-flex items-center justify-center gap-2 font-semibold;
     position: relative;
     color: #ffffff;
-    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-    border: 1px solid rgba(45, 229, 202, 0.45);
+    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 45%, #6d28d9 100%);
+    background-size: 220% 220%;
+    border: 1px solid rgba(167, 139, 250, 0.45);
     border-radius: var(--radius-pill);
-    transition: transform 0.2s ease, filter 0.25s ease;
+    box-shadow: 0 8px 32px -10px rgba(139, 92, 246, 0.55);
+    animation: btn-gradient-flow 6s ease-in-out infinite;
+    transition: transform 0.2s ease, filter 0.25s ease, box-shadow 0.3s ease;
   }
   .btn-primary-gradient:hover,
   .btn-darey:hover {
     color: #ffffff;
-    filter: brightness(1.08);
-    transform: translateY(-1px);
+    filter: brightness(1.1);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 14px 44px -10px rgba(139, 92, 246, 0.8);
   }
   .btn-primary-gradient:active,
   .btn-darey:active {
-    transform: translateY(0);
+    transform: translateY(0) scale(0.99);
   }
   .btn-darey svg,
   .btn-primary-gradient svg {

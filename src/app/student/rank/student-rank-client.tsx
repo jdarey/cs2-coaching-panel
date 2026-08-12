@@ -288,7 +288,7 @@ export function StudentRankClient() {
         <div className="flex items-center gap-2 mb-4">
           <span className="section-pill"><TrendingUp className="w-3.5 h-3.5" /> Twoja ranga w grze</span>
         </div>
-        <div className="glass-card rounded-3xl p-6 md:p-7 relative overflow-hidden">
+        <div className="glass-card border-glow rounded-3xl p-6 md:p-7 relative overflow-hidden">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Add entry form */}
             <div className="lg:w-72 shrink-0">

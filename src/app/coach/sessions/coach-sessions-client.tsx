@@ -340,7 +340,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
               return (
                 <article
                   key={session.id} className={cn(
-                    'glass-liquid spotlight-card group relative flex flex-col overflow-hidden rounded-3xl p-5',
+                    'glass-liquid spotlight-card sheen group relative flex flex-col overflow-hidden rounded-3xl p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_56px_-20px_rgba(139,92,246,0.35)]',
                     'hover:border-[#a78bfa]/25',
                     'rise-in'
                   )}

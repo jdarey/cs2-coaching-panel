@@ -379,10 +379,8 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               return (
                 <div
                   key={`${item.sessionId}-${video.id}`}
-                  className="glass-liquid rise-in rounded-3xl relative overflow-hidden group hover:border-[#a78bfa]/25" style={{
+                  className="glass-liquid rise-in sheen rounded-3xl relative overflow-hidden group hover:border-[#a78bfa]/30 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_56px_-20px_rgba(139,92,246,0.35)]" style={{
                     animationDelay: `${Math.min(idx * 60, 600)}ms`,
-                    // override hover border to violet glow when hovered
-                    ['--hover-border' as string]: 'rgba(45,229,202,0.25)',
                   }}
                 >
                   {/* ===== Thumbnail (16:9) ===== */}

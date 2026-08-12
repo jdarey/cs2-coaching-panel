@@ -231,7 +231,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
               const videoCount = session.videos.length
               return (
                 <div
-                  key={session.id} className="glass-liquid rise-in spotlight-card group relative overflow-hidden rounded-3xl p-6 hover:border-[#a78bfa]/25"
+                  key={session.id} className="glass-liquid rise-in spotlight-card sheen group relative overflow-hidden rounded-3xl p-6 hover:border-[#a78bfa]/30 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_56px_-20px_rgba(139,92,246,0.35)]"
                   style={{ animationDelay: `${0.05 + i * 0.05}s` }}
                   onMouseMove={spotlightHandler}
                 >

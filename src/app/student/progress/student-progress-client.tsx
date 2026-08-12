@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { formatDate, formatDateTime, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, spotlightHandler } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
+import { CountUp } from '@/components/count-up'
 import {
   TrendingUp,
   Trophy,
@@ -211,7 +212,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
               </div>
               <Award className="w-4 h-4 text-white/30" />
             </div>
-            <p className="mt-6 font-display text-3xl font-bold text-white">{stats.implemented}</p>
+            <p className="mt-6 font-display text-3xl font-bold text-white"><CountUp value={stats.implemented} /></p>
             <p className="mt-1 text-sm text-white/45">Wdrożone do gry</p>
           </div>
 
@@ -346,11 +347,11 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
 
             <div className="grid grid-cols-2 gap-3 mb-5">
               <div className="rounded-2xl p-4 bg-white/[0.03] border border-white/[0.06]">
-                <p className="font-display text-3xl font-bold text-white">{stats.totalSessions}</p>
+                <p className="font-display text-3xl font-bold text-white"><CountUp value={stats.totalSessions} /></p>
                 <p className="text-xs text-white/45 mt-1">Wszystkie sesje</p>
               </div>
               <div className="rounded-2xl p-4 bg-white/[0.03] border border-[#34d399]/15">
-                <p className="font-display text-3xl font-bold text-emerald-300">{stats.completedSessions}</p>
+                <p className="font-display text-3xl font-bold text-emerald-300"><CountUp value={stats.completedSessions} /></p>
                 <p className="text-xs text-white/45 mt-1">Zakończone</p>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StudentLayout } from '@/components/student-layout'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import { CountUp } from '@/components/count-up'
 import {
   Film, Clock, CalendarClock, BookOpen, ArrowRight, Sparkles, MessageSquare, Flame, Zap, PlayCircle,
   TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks,
@@ -202,7 +203,7 @@ export function StudentDashboardClient({
           >
             <div className="absolute -top-16 -right-16 w-52 h-52 rounded-full bg-[#8b5cf6]/15 blur-3xl pointer-events-none" />
             <div className="relative z-10 flex items-center gap-5">
-              <div className="relative w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] grid place-items-center ring-1 ring-white/25">
+              <div className="relative w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] grid place-items-center ring-1 ring-white/25 animate-pulse-ring">
                 {nextUpVideo ? <PlayCircle className="w-6 h-6 text-white" /> : <Film className="w-6 h-6 text-white" />}
               </div>
               <div className="min-w-0 flex-1">
@@ -254,7 +255,7 @@ export function StudentDashboardClient({
         {/* ===== PROGRESS + ELO TRAJECTORY ===== */}
         <div className="grid gap-6 lg:grid-cols-5 mb-8">
           {/* Progress card */}
-          <div className="animate-rise-in lg:col-span-3 relative rounded-3xl p-6 md:p-7 glass-liquid overflow-hidden" style={{ animationDelay: '120ms' }}>
+          <div className="animate-rise-in lg:col-span-3 relative rounded-3xl p-6 md:p-7 glass-liquid border-glow overflow-hidden" style={{ animationDelay: '120ms' }}>
             <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8 relative z-10">
               <div className="flex items-center gap-5 shrink-0">
                 <RankEmblem rank={rank} size={76} />
@@ -287,7 +288,7 @@ export function StudentDashboardClient({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {progressBreakdown.map((b) => (
                     <div key={b.key} className="rounded-2xl p-3.5 glass hover:border-white/[0.12] transition-all duration-300">
-                      <p className="font-display text-2xl font-bold tabular-nums" style={{ color: b.color }}>{b.v}</p>
+                      <p className="font-display text-2xl font-bold tabular-nums" style={{ color: b.color }}><CountUp value={b.v} /></p>
                       <p className="text-[11px] text-white/45 mt-1 leading-tight">{b.label}</p>
                     </div>
                   ))}
@@ -297,10 +298,10 @@ export function StudentDashboardClient({
           </div>
 
           {/* ELO trajectory */}
-          <div className="animate-rise-in lg:col-span-2 relative rounded-3xl p-6 glass-liquid overflow-hidden" style={{ animationDelay: '160ms' }}>
+          <div className="animate-rise-in lg:col-span-2 relative rounded-3xl p-6 glass-liquid border-glow overflow-hidden" style={{ animationDelay: '160ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] ring-1 ring-white/25">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] ring-1 ring-white/25 animate-icon-bounce">
                   <TrendingUp className="h-4 w-4 text-white" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-white/90">Trajektoria rangi</h3>
@@ -646,7 +647,7 @@ function EloChart({ entries }: { entries: RankEntry[] }) {
   return (
     <div>
       <div className="flex items-baseline gap-3 mb-2">
-        <span className="font-display text-2xl font-bold text-white tabular-nums">{data[data.length - 1].elo}</span>
+        <span className="font-display text-2xl font-bold text-white tabular-nums"><CountUp value={data[data.length - 1].elo} /></span>
         <span className={cn('inline-flex items-center gap-1 text-sm font-semibold tabular-nums', up ? 'text-[#34d399]' : 'text-red-300')}>
           <TrendingUp className={cn('h-4 w-4', !up && 'rotate-180')} />
           {up ? '+' : ''}{delta}

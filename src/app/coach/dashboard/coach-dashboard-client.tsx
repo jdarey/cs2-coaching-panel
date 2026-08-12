@@ -6,6 +6,7 @@ import { cn, formatDate, formatDateTime, STATUS_LABELS, STATUS_COLORS } from '@/
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import { CountUp } from '@/components/count-up'
 import {
   Plus, Users, BookOpen, Video, ArrowRight, Activity, MessageSquare, MessageSquareHeart,
   AlertTriangle, Clock3, CalendarClock, TrendingDown, TrendingUp, Minus, CheckCircle2,
@@ -91,7 +92,7 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
         >
           <Link
             href="/coach/sessions"
-            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white btn-darey ring-1 ring-white/20 hover:-translate-y-0.5 transition-all duration-300"
+            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white btn-darey animate-btn-gradient animate-shimmer ring-1 ring-white/20 hover:-translate-y-0.5 transition-all duration-300"
           >
             <Plus className="h-4 w-4" />
             Nowa sesja
@@ -114,11 +115,11 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
               className="rise-in group flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
               style={{ animationDelay: `${i * 50}ms` }}
             >
-              <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1', a.tone)}>
+              <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 animate-icon-bounce', a.tone)}>
                 <a.icon className="h-4 w-4" />
               </span>
               <span>
-                <span className="block font-display text-xl font-bold leading-none tabular-nums">{a.count}</span>
+                <span className="block font-display text-xl font-bold leading-none tabular-nums"><CountUp value={a.count} /></span>
                 <span className="block text-[11px] text-white/45 mt-1 leading-tight">{a.label}</span>
               </span>
             </Link>
@@ -126,7 +127,7 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
         </div>
 
         {/* ===== PRIORITY QUEUE — who needs you now ===== */}
-        <div className="rise-in glass-liquid relative overflow-hidden rounded-3xl p-6 mb-8" style={{ animationDelay: '80ms' }}>
+        <div className="rise-in glass-liquid border-glow relative overflow-hidden rounded-3xl p-6 mb-8" style={{ animationDelay: '80ms' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/25">
@@ -200,11 +201,11 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
             <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#6d28d9]/20 blur-3xl animate-aurora pointer-events-none" />
             <div className="relative flex flex-col md:flex-row md:items-center gap-6">
               <div className="flex items-center gap-5">
-                <div className="relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/30 shadow-lg shadow-black/30">
+                <div className="relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/30 shadow-lg shadow-black/30 animate-icon-bounce">
                   <Activity className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <p className="font-display text-5xl font-bold text-gradient-mesh leading-none tabular-nums">{effectiveness}%</p>
+                  <p className="font-display text-5xl font-bold text-gradient-mesh leading-none tabular-nums"><CountUp value={effectiveness} />%</p>
                   <p className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-white/45">Realizacja treningów</p>
                 </div>
               </div>
@@ -270,7 +271,7 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
                   <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#c4b5fd] group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
                 <div className="mt-5">
-                  <p className="font-display text-3xl font-bold text-white tabular-nums">{stat.value}</p>
+                  <p className="font-display text-3xl font-bold text-white tabular-nums"><CountUp value={stat.value} /></p>
                   <p className="mt-1 text-sm text-white/55 group-hover:text-white/70 transition-colors">{stat.name}</p>
                   <p className="mt-0.5 text-[11px] text-white/35">{stat.hint}</p>
                 </div>
