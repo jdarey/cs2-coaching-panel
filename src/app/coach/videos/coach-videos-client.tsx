@@ -71,6 +71,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   const [students] = useState<Student[]>(initialStudents)
   const [sessions] = useState<Session[]>(initialSessions)
   const [search, setSearch] = useState('')
+  const [activeTag, setActiveTag] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [editingVideo, setEditingVideo] = useState<Video | null>(null)
@@ -96,7 +97,8 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       v.title.toLowerCase().includes(search.toLowerCase()) ||
       v.description?.toLowerCase().includes(search.toLowerCase())
     const matchesTab = activeTab === 'all' || v.source === activeTab
-    return matchesSearch && matchesTab
+    const matchesTag = !activeTag || v.tags.some((t) => t.tag.id === activeTag)
+    return matchesSearch && matchesTab && matchesTag
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -211,6 +213,14 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       }
 
       toast({ title: 'Sukces', description: `Film przypisany do ucznia ${students.find(s => s.id === assignFormData.studentId)?.name || assignFormData.studentId}` })
+      // Keep the local count in sync so the grid reflects the new assignment
+      setVideos((prev) =>
+        prev.map((v) =>
+          v.id === assigningVideo.id
+            ? { ...v, _count: { ...v._count, sessionVideos: v._count.sessionVideos + 1 } }
+            : v
+        )
+      )
       setAssignDialogOpen(false)
       resetAssignForm()
     } catch {
@@ -372,6 +382,40 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             })}
           </div>
         </div>
+
+        {/* Tag filter */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-8 animate-rise-in" style={{ animationDelay: '160ms' }}>
+            <button
+              onClick={() => setActiveTag('')}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3.5 h-8 text-xs font-medium transition-all',
+                !activeTag
+                  ? 'text-white ring-1 ring-[#2de5ca]/40 bg-[#2de5ca]/10'
+                  : 'glass-liquid text-white/60 hover:text-white'
+              )}
+            >
+              Wszystkie
+            </button>
+            {tags.map((tag) => {
+              const selected = activeTag === tag.id
+              return (
+                <button
+                  key={tag.id}
+                  onClick={() => setActiveTag(selected ? '' : tag.id)}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full px-3.5 h-8 text-xs font-medium transition-all',
+                    selected ? 'text-white' : 'glass-liquid text-white/60 hover:text-white'
+                  )}
+                  style={selected ? { backgroundColor: `${tag.color}26`, boxShadow: `inset 0 0 0 1px ${tag.color}` } : undefined}
+                >
+                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: tag.color }} />
+                  {tag.name}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* Videos grid */}
         {filteredVideos.length === 0 ? (

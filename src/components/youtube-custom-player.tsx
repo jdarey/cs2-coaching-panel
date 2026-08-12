@@ -25,6 +25,11 @@ const QUALITY_LABELS: Record<string, string> = {
 // Default minimum quality injected via URL parameter
 const DEFAULT_VQ = 'hd2160'
 
+// Preferred quality codes, high → low. Adaptive mode walks down this ladder
+// (filtered to the qualities the current video actually offers) when the
+// connection can't keep up, and climbs back up once playback is smooth.
+const QUALITY_ORDER = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
+
 export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'Uczeń' }: YoutubeCustomPlayerProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const playerRef     = useRef<any>(null)
@@ -54,6 +59,15 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const [vq, setVq] = useState<string>(DEFAULT_VQ)
   // Mirror of vq readable from closures (resize observer) that would otherwise capture stale state
   const vqRef = useRef<string>(DEFAULT_VQ)
+
+  // Adaptive quality (default / Auto mode): playback starts at the highest
+  // available quality; if buffering persists the player steps DOWN one rung
+  // at a time, and climbs back up after a long smooth stretch. Disabled once
+  // the user picks a quality manually.
+  const userPickedRef     = useRef(false)
+  const bufferingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const recoveryTimerRef  = useRef<NodeJS.Timeout | null>(null)
+  const lastStepDownRef   = useRef(0)
 
   // Canvas scale for the iframe: 6x makes YouTube's ABR stream the highest
   // available quality (used for the default / Auto mode). When the user picks
@@ -99,6 +113,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     vqRef.current = DEFAULT_VQ
     setIsReinitialising(false)
     setThumbSrc(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
+    // Back to adaptive mode for the new video
+    userPickedRef.current = false
+    if (bufferingTimerRef.current) { clearTimeout(bufferingTimerRef.current); bufferingTimerRef.current = null }
+    if (recoveryTimerRef.current)  { clearTimeout(recoveryTimerRef.current);  recoveryTimerRef.current  = null }
     if (overlayTimeoutRef.current) clearTimeout(overlayTimeoutRef.current)
   }, [videoId])
 
@@ -106,6 +124,67 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const playerId = useRef(`yt-player-${videoId}`)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
   const qualityRetryRef = useRef(0)
+
+  const clearAdaptiveTimers = useCallback(() => {
+    if (bufferingTimerRef.current) { clearTimeout(bufferingTimerRef.current); bufferingTimerRef.current = null }
+    if (recoveryTimerRef.current)  { clearTimeout(recoveryTimerRef.current);  recoveryTimerRef.current  = null }
+  }, [])
+
+  // Quality ladder for the current video (only codes it actually offers).
+  const getQualityLadder = useCallback((): string[] => {
+    const available = playerRef.current?.getAvailableQualityLevels?.() ?? []
+    if (available.length > 0) return QUALITY_ORDER.filter(q => available.includes(q))
+    return [...QUALITY_ORDER]
+  }, [])
+
+  // Rebuild the player at a specific vq, resuming at the same position.
+  // Used by the adaptive up/down stepping (URL-level vq is the only
+  // mechanism YouTube embeds reliably honor).
+  const rebuildWithQuality = useCallback((q: string) => {
+    if (!playerRef.current) return
+    const t = playerRef.current.getCurrentTime?.() ?? 0
+    const wasPlaying = playerRef.current.getPlayerState?.() === 1
+    reinitStartRef.current = t
+    reinitPlayRef.current  = wasPlaying
+    reinitVqRef.current    = q
+    setVq(q)
+    vqRef.current = q
+    setCurrentQuality(q)
+    setShowQualityMenu(false)
+    setIsReinitialising(true)
+    reinitActiveRef.current = true
+    clearAdaptiveTimers()
+    setPlayerEpoch(e => e + 1)
+    setTimeout(() => {
+      if (reinitActiveRef.current) { reinitActiveRef.current = false; setIsReinitialising(false) }
+    }, 8000)
+  }, [clearAdaptiveTimers])
+
+  // Buffering persisted → drop one quality rung (adaptive mode only).
+  const stepDownQuality = useCallback(() => {
+    if (userPickedRef.current || reinitActiveRef.current) return
+    if (!playerRef.current || playerRef.current.getPlayerState?.() !== 3) return
+    const ladder = getQualityLadder()
+    if (ladder.length <= 1) return
+    let idx = ladder.indexOf(vqRef.current)
+    if (idx === -1) idx = 0
+    if (idx >= ladder.length - 1) return
+    lastStepDownRef.current = Date.now()
+    rebuildWithQuality(ladder[idx + 1])
+  }, [getQualityLadder, rebuildWithQuality])
+
+  // Long smooth stretch → climb back up one rung (never within 60s of the
+  // last step down, so a flaky connection doesn't ping-pong).
+  const stepUpQuality = useCallback(() => {
+    if (userPickedRef.current || reinitActiveRef.current) return
+    if (!playerRef.current) return
+    if (Date.now() - lastStepDownRef.current < 60000) return
+    const ladder = getQualityLadder()
+    if (ladder.length <= 1) return
+    let idx = ladder.indexOf(vqRef.current)
+    if (idx === -1 || idx <= 0) return
+    rebuildWithQuality(ladder[idx - 1])
+  }, [getQualityLadder, rebuildWithQuality])
 
   // 1. Load YouTube IFrame API
   useEffect(() => {
@@ -202,7 +281,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
             if (available.length === 0) return
             
             // Prefer specific high-quality codes over generic "first"
-            const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
+            const preferredOrder = QUALITY_ORDER
             const highest = preferredOrder.find(q => available.includes(q)) || available[0]
             // An explicit user choice is authoritative; only auto-pick the
             // highest available when nothing has been selected (default).
@@ -250,7 +329,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
                 const current = playerRef.current.getPlaybackQuality()
                 const available = playerRef.current.getAvailableQualityLevels?.() ?? []
                 if (available.length > 0) {
-                  const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
+                  const preferredOrder = QUALITY_ORDER
                   const highest = preferredOrder.find(q => available.includes(q)) || available[0]
                   // An explicit user choice is authoritative; only auto-pick
                   // the best when nothing has been selected yet (default).
@@ -280,6 +359,18 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
             setHasPlayed(true)
             const qualities: string[] = event.target.getAvailableQualityLevels?.() ?? []
             if (qualities.length > 0) setAvailableQualities(qualities)
+            // Adaptive quality: a long smooth stretch lets the quality climb
+            // back up one rung at a time.
+            if (bufferingTimerRef.current) { clearTimeout(bufferingTimerRef.current); bufferingTimerRef.current = null }
+            if (!userPickedRef.current) {
+              const ladder = getQualityLadder()
+              let idx = ladder.indexOf(vqRef.current)
+              if (idx === -1) idx = 0
+              if (idx > 0) {
+                if (recoveryTimerRef.current) clearTimeout(recoveryTimerRef.current)
+                recoveryTimerRef.current = setTimeout(() => stepUpQuality(), 90000)
+              }
+            }
             // Fade out thumbnail
             setThumbnailFading(true)
             if (overlayTimeoutRef.current) clearTimeout(overlayTimeoutRef.current)
@@ -289,11 +380,22 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
             }, 600)
           } else if (state === 2) {
             setIsPlaying(false); setIsBuffering(false)
+            if (bufferingTimerRef.current) { clearTimeout(bufferingTimerRef.current); bufferingTimerRef.current = null }
+            if (recoveryTimerRef.current)  { clearTimeout(recoveryTimerRef.current);  recoveryTimerRef.current  = null }
           } else if (state === 3) {
             setIsBuffering(true)
+            // Adaptive quality: if buffering persists, step the quality down
+            // one rung (gives a weak connection a chance to recover first).
+            if (!userPickedRef.current) {
+              if (recoveryTimerRef.current) { clearTimeout(recoveryTimerRef.current); recoveryTimerRef.current = null }
+              if (bufferingTimerRef.current) clearTimeout(bufferingTimerRef.current)
+              bufferingTimerRef.current = setTimeout(() => stepDownQuality(), 3500)
+            }
           } else if (state === 0) {
             setIsPlaying(false); setIsBuffering(false)
             setIsEnded(true); setShowControls(true)
+            if (bufferingTimerRef.current) { clearTimeout(bufferingTimerRef.current); bufferingTimerRef.current = null }
+            if (recoveryTimerRef.current)  { clearTimeout(recoveryTimerRef.current);  recoveryTimerRef.current  = null }
           }
         },
         onPlaybackQualityChange: (event: any) => {
@@ -314,6 +416,11 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isApiReady, videoId, playerEpoch])
+
+  // Cleanup: never let adaptive timers fire after unmount
+  useEffect(() => {
+    return () => clearAdaptiveTimers()
+  }, [])
 
   // 3. Time polling
   useEffect(() => {
@@ -345,7 +452,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   // 3c. Periodic quality enforcement - YouTube often ignores first request
   useEffect(() => {
     if (!isReady || !playerRef.current?.getPlaybackQuality) return
-    const preferredOrder = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
+    const preferredOrder = QUALITY_ORDER
     let interval: NodeJS.Timeout
     interval = setInterval(() => {
       // Skip while a rebuild is in flight (player destroyed mid quality change)
@@ -466,6 +573,10 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const setQuality = (q: string) => {
     if (!playerRef.current) return
 
+    // A manual pick switches the player out of adaptive mode.
+    userPickedRef.current = true
+    clearAdaptiveTimers()
+
     const t          = playerRef.current.getCurrentTime?.() ?? 0
     const wasPlaying = isPlaying
 
@@ -542,6 +653,14 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
            gentle fade that blends into the footage. Not a hard bar. */}
       <div className="pointer-events-none absolute top-0 left-0 right-0 z-20 h-16 bg-gradient-to-b from-black/85 via-black/35 to-transparent" />
 
+      {/* 2b. Soft bottom-right mask — hides the persistent YouTube logo
+           watermark that YouTube draws inside the video frame (bottom-right
+           corner). A gentle radial fade, so it never looks like a bar. */}
+      <div
+        className="pointer-events-none absolute bottom-0 right-0 z-20 h-24 w-48"
+        style={{ background: 'radial-gradient(ellipse 100% 100% at 100% 100%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 62%)' }}
+      />
+
       {/* 3. Click-capture overlay (ALWAYS) — covers YouTube native play button at all times */}
       <div className="absolute inset-0 z-30 bg-black/0 cursor-pointer" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
       {/* 3b. Base cover layer - always present to block any YouTube UI bleed-through */}
@@ -569,7 +688,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         <div className="absolute inset-0 z-40 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 pointer-events-none">
           <Loader2 className="w-9 h-9 text-[#2de5ca] animate-spin" />
           <p className="text-white/50 text-[11px] font-semibold tracking-widest uppercase">
-            Zmiana jakości na {qualityLabel(reinitVqRef.current)}…
+            {userPickedRef.current
+              ? `Zmiana jakości na ${qualityLabel(reinitVqRef.current)}…`
+              : 'Dopasowuję jakość do łącza…'}
           </p>
         </div>
       )}

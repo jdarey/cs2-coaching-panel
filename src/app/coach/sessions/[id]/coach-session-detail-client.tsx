@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   formatDate,
   formatDateTime,
@@ -74,6 +74,15 @@ interface Progress {
   watchedAt: string | null
 }
 
+interface LibraryVideo {
+  id: string
+  title: string
+  url: string
+  thumbnail: string | null
+  description: string | null
+  tags: { tag: { id: string; name: string; color: string } }[]
+}
+
 interface CoachSessionDetailClientProps {
   initialSession: Session
   initialProgress: Progress[]
@@ -99,7 +108,28 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
   const [sessionStatus, setSessionStatus] = useState<string>(initialSession.status)
   const [videoSearch, setVideoSearch] = useState('')
   const [newVideoUrl, setNewVideoUrl] = useState('')
+  const [libraryVideos, setLibraryVideos] = useState<LibraryVideo[] | null>(null)
+  const [libraryLoading, setLibraryLoading] = useState(true)
   const { toast } = useToast()
+
+  // Load the coach's video library once so the search can offer existing videos
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/videos')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => { if (!cancelled) setLibraryVideos(data) })
+      .catch(() => { if (!cancelled) setLibraryVideos([]) })
+      .finally(() => { if (!cancelled) setLibraryLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  const filteredLibrary = videoSearch.trim()
+    ? (libraryVideos || []).filter((v) =>
+        v.title.toLowerCase().includes(videoSearch.toLowerCase()) ||
+        (v.description || '').toLowerCase().includes(videoSearch.toLowerCase()) ||
+        v.tags.some((t) => t.tag.name.toLowerCase().includes(videoSearch.toLowerCase()))
+      )
+    : []
 
   const getProgressForVideo = (videoId: string) => progress.find((p) => p.videoId === videoId)
 
@@ -145,9 +175,30 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
     }
   }
 
-  const handleDeleteVideo = async (sessionVideoId: string) => {
+  const handleDeleteVideo = async (videoId: string) => {
     if (!confirm('Czy na pewno chcesz usunąć ten film z sesji?')) return
-    toast({ title: 'Info', description: 'Funkcja usuwania filmu z sesji do zaimplementowania' })
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/coach/sessions/${session.id}/videos`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
+        return
+      }
+      setSession(data)
+      if (currentVideoId === videoId) {
+        setCurrentVideoId(data.videos?.[0]?.video.id || '')
+      }
+      toast({ title: 'Sukces', description: 'Film usunięty z sesji' })
+    } catch {
+      toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSaveStatus = async () => {
@@ -163,6 +214,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
         return
       }
+      setSession((prev) => ({ ...prev, status: sessionStatus }))
       toast({ title: 'Sukces', description: 'Status sesji zaktualizowany' })
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
@@ -186,8 +238,31 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
         return
       }
+      setSession(data)
       toast({ title: 'Sukces', description: 'Film dodany do sesji' })
       setNewVideoUrl('')
+    } catch {
+      toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAddLibraryVideo = async (videoId: string) => {
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/coach/sessions/${session.id}/videos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
+        return
+      }
+      setSession(data)
+      toast({ title: 'Sukces', description: 'Film dodany do sesji' })
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
     } finally {
@@ -392,12 +467,14 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     const isActive = video.id === currentVideoId
                     const pct = videoProgress?.progress || 0
                     return (
-                      <button
+                      <div
                         key={video.id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setCurrentVideoId(video.id)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCurrentVideoId(video.id) }}
                         className={cn(
-                          'group relative w-full text-left rounded-2xl p-3.5 transition-all duration-300',
+                          'group relative w-full cursor-pointer text-left rounded-2xl p-3.5 transition-all duration-300',
                           isActive
                             ? 'glass-tinted border-[#2de5ca]/25'
                             : 'border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.1]'
@@ -452,8 +529,17 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                           {isActive && (
                             <CheckCircle2 className="h-4 w-4 text-[#2de5ca] flex-shrink-0" />
                           )}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteVideo(video.id) }}
+                            className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg text-white/25 opacity-0 group-hover:opacity-100 hover:text-red-300 hover:bg-red-500/10 transition-all"
+                            title="Usuń film z sesji"
+                            aria-label={`Usuń ${video.title} z sesji`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                      </button>
+                      </div>
                     )
                   })
                 )}
@@ -583,6 +669,61 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                   className="w-full h-12 rounded-xl bg-[#181818] border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
                 />
               </div>
+              {videoSearch.trim() && (
+                <div className="mt-3 space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {libraryLoading ? (
+                    <div className="flex items-center justify-center gap-2 py-6 text-xs text-white/40">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Ładowanie biblioteki...
+                    </div>
+                  ) : filteredLibrary.length === 0 ? (
+                    <p className="py-4 text-center text-xs text-white/40">
+                      Brak filmów w bibliotece pasujących do „{videoSearch}”.
+                    </p>
+                  ) : (
+                    filteredLibrary.map((v) => {
+                      const alreadyIn = session.videos.some((sv) => sv.video.id === v.id)
+                      return (
+                        <div key={v.id} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-[#181818] p-2.5">
+                          <div className="grid h-12 w-16 flex-shrink-0 place-items-center overflow-hidden rounded-lg bg-black/40">
+                            {v.thumbnail ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={v.thumbnail} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <Video className="h-4 w-4 text-white/30" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-white/85">{v.title}</p>
+                            {v.tags.length > 0 && (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {v.tags.map((t) => (
+                                  <span
+                                    key={t.tag.id}
+                                    className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium border"
+                                    style={{ color: t.tag.color, borderColor: `${t.tag.color}40`, backgroundColor: `${t.tag.color}12` }}
+                                  >
+                                    <span className="h-1 w-1 rounded-full" style={{ backgroundColor: t.tag.color }} />
+                                    {t.tag.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            disabled={alreadyIn || isLoading}
+                            onClick={() => handleAddLibraryVideo(v.id)}
+                            className="inline-flex flex-shrink-0 items-center gap-1 rounded-lg px-3 h-8 text-xs font-semibold text-white btn-darey transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {alreadyIn ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                            {alreadyIn ? 'Dodane' : 'Dodaj'}
+                          </button>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
