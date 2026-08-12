@@ -1,0 +1,284 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { CoachLayout } from '@/components/coach-layout-export'
+import { PageHeader } from '@/components/page-header'
+import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import { useRouter } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { cn, formatDateTime } from '@/lib/utils'
+import {
+  Swords, Trophy, Loader2, TrendingUp, TrendingDown, Crosshair, Inbox, Search, X, Minus,
+} from 'lucide-react'
+
+interface Match {
+  id: string
+  map: string
+  result: string
+  eloChange: number
+  kills: number | null
+  deaths: number | null
+  reflection: string | null
+  source: string
+  createdAt: string
+  student: { id: string; name: string | null; email: string; avatarUrl: string | null }
+  leetifyRating: number | null
+  preaim: number | null
+  reactionMs: number | null
+  accuracyEnemySpotted: number | null
+  accuracyHead: number | null
+  sprayAccuracy: number | null
+}
+
+export function CoachMatchesClient() {
+  const router = useRouter()
+  useLiveRefresh(() => router.refresh())
+  const [matches, setMatches] = useState<Match[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/matches')
+      if (res.ok) setMatches(await res.json())
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const stats = useMemo(() => {
+    const wins = matches.filter((m) => m.result === 'WIN').length
+    const losses = matches.filter((m) => m.result === 'LOSS').length
+    const total = matches.length
+    const wr = total > 0 ? Math.round((wins / total) * 100) : 0
+    // Per student winrate
+    const byStudent = new Map<string, { wins: number; losses: number; matches: number }>()
+    for (const m of matches) {
+      const s = byStudent.get(m.student.id) ?? { wins: 0, losses: 0, matches: 0 }
+      s.matches++
+      if (m.result === 'WIN') s.wins++
+      if (m.result === 'LOSS') s.losses++
+      byStudent.set(m.student.id, s)
+    }
+    const best = Array.from(byStudent.entries()).sort((a, b) => (b[1].wins / Math.max(1, b[1].matches)) - (a[1].wins / Math.max(1, a[1].matches)))[0]
+    return { wins, losses, total, wr, best }
+  }, [matches])
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    if (!q) return matches
+    return matches.filter(
+      (m) =>
+        m.student.name?.toLowerCase().includes(q) ||
+        m.student.email.toLowerCase().includes(q) ||
+        m.map.toLowerCase().includes(q),
+    )
+  }, [matches, search])
+
+  return (
+    <CoachLayout>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-24 space-y-8">
+        <PageHeader
+          icon={Swords}
+          label="Monitoring wyników"
+          title="Mecze uczniów"
+          subtitle="Feed meczów zalogowanych przez uczniów — serie, winrate i refleksje w jednym miejscu."
+        />
+
+        {/* Stats */}
+        <section className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '0ms' }}>
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/20">
+                <Trophy className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-display text-xl font-bold text-emerald-300">{stats.wins}</p>
+                <p className="text-[11px] text-white/45">Wygrane</p>
+              </div>
+            </div>
+          </div>
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '60ms' }}>
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#f87171] to-[#ef4444] ring-1 ring-white/20">
+                <Crosshair className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-display text-xl font-bold text-red-300">{stats.losses}</p>
+                <p className="text-[11px] text-white/45">Przegrane</p>
+              </div>
+            </div>
+          </div>
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '120ms' }}>
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-display text-xl font-bold text-[#c4b5fd]">{stats.wr}%</p>
+                <p className="text-[11px] text-white/45">Winrate łącznie</p>
+              </div>
+            </div>
+          </div>
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '180ms' }}>
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/20">
+                <Swords className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-display text-xl font-bold text-amber-300">{stats.total}</p>
+                <p className="text-[11px] text-white/45">Zalogowanych meczów</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Search */}
+        <div className="relative max-w-md animate-rise-in" style={{ animationDelay: '220ms' }}>
+          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Szukaj po uczniu lub mapie..."
+            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#8b5cf6]/30 transition"
+            aria-label="Szukaj meczów"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition"
+              aria-label="Wyczyść wyszukiwanie"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Feed */}
+        {loading ? (
+          <div className="glass-liquid rounded-3xl flex items-center justify-center py-20 text-white/40">
+            <Loader2 className="w-5 h-5 animate-spin mr-3" /> Ładowanie meczów…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="glass-liquid rounded-3xl py-16 px-6 text-center">
+            <Inbox className="w-12 h-12 mx-auto mb-4 text-white/25" />
+            <p className="text-white/55">{search ? 'Brak meczów pasujących do kryteriów' : 'Żaden uczeń nie zalogował jeszcze meczu.'}</p>
+            <p className="text-sm text-white/35 mt-1">Uczniowie logują mecze po każdej grze — zachęć ich do tego.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((m, i) => {
+              const win = m.result === 'WIN'
+              const draw = m.result === 'DRAW'
+              return (
+                <div
+                  key={m.id}
+                  className={cn(
+                    'glass-liquid rise-in spotlight-card relative rounded-3xl p-5 overflow-hidden transition-all duration-300',
+                    win && 'border-l-2 border-l-emerald-500/50',
+                    m.result === 'LOSS' && 'border-l-2 border-l-red-500/40',
+                  )}
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={cn(
+                        'shrink-0 grid place-items-center w-12 h-12 rounded-2xl ring-1',
+                        win
+                          ? 'bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-white/20'
+                          : m.result === 'LOSS'
+                            ? 'bg-gradient-to-br from-[#f87171] to-[#ef4444] ring-white/20'
+                            : 'bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-white/20',
+                      )}
+                    >
+                      {win ? <Trophy className="w-5 h-5 text-white" /> : m.result === 'LOSS' ? <Crosshair className="w-5 h-5 text-white" /> : <Minus className="w-5 h-5 text-white" />}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link href={`/coach/students?q=${encodeURIComponent(m.student.email)}`} className="flex items-center gap-2 group min-w-0">
+                          <Avatar className="h-6 w-6 rounded-lg ring-1 ring-white/15 shrink-0">
+                            <AvatarImage src={m.student.avatarUrl || undefined} alt={m.student.name || m.student.email} />
+                            <AvatarFallback className="rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white text-[10px] font-bold">
+                              {(m.student.name || m.student.email)[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-semibold text-white/75 group-hover:text-white truncate transition-colors">{m.student.name || m.student.email}</span>
+                        </Link>
+                        <span className="text-white/25">·</span>
+                        <span className="font-display text-lg font-bold">{m.map}</span>
+                        <span className={cn(
+                          'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 border',
+                          win ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/25'
+                            : m.result === 'LOSS' ? 'text-red-300 bg-red-500/10 border-red-500/25'
+                              : 'text-amber-300 bg-amber-500/10 border-amber-500/25',
+                        )}>
+                          {win ? 'W' : m.result === 'LOSS' ? 'P' : 'R'}
+                        </span>
+                        {m.eloChange !== 0 && (
+                          <span className={cn('inline-flex items-center gap-0.5 text-xs font-bold tabular-nums', m.eloChange > 0 ? 'text-[#34d399]' : 'text-red-300')}>
+                            {m.eloChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {m.eloChange > 0 ? '+' : ''}{m.eloChange} ELO
+                          </span>
+                        )}
+                        <span className="text-[11px] text-white/35 ml-auto">{formatDateTime(m.createdAt)}</span>
+                      </div>
+
+                      {m.source === 'FACEIT' && (m.leetifyRating != null || m.reactionMs != null || m.preaim != null || m.accuracyHead != null || m.sprayAccuracy != null) && (
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                          {m.leetifyRating != null && (
+                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
+                              <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Rating</p>
+                              <p className="text-sm font-bold text-[#c4b5fd] tabular-nums">{m.leetifyRating.toFixed(2)}</p>
+                            </div>
+                          )}
+                          {m.reactionMs != null && (
+                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
+                              <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Reakcja</p>
+                              <p className={cn('text-sm font-bold tabular-nums', m.reactionMs > 350 ? 'text-red-300' : 'text-[#34d399]')}>{m.reactionMs} ms</p>
+                            </div>
+                          )}
+                          {m.preaim != null && (
+                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
+                              <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Pre-aim</p>
+                              <p className="text-sm font-bold text-[#38bdf8] tabular-nums">{m.preaim.toFixed(1)}%</p>
+                            </div>
+                          )}
+                          {m.accuracyHead != null && (
+                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
+                              <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">HS</p>
+                              <p className="text-sm font-bold text-[#fbbf24] tabular-nums">{m.accuracyHead.toFixed(1)}%</p>
+                            </div>
+                          )}
+                          {m.sprayAccuracy != null && (
+                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
+                              <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Spray</p>
+                              <p className="text-sm font-bold text-[#a78bfa] tabular-nums">{m.sprayAccuracy.toFixed(1)}%</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {m.reflection && (
+                        <p className="mt-2 text-sm text-white/55 leading-relaxed rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2.5">
+                          {m.reflection}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </CoachLayout>
+  )
+}

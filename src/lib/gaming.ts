@@ -115,6 +115,68 @@ export async function fetchLeetifyProfile(steamId: string): Promise<LeetifyProfi
   }
 }
 
+export interface LeetifyMatch {
+  externalId: string
+  map: string
+  outcome: 'WIN' | 'LOSS' | 'DRAW'
+  score: [number, number] | null
+  leetifyRating: number | null
+  preaim: number | null
+  reactionTimeMs: number | null
+  accuracyEnemySpotted: number | null
+  accuracyHead: number | null
+  sprayAccuracy: number | null
+  finishedAt: string
+}
+
+// Normalize a CS2 map id to its display name (de_dust2 -> Dust2, de_boulder -> Boulder).
+export function normalizeMapName(raw: string): string {
+  const name = raw.replace(/^de_/, '').trim()
+  if (!name) return raw
+  // two-part names like mirage, dust2, inferno -> capitalised
+  return name
+    .split('_')
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join('')
+}
+
+// Fetch the player's recent matches from Leetify's public API (keyless) by
+// steam64. Leetify aggregates ALL matchmaking — including Faceit — with per
+// match stats (preaim, reaction, accuracy, score). Faceit matches are
+// preferred; when fewer than `limit` exist, other matchmaking fills the rest.
+export async function fetchLeetifyRecentMatches(steamId: string, limit = 5): Promise<LeetifyMatch[]> {
+  try {
+    const url = `${LEETIFY_API}/v3/profile?steam64_id=${encodeURIComponent(steamId)}`
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) return []
+    const data = await res.json()
+    const games: any[] = Array.isArray(data?.recent_matches) ? data.recent_matches : []
+
+    const mapMatch = (g: any): LeetifyMatch => ({
+      externalId: g.id || `${g.finished_at}-${g.map_name}`,
+      map: normalizeMapName(g.map_name || 'Inna'),
+      outcome: g.outcome === 'win' ? 'WIN' : g.outcome === 'loss' ? 'LOSS' : 'DRAW',
+      score: Array.isArray(g.score) && g.score.length === 2 ? [g.score[0], g.score[1]] : null,
+      leetifyRating: typeof g.leetify_rating === 'number' ? g.leetify_rating : null,
+      preaim: typeof g.preaim === 'number' ? g.preaim : null,
+      reactionTimeMs: typeof g.reaction_time_ms === 'number' ? g.reaction_time_ms : null,
+      accuracyEnemySpotted: typeof g.accuracy_enemy_spotted === 'number' ? g.accuracy_enemy_spotted : null,
+      accuracyHead: typeof g.accuracy_head === 'number' ? g.accuracy_head : null,
+      sprayAccuracy: typeof g.spray_accuracy === 'number' ? g.spray_accuracy : null,
+      finishedAt: g.finished_at || new Date().toISOString(),
+    })
+
+    const all = games.map(mapMatch)
+    // Faceit first, then fill with other matchmaking if needed
+    const faceitMatches = all.filter((_, i) => games[i]?.data_source === 'faceit')
+    if (faceitMatches.length >= limit) return faceitMatches.slice(0, limit)
+    const others = all.filter((_, i) => games[i]?.data_source !== 'faceit')
+    return [...faceitMatches, ...others].slice(0, limit)
+  } catch {
+    return []
+  }
+}
+
 // Fetch a Faceit player by nickname using the legacy (keyless) endpoint.
 export async function fetchFaceitLegacy(nickname: string): Promise<FaceitLegacyProfile | null> {
   try {

@@ -9,12 +9,13 @@ import { StudentLayout } from '@/components/student-layout'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
 import { CountUp } from '@/components/count-up'
 import {
-  Film, Clock, CalendarClock, BookOpen, ArrowRight, Sparkles, MessageSquare, Flame, Zap, PlayCircle,
-  TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks,
+  Film, Clock, CalendarClock, BookOpen, ArrowRight,  Sparkles, MessageSquare, Flame, Zap, PlayCircle,
+  TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks, Timer,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getRank, nextRank, getLevel, getStreak } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
+import { SkillProgressChart, type SkillSnapshot } from '@/components/skill-progress-chart'
 
 interface Session {
   id: string
@@ -59,6 +60,18 @@ interface Assignment {
   videoId: string | null
 }
 
+interface RoutineAssignment {
+  id: string
+  status: string
+  routine: {
+    id: string
+    title: string
+    description: string | null
+    tasks: { id: string; title: string; description: string | null; videoId: string | null; day: number; minutes: number | null }[]
+  }
+  progress: { taskId: string; status: string }[]
+}
+
 interface Stats {
   totalVideos: number
   pending: number
@@ -77,6 +90,14 @@ interface StudentDashboardClientProps {
   initialRank: RankEntry[]
   initialMistakes: Mistake[]
   initialAssignments: Assignment[]
+  initialRoutines: RoutineAssignment[]
+  initialPractice: {
+    weeks: { label: string; minutes: number; isCurrent: boolean }[]
+    totalMinutes: number
+    thisWeek: number
+    sessions: number
+  }
+  initialSkillSnapshots: SkillSnapshot[]
   weekly: { videosDone: number; tasksDone: number; sessionsThisWeek: number; overdueAssignments: number; dueSoonAssignments: number }
 }
 
@@ -90,6 +111,9 @@ export function StudentDashboardClient({
   initialRank,
   initialMistakes,
   initialAssignments,
+  initialRoutines,
+  initialPractice,
+  initialSkillSnapshots,
   weekly,
 }: StudentDashboardClientProps) {
   const router = useRouter()
@@ -116,6 +140,16 @@ export function StudentDashboardClient({
 
   const overdueAssignments = assignments.filter((a) => a.status === 'PENDING' && a.dueDate && new Date(a.dueDate) < new Date())
   const nextAssignment = assignments.find((a) => a.status === 'PENDING')
+
+  const activeRoutine = initialRoutines.find((r) => r.status === 'ACTIVE')
+  const routineDone = activeRoutine
+    ? activeRoutine.progress.filter((p) => p.status === 'DONE').length
+    : 0
+  const routineTotal = activeRoutine?.routine.tasks.length ?? 0
+  const routinePct = routineTotal > 0 ? Math.round((routineDone / routineTotal) * 100) : 0
+
+  const practiceWeeks = initialPractice.weeks
+  const maxPracticeWeek = Math.max(1, ...practiceWeeks.map((w) => w.minutes))
 
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<TabKey>('sessions')
@@ -252,6 +286,51 @@ export function StudentDashboardClient({
           </div>
         </div>
 
+        {/* ===== ACTIVE ROUTINE ===== */}
+        {activeRoutine && (
+          <Link
+            href="/student/tasks"
+            className="animate-rise-in group glass-liquid relative overflow-hidden rounded-3xl p-6 mb-8 spotlight-card block transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-20px_rgba(139,92,246,0.35)]"
+            style={{ animationDelay: '100ms' }}
+            onMouseMove={(e) => {
+              const r = e.currentTarget.getBoundingClientRect()
+              e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+              e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+            }}
+          >
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#8b5cf6]/15 blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-5">
+              <div className="relative w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] grid place-items-center ring-1 ring-white/25 animate-pulse-ring">
+                <ListChecks className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-semibold mb-1">
+                  Twoja aktywna rutyna
+                </p>
+                <h3 className="font-display text-lg font-bold truncate">{activeRoutine.routine.title}</h3>
+                {activeRoutine.routine.description && (
+                  <p className="text-sm text-white/45 mt-0.5 line-clamp-1">{activeRoutine.routine.description}</p>
+                )}
+              </div>
+              <div className="shrink-0 sm:w-64">
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-white/50">Postęp rutyny</span>
+                  <span className="font-semibold text-white/80 tabular-nums">
+                    {routineDone}/{routineTotal} · {routinePct}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6] transition-all duration-1000"
+                    style={{ width: `${routinePct}%` }}
+                  />
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 shrink-0 text-white/30 group-hover:text-[#c4b5fd] group-hover:translate-x-1 transition-all duration-300" />
+            </div>
+          </Link>
+        )}
+
         {/* ===== PROGRESS + ELO TRAJECTORY ===== */}
         <div className="grid gap-6 lg:grid-cols-5 mb-8">
           {/* Progress card */}
@@ -320,6 +399,115 @@ export function StudentDashboardClient({
             )}
           </div>
         </div>
+
+        {/* ===== PRACTICE TIME ===== */}
+        <div className="grid gap-6 lg:grid-cols-3 mb-8">
+          {/* Weekly minutes chart */}
+          <div className="animate-rise-in lg:col-span-2 glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '170ms' }}>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#f59e0b] to-[#ef4444] ring-1 ring-white/25 animate-icon-bounce">
+                  <Timer className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-semibold text-white/90">Moja praktyka</h3>
+                  <p className="text-[11px] text-white/40">minuty treningu w ostatnich 8 tygodniach</p>
+                </div>
+              </div>
+              <Link href="/student/tasks" className="text-[11px] text-white/40 hover:text-[#c4b5fd] transition-colors font-medium">
+                zadania treningowe
+              </Link>
+            </div>
+            {initialPractice.sessions === 0 ? (
+              <p className="text-sm text-white/40 text-center py-12">
+                Ukończ pierwszy trening z timerem, aby zobaczyć wykres swojego czasu.
+                <Link href="/student/tasks" className="block mt-2 text-[#c4b5fd] hover:text-white transition-colors font-medium">Otwórz zadania →</Link>
+              </p>
+            ) : (
+              <div className="flex items-end gap-2 sm:gap-3 h-40">
+                {practiceWeeks.map((w, i) => {
+                  const h = w.minutes > 0 ? Math.max(6, (w.minutes / maxPracticeWeek) * 130) : 3
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group" title={`${w.label}: ${w.minutes} min`}>
+                      <span className="text-[10px] font-semibold tabular-nums opacity-0 group-hover:opacity-100 transition-opacity text-[#c4b5fd]">
+                        {w.minutes}
+                      </span>
+                      <div
+                        className={cn(
+                          'w-full max-w-9 rounded-t-xl transition-all duration-700',
+                          w.isCurrent
+                            ? 'bg-gradient-to-t from-[#8b5cf6] to-[#a78bfa] ring-1 ring-white/30 shadow-[0_0_16px_rgba(139,92,246,0.5)]'
+                            : 'bg-white/[0.08] group-hover:bg-[#a78bfa]/30',
+                        )}
+                        style={{ height: `${h}px` }}
+                      />
+                      <span className={cn('text-[10px] tabular-nums', w.isCurrent ? 'text-[#c4b5fd] font-semibold' : 'text-white/30')}>
+                        {w.label}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Practice stats */}
+          <div className="animate-rise-in glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] ring-1 ring-white/25">
+                <Flame className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="font-display text-lg font-semibold text-white/90">Łącznie</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="rounded-2xl p-4 glass">
+                <p className="font-display text-3xl font-bold text-white tabular-nums"><CountUp value={initialPractice.totalMinutes} /></p>
+                <p className="text-xs text-white/45 mt-1">minut treningu zalogowanych</p>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1 rounded-2xl p-4 glass">
+                  <p className="font-display text-2xl font-bold text-[#c4b5fd] tabular-nums"><CountUp value={initialPractice.thisWeek} /></p>
+                  <p className="text-[11px] text-white/45 mt-1">min w tym tygodniu</p>
+                </div>
+                <div className="flex-1 rounded-2xl p-4 glass">
+                  <p className="font-display text-2xl font-bold text-[#34d399] tabular-nums"><CountUp value={initialPractice.sessions} /></p>
+                  <p className="text-[11px] text-white/45 mt-1">sesji praktyki</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== SKILL PROGRESS ===== */}
+        {initialSkillSnapshots.length >= 2 ? (
+          <div className="animate-rise-in glass-liquid relative overflow-hidden rounded-3xl p-6 md:p-7 mb-8" style={{ animationDelay: '210ms' }}>
+            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[#8b5cf6]/15 blur-3xl pointer-events-none" />
+            <div className="relative z-10">
+              <SkillProgressChart snapshots={initialSkillSnapshots} />
+            </div>
+          </div>
+        ) : (
+          <div className="animate-rise-in glass-liquid relative overflow-hidden rounded-3xl p-6 mb-8" style={{ animationDelay: '210ms' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] ring-1 ring-white/25">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-display text-lg font-semibold text-white/90">Postęp słabości w czasie</h3>
+                <p className="text-sm text-white/45 mt-0.5">
+                  Gdy trener zsynchronizuje Twoje mecze z Faceita (Steam ID w ustawieniach), zobaczysz tu wykres, czy Twoje wyniki (celność, pozycje, utility…) rosną z tygodnia na tydzień.
+                </p>
+              </div>
+              <Link
+                href="/student/settings"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:border-[#a78bfa]/40 hover:text-[#c4b5fd] transition-all duration-300 shrink-0"
+              >
+                <Sparkles className="w-4 h-4 text-[#a78bfa]" />
+                Połącz Faceit
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* ===== MISTAKES + WEEKLY ===== */}
         <div className="grid gap-6 lg:grid-cols-3 mb-8">

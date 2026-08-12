@@ -17,7 +17,13 @@ import {
   Flame,
   Inbox,
   Check,
+  ListChecks,
+  ChevronDown,
+  Clock,
+  Trophy,
+  Timer,
 } from 'lucide-react'
+import { PracticeTimer } from '@/components/practice-timer'
 
 interface Assignment {
   id: string
@@ -30,17 +36,37 @@ interface Assignment {
   video?: { id: string; title: string; url: string; thumbnail: string | null } | null
 }
 
+interface RoutineAssignment {
+  id: string
+  status: string
+  completedAt: string | null
+  routine: {
+    id: string
+    title: string
+    description: string | null
+    tasks: { id: string; title: string; description: string | null; videoId: string | null; day: number; minutes: number | null }[]
+  }
+  progress: { id: string; taskId: string; status: string; completedAt: string | null }[]
+}
+
 export function StudentTasksClient() {
   const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [routines, setRoutines] = useState<RoutineAssignment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'DONE'>('ALL')
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [togglingTask, setTogglingTask] = useState<string | null>(null)
+  const [expandedRoutine, setExpandedRoutine] = useState<string | null>(null)
+  const [activeTimer, setActiveTimer] = useState<{ assignment: RoutineAssignment; task: RoutineAssignment['routine']['tasks'][number] } | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch('/api/assignments')
-      if (res.ok) {
-        setAssignments(await res.json())
+      const [aRes, rRes] = await Promise.all([fetch('/api/assignments'), fetch('/api/routines')])
+      if (aRes.ok) {
+        setAssignments(await aRes.json())
+      }
+      if (rRes.ok) {
+        setRoutines(await rRes.json())
       }
     } catch {
       /* ignore */
@@ -75,6 +101,40 @@ export function StudentTasksClient() {
       /* ignore */
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  const toggleRoutineTask = async (ra: RoutineAssignment, taskId: string) => {
+    setTogglingTask(taskId)
+    const current = ra.progress.find((p) => p.taskId === taskId)
+    const next = current?.status === 'DONE' ? 'PENDING' : 'DONE'
+    try {
+      const res = await fetch('/api/routines/progress', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId: ra.id, taskId, status: next }),
+      })
+      if (res.ok) {
+        setRoutines((prev) =>
+          prev.map((r) => {
+            if (r.id !== ra.id) return r
+            const progress = r.progress.some((p) => p.taskId === taskId)
+              ? r.progress.map((p) =>
+                  p.taskId === taskId
+                    ? { ...p, status: next, completedAt: next === 'DONE' ? new Date().toISOString() : null }
+                    : p,
+                )
+              : [...r.progress, { id: '', taskId, status: next, completedAt: next === 'DONE' ? new Date().toISOString() : null }]
+            const allDone =
+              progress.length >= r.routine.tasks.length && progress.every((p) => p.status === 'DONE')
+            return { ...r, progress, status: allDone ? 'COMPLETED' : 'ACTIVE' }
+          }),
+        )
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setTogglingTask(null)
     }
   }
 
@@ -157,6 +217,183 @@ export function StudentTasksClient() {
             </div>
           </div>
         </section>
+
+        {/* My routines */}
+        {!loading && routines.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20">
+                <ListChecks className="w-4 h-4 text-white" />
+              </span>
+              <h2 className="font-display text-xl font-bold text-gradient-violet">Moje rutyny</h2>
+              <span className="text-xs text-white/40 font-medium">Programy od trenera rozłożone na dni</span>
+            </div>
+
+            {routines.map((ra, i) => {
+              const expanded = expandedRoutine === ra.id
+              const doneCount = ra.progress.filter((p) => p.status === 'DONE').length
+              const totalCount = ra.routine.tasks.length
+              const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+              const completed = ra.status === 'COMPLETED'
+              const days = Array.from(new Set(ra.routine.tasks.map((t) => t.day))).sort((a, b) => a - b)
+
+              return (
+                <div
+                  key={ra.id}
+                  className="glass-liquid rise-in spotlight-card rounded-3xl overflow-hidden transition-all duration-300"
+                  style={{ animationDelay: `${i * 70}ms` }}
+                  onMouseMove={spotlightHandler}
+                >
+                  <button
+                    onClick={() => setExpandedRoutine(expanded ? null : ra.id)}
+                    className="w-full flex items-center gap-4 p-5 text-left group"
+                  >
+                    <div
+                      className={cn(
+                        'relative shrink-0 grid place-items-center w-11 h-11 rounded-2xl ring-1 transition-all duration-300',
+                        completed
+                          ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] ring-white/25 shadow-[0_6px_20px_-6px_rgba(52,211,153,0.5)]'
+                          : 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-white/25 shadow-[0_6px_20px_-6px_rgba(139,92,246,0.5)]',
+                      )}
+                    >
+                      {completed ? <Trophy className="w-5 h-5 text-white" /> : <ListChecks className="w-5 h-5 text-white" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className={cn('font-display text-lg font-bold leading-snug', completed ? 'text-emerald-200' : 'text-white')}>
+                          {ra.routine.title}
+                        </h3>
+                        {completed && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-2 py-0.5">
+                            <Trophy className="w-3 h-3" /> Ukończona
+                          </span>
+                        )}
+                      </div>
+                      {ra.routine.description && (
+                        <p className="mt-0.5 text-sm text-white/45 line-clamp-1">{ra.routine.description}</p>
+                      )}
+                      <div className="mt-2 flex items-center gap-3">
+                        <div className="flex-1 max-w-[220px] h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+                          <div
+                            className={cn(
+                              'h-full rounded-full transition-all duration-700',
+                              completed
+                                ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]'
+                                : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]',
+                            )}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-white/60">
+                          {doneCount}/{totalCount} zadań
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-white/40">
+                          <Calendar className="w-3 h-3" />
+                          {days.length} {days.length === 1 ? 'dzień' : 'dni'}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={cn('w-5 h-5 shrink-0 text-white/35 transition-transform duration-300', expanded && 'rotate-180')}
+                    />
+                  </button>
+
+                  {/* Expanded day-by-day view */}
+                  {expanded && (
+                    <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
+                      {days.map((d) => {
+                        const dayTasks = ra.routine.tasks.filter((t) => t.day === d)
+                        const dayDone = dayTasks.filter((t) =>
+                          ra.progress.find((p) => p.taskId === t.id)?.status === 'DONE',
+                        ).length
+                        return (
+                          <div key={d} className="py-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd]">Dzień {d}</p>
+                              <span className="text-[11px] text-white/40">
+                                {dayDone}/{dayTasks.length} zrobione
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              {dayTasks.map((t) => {
+                                const tp = ra.progress.find((p) => p.taskId === t.id)
+                                const done = tp?.status === 'DONE'
+                                return (
+                                  <div
+                                    key={t.id}
+                                    className={cn(
+                                      'flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300',
+                                      done
+                                        ? 'bg-emerald-500/[0.06] border-emerald-500/20'
+                                        : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/25',
+                                    )}
+                                  >
+                                    <button
+                                      onClick={() => toggleRoutineTask(ra, t.id)}
+                                      disabled={togglingTask === t.id}
+                                      aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'}
+                                      className={cn(
+                                        'relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300',
+                                        done
+                                          ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25'
+                                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]',
+                                      )}
+                                    >
+                                      {togglingTask === t.id ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                      ) : done ? (
+                                        <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                                      ) : (
+                                        <Circle className="w-3.5 h-3.5" />
+                                      )}
+                                    </button>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={cn('text-sm font-semibold leading-snug', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>
+                                        {t.title}
+                                      </p>
+                                      {t.description && (
+                                        <p className={cn('mt-0.5 text-xs leading-relaxed', done ? 'text-white/30' : 'text-white/45')}>
+                                          {t.description}
+                                        </p>
+                                      )}
+                                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                                        {t.minutes && (
+                                          <span className="inline-flex items-center gap-1 text-[11px] text-white/40">
+                                            <Clock className="w-3 h-3" />
+                                            ~{t.minutes} min
+                                          </span>
+                                        )}
+                                        {t.minutes && !done && (
+                                          <button
+                                            onClick={() => setActiveTimer({ assignment: ra, task: t })}
+                                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 hover:bg-[#a78bfa]/[0.18] hover:border-[#a78bfa]/40 transition-all group/timer"
+                                          >
+                                            <Timer className="w-3.5 h-3.5 transition-transform group-hover/timer:rotate-12" />
+                                            Start treningu
+                                          </button>
+                                        )}
+                                        {t.minutes && done && (
+                                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/70">
+                                            <Check className="w-3 h-3" />
+                                            Odhaczone
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </section>
+        )}
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
@@ -305,6 +542,28 @@ export function StudentTasksClient() {
               )
             })}
           </ul>
+        )}
+
+        {/* Practice timer modal */}
+        {activeTimer && (
+          <PracticeTimer
+            minutes={activeTimer.task.minutes ?? 10}
+            taskTitle={activeTimer.task.title}
+            onClose={() => setActiveTimer(null)}
+            onComplete={() => {
+              // Log the completed practice session to the DB (weekly chart)
+              fetch('/api/practice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  minutes: activeTimer.task.minutes ?? 10,
+                  taskId: activeTimer.task.id,
+                  assignmentId: activeTimer.assignment.id,
+                }),
+              }).catch(() => undefined)
+              toggleRoutineTask(activeTimer.assignment, activeTimer.task.id)
+            }}
+          />
         )}
 
         {/* Footer flourish */}

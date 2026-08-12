@@ -9,8 +9,8 @@ import { useLiveRefresh } from '@/hooks/use-live-refresh'
 import { CountUp } from '@/components/count-up'
 import {
   Plus, Users, BookOpen, Video, ArrowRight, Activity, MessageSquare, MessageSquareHeart,
-  AlertTriangle, Clock3, CalendarClock, TrendingDown, TrendingUp, Minus, CheckCircle2,
-  Inbox, Flame,
+  AlertTriangle, Clock3, CalendarClock, CheckCircle2,
+  Inbox, Flame, ListChecks,
 } from 'lucide-react'
 
 type Reason = { key: string; label: string }
@@ -40,7 +40,17 @@ interface CoachDashboardInitial {
   overdueAssignments: number
   attentionNeeding: number
   attention: AttentionStudent[]
-  mistakeTrends: { tag: { id: string; name: string; color: string }; thisMonth: number; lastMonth: number }[]
+  routinesSummary: {
+    id: string
+    title: string
+    taskTotal: number
+    assignmentTotal: number
+    activeAssignments: number
+    completedAssignments: number
+    doneTasks: number
+    pct: number
+    students: string[]
+  }[]
   recentSessions: any[]
   sessionsThisWeek: number
   doneThisWeek: number
@@ -62,7 +72,7 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
 
   const {
     studentsCount, sessionsCount, videosCount, tagsCount, effectiveness,
-    assignmentRate, overdueAssignments, attentionNeeding, attention, mistakeTrends,
+    assignmentRate, overdueAssignments, attentionNeeding, attention, routinesSummary,
     recentSessions, sessionsThisWeek, doneThisWeek, activeStudents, upcomingCount,
   } = initial
 
@@ -79,8 +89,6 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
     { count: upcomingCount, label: 'nadchodzących sesji', href: '/coach/sessions', icon: CalendarClock, tone: 'text-[#c4b5fd] bg-[#a78bfa]/[0.12] ring-[#a78bfa]/25' },
     { count: studentsCount - activeStudents, label: 'nieaktywnych 7 dni', href: '/coach/students', icon: Inbox, tone: 'text-sky-300 bg-sky-500/[0.12] ring-sky-500/25' },
   ]
-
-  const maxTrend = Math.max(1, ...mistakeTrends.map((t) => t.thisMonth))
 
   return (
     <CoachLayout>
@@ -283,47 +291,36 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
 
         {/* ===== MISTAKE TRENDS + RECENT ===== */}
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
-          {/* Mistake trends */}
+          {/* Routines overview */}
           <div className="rise-in glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '420ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#f97316] to-[#ef4444] ring-1 ring-white/25">
-                  <TrendingDown className="h-4 w-4 text-white" />
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/25">
+                  <ListChecks className="h-4 w-4 text-white" />
                 </div>
-                <h3 className="font-display text-lg font-semibold text-white/90">Trendy błędów</h3>
+                <h3 className="font-display text-lg font-semibold text-white/90">Rutyny</h3>
               </div>
-              <Link href="/coach/tags" className="text-[11px] text-white/40 hover:text-[#c4b5fd] transition-colors font-medium">
-                zarządzaj tagami
+              <Link href="/coach/routines" className="text-[11px] text-white/40 hover:text-[#c4b5fd] transition-colors font-medium">
+                zobacz wszystkie
               </Link>
             </div>
-            {mistakeTrends.length === 0 ? (
-              <p className="text-sm text-white/40 text-center py-8">Brak oznaczonych błędów — dodaj tagi do sesji.</p>
+            {routinesSummary.length === 0 ? (
+              <p className="text-sm text-white/40 text-center py-8">Brak rutyn. Stwórz program treningowy rozłożony na dni.</p>
             ) : (
               <div className="space-y-3">
-                {mistakeTrends.slice(0, 6).map((t) => {
-                  const delta = t.thisMonth - t.lastMonth
-                  const w = Math.round((t.thisMonth / maxTrend) * 100)
-                  return (
-                    <div key={t.tag.id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-white/70 font-medium">{t.tag.name}</span>
-                        <span className="flex items-center gap-1.5 text-xs">
-                          <span className="text-white/50 tabular-nums">{t.thisMonth}</span>
-                          {delta > 0 ? (
-                            <span className="inline-flex items-center gap-0.5 text-red-300"><TrendingUp className="h-3 w-3" />+{delta}</span>
-                          ) : delta < 0 ? (
-                            <span className="inline-flex items-center gap-0.5 text-[#34d399]"><TrendingDown className="h-3 w-3" />{delta}</span>
-                          ) : (
-                            <Minus className="h-3 w-3 text-white/30" />
-                          )}
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(4, w)}%`, background: t.tag.color || '#a78bfa' }} />
-                      </div>
+                {routinesSummary.slice(0, 5).map((r) => (
+                  <Link key={r.id} href="/coach/routines" className="block group">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-white/70 font-medium truncate pr-2 group-hover:text-white transition-colors">{r.title}</span>
+                      <span className="text-xs text-white/50 tabular-nums whitespace-nowrap">
+                        {r.activeAssignments > 0 ? `${r.activeAssignments} aktywnych` : r.completedAssignments > 0 ? `${r.completedAssignments} ukończ.` : `${r.assignmentTotal} przypisań`}
+                      </span>
                     </div>
-                  )
-                })}
+                    <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6] transition-all duration-1000" style={{ width: `${Math.max(4, r.pct)}%` }} />
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </div>

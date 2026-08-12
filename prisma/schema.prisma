@@ -69,6 +69,27 @@ model User {
   // Rank / ELO tracking over time
   rankEntries RankEntry[]
 
+  // Logged matches (W/L, map, ELO change, reflection)
+  matches MatchLog[]
+
+  // Personal training goals
+  goals Goal[]
+
+  // Leetify skill snapshots over time (aim/positioning/utility/…) — feeds the
+  // weakness-progress chart
+  skillSnapshots SkillSnapshot[]
+
+  // Training routines (structured multi-day programs)
+  routinesAsCoach     Routine[]            @relation("RoutineCoach")
+  routinesAssigned    RoutineAssignment[]  @relation("RoutineAssignCoach")
+  routinesReceived    RoutineAssignment[]  @relation("RoutineAssignStudent")
+
+  // Completed practice timer sessions (logged training time)
+  practiceSessions PracticeSession[]
+
+  // Goals set for coached students
+  goalsCoached Goal[] @relation("GoalCoach")
+
   // Password reset tokens
   passwordResetTokens PasswordResetToken[]
 
@@ -167,6 +188,7 @@ model Video {
   progress    VideoProgress[]
   sessionVideos SessionVideo[]
   assignments Assignment[]
+  routineTasks RoutineTask[]
 
   @@index([coachId])
   @@index([isActive])
@@ -298,6 +320,77 @@ model Assignment {
   @@index([dueDate])
 }
 
+// A training routine: a structured multi-day program with per-day tasks.
+// The coach builds it once (title + tasks with day offsets and optional
+// videos) and assigns it to a student, who then works through the days.
+model Routine {
+  id          String   @id @default(cuid())
+  coachId     String
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  coach       User                @relation("RoutineCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  tasks       RoutineTask[]
+  assignments RoutineAssignment[]
+
+  @@index([coachId])
+}
+
+model RoutineTask {
+  id          String   @id @default(cuid())
+  routineId   String
+  title       String
+  description String?
+  videoId     String? // optional linked video to watch/practice
+  day         Int      @default(1) // day offset within the routine (1, 2, 3…)
+  minutes     Int?     // estimated practice minutes
+  order       Int      @default(0)
+
+  routine  Routine              @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  video    Video?               @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  progress RoutineTaskProgress[]
+  practice PracticeSession[]
+
+  @@index([routineId])
+}
+
+// A routine assigned to one specific student (their personal copy).
+model RoutineAssignment {
+  id          String   @id @default(cuid())
+  routineId   String
+  coachId     String
+  studentId   String
+  status      String   @default("ACTIVE") // ACTIVE | COMPLETED
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  routine Routine               @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  coach   User                  @relation("RoutineAssignCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student User                  @relation("RoutineAssignStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  progress RoutineTaskProgress[]
+  practice PracticeSession[]
+
+  @@index([studentId])
+  @@index([coachId])
+}
+
+// Per-task completion inside an assigned routine.
+model RoutineTaskProgress {
+  id           String   @id @default(cuid())
+  assignmentId String
+  taskId       String
+  status       String   @default("PENDING") // PENDING | DONE
+  completedAt  DateTime?
+
+  assignment RoutineAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  task       RoutineTask       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, taskId])
+  @@index([taskId])
+}
+
 // A student's in-game rank / ELO logged over time (Premier, Faceit...).
 // Lets the coach and student watch real progression, not just video completion.
 model RankEntry {
@@ -314,6 +407,94 @@ model RankEntry {
 
   @@index([studentId])
   @@index([recordedAt])
+}
+
+// A logged match — the student records result, map and ELO change after
+// each competitive game. Feeds the rank story and gives the coach the
+// accountability view (wins, losses, streaks).
+model MatchLog {
+  id         String   @id @default(cuid())
+  studentId  String
+  map        String   @default("Mirage")
+  result     String   // WIN | LOSS | DRAW
+  eloChange  Int      @default(0)
+  kills      Int?
+  deaths     Int?
+  reflection String? // what went well / what to improve (AI analysis for Faceit matches)
+  source     String   @default("MANUAL") // MANUAL | FACEIT
+  externalId String?  @unique // Faceit/Leetify match id (dedupe)
+  createdAt  DateTime @default(now())
+
+  // Per-match stats from Leetify (Faceit matches) — accurate match numbers
+  leetifyRating      Float?
+  preaim             Float?
+  reactionMs         Float?
+  accuracyEnemySpotted Float?
+  accuracyHead       Float?
+  sprayAccuracy      Float?
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([createdAt])
+}
+
+// A snapshot of the student's Leetify skill ratings at a point in time.
+// Sampled on every Faceit sync / AI analysis so the coach can watch whether
+// aim/positioning/utility improve over the weeks of routines.
+model SkillSnapshot {
+  id          String   @id @default(cuid())
+  studentId   String
+  aim         Float?
+  positioning Float?
+  utility     Float?
+  clutch      Float?
+  opening     Float?
+  reactionMs  Float?
+  createdAt   DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([createdAt])
+}
+
+// A personal training goal set by the student (or coach) — "less is more":
+// a few concrete targets with a deadline, tracked to completion.
+model Goal {
+  id          String   @id @default(cuid())
+  studentId   String
+  coachId     String?
+  title       String
+  target      String? // e.g. "15 000 ELO", "Faceit level 7"
+  deadline    DateTime?
+  status      String   @default("ACTIVE") // ACTIVE | DONE | DROPPED
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  coach   User? @relation("GoalCoach", fields: [coachId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+}
+
+// A completed practice session logged from the training timer (or manually).
+// Lets the student (and coach) see real invested training time over weeks.
+model PracticeSession {
+  id           String   @id @default(cuid())
+  studentId    String
+  taskId       String? // routine task this session practiced (if any)
+  assignmentId String? // routine assignment (if any)
+  minutes      Int      @default(1) // completed practice minutes
+  source       String   @default("TIMER") // TIMER | MANUAL
+  createdAt    DateTime @default(now())
+
+  student    User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  task       RoutineTask?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  assignment RoutineAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([createdAt])
 }
 
 // Coach-specific settings (fully customizable)

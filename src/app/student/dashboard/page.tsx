@@ -15,7 +15,7 @@ export default async function StudentDashboardPage() {
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 86400000)
 
-  const [sessions, progress, coach, rankEntries, myTags, assignments, coachInfo, weekStats] = await Promise.all([
+  const [sessions, progress, coach, rankEntries, myTags, assignments, coachInfo, weekStats, routines, practice, skillSnapshots] = await Promise.all([
     prisma.session.findMany({
       where: { studentId: userId, status: { in: ['ACTIVE', 'COMPLETED'] } },
       orderBy: { scheduledAt: 'desc' },
@@ -67,6 +67,29 @@ export default async function StudentDashboardPage() {
       prisma.assignment.count({ where: { studentId: userId, completedAt: { gte: weekAgo } } }),
       prisma.session.count({ where: { studentId: userId, createdAt: { gte: weekAgo } } }),
     ]),
+    // My routines with progress
+    prisma.routineAssignment.findMany({
+      where: { studentId: userId },
+      include: {
+        routine: {
+          include: { tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+        },
+        progress: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
+    // Completed practice sessions (last 8 weeks for the chart)
+    prisma.practiceSession.findMany({
+      where: { studentId: userId, createdAt: { gte: new Date(now.getTime() - 8 * 7 * 86400000) } },
+      select: { minutes: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    }),
+    // Skill snapshots (Leetify) — my progress over time
+    prisma.skillSnapshot.findMany({
+      where: { studentId: userId },
+      orderBy: { createdAt: 'asc' },
+    }),
   ])
 
   // Stats
@@ -128,6 +151,62 @@ export default async function StudentDashboardPage() {
     updatedAt: a.updatedAt.toISOString(),
   }))
 
+  // Routines for client: active one with progress snapshot
+  const routinesForClient = routines.map((ra) => ({
+    id: ra.id,
+    status: ra.status,
+    routine: {
+      id: ra.routine.id,
+      title: ra.routine.title,
+      description: ra.routine.description,
+      tasks: ra.routine.tasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        videoId: t.videoId,
+        day: t.day,
+        minutes: t.minutes,
+      })),
+    },
+    progress: ra.progress.map((p) => ({ taskId: p.taskId, status: p.status })),
+  }))
+
+  // Practice aggregation: 8 weeks (Monday start) + totals
+  const practiceWeeks = 8
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+  startOfWeek.setHours(0, 0, 0, 0)
+  const from = new Date(startOfWeek)
+  from.setDate(from.getDate() - (practiceWeeks - 1) * 7)
+
+  const practiceForClient = Array.from({ length: practiceWeeks }, (_, i) => {
+    const weekStart = new Date(from)
+    weekStart.setDate(from.getDate() + i * 7)
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekStart.getDate() + 7)
+    const minutes = practice
+      .filter((p) => p.createdAt >= weekStart && p.createdAt < weekEnd)
+      .reduce((acc, p) => acc + p.minutes, 0)
+    return {
+      label: `${weekStart.getDate()}.${String(weekStart.getMonth() + 1).padStart(2, '0')}`,
+      minutes,
+      isCurrent: i === practiceWeeks - 1,
+    }
+  })
+  const totalPracticeMinutes = practice.reduce((acc, p) => acc + p.minutes, 0)
+  const thisWeekPractice = practice
+    .filter((p) => p.createdAt >= startOfWeek)
+    .reduce((acc, p) => acc + p.minutes, 0)
+
+  const skillSnapshotsForClient = skillSnapshots.map((s) => ({
+    createdAt: s.createdAt.toISOString(),
+    aim: s.aim,
+    positioning: s.positioning,
+    utility: s.utility,
+    clutch: s.clutch,
+    opening: s.opening,
+  }))
+
   return (
     <StudentDashboardClient
       initialStats={stats}
@@ -137,6 +216,14 @@ export default async function StudentDashboardPage() {
       initialRank={rankForClient}
       initialMistakes={myMistakes}
       initialAssignments={assignmentsForClient}
+      initialRoutines={routinesForClient}
+      initialPractice={{
+        weeks: practiceForClient,
+        totalMinutes: totalPracticeMinutes,
+        thisWeek: thisWeekPractice,
+        sessions: practice.length,
+      }}
+      initialSkillSnapshots={skillSnapshotsForClient}
       weekly={{ videosDone: weekStats[0], tasksDone: weekStats[1], sessionsThisWeek: weekStats[2], overdueAssignments, dueSoonAssignments }}
     />
   )

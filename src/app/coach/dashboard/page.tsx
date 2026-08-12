@@ -14,10 +14,8 @@ export default async function CoachDashboardPage() {
   const userId = (session.user as any).id
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 86400000)
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-  const [students, sessionsCount, videosCount, tagsCount, recentSessions, progressStats, sessionStatuses, assignments, messages, tagNames, allStudents, upcomingSessions, sessionsThisWeek] = await Promise.all([
+  const [students, sessionsCount, videosCount, tagsCount, recentSessions, progressStats, sessionStatuses, assignments, messages, allStudents, upcomingSessions, sessionsThisWeek, routines] = await Promise.all([
     // All students with their activity snapshot — feeds the attention queue
     prisma.user.findMany({
       where: { coachId: userId },
@@ -60,16 +58,28 @@ export default async function CoachDashboardPage() {
       where: { receiverId: userId, readAt: null },
       _count: { senderId: true },
     }),
-    prisma.tag.findMany({
-      where: { coachId: userId },
-      select: { id: true, name: true, color: true },
-    }),
     prisma.user.count({ where: { coachId: userId } }),
     prisma.session.findMany({
       where: { coachId: userId, status: 'ACTIVE', scheduledAt: { gte: now } },
       select: { id: true },
     }),
     prisma.session.count({ where: { coachId: userId, createdAt: { gte: weekAgo } } }),
+    prisma.routine.findMany({
+      where: { coachId: userId },
+      include: {
+        _count: { select: { tasks: true, assignments: true } },
+        assignments: {
+          include: {
+            student: { select: { id: true, name: true, email: true } },
+            progress: { select: { status: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 30,
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 6,
+    }),
   ])
 
   // ---- Attention queue: who needs the coach's attention right now ----
@@ -99,17 +109,28 @@ export default async function CoachDashboardPage() {
   })
   attention.sort((a, b) => b.score - a.score)
 
-  // ---- Mistake trends: this month vs previous month, per tag ----
-  const mistakeTrends = await Promise.all(
-    tagNames.map(async (tag) => {
-      const [thisMonth, lastMonth] = await Promise.all([
-        prisma.sessionTag.count({ where: { tagId: tag.id, session: { coachId: userId, createdAt: { gte: monthStart } } } }),
-        prisma.sessionTag.count({ where: { tagId: tag.id, session: { coachId: userId, createdAt: { gte: prevMonthStart, lt: monthStart } } } }),
-      ])
-      return { tag, thisMonth, lastMonth }
-    }),
-  )
-  mistakeTrends.sort((a, b) => b.thisMonth - a.thisMonth)
+  // ---- Routines: structured programs with live progress ----
+  const routinesSummary = routines.map((r) => {
+    const taskTotal = r._count.tasks
+    const activeAssignments = r.assignments.filter((a) => a.status === 'ACTIVE')
+    const completedAssignments = r.assignments.filter((a) => a.status === 'COMPLETED').length
+    const doneTasks = r.assignments.reduce(
+      (acc, a) => acc + a.progress.filter((p) => p.status === 'DONE').length,
+      0,
+    )
+    const totalAssignedTasks = r.assignments.reduce((acc, a) => acc + taskTotal, 0)
+    return {
+      id: r.id,
+      title: r.title,
+      taskTotal,
+      assignmentTotal: r.assignments.length,
+      activeAssignments: activeAssignments.length,
+      completedAssignments,
+      doneTasks,
+      pct: totalAssignedTasks > 0 ? Math.round((doneTasks / totalAssignedTasks) * 100) : 0,
+      students: r.assignments.map((a) => a.student.name || a.student.email),
+    }
+  })
 
   // ---- Assignment pipeline ----
   const totalAssignments = assignments.length
@@ -146,7 +167,7 @@ export default async function CoachDashboardPage() {
     overdueAssignments,
     attentionNeeding: attention.filter((a) => a.score > 0).length,
     attention,
-    mistakeTrends,
+    routinesSummary,
     recentSessions,
     sessionsThisWeek,
     doneThisWeek,

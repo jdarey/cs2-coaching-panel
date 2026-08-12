@@ -17,6 +17,11 @@ import {
   Loader2,
   Film,
   Target,
+  Bot,
+  RefreshCw,
+  TrendingDown,
+  ListChecks,
+  Sparkles,
 } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -24,6 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { getRank, getLevel } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
+import { SkillProgressChart } from '@/components/skill-progress-chart'
 
 interface StudentDetail {
   id: string
@@ -84,6 +90,71 @@ export function CoachStudentDetailClient({
   const [form, setForm] = useState({ title: '', description: '', videoId: '', dueDate: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // AI analysis state
+  const [aiLoading, setAiLoading] = useState(true)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiData, setAiData] = useState<{
+    profile: { name: string | null; totalMatches: number | null; winrate: number | null; rating: Record<string, number | null> }
+    weaknesses: { key: string; label: string; value: number | null; advice: string }[]
+    suggestedRoutine: { title: string; description: string; tasks: { title: string; day: number; minutes: number }[] } | null
+    snapshots: { createdAt: string; aim: number | null; positioning: number | null; utility: number | null; clutch: number | null; opening: number | null }[]
+  } | null>(null)
+  const [creatingRoutine, setCreatingRoutine] = useState(false)
+  const [routineCreated, setRoutineCreated] = useState<string | null>(null)
+
+  const loadAiAnalysis = useCallback(async () => {
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const res = await fetch(`/api/coach/ai-analysis?studentId=${student.id}`)
+      const data = await res.json()
+      if (!res.ok) {
+        setAiError(data.error || 'Nie udało się pobrać analizy')
+        setAiData(null)
+      } else {
+        setAiData(data)
+      }
+    } catch {
+      setAiError('Wystąpił błąd serwera')
+    } finally {
+      setAiLoading(false)
+    }
+  }, [student.id])
+
+  useEffect(() => {
+    loadAiAnalysis()
+  }, [loadAiAnalysis])
+
+  const createSuggestedRoutine = async () => {
+    if (!aiData?.suggestedRoutine) return
+    setCreatingRoutine(true)
+    try {
+      const res = await fetch('/api/routines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: aiData.suggestedRoutine.title,
+          description: `${aiData.suggestedRoutine.description} (automatycznie z analizy AI dla ${student.name || student.email})`,
+          tasks: aiData.suggestedRoutine.tasks.map((t) => ({
+            title: t.title,
+            day: t.day,
+            minutes: t.minutes,
+          })),
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setRoutineCreated(data.id)
+      } else {
+        setAiError(data.error || 'Nie udało się utworzyć rutyny')
+      }
+    } catch {
+      setAiError('Wystąpił błąd serwera')
+    } finally {
+      setCreatingRoutine(false)
+    }
+  }
 
   const loadAssignments = useCallback(async () => {
     try {
@@ -239,6 +310,135 @@ export function CoachStudentDetailClient({
               })}
             </div>
           </div>
+        </div>
+
+        {/* ===== AI ANALYSIS ===== */}
+        <div className="glass-card rise-in relative rounded-3xl p-6 md:p-7 mb-8 overflow-hidden border border-[#a78bfa]/20" style={{ animationDelay: '80ms' }}>
+          <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[#8b5cf6]/15 blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex items-center justify-between mb-6 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="relative grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/25 animate-pulse-ring">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight">Analiza AI trenera</h2>
+                <p className="text-xs text-white/40">Słabości gracza na podstawie statystyk Leetify + gotowa rutyna treningowa</p>
+              </div>
+            </div>
+            <button
+              onClick={loadAiAnalysis}
+              disabled={aiLoading}
+              className="inline-flex items-center gap-1.5 rounded-xl px-3 h-9 text-xs font-medium text-white/60 hover:text-white glass hover:border-[#a78bfa]/30 transition"
+            >
+              <RefreshCw className={cn('w-3.5 h-3.5', aiLoading && 'animate-spin')} />
+              Odśwież
+            </button>
+          </div>
+
+          {aiLoading ? (
+            <div className="flex items-center justify-center py-12 text-white/40">
+              <Loader2 className="w-5 h-5 animate-spin mr-3" /> Analizuję statystyki ucznia…
+            </div>
+          ) : aiError ? (
+            <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] px-5 py-4 flex items-center gap-3">
+              <TrendingDown className="w-5 h-5 text-amber-300 shrink-0" />
+              <p className="text-sm text-amber-200/90">{aiError}</p>
+            </div>
+          ) : aiData ? (
+            <>
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Weaknesses */}
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-white/45 bg-white/[0.03] border border-white/[0.08] rounded-full px-3 py-1">
+                    <ClipboardList className="w-3 h-3 text-[#c4b5fd]" />
+                    {aiData.profile.totalMatches ?? '—'} meczów
+                  </span>
+                  {aiData.profile.winrate != null && (
+                    <span className="inline-flex items-center gap-1.5 text-xs text-white/45 bg-white/[0.03] border border-white/[0.08] rounded-full px-3 py-1">
+                      <Target className="w-3 h-3 text-[#c4b5fd]" />
+                      winrate {aiData.profile.winrate}%
+                    </span>
+                  )}
+                </div>
+
+                {aiData.weaknesses.map((w) => (
+                  <div key={w.key} className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-semibold text-white/85">{w.label}</span>
+                      <span className="text-xs font-bold tabular-nums text-red-300">{w.value}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden mb-2.5">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#f87171] to-[#ef4444] transition-all duration-1000"
+                        style={{ width: `${Math.min(100, w.value ?? 0)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-white/50 leading-relaxed">{w.advice}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Suggested routine */}
+              <div className="rounded-2xl border border-[#a78bfa]/25 bg-gradient-to-br from-[#a78bfa]/[0.08] to-[#8b5cf6]/[0.03] p-5 flex flex-col">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="grid place-items-center w-8 h-8 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </span>
+                  <h3 className="font-display text-lg font-bold">Proponowana rutyna</h3>
+                </div>
+                {aiData.suggestedRoutine ? (
+                  <>
+                    <p className="font-display text-base font-semibold text-[#c4b5fd]">{aiData.suggestedRoutine.title}</p>
+                    <p className="mt-1 text-sm text-white/50 leading-relaxed">{aiData.suggestedRoutine.description}</p>
+                    <div className="mt-4 space-y-2 flex-1">
+                      {aiData.suggestedRoutine.tasks.slice(0, 5).map((t, i) => (
+                        <div key={i} className="flex items-center gap-2.5 text-sm">
+                          <span className="grid place-items-center w-6 h-6 shrink-0 rounded-lg bg-white/[0.06] text-[11px] font-bold text-[#c4b5fd]">
+                            D{t.day}
+                          </span>
+                          <span className="flex-1 min-w-0 truncate text-white/75">{t.title}</span>
+                          <span className="text-xs text-white/35 tabular-nums whitespace-nowrap">{t.minutes} min</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-5 pt-4 border-t border-white/[0.08]">
+                      {routineCreated ? (
+                        <Link
+                          href="/coach/routines"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl h-12 text-sm font-semibold text-white btn-darey overflow-hidden"
+                        >
+                          <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20" />
+                          <Check className="w-4 h-4" />
+                          Rutyna utworzona — otwórz listę rutyn
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={createSuggestedRoutine}
+                          disabled={creatingRoutine}
+                          className="relative w-full inline-flex items-center justify-center gap-2 rounded-2xl h-12 text-sm font-semibold text-white btn-darey overflow-hidden disabled:opacity-60"
+                        >
+                          <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20" />
+                          {creatingRoutine ? <Loader2 className="w-4 h-4 animate-spin" /> : <ListChecks className="w-4 h-4" />}
+                          Stwórz rutynę i przypisz
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-white/40">Brak danych do wygenerowania rutyny — dodaj więcej meczów lub Steam ID ucznia.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Progress over time */}
+            {aiData.snapshots.length >= 2 && (
+              <div className="mt-6 border-t border-white/[0.07] pt-6">
+                <SkillProgressChart snapshots={aiData.snapshots} />
+              </div>
+            )}
+            </>
+          ) : null}
         </div>
 
         {/* Sessions header */}
@@ -476,3 +676,4 @@ export function CoachStudentDetailClient({
     </CoachLayout>
   )
 }
+
