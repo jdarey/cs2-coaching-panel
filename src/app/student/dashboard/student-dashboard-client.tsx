@@ -5,9 +5,9 @@ import { formatDate, formatDateTime, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StudentLayout } from '@/components/student-layout'
-import { Film, Clock, Play, CheckCircle2, CalendarClock, BookOpen, TrendingUp, Settings, ArrowRight, Sparkles, Plus, MessageSquare, MessageSquareHeart, Flame, Trophy, Target, Zap } from 'lucide-react'
+import { Film, Clock, CalendarClock, BookOpen, ArrowRight, Sparkles, MessageSquare, Flame, Zap, Target, PlayCircle } from 'lucide-react'
 import Link from 'next/link'
-import { getRank, nextRank, getLevel, getStreak, getAchievements } from '@/lib/gamification'
+import { getRank, nextRank, getLevel, getStreak } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
 
 interface Session {
@@ -57,15 +57,7 @@ interface StudentDashboardClientProps {
   initialCoach: Coach | null
 }
 
-type StatKey = 'total' | 'pending' | 'watching' | 'done'
 type TabKey = 'sessions' | 'activity'
-
-const STAT_META: Record<StatKey, { label: string; icon: typeof Film; accent: string; ring: string }> = {
-  total: { label: 'Wszystkie filmy', icon: Film, accent: 'from-[#2de5ca] to-[#14b8a6]', ring: 'rgba(45,229,202,0.45)' },
-  pending: { label: 'Do oglądania', icon: Clock, accent: 'from-[#fbbf24] to-[#f97316]', ring: 'rgba(251,191,36,0.4)' },
-  watching: { label: 'W trakcie', icon: Play, accent: 'from-[#2de5ca] to-[#8cffef]', ring: 'rgba(45,229,202,0.4)' },
-  done: { label: 'Zakończone', icon: CheckCircle2, accent: 'from-[#34d399] to-[#16a34a]', ring: 'rgba(52,211,153,0.4)' },
-}
 
 export function StudentDashboardClient({
   initialStats,
@@ -73,7 +65,7 @@ export function StudentDashboardClient({
   initialProgress,
   initialCoach,
 }: StudentDashboardClientProps) {
-  const { totalVideos, pending, watching, watched, implemented, totalSessions, activeSessions } = initialStats
+  const { totalVideos, pending, watching, watched, implemented, totalSessions } = initialStats
   const sessions = initialSessions
   const progress = initialProgress
   const coach = initialCoach
@@ -83,34 +75,19 @@ export function StudentDashboardClient({
   const next = nextRank(completionRate)
   const levelInfo = getLevel(watched + implemented)
   const streak = getStreak(progress.map((p) => p.watchedAt || p.updatedAt))
-  const achievements = getAchievements({
-    total: totalVideos,
-    pending,
-    watching,
-    watched,
-    implemented,
-    sessionsCount: totalSessions,
-    feedbackCount: 0,
-    messagesSent: 0,
-  })
-  const earnedCount = achievements.filter((a) => a.earned).length
-  const nextUp = progress.find((p) => p.status === 'PENDING')
 
-  const statCards: { key: StatKey; value: number }[] = [
-    { key: 'total', value: totalVideos },
-    { key: 'pending', value: pending },
-    { key: 'watching', value: watching },
-    { key: 'done', value: watched + implemented },
-  ]
-
-  const recentProgress = progress.slice(0, 6)
+  // "Co teraz": the next video to watch, or the next upcoming session
+  const nextUpVideo = progress.find((p) => p.status === 'PENDING' || p.status === 'WATCHING')
   const upcomingSessions = sessions.filter((s) => s.status === 'ACTIVE').slice(0, 4)
   const nextSession = upcomingSessions[0]
+
+  const recentProgress = progress.slice(0, 6)
 
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<TabKey>('sessions')
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({ sessions: null, activity: null })
   const [underline, setUnderline] = useState({ left: 0, width: 0 })
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -125,7 +102,13 @@ export function StudentDashboardClient({
     return () => window.removeEventListener('resize', update)
   }, [activeTab, mounted])
 
-  
+  const progressBreakdown = [
+    { v: pending, label: 'Do oglądania', color: '#fbbf24', key: 'pending' },
+    { v: watching, label: 'W trakcie', color: '#2de5ca', key: 'watching' },
+    { v: watched, label: 'Obejrzane', color: '#34d399', key: 'watched' },
+    { v: implemented, label: 'Wdrożone', color: '#14b8a6', key: 'implemented' },
+  ]
+
   if (!mounted) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#060606]">
@@ -145,8 +128,8 @@ export function StudentDashboardClient({
     <StudentLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         {/* ===== Hero Header ===== */}
-        <div className="animate-rise-in mb-10 md:mb-16">
-          <div className="flex flex-wrap items-center gap-2 mb-6">
+        <div className="animate-rise-in mb-8">
+          <div className="flex flex-wrap items-center gap-2 mb-5">
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-medium text-white/60 glass">
               <span className="live-dot" />
               Witaj z powrotem
@@ -162,309 +145,197 @@ export function StudentDashboardClient({
               Poziom {levelInfo.level}
             </div>
           </div>
-          <h1 className="font-display text-display font-bold tracking-tight mb-4 text-gradient-vantor">
+          <h1 className="font-display text-display font-bold tracking-tight mb-3 text-gradient-vantor">
             Panel ucznia
           </h1>
-          <p className="text-white/45 text-lg md:text-xl max-w-2xl font-light tracking-wide">
-            Twój postęp, sesje i filmy — w jednym eleganckim miejscu. Kontynuuj tam, gdzie skończyłeś.
+          <p className="text-white/45 text-lg max-w-2xl font-light tracking-wide">
+            Twój postęp, sesje i filmy — w jednym miejscu. Kontynuuj tam, gdzie skończyłeś.
           </p>
         </div>
 
-        {/* ===== Marquee Band ===== */}
-        <div className="marquee animate-rise-in mb-10 py-3 border-y border-white/[0.06]" style={{ animationDelay: '30ms' }}>
-          <div className="marquee-track text-sm font-display font-semibold text-white/30">
-            {[0, 1].map((n) => (
-              <span key={n} className="flex items-center gap-10">
-                <span>PODNOSIMY TWÓJ LEVEL</span><span className="text-[#2de5ca]">✦</span>
-                <span>AIM TRAINING</span><span className="text-[#2de5ca]">✦</span>
-                <span>ANALIZA MECZÓW</span><span className="text-[#2de5ca]">✦</span>
-                <span>GRANIE W ZESPOLE</span><span className="text-[#2de5ca]">✦</span>
-                <span>MIKRO I MAKRO</span><span className="text-[#2de5ca]">✦</span>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* ===== RANK CARD — the „wow” centerpiece ===== */}
-        <div className="animate-rise-in mb-10">
-          <div className="bento-card p-6 md:p-8 relative overflow-hidden">
-            <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-30" style={{ background: 'radial-gradient(50% 50% at 50% 100%, #14b8a6 0%, rgba(20,184,166,0.25) 70%, transparent 100%)' }} />
-            <div className="relative flex flex-col lg:flex-row lg:items-center gap-8">
-              {/* Rank emblem + name */}
-              <div className="flex items-center gap-6">
-                <RankEmblem rank={rank} size={96} />
-                <div>
-                  <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-1">Twoja ranga treningowa</p>
-                  <h2 className="font-display text-3xl md:text-4xl font-bold text-white">{rank.name}</h2>
-                  <div className="mt-3 flex items-center gap-3">
-                    <div className="w-40 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-1000"
-                        style={{
-                          width: `${next ? Math.min(100, ((completionRate - rank.min) / ((next.min - rank.min) || 1)) * 100) : 100}%`,
-                          background: `linear-gradient(90deg, ${rank.color}, ${next?.color || rank.color})`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs text-white/45">
-                      {next ? `${next.min - completionRate}% do rangi ${next.name}` : 'Maksymalna ranga!'}
-                    </span>
-                  </div>
-                </div>
+        {/* ===== ACTION ROW: next step + session countdown ===== */}
+        <div className="grid gap-4 lg:grid-cols-2 mb-8">
+          {/* Next video */}
+          <Link
+            href={nextUpVideo ? `/student/videos/${nextUpVideo.video.id}` : '/student/videos'}
+            className="animate-rise-in group glass-liquid relative overflow-hidden rounded-3xl p-6 spotlight-card"
+            style={{ animationDelay: '0ms' }}
+            onMouseMove={(e) => {
+              const r = e.currentTarget.getBoundingClientRect()
+              e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+              e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+            }}
+          >
+            <div className="absolute -top-16 -right-16 w-52 h-52 rounded-full bg-[#14b8a6]/15 blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex items-center gap-5">
+              <div className="relative w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] grid place-items-center ring-1 ring-white/25">
+                {nextUpVideo ? <PlayCircle className="w-6 h-6 text-white" /> : <Film className="w-6 h-6 text-white" />}
               </div>
-
-              {/* Level + XP */}
-              <div className="lg:border-l lg:border-white/[0.08] lg:pl-8">
-                <div className="flex items-baseline gap-2">
-                  <p className="font-display text-4xl font-bold text-[#2de5ca]">{levelInfo.level}</p>
-                  <p className="text-xs uppercase tracking-widest text-white/40 font-semibold">poziom</p>
-                </div>
-                <div className="mt-3 w-44 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#14b8a6] to-[#2de5ca] transition-all duration-1000" style={{ width: `${levelInfo.pct}%` }} />
-                </div>
-                <p className="mt-2 text-[11px] text-white/40">{levelInfo.xp}/{levelInfo.xpToNext} XP do kolejnego poziomu</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] uppercase tracking-widest text-[#8cffef] font-semibold mb-1">
+                  {nextUpVideo ? 'Kontynuuj naukę' : 'Biblioteka filmów'}
+                </p>
+                <h3 className="font-display text-lg font-bold truncate">
+                  {nextUpVideo ? nextUpVideo.video.title : 'Zacznij od pierwszego filmu'}
+                </h3>
+                <p className="text-sm text-white/45 mt-0.5">
+                  {nextUpVideo ? nextUpVideo.session?.title || 'Sesja treningowa' : 'Wybierz materiał z biblioteki'}
+                </p>
               </div>
+              <ArrowRight className="w-5 h-5 shrink-0 text-white/30 group-hover:text-[#8cffef] group-hover:translate-x-1 transition-all duration-300" />
+            </div>
+          </Link>
 
-              {/* Next mission + session countdown */}
-              <div className="lg:ml-auto flex flex-col gap-3">
-                <Link
-                  href={nextUp ? '/student/videos' : '/student/sessions'}
-                  className="btn-darey inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold self-start"
-                >
-                  <Target className="w-4 h-4" />
-                  {nextUp ? 'Następny krok: obejrzyj film' : 'Zaplanuj następny trening'}
-                </Link>
-                {nextSession && nextSession.scheduledAt && (
-                  <div className="inline-flex items-center gap-2 text-xs text-white/55">
-                    <CalendarClock className="w-4 h-4 text-[#2de5ca]" />
-                    <Countdown target={nextSession.scheduledAt} label={nextSession.title} />
-                  </div>
-                )}
+          {/* Next session */}
+          <div className="animate-rise-in glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '60ms' }}>
+            <div className="absolute -bottom-16 -left-16 w-52 h-52 rounded-full bg-[#2de5ca]/10 blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex items-center gap-5">
+              <div className="relative w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] grid place-items-center ring-1 ring-white/25">
+                <CalendarClock className="w-6 h-6 text-white" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] uppercase tracking-widest text-amber-300 font-semibold mb-1">
+                  {nextSession ? 'Najbliższa sesja' : 'Sesje'}
+                </p>
+                <h3 className="font-display text-lg font-bold truncate">
+                  {nextSession ? nextSession.title : 'Brak zaplanowanych sesji'}
+                </h3>
+                <p className="text-sm text-white/45 mt-0.5">
+                  {nextSession && nextSession.scheduledAt ? (
+                    <Countdown target={nextSession.scheduledAt} />
+                  ) : (
+                    'Trener poinformuje Cię o nowej sesji'
+                  )}
+                </p>
+              </div>
+              <Link
+                href="/student/sessions"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300 shrink-0"
+              >
+                Sesje <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-
-          {/* Achievements strip */}
-          <div className="mt-6 flex items-center gap-2 mb-4">
-            <span className="section-pill"><Trophy className="w-3.5 h-3.5" /> Osiągnięcia</span>
-            <span className="text-xs text-white/40">{earnedCount}/{achievements.length} zdobytych</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            {achievements.map((a) => (
-              <div
-                key={a.key}
-                title={`${a.name} — ${a.desc}`}
-                className={`bento-card flex flex-col items-center justify-center gap-2 p-4 text-center transition-all duration-300 ${a.earned ? 'border-[#2de5ca]/30' : 'opacity-40 grayscale'}`}
-              >
-                <span className="text-2xl">{a.icon}</span>
-                <span className="text-[10px] font-semibold text-white/70 leading-tight">{a.name}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* ===== Coach Banner ===== */}
-        {coach && (
-          <div className="animate-rise-in animate-rise-in-delay-1 mb-10 relative rounded-3xl overflow-hidden glass-card p-6 md:p-8" style={{ animationDelay: '60ms' }}>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#2de5ca]/10 via-transparent to-[#2de5ca]/10" />
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 md:gap-6">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Avatar className="w-18 h-18 rounded-2xl ring-2 ring-white/20">
-                    <AvatarImage src={coach.avatarUrl ?? undefined} alt={coach.name ?? coach.email} />
-                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white font-display font-semibold text-xl">
-                      {(coach.name ?? coach.email)[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#34d399] ring-3 ring-[#060606] grid place-items-center">
-                    <span className="w-2 h-2 rounded-full bg-white/90" />
+        {/* ===== PROGRESS CARD — one place for all numbers ===== */}
+        <div className="animate-rise-in relative rounded-3xl p-6 md:p-8 glass-liquid overflow-hidden mb-8" style={{ animationDelay: '120ms' }}>
+          <div className="flex flex-col lg:flex-row lg:items-center gap-7 lg:gap-10 relative z-10">
+            {/* Rank emblem + ring */}
+            <div className="flex items-center gap-6 shrink-0">
+              <RankEmblem rank={rank} size={88} />
+              <div>
+                <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-1">Twoja ranga</p>
+                <h2 className="font-display text-2xl md:text-3xl font-bold text-white">{rank.name}</h2>
+                <div className="mt-2.5 flex items-center gap-2.5">
+                  <div className="w-32 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-1000"
+                      style={{
+                        width: `${next ? Math.min(100, ((completionRate - rank.min) / ((next.min - rank.min) || 1)) * 100) : 100}%`,
+                        background: `linear-gradient(90deg, ${rank.color}, ${next?.color || rank.color})`,
+                      }}
+                    />
                   </div>
+                  <span className="text-xs text-white/45 whitespace-nowrap">
+                    {next ? `${next.min - completionRate}% do ${next.name}` : 'Maks! 👑'}
+                  </span>
                 </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-widest text-[#8cffef] font-semibold mb-1.5">Twój trener</p>
-                  <h3 className="font-display text-2xl font-bold">{coach.name ?? coach.email}</h3>
-                  <p className="text-white/40 text-sm mt-1">Skontaktuj się w razie pytań</p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-white/45">
+                  <Zap className="w-3.5 h-3.5 text-[#2de5ca]" />
+                  Poziom {levelInfo.level} · {levelInfo.xp}/{levelInfo.xpToNext} XP
                 </div>
-              </div>
-
-              <div className="hidden md:block w-px h-14 bg-white/10 mx-auto" />
-
-              <div className="flex flex-1 gap-3 md:justify-end flex-wrap">
-                <Link
-                  href="/student/sessions"
-                  className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-white glass hover:border-white/[0.15] transition-all duration-300 overflow-hidden"
-                >
-                  <BookOpen className="w-4.5 h-4.5 text-[#8cffef]" />
-                  Przeglądaj sesje
-                </Link>
-                <Link
-                  href="/student/videos"
-                  className="btn-darey relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-300"
-                >
-                  <Film className="w-4.5 h-4.5" />
-                  Przejdź do filmów
-                  <ArrowRight className="w-4.5 h-4.5 transition-transform group-hover:translate-x-1" />
-                </Link>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* ===== Stats Grid ===== */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
-          {statCards.map((stat, i) => {
-            const meta = STAT_META[stat.key]
-            const Icon = meta.icon
-            return (
-              <div
-                key={stat.key}
-                className="animate-rise-in h-full rounded-3xl group relative h-full rounded-3xl p-6 glass-card overflow-hidden"
-                style={{ animationDelay: `${80 + i * 60}ms` }}
-              >
-                <div
-                  className="absolute -top-12 -right-12 w-36 h-36 rounded-full opacity-40 blur-3xl transition-opacity duration-500 group-hover:opacity-70"
-                  style={{ background: `radial-gradient(circle, ${meta.ring} 0%, transparent 70%)` }}
-                />
-                <div className="relative z-10 flex items-start justify-between">
-                  <div>
-                    <p className="text-white/45 text-[13px] font-medium tracking-wide">{meta.label}</p>
-                    <p className="font-display text-4xl leading-none font-bold mt-2">{stat.value}</p>
-                  </div>
-                  <div
-                    className={cn(
-                      'relative p-4 rounded-2xl bg-gradient-to-br shadow-lg grid place-items-center',
-                      meta.accent,
-                    )}
-                    style={{}}
-                  >
-                    <Icon className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
-                    <div className="absolute inset-0 rounded-2xl ring-1 ring-white/30" />
-                  </div>
-                </div>
-                <div className="relative z-10 mt-6 h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
-                  <div
-                    className={cn('h-full rounded-full bg-gradient-to-r opacity-80', meta.accent)}
-                    style={{
-                      width: totalVideos > 0 ? `${Math.min(100, (stat.value / totalVideos) * 100)}%` : '0%',
-                      transition: 'width 1s cubic-bezier(0.16, 1, 0.3, 1)',
-                    }}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* ===== Progress Overview ===== */}
-        <div className="mb-10">
-          {/* Progress Ring + Breakdown */}
-          <div className="animate-rise-in relative rounded-3xl p-7 md:p-8 glass-card overflow-hidden" style={{ animationDelay: '180ms' }}>
-            <div className="flex flex-col md:flex-row md:items-center gap-7 md:gap-10 relative z-10">
-              {/* Circular Progress */}
-              <div className="relative w-[160px] h-[160px] flex-shrink-0 mx-auto md:mx-0">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 140 140">
-                  <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
+            {/* Circular progress */}
+            <div className="hidden md:flex items-center gap-4 shrink-0 lg:border-l lg:border-white/[0.08] lg:pl-10">
+              <div className="relative w-[120px] h-[120px]">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="9" />
                   <circle
-                    cx="70"
-                    cy="70"
-                    r="60"
-                    fill="none"
-                    stroke="url(#dashProgress)"
-                    strokeWidth="10"
-                    strokeLinecap="round"
-                    strokeDasharray={`${(completionRate / 100) * (2 * Math.PI * 60)} ${2 * Math.PI * 60}`}
+                    cx="60" cy="60" r="50" fill="none"
+                    stroke="url(#dashProgress)" strokeWidth="9" strokeLinecap="round"
+                    strokeDasharray={`${(completionRate / 100) * (2 * Math.PI * 50)} ${2 * Math.PI * 50}`}
                     style={{ transition: 'stroke-dasharray 1.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
                   />
                   <defs>
                     <linearGradient id="dashProgress" x1="0" y1="0" x2="1" y2="1">
                       <stop offset="0%" stopColor="#8cffef" />
-                      <stop offset="55%" stopColor="#14b8a6" />
                       <stop offset="100%" stopColor="#14b8a6" />
                     </linearGradient>
                   </defs>
                 </svg>
                 <div className="absolute inset-0 grid place-items-center text-center">
                   <div>
-                    <p className="font-display text-3xl md:text-4xl leading-none font-bold text-gradient-mesh">{completionRate}%</p>
-                    <p className="text-[10px] uppercase tracking-widest text-white/40 mt-1.5">ukończone</p>
+                    <p className="font-display text-2xl font-bold text-gradient-mesh leading-none">{completionRate}%</p>
+                    <p className="text-[9px] uppercase tracking-widest text-white/40 mt-1">ukończone</p>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Breakdown */}
-              <div className="flex-1 w-full">
-                <h3 className="font-display text-xl font-bold mb-1">Postęp oglądania</h3>
-                <p className="text-white/40 text-sm mb-6">Rozkład Twojej aktywności na filmach</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { v: pending, label: 'Do oglądania', color: '#fbbf24', key: 'pending' },
-                    { v: watching, label: 'W trakcie', color: '#2de5ca', key: 'watching' },
-                    { v: watched, label: 'Obejrzane', color: '#34d399', key: 'watched' },
-                    { v: implemented, label: 'Wdrożone', color: '#14b8a6', key: 'implemented' },
-                  ].map((b) => (
-                    <div
-                      key={b.key}
-                      className="relative rounded-2xl p-5 glass hover:border-white/[0.12] transition-all duration-300"
-                    >
-                      <div
-                        className="absolute top-0 left-0 right-0 h-[2.5px] rounded-full opacity-70"
-                        style={{ background: `linear-gradient(90deg, ${b.color}, transparent)` }}
-                      />
-                      <p className="font-display text-3xl font-bold" style={{ color: b.color }}>{b.v}</p>
-                      <p className="text-[11px] text-white/45 mt-1.5 leading-tight">{b.label}</p>
-                    </div>
-                  ))}
+            {/* Breakdown */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-base font-semibold text-white/85 mb-3">Postęp oglądania</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {progressBreakdown.map((b) => (
+                  <div key={b.key} className="rounded-2xl p-4 glass hover:border-white/[0.12] transition-all duration-300">
+                    <p className="font-display text-2xl font-bold tabular-nums" style={{ color: b.color }}>{b.v}</p>
+                    <p className="text-[11px] text-white/45 mt-1 leading-tight">{b.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
+                <Link
+                  href="/student/progress"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2de5ca] hover:text-white transition-colors"
+                >
+                  Szczegółowe statystyki <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== Coach Banner ===== */}
+        {coach && (
+          <div className="animate-rise-in mb-8 relative rounded-3xl overflow-hidden glass-card p-5 md:p-6" style={{ animationDelay: '180ms' }}>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#2de5ca]/10 via-transparent to-[#2de5ca]/10" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <Avatar className="w-12 h-12 rounded-2xl ring-2 ring-white/20 shrink-0">
+                  <AvatarImage src={coach.avatarUrl ?? undefined} alt={coach.name ?? coach.email} />
+                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white font-display font-semibold text-lg">
+                    {(coach.name ?? coach.email)[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-[#8cffef] font-semibold mb-0.5">Twój trener</p>
+                  <h3 className="font-display text-xl font-bold truncate">{coach.name ?? coach.email}</h3>
+                  <p className="text-white/40 text-xs mt-0.5 truncate">Skontaktuj się w razie pytań</p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ===== Quick Actions ===== */}
-        <div className="animate-rise-in relative rounded-3xl p-7 glass-card overflow-hidden mb-10" style={{ animationDelay: '240ms' }}>
-            <div className="flex items-center gap-2 mb-5 relative z-10">
-              <div className="p-2 rounded-lg glass">
-                <Sparkles className="w-4 h-4 text-[#8cffef]" />
+              <div className="flex gap-2.5 md:ml-auto flex-wrap">
+                <Link
+                  href="/student/messages"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:border-[#2de5ca]/40 hover:text-[#8cffef] transition-all duration-300"
+                >
+                  <MessageSquare className="w-4 h-4 text-[#8cffef]" /> Napisz
+                </Link>
+                <Link
+                  href="/student/sessions"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:border-[#2de5ca]/40 transition-all duration-300"
+                >
+                  <BookOpen className="w-4 h-4 text-[#8cffef]" /> Sesje
+                </Link>
               </div>
-              <h4 className="font-display text-lg font-bold">Szybkie akcje</h4>
             </div>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 relative z-10">
-              {[
-                { href: '/student/messages', icon: MessageSquare, label: 'Wiadomości', sub: 'Czat z trenerem' },
-                { href: '/student/feedback', icon: MessageSquareHeart, label: 'Moja opinia', sub: 'Podziel się spostrzeżeniami' },
-                { href: '/student/sessions', icon: BookOpen, label: 'Wszystkie sesje', sub: 'Przeglądaj swoje sesje' },
-                { href: '/student/videos', icon: Film, label: 'Filmy do oglądania', sub: 'Twoja lista filmów' },
-                { href: '/student/progress', icon: TrendingUp, label: 'Mój postęp', sub: 'Statystyki i wykresy' },
-                { href: '/student/settings', icon: Settings, label: 'Ustawienia', sub: 'Profil i preferencje' },
-              ].map((a) => {
-                const Icon = a.icon
-                return (
-                  <Link
-                    key={a.href}
-                    href={a.href}
-                    className="group spotlight-card relative flex items-center gap-4 p-5 rounded-2xl glass overflow-hidden hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
-                    onMouseMove={(e) => {
-                      const r = e.currentTarget.getBoundingClientRect()
-                      e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-                      e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-                    }}
-                  >
-                    <div className="icon-tile w-11 h-11 shrink-0">
-                      <Icon className="w-5 h-5" strokeWidth={2.2} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold leading-snug text-white group-hover:text-[#8cffef] transition-colors">{a.label}</p>
-                      <p className="text-xs text-white/45 leading-relaxed mt-0.5">{a.sub}</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 shrink-0 text-white/30 group-hover:text-[#8cffef] group-hover:translate-x-1 transition-all duration-300" />
-                  </Link>
-                )
-              })}
           </div>
-        </div>
+        )}
 
         {/* ===== Tabs Section ===== */}
-        <div className="animate-rise-in relative rounded-3xl glass-card overflow-hidden" style={{ animationDelay: '300ms' }}>
+        <div className="animate-rise-in relative rounded-3xl glass-card overflow-hidden" style={{ animationDelay: '240ms' }}>
           {/* Tab bar */}
           <div className="relative flex gap-1 px-4 pt-4 border-b border-white/[0.05]">
             {[
@@ -501,12 +372,11 @@ export function StudentDashboardClient({
             {activeTab === 'sessions' && (
               <div className="space-y-4 animate-fade-up" key="sessions">
                 {upcomingSessions.length === 0 ? (
-                  <div className="text-center py-16 px-6">
-                    <div className="relative w-20 h-20 mx-auto mb-5 grid place-items-center rounded-2xl glass border border-white/[0.07]">
-                      <CalendarClock className="w-8 h-8 text-white/50" strokeWidth={1.8} />
-                      <div className="absolute inset-0 rounded-2xl ring-1 ring-white/5" />
+                  <div className="text-center py-14 px-6">
+                    <div className="relative w-16 h-16 mx-auto mb-4 grid place-items-center rounded-2xl glass border border-white/[0.07]">
+                      <CalendarClock className="w-7 h-7 text-white/50" strokeWidth={1.8} />
                     </div>
-                    <h4 className="font-display text-lg font-semibold mb-2">Brak nadchodzących sesji</h4>
+                    <h4 className="font-display text-lg font-semibold mb-1.5">Brak nadchodzących sesji</h4>
                     <p className="text-white/40 text-sm">Twój trener poinformuje Cię o nowej sesji</p>
                   </div>
                 ) : (
@@ -516,9 +386,8 @@ export function StudentDashboardClient({
                       className="group relative flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-2xl glass hover:bg-white/[0.03] hover:border-[#2de5ca]/25 transition-all duration-300"
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="relative p-4 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#8cffef] flex-shrink-0">
-                          <CalendarClock className="w-5.5 h-5.5 text-white" strokeWidth={2.2} />
-                          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
+                        <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#8cffef] flex-shrink-0">
+                          <CalendarClock className="w-5 h-5 text-white" strokeWidth={2.2} />
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-white group-hover:text-[#8cffef] transition-colors truncate">{session.title}</h4>
@@ -527,7 +396,7 @@ export function StudentDashboardClient({
                             {session.scheduledAt ? formatDateTime(session.scheduledAt) : 'Bez terminu'}
                           </p>
                           {session.tags.length > 0 && (
-                            <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            <div className="mt-2 flex flex-wrap gap-1.5">
                               {session.tags.slice(0, 3).map((st) => (
                                 <span
                                   key={st.tag.id}
@@ -537,11 +406,6 @@ export function StudentDashboardClient({
                                   {st.tag.name}
                                 </span>
                               ))}
-                              {session.tags.length > 3 && (
-                                <span className="text-[11px] px-2.5 py-1 rounded-full font-medium glass border border-white/[0.06] text-white/45">
-                                  +{session.tags.length - 3}
-                                </span>
-                              )}
                             </div>
                           )}
                         </div>
@@ -554,8 +418,7 @@ export function StudentDashboardClient({
                           href={`/student/sessions/${session.id}`}
                           className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300"
                         >
-                          Otwórz
-                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                          Otwórz <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                         </Link>
                       </div>
                     </div>
@@ -567,12 +430,11 @@ export function StudentDashboardClient({
             {activeTab === 'activity' && (
               <div className="space-y-4 animate-fade-up" key="activity">
                 {recentProgress.length === 0 ? (
-                  <div className="text-center py-16 px-6">
-                    <div className="relative w-20 h-20 mx-auto mb-5 grid place-items-center rounded-2xl glass border border-white/[0.07]">
-                      <Film className="w-8 h-8 text-white/50" strokeWidth={1.8} />
-                      <div className="absolute inset-0 rounded-2xl ring-1 ring-white/5" />
+                  <div className="text-center py-14 px-6">
+                    <div className="relative w-16 h-16 mx-auto mb-4 grid place-items-center rounded-2xl glass border border-white/[0.07]">
+                      <Film className="w-7 h-7 text-white/50" strokeWidth={1.8} />
                     </div>
-                    <h4 className="font-display text-lg font-semibold mb-2">Brak ostatniej aktywności</h4>
+                    <h4 className="font-display text-lg font-semibold mb-1.5">Brak ostatniej aktywności</h4>
                     <p className="text-white/40 text-sm">Rozpocznij oglądanie filmów z sesji</p>
                   </div>
                 ) : (
@@ -584,19 +446,19 @@ export function StudentDashboardClient({
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className="relative w-20 h-12 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/10">
                           {p.video.thumbnail ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img src={p.video.thumbnail} alt={p.video.title} className="w-full h-full object-cover" loading="lazy" />
                           ) : (
                             <div className="w-full h-full grid place-items-center bg-gradient-to-br from-[#1a1c28] to-[#0f1118]">
                               <Film className="w-5 h-5 text-white/40" />
                             </div>
                           )}
-                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-[#2de5ca]/40 to-transparent" />
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-white group-hover:text-[#8cffef] transition-colors truncate">{p.video.title}</h4>
                           <p className="text-sm text-white/45 truncate">{p.session?.title}</p>
                           {typeof p.progress === 'number' && (
-                            <div className="mt-2.5 h-1.5 rounded-full bg-white/[0.05] overflow-hidden max-w-xs">
+                            <div className="mt-2 h-1.5 rounded-full bg-white/[0.05] overflow-hidden max-w-xs">
                               <div
                                 className="h-full rounded-full bg-gradient-to-r from-[#2de5ca] to-[#14b8a6]"
                                 style={{ width: `${p.progress}%`, transition: 'width 0.8s ease' }}
@@ -614,46 +476,35 @@ export function StudentDashboardClient({
                             href={`/student/sessions/${p.session.id}`}
                             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300"
                           >
-                            Kontynuuj
-                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                            Kontynuuj <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                           </Link>
                         )}
                       </div>
                     </div>
                   ))
-                )}              </div>
+                )}
+              </div>
             )}
           </div>
         </div>
 
-
-        {/* ===== Footer hint ===== */}
-        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/30">
-          <p className="font-display tracking-wide">
-            {totalSessions > 0 ? `Masz ${totalSessions} sesji łącznie` : 'Brak sesji — skontaktuj się z trenerem'}
-          </p>
-          <p className="hidden sm:flex items-center gap-1.5">
-            <Plus className="w-4 h-4 text-[#2de5ca]" />
-            Systematyczność to klucz do sukcesu
-          </p>
+        {/* ===== Footer ===== */}
+        <div className="mt-12 flex items-center justify-center gap-2 text-[11px] text-white/25 font-medium tracking-wide">
+          <span className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
+          <Sparkles className="w-3 h-3 text-[#2de5ca]/50" />
+          <span className="uppercase tracking-[0.25em]">
+            {totalSessions > 0 ? `${totalSessions} sesji · systematyczność to klucz` : 'Systematyczność to klucz'}
+          </span>
+          <Sparkles className="w-3 h-3 text-[#2de5ca]/50" />
+          <span className="h-px w-12 bg-gradient-to-l from-transparent to-white/15" />
         </div>
-
-        {/* ===== XL footer brand (Vantor Logo-XL style) ===== */}
-        <footer className="mt-20 select-none pointer-events-none">
-          <div className="text-center font-display font-bold leading-none tracking-tighter text-[13vw] lg:text-[9rem] text-transparent bg-clip-text bg-gradient-to-b from-white/[0.14] to-transparent">
-            CS2
-          </div>
-          <div className="text-center font-display font-bold leading-none tracking-tighter text-[13vw] lg:text-[9rem] text-transparent bg-clip-text bg-gradient-to-b from-white/[0.14] to-transparent -mt-[4vw] lg:-mt-10">
-            COACHING
-          </div>
-        </footer>
       </div>
     </StudentLayout>
   )
 }
 
 // Tiny isolated countdown — ticks every second, only re-renders itself.
-function Countdown({ target, label }: { target: string; label: string }) {
+function Countdown({ target }: { target: string }) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000)
@@ -662,7 +513,7 @@ function Countdown({ target, label }: { target: string; label: string }) {
 
   const diff = new Date(target).getTime() - now
   if (diff <= 0) {
-    return <span>Sesja „{label}” — dziś lub wkrótce</span>
+    return <span>Odbywa się dziś lub wkrótce</span>
   }
   const days = Math.floor(diff / 86400000)
   const hours = Math.floor((diff % 86400000) / 3600000)
@@ -671,20 +522,7 @@ function Countdown({ target, label }: { target: string; label: string }) {
   const pad = (n: number) => String(n).padStart(2, '0')
   return (
     <span className="tabular-nums">
-      Sesja za: {days > 0 ? `${days}d ` : ''}{pad(hours)}:{pad(minutes)}:{pad(secs)}
+      Za: {days > 0 ? `${days}d ` : ''}{pad(hours)}:{pad(minutes)}:{pad(secs)}
     </span>
-  )
-}
-
-function EmptyState({ icon: Icon, title, sub }: { icon: typeof Film; title: string; sub: string }) {
-  return (
-    <div className="text-center py-20 px-6">
-      <div className="relative w-20 h-20 mx-auto mb-5 grid place-items-center rounded-2xl glass border border-white/[0.07]">
-        <Icon className="w-8 h-8 text-white/50" strokeWidth={1.8} />
-        <div className="absolute inset-0 rounded-2xl ring-1 ring-white/5" />
-      </div>
-      <h4 className="font-display text-lg font-semibold mb-2">{title}</h4>
-      <p className="text-white/40 text-sm">{sub}</p>
-    </div>
   )
 }
