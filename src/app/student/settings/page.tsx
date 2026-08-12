@@ -21,6 +21,9 @@ export default async function StudentSettingsPage() {
       name: true,
       avatarUrl: true,
       createdAt: true,
+      steamId: true,
+      steamVanity: true,
+      faceitNickname: true,
       coach: { select: { id: true, name: true, email: true, avatarUrl: true } },
     },
   })

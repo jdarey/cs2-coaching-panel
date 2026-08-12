@@ -77,6 +77,8 @@ export const coachSettingsSchema = z.object({
   notificationEmail: z.boolean().default(false),
   notificationDiscord: z.boolean().default(false),
   discordWebhook: z.string().url().optional().or(z.literal('')),
+  steamApiKey: z.string().max(500).optional().nullable(),
+  faceitApiKey: z.string().max(500).optional().nullable(),
 })
 
 // Types

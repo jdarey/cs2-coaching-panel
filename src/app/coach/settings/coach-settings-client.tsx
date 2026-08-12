@@ -23,6 +23,8 @@ import {
   MessageCircle,
   Sparkles,
   Camera,
+  Gamepad2,
+  KeyRound,
 } from 'lucide-react'
 
 interface User {
@@ -41,6 +43,8 @@ interface Settings {
   notificationEmail: boolean
   notificationDiscord: boolean
   discordWebhook: string | null
+  steamApiKey: string | null
+  faceitApiKey: string | null
   createdAt: string
   updatedAt: string
 }
@@ -73,6 +77,11 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     progressUpdates: true,
   })
   const [discordWebhook, setDiscordWebhook] = useState(initialSettings?.discordWebhook || '')
+  const [apiKeys, setApiKeys] = useState({
+    steamApiKey: initialSettings?.steamApiKey || '',
+    faceitApiKey: initialSettings?.faceitApiKey || '',
+  })
+  const [apiKeysSaved, setApiKeysSaved] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | 'system')) || 'system'
   )
@@ -235,6 +244,32 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     localStorage.setItem('theme', newTheme)
     // Re-apply through the shared initializer so system === current OS preference
     applyStoredTheme()
+  }
+
+  const handleApiKeysSave = async () => {
+    setIsLoading(true)
+    setApiKeysSaved(false)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steamApiKey: apiKeys.steamApiKey.trim() || null,
+          faceitApiKey: apiKeys.faceitApiKey.trim() || null,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
+        return
+      }
+      setApiKeysSaved(true)
+      toast({ title: 'Zapisano', description: 'Klucze API zapisane — ELO będzie pobierane automatycznie' })
+    } catch {
+      toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   
@@ -613,6 +648,83 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Game integrations — API keys */}
+              <div className="rounded-2xl p-5 glass-liquid">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                    <Gamepad2 className="h-5 w-5 text-[#8cffef]" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white">Automatyczne ELO (Faceit + Premier)</p>
+                    <p className="text-sm text-white/45">
+                      Działa bez kluczy API: uczeń podaje link do Steam, a system pobiera Premier i Faceit z Leetify.
+                      Klucze poniżej są opcjonalne — podnoszą tylko limity zapytań.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="steamApiKey" className="text-xs font-medium text-white/55">
+                      Steam Web API Key{' '}
+                      <span className="text-white/35">(opcjonalny — steamcommunity.com/dev/apikey)</span>
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                      <input
+                        id="steamApiKey"
+                        type="password"
+                        placeholder="Wygeneruj na steamcommunity.com/dev/apikey"
+                        value={apiKeys.steamApiKey}
+                        onChange={(e) => setApiKeys((s) => ({ ...s, steamApiKey: e.target.value }))}
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/25 focus:border-[#2de5ca]/40 transition"
+                      />
+                    </div>
+                    <p className="text-xs text-white/40">
+                      Bez klucza Steam działa też (przez publiczną stronę profilu) — klucz daje bogatszy profil.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="faceitApiKey" className="text-xs font-medium text-white/55">
+                      Faceit Open API Key{' '}
+                      <span className="text-white/35">(opcjonalny — developers.faceit.com)</span>
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                      <input
+                        id="faceitApiKey"
+                        type="password"
+                        placeholder="Utwórz aplikację i klucz na developers.faceit.com"
+                        value={apiKeys.faceitApiKey}
+                        onChange={(e) => setApiKeys((s) => ({ ...s, faceitApiKey: e.target.value }))}
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/25 focus:border-[#2de5ca]/40 transition"
+                      />
+                    </div>
+                    <p className="text-xs text-white/40">
+                      Bez klucza Faceit działa też (przez publiczne endpointy) — klucz podnosi limity zapytań.
+                    </p>
+                  </div>
+
+                  {apiKeysSaved && (
+                    <p className="text-xs text-emerald-300">✓ Klucze zapisane</p>
+                  )}
+
+                  <button
+                    onClick={handleApiKeysSave}
+                    disabled={isLoading}
+                    className=" relative overflow-hidden inline-flex items-center gap-2 rounded-2xl px-5 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    Zapisz klucze API
+                  </button>
+                </div>
               </div>
             </section>
           )}

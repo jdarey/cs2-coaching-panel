@@ -33,6 +33,10 @@ model User {
   name          String?
   role          Role      @default(STUDENT)
   avatarUrl     String?
+  // Gaming identities for auto-fetching rank/ELO
+  steamId       String?   // steam64 ID
+  steamVanity   String?   // steam vanity URL name
+  faceitNickname String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -321,6 +325,9 @@ model CoachSettings {
   notificationEmail Boolean  @default(false)
   notificationDiscord Boolean  @default(false)
   discordWebhook    String?
+  // API keys for automatic rank/ELO fetching (Faceit Open API + Steam Web API)
+  steamApiKey       String?
+  faceitApiKey      String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

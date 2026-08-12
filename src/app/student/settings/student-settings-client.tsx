@@ -22,6 +22,9 @@ import {
   Sun,
   Send,
   CheckCircle2,
+  Gamepad2,
+  TrendingUp,
+  ExternalLink,
 } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
@@ -32,6 +35,9 @@ interface User {
   name: string | null
   avatarUrl: string | null
   createdAt: string
+  steamId: string | null
+  steamVanity: string | null
+  faceitNickname: string | null
   coach: { id: string; name: string | null; email: string; avatarUrl: string | null } | null
 }
 
@@ -39,11 +45,12 @@ interface StudentSettingsClientProps {
   initialUser: User
 }
 
-type SectionKey = 'profile' | 'password' | 'notifications' | 'appearance'
+type SectionKey = 'profile' | 'password' | 'gaming' | 'notifications' | 'appearance'
 
 const SECTIONS: { key: SectionKey; label: string; icon: typeof User }[] = [
   { key: 'profile', label: 'Profil', icon: User },
   { key: 'password', label: 'Hasło', icon: Lock },
+  { key: 'gaming', label: 'Gry i konta', icon: Gamepad2 },
   { key: 'notifications', label: 'Powiadomienia', icon: Bell },
   { key: 'appearance', label: 'Wygląd', icon: Globe },
 ]
@@ -68,13 +75,20 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | 'system')) || 'system'
   )
+  const [gaming, setGaming] = useState({
+    steam: user.steamVanity || user.steamId || '',
+    faceit: user.faceitNickname || '',
+  })
+  const [gamingLoading, setGamingLoading] = useState(false)
+  const [gamingResult, setGamingResult] = useState<{ ok: boolean; message: string } | null>(null)
+  const [faceitResult, setFaceitResult] = useState<{ nickname: string; elo: number | null; skillLevel: number | null } | null>(null)
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '')
   const [avatarDirty, setAvatarDirty] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { update: refreshSession } = useSession()
   const { toast } = useToast()
 
-  const tabRefs = useRef<Record<SectionKey, HTMLButtonElement | null>>({ profile: null, password: null, notifications: null, appearance: null })
+  const tabRefs = useRef<Record<SectionKey, HTMLButtonElement | null>>({ profile: null, password: null, gaming: null, notifications: null, appearance: null })
   const [underline, setUnderline] = useState({ left: 0, width: 0 })
 
   useEffect(() => {
@@ -195,6 +209,96 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
   const handleNotificationChange = (key: string, value: boolean) => {
     setNotifications((prev) => ({ ...prev, [key]: value }))
     // In real app, save to database
+  }
+
+  const saveGaming = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setGamingResult(null)
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steamVanity: gaming.steam.trim() || null,
+          steamId: null,
+          faceitNickname: gaming.faceit.trim() || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setGamingResult({ ok: false, message: data.error || 'Nie udało się zapisać' })
+        return
+      }
+      setGamingResult({ ok: true, message: 'Zapisano konta gier' })
+    } catch {
+      setGamingResult({ ok: false, message: 'Błąd sieci' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchGamingProfile = async () => {
+    const identifier = (gaming.steam || gaming.faceit || '').trim()
+    if (!identifier) {
+      setGamingResult({ ok: false, message: 'Podaj link do profilu Steam lub nickname Faceit' })
+      return
+    }
+    setGamingLoading(true)
+    setGamingResult(null)
+    setFaceitResult(null)
+    try {
+      // Unified keyless integration: Steam URL/vanity/ID or Faceit nick
+      const res = await fetch(`/api/integrations/leetify?identifier=${encodeURIComponent(identifier)}`)
+      const data = await res.json()
+      if (!res.ok) {
+        setGamingResult({ ok: false, message: data.error || 'Nie udało się pobrać rangi' })
+        return
+      }
+      setFaceitResult({ nickname: data.name || identifier, elo: data.faceitElo, skillLevel: data.faceitLevel })
+
+      // Auto-save rank entries (Premier + Faceit) so they land on the rank page
+      let saved = 0
+      if (data.premier != null) {
+        const r = await fetch('/api/ranks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'PREMIER',
+            rank: `${data.premier} Premier`,
+            elo: data.premier,
+            note: 'Pobrano automatycznie (Leetify)',
+          }),
+        })
+        if (r.ok) saved++
+      }
+      if (data.faceitElo != null || data.faceitLevel != null) {
+        const r = await fetch('/api/ranks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'FACEIT',
+            rank: data.faceitElo != null ? `${data.faceitElo} ELO` : `Poziom ${data.faceitLevel}`,
+            elo: data.faceitElo,
+            note: 'Pobrano automatycznie (Leetify)',
+          }),
+        })
+        if (r.ok) saved++
+      }
+
+      const parts = []
+      if (data.premier != null) parts.push(`Premier: ${data.premier}`)
+      if (data.faceitElo != null) parts.push(`Faceit ELO: ${data.faceitElo}`)
+      if (data.faceitLevel != null) parts.push(`Poziom: ${data.faceitLevel}`)
+      setGamingResult({
+        ok: true,
+        message: parts.length > 0 ? `Pobrano: ${parts.join(' · ')}${saved > 0 ? ' · zapisano do rankingu' : ''}` : 'Profil znaleziony, ale bez danych o rangach',
+      })
+    } catch {
+      setGamingResult({ ok: false, message: 'Błąd sieci przy pobieraniu rangi' })
+    } finally {
+      setGamingLoading(false)
+    }
   }
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
@@ -424,6 +528,93 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Zmień hasło
                 </button>
+              </form>
+            )}
+
+            {/* ===== GAMING ===== */}
+            {activeSection === 'gaming' && (
+              <form onSubmit={saveGaming} className="space-y-6" style={{ animationDelay: '0.15s' }}>
+                <div className="rounded-3xl glass-tinted p-6">
+                  <div className="flex items-start gap-3 mb-1">
+                    <div className="grid place-items-center w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#8cffef] flex-shrink-0">
+                      <Gamepad2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-semibold text-white">Konta gier</h3>
+                      <p className="text-sm text-white/45">Podłącz Steam — Twoja ranga i ELO będą pobierane automatycznie i trafiały na stronę rangi.</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-2">
+                    <label htmlFor="steam" className="text-sm font-medium text-white/70">
+                      Link do profilu Steam lub nickname Faceit
+                    </label>
+                    <div className="relative">
+                      <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                      <input
+                        id="steam"
+                        value={gaming.steam}
+                        onChange={(e) => setGaming((s) => ({ ...s, steam: e.target.value }))}
+                        placeholder="np. https://steamcommunity.com/id/TwojNick albo nick z Faceit"
+                        className={inputBase}
+                      />
+                    </div>
+                    <p className="text-xs text-white/40">
+                      Wystarczy sam link — Twój Premier rating, Faceit ELO i poziom zostaną pobrane automatycznie.
+                      Bez żadnych kluczy API po Twojej stronie. Jeśli profil jest prywatny, ustaw go jako publiczny
+                      albo połącz z Leetify (leetify.com).
+                    </p>
+                  </div>
+
+                  {gamingResult && (
+                    <p className={cn('mt-4 text-sm', gamingResult.ok ? 'text-emerald-300' : 'text-red-300')}>
+                      {gamingResult.message}
+                    </p>
+                  )}
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white btn-darey disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300 overflow-hidden"
+                    >
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Zapisz konta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={fetchGamingProfile}
+                      disabled={gamingLoading}
+                      className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-white/[0.04] border border-white/[0.1] hover:border-[#2de5ca]/40 disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300"
+                    >
+                      {gamingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4 text-[#8cffef]" />}
+                      Pobierz rangę teraz
+                    </button>
+                  </div>
+
+                  {faceitResult && (
+                    <div className="mt-5 rounded-2xl bg-white/[0.03] border border-[#2de5ca]/20 p-4 flex items-center gap-4">
+                      <div className="grid place-items-center w-11 h-11 rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white flex-shrink-0">
+                        <TrendingUp className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-display font-semibold text-white">{faceitResult.nickname}</p>
+                        <p className="text-sm text-white/55">
+                          ELO: <span className="font-semibold text-[#8cffef]">{faceitResult.elo ?? '—'}</span>
+                          {faceitResult.skillLevel != null && <> · Poziom {faceitResult.skillLevel}</>}
+                        </p>
+                      </div>
+                      <a
+                        href={`https://faceit.com/pl/players/${encodeURIComponent(faceitResult.nickname)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-auto inline-flex items-center gap-1.5 text-xs text-white/45 hover:text-white transition-colors"
+                      >
+                        Profil <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
               </form>
             )}
 

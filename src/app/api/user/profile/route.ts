@@ -24,7 +24,43 @@ const avatarSchema = z
 const profileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatarUrl: z.union([avatarSchema, z.literal('')]).optional(),
+  steamId: z.string().max(64).optional().nullable(),
+  steamVanity: z.string().max(128).optional().nullable(),
+  faceitNickname: z.string().max(64).optional().nullable(),
 })
+
+export const dynamic = 'force-dynamic'
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userId = (session.user as any).id
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        role: true,
+        steamId: true,
+        steamVanity: true,
+        faceitNickname: true,
+      },
+    })
+    if (!user) {
+      return NextResponse.json({ error: 'Nie znaleziono użytkownika' }, { status: 404 })
+    }
+    return NextResponse.json(user)
+  } catch (error) {
+    console.error('Profile GET error:', error)
+    return NextResponse.json({ error: 'Błąd pobierania profilu' }, { status: 500 })
+  }
+}
 
 export async function PUT(request: NextRequest) {
   try {
@@ -40,7 +76,16 @@ export async function PUT(request: NextRequest) {
     const user = await prisma.user.update({
       where: { id: userId },
       data: validated,
-      select: { id: true, email: true, name: true, avatarUrl: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        role: true,
+        steamId: true,
+        steamVanity: true,
+        faceitNickname: true,
+      },
     })
 
     return NextResponse.json(user)
