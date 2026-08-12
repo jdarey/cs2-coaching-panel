@@ -24,7 +24,7 @@ type Feedback = {
 }
 
 const TYPE_META: Record<string, { label: string; icon: any; color: string }> = {
-  GENERAL: { label: 'Ogólna', icon: MessageSquare, color: 'text-[#8FA3FF] bg-[#2de5ca]/15 border-[#2de5ca]/30' },
+  GENERAL: { label: 'Ogólna', icon: MessageSquare, color: 'text-[#8FA3FF] bg-[#a78bfa]/15 border-[#a78bfa]/30' },
   SESSION: { label: 'Po sesji', icon: CalendarDays, color: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30' },
   SUGGESTION: { label: 'Pomysł', icon: Lightbulb, color: 'text-amber-300 bg-amber-500/15 border-amber-500/30' },
   ISSUE: { label: 'Problem', icon: AlertTriangle, color: 'text-red-300 bg-red-500/15 border-red-500/30' },
@@ -118,7 +118,7 @@ export function CoachFeedbackClient() {
             className={cn(
               'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border',
               filter === t.key
-                ? 'bg-[#14b8a6]/25 border-[#2de5ca]/50 text-white'
+                ? 'bg-[#8b5cf6]/25 border-[#a78bfa]/50 text-white'
                 : 'glass text-white/55 hover:text-white/85',
             )}
           >
@@ -145,7 +145,7 @@ export function CoachFeedbackClient() {
             const meta = TYPE_META[f.type] ?? TYPE_META.GENERAL
             const open = openId === f.id
             return (
-              <div key={f.id} className={cn('glass rounded-2xl overflow-hidden transition-all duration-300', f.status === 'NEW' && 'border-[#2de5ca]/40')}>
+              <div key={f.id} className={cn('glass rounded-2xl overflow-hidden transition-all duration-300', f.status === 'NEW' && 'border-[#a78bfa]/40')}>
                 <button
                   onClick={() => {
                     setOpenId(open ? null : f.id)
@@ -155,7 +155,7 @@ export function CoachFeedbackClient() {
                 >
                   <Avatar className="h-11 w-11 rounded-xl ring-1 ring-white/10 shrink-0">
                     <AvatarImage src={f.student.avatarUrl || ''} alt={f.student.name || ''} />
-                    <AvatarFallback className="rounded-xl bg-[#14b8a6] text-white text-sm font-semibold">
+                    <AvatarFallback className="rounded-xl bg-[#8b5cf6] text-white text-sm font-semibold">
                       {(f.student.name || f.student.email || '?')[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -166,7 +166,7 @@ export function CoachFeedbackClient() {
                         <meta.icon className="w-3 h-3" /> {meta.label}
                       </span>
                       {f.status === 'NEW' && (
-                        <span className="px-2 py-0.5 rounded-full bg-[#2de5ca] text-white text-[10px] font-bold">NOWA</span>
+                        <span className="px-2 py-0.5 rounded-full bg-[#a78bfa] text-white text-[10px] font-bold">NOWA</span>
                       )}
                       {f.status === 'RESPONDED' && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-semibold">
@@ -185,7 +185,7 @@ export function CoachFeedbackClient() {
                 {open && (
                   <div className="px-5 pb-5 pt-1 border-t border-white/[0.05]">
                     {f.response && (
-                      <div className="mt-4 rounded-xl bg-[#14b8a6]/10 border border-[#2de5ca]/25 p-4">
+                      <div className="mt-4 rounded-xl bg-[#8b5cf6]/10 border border-[#a78bfa]/25 p-4">
                         <p className="text-[11px] font-semibold text-[#8FA3FF] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                           <Star className="w-3 h-3" /> Twoja odpowiedź
                         </p>

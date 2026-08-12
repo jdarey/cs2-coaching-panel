@@ -126,7 +126,7 @@ export function StudentFeedbackClient() {
                   className={cn(
                     'flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border transition-all duration-200',
                     type === o.value
-                      ? 'bg-[#14b8a6]/25 border-[#2de5ca]/50 text-white'
+                      ? 'bg-[#8b5cf6]/25 border-[#a78bfa]/50 text-white'
                       : 'glass text-white/55 hover:text-white/85',
                   )}
                 >
@@ -205,7 +205,7 @@ export function StudentFeedbackClient() {
                   <div key={f.id} className="glass rounded-2xl p-4">
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-[#2de5ca]/15 border-[#2de5ca]/30 text-[#8FA3FF]">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-[#a78bfa]/15 border-[#a78bfa]/30 text-[#8FA3FF]">
                           <meta.icon className="w-3 h-3" /> {meta.label}
                         </span>
                         {f.status === 'RESPONDED' && (

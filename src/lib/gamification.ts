@@ -15,7 +15,7 @@ export const RANKS: Rank[] = [
   { key: 'bronze', name: 'Nowicjusz', tier: 0, min: 0, color: '#b45309', glow: 'rgba(180,83,9,0.5)' },
   { key: 'silver', name: 'Srebrny', tier: 1, min: 12, color: '#9ca3af', glow: 'rgba(156,163,175,0.5)' },
   { key: 'gold', name: 'Złota Nova', tier: 2, min: 26, color: '#eab308', glow: 'rgba(234,179,8,0.5)' },
-  { key: 'mg', name: 'Strażnik', tier: 3, min: 40, color: '#2de5ca', glow: 'rgba(45,229,202,0.5)' },
+  { key: 'mg', name: 'Strażnik', tier: 3, min: 40, color: '#a78bfa', glow: 'rgba(45,229,202,0.5)' },
   { key: 'dg', name: 'Wyróżniony', tier: 4, min: 54, color: '#2fb6a2', glow: 'rgba(47,182,162,0.55)' },
   { key: 'le', name: 'Legendarny', tier: 5, min: 68, color: '#0099ff', glow: 'rgba(0,153,255,0.5)' },
   { key: 'sm', name: 'Najwyższy', tier: 6, min: 82, color: '#a855f7', glow: 'rgba(168,85,247,0.5)' },

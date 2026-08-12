@@ -65,9 +65,9 @@ interface StudentVideosClientProps {
 // Premium status meta — pairs the palette hex with an icon + label.
 const STATUS_META: Record<string, { color: string; icon: typeof Clock; dot: string; ring: string; glow: string }> = {
   PENDING: { color: '#fbbf24', icon: Hourglass, dot: 'bg-[#fbbf24]', ring: 'ring-[#fbbf24]/30', glow: 'rgba(251,191,36,0.35)' },
-  WATCHING: { color: '#2de5ca', icon: CircleDot, dot: 'bg-[#2de5ca]', ring: 'ring-[#2de5ca]/30', glow: 'rgba(45,229,202,0.35)' },
+  WATCHING: { color: '#a78bfa', icon: CircleDot, dot: 'bg-[#a78bfa]', ring: 'ring-[#a78bfa]/30', glow: 'rgba(45,229,202,0.35)' },
   WATCHED: { color: '#34d399', icon: CheckCircle2, dot: 'bg-[#34d399]', ring: 'ring-[#34d399]/30', glow: 'rgba(52,211,153,0.35)' },
-  IMPLEMENTED: { color: '#14b8a6', icon: CheckCircle2, dot: 'bg-[#14b8a6]', ring: 'ring-[#14b8a6]/30', glow: 'rgba(20,184,166,0.35)' },
+  IMPLEMENTED: { color: '#8b5cf6', icon: CheckCircle2, dot: 'bg-[#8b5cf6]', ring: 'ring-[#8b5cf6]/30', glow: 'rgba(20,184,166,0.35)' },
 }
 
 
@@ -172,9 +172,9 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
         {/* ===== Stats glass strip ===== */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { label: 'Wszystkie', value: stats.total, accent: '#2de5ca', icon: BookOpen },
+            { label: 'Wszystkie', value: stats.total, accent: '#a78bfa', icon: BookOpen },
             { label: 'Do oglądania', value: stats.pending, accent: '#fbbf24', icon: Clock },
-            { label: 'W trakcie', value: stats.watching, accent: '#2de5ca', icon: Play },
+            { label: 'W trakcie', value: stats.watching, accent: '#a78bfa', icon: Play },
             { label: 'Ukończone', value: stats.watched + stats.implemented, accent: '#34d399', icon: CheckCircle2 },
           ].map((stat, i) => {
             const Icon = stat.icon
@@ -225,8 +225,8 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                 />
                 <defs>
                   <linearGradient id="completionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8cffef" />
-                    <stop offset="100%" stopColor="#14b8a6" />
+                    <stop offset="0%" stopColor="#c4b5fd" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -321,7 +321,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
             <select
               value={selectedSessionId || ''}
               onChange={(e) => setSelectedSessionId(e.target.value || null)}
-              className="h-9 self-center rounded-xl bg-white/[0.04] border border-white/[0.08] px-3 text-xs text-white/70 focus:outline-none focus:border-[#2de5ca]/30 hover:bg-white/[0.07] transition-colors cursor-pointer"
+              className="h-9 self-center rounded-xl bg-white/[0.04] border border-white/[0.08] px-3 text-xs text-white/70 focus:outline-none focus:border-[#a78bfa]/30 hover:bg-white/[0.07] transition-colors cursor-pointer"
               style={{ backdropFilter: 'blur(16px)' }}
             >
               <option value="" className="bg-[#06070d]">Wszystkie sesje</option>
@@ -345,7 +345,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                   'radial-gradient(circle at 30% 30%, rgba(124,111,255,0.28) 0%, rgba(20,184,166,0.12) 40%, rgba(6,7,13,0) 70%)',
               }}
             >
-              <Video className="h-8 w-8 text-[#8cffef]" strokeWidth={2} />
+              <Video className="h-8 w-8 text-[#c4b5fd]" strokeWidth={2} />
             </div>
             <h3 className="font-display text-xl font-bold text-white mb-1.5">Nie znaleziono filmów</h3>
             <p className="text-sm text-white/50 max-w-sm mx-auto">
@@ -379,7 +379,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               return (
                 <div
                   key={`${item.sessionId}-${video.id}`}
-                  className="glass-liquid rise-in rounded-3xl relative overflow-hidden group hover:border-[#2de5ca]/25" style={{
+                  className="glass-liquid rise-in rounded-3xl relative overflow-hidden group hover:border-[#a78bfa]/25" style={{
                     animationDelay: `${Math.min(idx * 60, 600)}ms`,
                     // override hover border to violet glow when hovered
                     ['--hover-border' as string]: 'rgba(45,229,202,0.25)',
@@ -437,7 +437,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         className="absolute inset-0 grid place-items-center"
                         aria-label={`Odtwórz: ${video.title}`}
                       >
-                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
+                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
                           <Play className="h-6 w-6 text-white translate-x-0.5" fill="currentColor" />
                         </span>
                       </Link>
@@ -447,7 +447,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                   {/* ===== Body ===== */}
                   <div className="p-4">
                     {/* Title — turns violet on hover, clamps to 2 lines */}
-                    <h3 className="font-display text-lg font-bold leading-snug text-white transition-colors duration-300 group-hover:text-[#8cffef] line-clamp-2">
+                    <h3 className="font-display text-lg font-bold leading-snug text-white transition-colors duration-300 group-hover:text-[#c4b5fd] line-clamp-2">
                       {video.title}
                     </h3>
 
@@ -519,9 +519,9 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       {/* Open progress dialog */}
                       <button
                         onClick={() => setVideoProgressDialog({ video: item, sessionTitle: item.sessionTitle, progress: p })}
-                        className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold text-white bg-white/[0.04] border border-white/[0.08] hover:bg-[#2de5ca]/15 hover:border-[#2de5ca]/30 hover:text-white transition-all duration-300 relative overflow-hidden"
+                        className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold text-white bg-white/[0.04] border border-white/[0.08] hover:bg-[#a78bfa]/15 hover:border-[#a78bfa]/30 hover:text-white transition-all duration-300 relative overflow-hidden"
                       >
-                        <PlayCircle className="h-3.5 w-3.5 text-[#8cffef]" strokeWidth={2.2} />
+                        <PlayCircle className="h-3.5 w-3.5 text-[#c4b5fd]" strokeWidth={2.2} />
                         <span>Oceń</span>
                         <ArrowRight className="h-3 w-3 opacity-60 transition-transform group-hover:translate-x-0.5" />
                       </button>
@@ -548,7 +548,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               {/* Dialog header */}
               <div className="flex items-start justify-between gap-3 p-5 border-b border-white/[0.06]">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#8cffef] font-semibold mb-1">Twoja ocena</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#c4b5fd] font-semibold mb-1">Twoja ocena</p>
                   <h2 className="font-display text-lg font-bold text-white line-clamp-2">{videoProgressDialog.video.video.title}</h2>
                   <p className="text-xs text-white/45 mt-1 flex items-center gap-1.5">
                     <BookOpen className="h-3 w-3" /> {videoProgressDialog.sessionTitle}
@@ -625,7 +625,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       videoProgressDialog.progress?.status || 'WATCHING',
                       parseInt(e.target.value)
                     )}
-                    className="w-full accent-[#2de5ca] cursor-pointer"
+                    className="w-full accent-[#a78bfa] cursor-pointer"
                     style={{ height: '6px' }}
                   />
                 </div>
@@ -644,14 +644,14 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       e.target.value
                     )}
                     rows={3}
-                    className="w-full rounded-xl bg-white/[0.025] border border-white/[0.08] px-3.5 py-2.5 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#2de5ca]/40 transition-colors resize-none"
+                    className="w-full rounded-xl bg-white/[0.025] border border-white/[0.08] px-3.5 py-2.5 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#a78bfa]/40 transition-colors resize-none"
                   />
                 </div>
 
                 {/* Save spinner */}
                 {isSaving && (
                   <div className="flex items-center justify-center gap-2 text-xs text-white/55">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#8cffef]" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#c4b5fd]" />
                     Zapisywanie…
                   </div>
                 )}

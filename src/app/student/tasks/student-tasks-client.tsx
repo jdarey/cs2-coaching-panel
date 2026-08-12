@@ -132,7 +132,7 @@ export function StudentTasksClient() {
             onMouseMove={spotlightHandler}
           >
             <div className="flex items-center gap-3">
-              <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/20">
+              <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/20">
                 <Target className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -167,7 +167,7 @@ export function StudentTasksClient() {
               className={cn(
                 'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border',
                 filter === f
-                  ? 'text-white border-[#2de5ca]/40 bg-[#2de5ca]/[0.08]'
+                  ? 'text-white border-[#a78bfa]/40 bg-[#a78bfa]/[0.08]'
                   : 'text-white/50 border-white/[0.08] bg-white/[0.02] hover:text-white/80 hover:border-white/15',
               )}
             >
@@ -178,7 +178,7 @@ export function StudentTasksClient() {
           ))}
           {pendingCount > 0 && (
             <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-white/40">
-              <Flame className="w-3.5 h-3.5 text-[#2de5ca]" />
+              <Flame className="w-3.5 h-3.5 text-[#a78bfa]" />
               {pendingCount} zadań czeka na Ciebie
             </span>
           )}
@@ -191,8 +191,8 @@ export function StudentTasksClient() {
           </div>
         ) : sorted.length === 0 ? (
           <div className="glass-liquid rounded-3xl py-16 px-6 text-center flex flex-col items-center">
-            <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca]/25 to-[#14b8a6]/10 ring-1 ring-white/15 mb-4">
-              <Inbox className="w-7 h-7 text-[#8cffef]" />
+            <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa]/25 to-[#8b5cf6]/10 ring-1 ring-white/15 mb-4">
+              <Inbox className="w-7 h-7 text-[#c4b5fd]" />
             </div>
             <p className="font-display text-base font-semibold text-white">
               {filter === 'ALL' ? 'Brak zadań od trenera' : filter === 'DONE' ? 'Brak ukończonych zadań' : 'Wszystko zrobione! 🎉'}
@@ -228,8 +228,8 @@ export function StudentTasksClient() {
                       className={cn(
                         'relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300',
                         done
-                          ? 'bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white ring-1 ring-white/25 shadow-[0_6px_20px_-6px_rgba(45,229,202,0.6)]'
-                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#2de5ca]/40 hover:text-[#8cffef]',
+                          ? 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white ring-1 ring-white/25 shadow-[0_6px_20px_-6px_rgba(45,229,202,0.6)]'
+                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]',
                       )}
                     >
                       {togglingId === a.id ? (
@@ -273,7 +273,7 @@ export function StudentTasksClient() {
                         {a.video && (
                           <Link
                             href={`/student/videos/${a.video.id}`}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#8cffef] hover:text-white transition-colors bg-[#2de5ca]/[0.08] border border-[#2de5ca]/20 rounded-full px-3 py-1.5"
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#c4b5fd] hover:text-white transition-colors bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 rounded-full px-3 py-1.5"
                           >
                             <Film className="w-3.5 h-3.5" />
                             {a.video.title}
@@ -310,9 +310,9 @@ export function StudentTasksClient() {
         {/* Footer flourish */}
         <div className="pt-4 flex items-center justify-center gap-2 text-[11px] text-white/25 font-medium tracking-wide">
           <span className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
-          <Sparkles className="w-3 h-3 text-[#2de5ca]/50" />
+          <Sparkles className="w-3 h-3 text-[#a78bfa]/50" />
           <span className="uppercase tracking-[0.25em]">Małe kroki każdego dnia</span>
-          <Sparkles className="w-3 h-3 text-[#2de5ca]/50" />
+          <Sparkles className="w-3 h-3 text-[#a78bfa]/50" />
           <span className="h-px w-12 bg-gradient-to-l from-transparent to-white/15" />
         </div>
       </div>

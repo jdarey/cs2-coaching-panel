@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         <p style="color: #9ca3af; line-height: 1.6;">Cześć ${name}! Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta w panelu CS2 Coaching.</p>
         <p style="color: #9ca3af; line-height: 1.6;">Kliknij poniższy przycisk, aby ustawić nowe hasło. Link jest ważny przez 1 godzinę.</p>
         <p style="text-align: center; margin: 28px 0;">
-          <a href="${resetUrl}" style="display: inline-block; padding: 12px 28px; border-radius: 12px; background: #2de5ca; color: #062a24; font-weight: 700; text-decoration: none;">Ustaw nowe hasło</a>
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 28px; border-radius: 12px; background: #a78bfa; color: #062a24; font-weight: 700; text-decoration: none;">Ustaw nowe hasło</a>
         </p>
         <p style="color: #6b7280; font-size: 13px;">Jeśli to nie Ty prosiłeś o zmianę hasła, zignoruj tę wiadomość.</p>
       </div>

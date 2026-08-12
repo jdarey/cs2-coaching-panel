@@ -209,13 +209,13 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
   const statusAccent: Record<string, string> = {
     DRAFT: 'text-white/55 bg-white/[0.06] border-white/[0.10]',
-    ACTIVE: 'text-[#2de5ca] bg-[#2de5ca]/10 border-[#2de5ca]/25',
+    ACTIVE: 'text-[#a78bfa] bg-[#a78bfa]/10 border-[#a78bfa]/25',
     COMPLETED: 'text-[#34d399] bg-[#34d399]/10 border-[#34d399]/25',
     ARCHIVED: 'text-white/55 bg-white/[0.06] border-white/[0.10]',
     PENDING: 'text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/25',
-    WATCHING: 'text-[#2de5ca] bg-[#2de5ca]/10 border-[#2de5ca]/25',
+    WATCHING: 'text-[#a78bfa] bg-[#a78bfa]/10 border-[#a78bfa]/25',
     WATCHED: 'text-[#34d399] bg-[#34d399]/10 border-[#34d399]/25',
-    IMPLEMENTED: 'text-[#2de5ca] bg-[#2de5ca]/10 border-[#2de5ca]/25',
+    IMPLEMENTED: 'text-[#a78bfa] bg-[#a78bfa]/10 border-[#a78bfa]/25',
   }
 
   return (
@@ -249,12 +249,12 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
               </span>
               {session.scheduledAt && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/65 bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
-                  <Calendar className="w-3.5 h-3.5 text-[#8cffef]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#c4b5fd]" />
                   {formatDateTime(session.scheduledAt)}
                 </span>
               )}
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/65 bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
-                <Clock className="w-3.5 h-3.5 text-[#8cffef]" />
+                <Clock className="w-3.5 h-3.5 text-[#c4b5fd]" />
                 {completedVideos}/{totalVideos} • {completionPct}%
               </span>
             </div>
@@ -302,11 +302,11 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                       pointer-transparent, so clicks still reach the player. */}
                   <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-between gap-3 px-3 bg-gradient-to-b from-black/85 via-black/55 to-transparent">
                     <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/20">
-                      <Lock className="h-3.5 w-3.5 text-[#8cffef]" />
+                      <Lock className="h-3.5 w-3.5 text-[#c4b5fd]" />
                       <span className="max-w-[220px] truncate">{session.student.name || 'Uczeń'}</span>
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/50 ring-1 ring-white/15">
-                      <Film className="h-3.5 w-3.5 text-[#8cffef]" />
+                      <Film className="h-3.5 w-3.5 text-[#c4b5fd]" />
                       Wideo treningowe
                     </span>
                   </div>
@@ -318,12 +318,12 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   rel="noopener noreferrer"
                   className="group w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-white/[0.03] to-transparent"
                 >
-                  <div className="relative grid place-items-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6]">
+                  <div className="relative grid place-items-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6]">
                     <Play className="w-7 h-7 text-white" />
                     <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
                   </div>
                   <p className="text-white/55 text-sm">Otwórz źródło zewnętrzne</p>
-                  <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-[#8cffef] transition-colors" />
+                  <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-[#c4b5fd] transition-colors" />
                 </a>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-white/[0.03] to-transparent">
@@ -357,7 +357,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
             {session.videos.length > 0 && (
               <div className="px-3 sm:px-4 pb-4">
                 <div className="flex items-center gap-2 px-2 pt-2 pb-3 mb-1">
-                  <ListVideo className="w-4 h-4 text-[#8cffef]" />
+                  <ListVideo className="w-4 h-4 text-[#c4b5fd]" />
                   <p className="text-xs uppercase tracking-wider text-white/45 font-semibold">Lista filmów</p>
                 </div>
                 <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
@@ -374,7 +374,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                         className={cn(
                           'group relative w-full text-left rounded-2xl p-3.5 border transition-all duration-300 overflow-hidden',
                           isActive
-                            ? 'glass-tinted border-[#2de5ca]/30'
+                            ? 'glass-tinted border-[#a78bfa]/30'
                             : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.12]',
                         )}
                       >
@@ -383,8 +383,8 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                             className={cn(
                               'grid place-items-center w-10 h-10 rounded-xl flex-shrink-0 transition-colors',
                               isActive
-                                ? 'bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white'
-                                : 'bg-white/[0.04] border border-white/[0.07] text-white/55 group-hover:text-[#8cffef]',
+                                ? 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white'
+                                : 'bg-white/[0.04] border border-white/[0.07] text-white/55 group-hover:text-[#c4b5fd]',
                             )}
                           >
                             <BookOpen className="w-4 h-4" />
@@ -427,7 +427,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 rounded-2xl ring-1 ring-white/15">
                 <AvatarImage src={session.coach.avatarUrl || ''} alt={session.coach.name || ''} />
-                <AvatarFallback className="bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
+                <AvatarFallback className="bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white">
                   {session.coach.name?.[0] || 'T'}
                 </AvatarFallback>
               </Avatar>
@@ -452,7 +452,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
             <a
               href={`mailto:${session.coach.email}`}
-              className=" relative mt-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-white/[0.07] hover:border-[#2de5ca]/30 transition-all duration-300 overflow-hidden"
+              className=" relative mt-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-white/[0.07] hover:border-[#a78bfa]/30 transition-all duration-300 overflow-hidden"
             >
               <Send className="w-4 h-4" />
               Napisz wiadomość
@@ -464,12 +464,12 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
         {session.tags.length > 0 && (
           <div className="mb-8 rise-in" style={{ animationDelay: '0.18s' }}>
             <div className="flex items-center gap-2 mb-4">
-              <Target className="w-4 h-4 text-[#8cffef]" />
+              <Target className="w-4 h-4 text-[#c4b5fd]" />
               <p className="text-xs uppercase tracking-wider text-white/45 font-semibold">Tagi do poprawy</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {session.tags.map((st, index) => {
-                const color = st.tag.color || '#8cffef'
+                const color = st.tag.color || '#c4b5fd'
                 return (
                   <div
                     key={st.tag.id}
@@ -579,7 +579,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   </div>
                   <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.06]">
                     <p className="text-sm text-white/45">Postęp</p>
-                    <p className="text-2xl font-display font-bold text-[#8cffef] mt-0.5">{completionPct}%</p>
+                    <p className="text-2xl font-display font-bold text-[#c4b5fd] mt-0.5">{completionPct}%</p>
                   </div>
                 </div>
               </div>
@@ -661,7 +661,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                         {video.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mb-4">
                             {video.tags.map((vt) => {
-                              const color = vt.tag.color || '#8cffef'
+                              const color = vt.tag.color || '#c4b5fd'
                               return (
                                 <span
                                   key={vt.tag.id}
@@ -731,7 +731,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                               )}
                               <button
                                 onClick={() => setVideoProgressDialog({ video: sv, progress: videoProgress })}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-[#14b8a6]/15 hover:border-[#14b8a6]/40 hover:text-[#8cffef] transition-all duration-300"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white bg-white/[0.04] border border-white/[0.10] hover:bg-[#8b5cf6]/15 hover:border-[#8b5cf6]/40 hover:text-[#c4b5fd] transition-all duration-300"
                               >
                                 {currentStatus === 'PENDING' ? 'Rozpocznij' : 'Aktualizuj'}
                               </button>
@@ -758,7 +758,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   rows={3}
-                  className="min-h-[110px] rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 transition-all duration-300 resize-none"
+                  className="min-h-[110px] rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#a78bfa]/50 focus-visible:ring-2 focus-visible:ring-[#8b5cf6]/25 transition-all duration-300 resize-none"
                 />
                 <button
                   type="submit"
@@ -789,7 +789,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                     <div className="flex items-start gap-3">
                       <Avatar className="h-9 w-9 rounded-xl ring-1 ring-white/10 flex-shrink-0">
                         <AvatarImage src={note.user.avatarUrl || ''} alt={note.user.name || ''} />
-                        <AvatarFallback className="text-xs bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
+                        <AvatarFallback className="text-xs bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white">
                           {note.user.name?.[0] || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -800,7 +800,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                             className={cn(
                               'inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-medium border',
                               note.user.role === 'COACH'
-                                ? 'text-[#8cffef] bg-[#8cffef]/10 border-[#8cffef]/25'
+                                ? 'text-[#c4b5fd] bg-[#c4b5fd]/10 border-[#c4b5fd]/25'
                                 : 'text-white/55 bg-white/[0.04] border-white/[0.08]',
                             )}
                           >
@@ -810,7 +810,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                         </div>
                         <p className="text-sm text-white/80 whitespace-pre-wrap mt-1.5">{note.content}</p>
                         {note.isPrivate && (
-                          <span className="mt-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium text-[#2de5ca] bg-[#2de5ca]/10 border border-[#2de5ca]/25">
+                          <span className="mt-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium text-[#a78bfa] bg-[#a78bfa]/10 border border-[#a78bfa]/25">
                             <Lock className="w-2.5 h-2.5" />
                             Prywatna notatka trenera
                           </span>
@@ -835,7 +835,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2 mb-5">
-                <div className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6]">
+                <div className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6]">
                   <PlayCircle className="w-5 h-5 text-white" />
                 </div>
                 <h2 className="text-lg font-display font-bold text-white">{videoProgressDialog.video.video.title}</h2>
@@ -887,7 +887,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                         parseInt(e.target.value),
                       )
                     }
-                    className="w-full accent-[#2de5ca]"
+                    className="w-full accent-[#a78bfa]"
                   />
                 </div>
 
@@ -907,7 +907,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                       )
                     }
                     rows={3}
-                    className="rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 transition-all duration-300 resize-none"
+                    className="rounded-2xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#a78bfa]/50 focus-visible:ring-2 focus-visible:ring-[#8b5cf6]/25 transition-all duration-300 resize-none"
                   />
                 </div>
 

@@ -104,8 +104,8 @@ export default function RegisterPage() {
   }
 
   const roles: { key: 'STUDENT' | 'COACH'; label: string; sub: string; Icon: typeof GraduationCapIcon; color: string; ring: string }[] = [
-    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#2de5ca] to-[#8cffef]', ring: 'rgba(45,229,202,0.4)' },
-    { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', Icon: ShieldCheckIcon, color: 'from-[#2de5ca] to-[#14b8a6]', ring: 'rgba(20,184,166,0.4)' },
+    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#a78bfa] to-[#c4b5fd]', ring: 'rgba(45,229,202,0.4)' },
+    { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', Icon: ShieldCheckIcon, color: 'from-[#a78bfa] to-[#8b5cf6]', ring: 'rgba(20,184,166,0.4)' },
   ]
 
   return (
@@ -116,7 +116,7 @@ export default function RegisterPage() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
               <GraduationCapIcon className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
@@ -139,8 +139,8 @@ export default function RegisterPage() {
 
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-[#8cffef]" />
-              <p className="text-[11px] uppercase tracking-widest text-[#8cffef] font-semibold">Rejestracja</p>
+              <Sparkles className="w-4 h-4 text-[#c4b5fd]" />
+              <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-semibold">Rejestracja</p>
             </div>
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">Załóż konto</h2>
 
@@ -167,7 +167,7 @@ export default function RegisterPage() {
                         className={cn(
                           'relative group flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border transition-all duration-300 overflow-hidden',
                           active
-                            ? 'border-[#2de5ca]/50 bg-[#2de5ca]/10'
+                            ? 'border-[#a78bfa]/50 bg-[#a78bfa]/10'
                             : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]',
                         )}
                       >
@@ -183,7 +183,7 @@ export default function RegisterPage() {
                           <p className="text-[11px] text-white/45">{r.sub}</p>
                         </div>
                         {active && (
-                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#2de5ca]" />
+                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#a78bfa]" />
                         )}
                       </button>
                     )
@@ -195,7 +195,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="email" className="label-premium">Email</Label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#c4b5fd]" />
                   <Input
                     id="email"
                     name="email"
@@ -217,7 +217,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="name" className="label-premium">Imię <span className="text-white/30 normal-case font-normal">(opcjonalnie)</span></Label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#c4b5fd]" />
                   <Input
                     id="name"
                     name="name"
@@ -238,7 +238,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="password" className="label-premium">Hasło</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#c4b5fd]" />
                   <Input
                     id="password"
                     name="password"
@@ -260,7 +260,7 @@ export default function RegisterPage() {
               <div className="space-y-2.5">
                 <Label htmlFor="confirmPassword" className="label-premium">Potwierdź hasło</Label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#c4b5fd]" />
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"

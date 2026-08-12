@@ -309,7 +309,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
   }
 
   const inputBase =
-    'h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#2de5ca]/50 focus-visible:ring-2 focus-visible:ring-[#14b8a6]/25 focus-visible:outline-none transition-all duration-300 pl-11 pr-4 text-sm'
+    'h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 focus-visible:border-[#a78bfa]/50 focus-visible:ring-2 focus-visible:ring-[#8b5cf6]/25 focus-visible:outline-none transition-all duration-300 pl-11 pr-4 text-sm'
 
   return (
     <StudentLayout>
@@ -359,7 +359,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     <div className="relative">
                       <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15">
                         <AvatarImage src={avatarUrl || ''} alt={user.name || ''} />
-                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white">
                           {getInitials(user.name || 'U')}
                         </AvatarFallback>
                       </Avatar>
@@ -376,7 +376,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-xl bg-[#060606] border border-white/10 hover:border-[#2de5ca]/40 transition"
+                        className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-xl bg-[#060606] border border-white/10 hover:border-[#a78bfa]/40 transition"
                         aria-label="Zmień zdjęcie profilowe"
                         title="Zmień zdjęcie profilowe"
                       >
@@ -448,7 +448,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12 rounded-xl ring-1 ring-white/10">
                         <AvatarImage src={user.coach.avatarUrl || ''} alt={user.coach.name || ''} />
-                        <AvatarFallback className="bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white">
                           {user.coach.name?.[0] || 'T'}
                         </AvatarFallback>
                       </Avatar>
@@ -536,7 +536,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
               <form onSubmit={saveGaming} className="space-y-6" style={{ animationDelay: '0.15s' }}>
                 <div className="rounded-3xl glass-tinted p-6">
                   <div className="flex items-start gap-3 mb-1">
-                    <div className="grid place-items-center w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#8cffef] flex-shrink-0">
+                    <div className="grid place-items-center w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#c4b5fd] flex-shrink-0">
                       <Gamepad2 className="w-5 h-5" />
                     </div>
                     <div>
@@ -585,22 +585,22 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       type="button"
                       onClick={fetchGamingProfile}
                       disabled={gamingLoading}
-                      className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-white/[0.04] border border-white/[0.1] hover:border-[#2de5ca]/40 disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300"
+                      className=" relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-white/[0.04] border border-white/[0.1] hover:border-[#a78bfa]/40 disabled:opacity-55 disabled:cursor-not-allowed transition-all duration-300"
                     >
-                      {gamingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4 text-[#8cffef]" />}
+                      {gamingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4 text-[#c4b5fd]" />}
                       Pobierz rangę teraz
                     </button>
                   </div>
 
                   {faceitResult && (
-                    <div className="mt-5 rounded-2xl bg-white/[0.03] border border-[#2de5ca]/20 p-4 flex items-center gap-4">
-                      <div className="grid place-items-center w-11 h-11 rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white flex-shrink-0">
+                    <div className="mt-5 rounded-2xl bg-white/[0.03] border border-[#a78bfa]/20 p-4 flex items-center gap-4">
+                      <div className="grid place-items-center w-11 h-11 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white flex-shrink-0">
                         <TrendingUp className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="font-display font-semibold text-white">{faceitResult.nickname}</p>
                         <p className="text-sm text-white/55">
-                          ELO: <span className="font-semibold text-[#8cffef]">{faceitResult.elo ?? '—'}</span>
+                          ELO: <span className="font-semibold text-[#c4b5fd]">{faceitResult.elo ?? '—'}</span>
                           {faceitResult.skillLevel != null && <> · Poziom {faceitResult.skillLevel}</>}
                         </p>
                       </div>
@@ -635,7 +635,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       className="group flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
                     >
                       <div className="flex items-start gap-3 min-w-0">
-                        <div className="grid place-items-center w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] text-[#8cffef] flex-shrink-0">
+                        <div className="grid place-items-center w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] text-[#c4b5fd] flex-shrink-0">
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
@@ -674,8 +674,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     t === 'light'
                       ? 'text-[#fbbf24]'
                       : t === 'dark'
-                        ? 'text-[#2de5ca]'
-                        : 'text-[#8cffef]'
+                        ? 'text-[#a78bfa]'
+                        : 'text-[#c4b5fd]'
                   return (
                     <button
                       key={t}
@@ -683,7 +683,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       className={cn(
                         'group relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300',
                         theme === t
-                          ? 'glass-tinted border-[#2de5ca]/30'
+                          ? 'glass-tinted border-[#a78bfa]/30'
                           : 'bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]',
                       )}
                     >
@@ -697,7 +697,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                           <Icon className="w-5 h-5" />
                         </div>
                         {theme === t && (
-                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-[#14b8a6]/20 text-[#8cffef] border border-[#14b8a6]/30">
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-[#8b5cf6]/20 text-[#c4b5fd] border border-[#8b5cf6]/30">
                             <CheckCircle2 className="w-3 h-3" />
                             Aktywny
                           </span>

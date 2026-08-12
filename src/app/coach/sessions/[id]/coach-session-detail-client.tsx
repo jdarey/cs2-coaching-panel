@@ -90,9 +90,9 @@ interface CoachSessionDetailClientProps {
 
 const SESSION_STATUSES: { value: string; label: string; color: string }[] = [
   { value: 'DRAFT', label: 'Szkic', color: '#9ca3af' },
-  { value: 'ACTIVE', label: 'Aktywna', color: '#2de5ca' },
+  { value: 'ACTIVE', label: 'Aktywna', color: '#a78bfa' },
   { value: 'COMPLETED', label: 'Zakończona', color: '#34d399' },
-  { value: 'ARCHIVED', label: 'Zarchiwizowana', color: '#14b8a6' },
+  { value: 'ARCHIVED', label: 'Zarchiwizowana', color: '#8b5cf6' },
 ]
 
 export function CoachSessionDetailClient({ initialSession, initialProgress }: CoachSessionDetailClientProps) {
@@ -306,7 +306,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
             href="/coach/sessions"
             className="group inline-flex items-center gap-2 text-sm font-medium text-white/55 hover:text-white transition-colors duration-300 mb-8"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-[#181818] group-hover:border-[#2de5ca]/25 group-hover:bg-[#2de5ca]/5 transition-all duration-300">
+            <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-[#181818] group-hover:border-[#a78bfa]/25 group-hover:bg-[#a78bfa]/5 transition-all duration-300">
               <ArrowLeft className="h-4 w-4" />
             </span>
             <span>Sesje</span>
@@ -317,7 +317,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         <div
           className="glass-liquid border-glow rise-in relative overflow-hidden rounded-3xl p-7 sm:p-9 mb-8" style={{ animationDelay: '70ms' }}
         >
-          <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-gradient-to-br from-[#2de5ca]/25 to-[#147a6b]/10 blur-3xl animate-aurora-slow" />
+          <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-gradient-to-br from-[#a78bfa]/25 to-[#6d28d9]/10 blur-3xl animate-aurora-slow" />
           <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-4">
@@ -344,7 +344,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 </p>
               )}
               {session.scheduledAt && (
-                <p className="mt-3 inline-flex items-center gap-2 text-xs text-[#8cffef]">
+                <p className="mt-3 inline-flex items-center gap-2 text-xs text-[#c4b5fd]">
                   <Calendar className="h-3.5 w-3.5" />
                   Zaplanowana: {formatDateTime(session.scheduledAt)}
                 </p>
@@ -388,7 +388,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
               className="glass-liquid relative overflow-hidden rounded-3xl" >
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
                 <div className="flex items-center gap-2.5">
-                  <PlayCircle className="h-5 w-5 text-[#2de5ca]" />
+                  <PlayCircle className="h-5 w-5 text-[#a78bfa]" />
                   <h2 className="font-display text-lg font-semibold text-white/90">Odtwarzacz</h2>
                 </div>
                 {currentVideo && (
@@ -449,7 +449,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
               className="glass-liquid relative overflow-hidden rounded-3xl" >
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
                 <div className="flex items-center gap-2.5">
-                  <ListVideo className="h-5 w-5 text-[#2de5ca]" />
+                  <ListVideo className="h-5 w-5 text-[#a78bfa]" />
                   <h2 className="font-display text-lg font-semibold text-white/90">Playlist sesji</h2>
                 </div>
                 <span className="text-xs text-white/40">{totalVideos} filmów</span>
@@ -476,7 +476,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                         className={cn(
                           'group relative w-full cursor-pointer text-left rounded-2xl p-3.5 transition-all duration-300',
                           isActive
-                            ? 'glass-tinted border-[#2de5ca]/25'
+                            ? 'glass-tinted border-[#a78bfa]/25'
                             : 'border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.1]'
                         )}
                       >
@@ -520,14 +520,14 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                                   'h-full rounded-full transition-all duration-700',
                                   pct >= 100
                                     ? 'bg-gradient-to-r from-emerald-400/80 to-emerald-500/60'
-                                    : 'bg-gradient-to-r from-[#2de5ca]/70 to-[#14b8a6]/70'
+                                    : 'bg-gradient-to-r from-[#a78bfa]/70 to-[#8b5cf6]/70'
                                 )}
                                 style={{ width: `${Math.min(100, Math.max(2, pct))}%` }}
                               />
                             </div>
                           </div>
                           {isActive && (
-                            <CheckCircle2 className="h-4 w-4 text-[#2de5ca] flex-shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-[#a78bfa] flex-shrink-0" />
                           )}
                           <button
                             type="button"
@@ -550,10 +550,10 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
           {/* RIGHT: user info card */}
           <div className="rise-in" style={{ animationDelay: '210ms' }}>
             <div className="glass-tinted relative overflow-hidden rounded-3xl p-6 h-full">
-              <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-[#2de5ca]/15 blur-3xl" />
+              <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-[#a78bfa]/15 blur-3xl" />
               <div className="relative">
                 <div className="flex items-center gap-2.5 mb-5">
-                  <MessageSquare className="h-4 w-4 text-[#8cffef]" />
+                  <MessageSquare className="h-4 w-4 text-[#c4b5fd]" />
                   <span className="text-[10px] uppercase tracking-[0.22em] text-white/45 font-semibold">
                     Uczeń
                   </span>
@@ -567,7 +567,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                         className="h-16 w-16 rounded-xl object-cover ring-1 ring-white/15"
                       />
                     ) : (
-                      <div className="grid h-16 w-16 place-items-center rounded-xl ring-1 ring-white/15 bg-gradient-to-br from-[#2de5ca]/20 to-[#147a6b]/20 text-base font-semibold text-white">
+                      <div className="grid h-16 w-16 place-items-center rounded-xl ring-1 ring-white/15 bg-gradient-to-br from-[#a78bfa]/20 to-[#6d28d9]/20 text-base font-semibold text-white">
                         {getInitials(session.student.name || session.student.email)}
                       </div>
                     )}
@@ -583,7 +583,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-[#181818] px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:border-[#2de5ca]/25 hover:bg-[#2de5ca]/5 transition-all duration-300"
+                  className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-[#181818] px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:border-[#a78bfa]/25 hover:bg-[#a78bfa]/5 transition-all duration-300"
                 >
                   <Send className="h-3.5 w-3.5" />
                   Napisz wiadomość
@@ -603,7 +603,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         {/* Tags row */}
         <div className="rise-in mt-8" style={{ animationDelay: '280ms' }}>
           <div className="flex items-center gap-2.5 mb-4">
-            <Tag className="h-4 w-4 text-[#8cffef]" />
+            <Tag className="h-4 w-4 text-[#c4b5fd]" />
             <h2 className="font-display text-lg font-semibold text-white/90">Tagi błędów</h2>
             <span className="text-xs text-white/35">{session.tags.length}</span>
           </div>
@@ -652,7 +652,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
             <div className="flex items-center gap-2.5">
-              <Plus className="h-5 w-5 text-[#2de5ca]" />
+              <Plus className="h-5 w-5 text-[#a78bfa]" />
               <h2 className="font-display text-lg font-semibold text-white/90">Dodaj film do sesji</h2>
             </div>
           </div>
@@ -666,7 +666,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                   value={videoSearch}
                   onChange={(e) => setVideoSearch(e.target.value)}
                   placeholder="Szukaj w bibliotece filmów..."
-                  className="w-full h-12 rounded-xl bg-[#181818] border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
+                  className="w-full h-12 rounded-xl bg-[#181818] border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#a78bfa]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
                 />
               </div>
               {videoSearch.trim() && (
@@ -740,7 +740,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     value={newVideoUrl}
                     onChange={(e) => setNewVideoUrl(e.target.value)}
                     placeholder="https://youtube.com/watch?v=..."
-                    className="w-full h-12 rounded-xl bg-[#181818] border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 rounded-xl bg-[#181818] border border-white/[0.06] pl-11 pr-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#a78bfa]/40 focus-visible:bg-white/[0.05] transition-all duration-300"
                   />
                 </div>
                 <button
@@ -762,7 +762,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
             <div className="flex items-center gap-2.5">
-              <MessageSquare className="h-5 w-5 text-[#2de5ca]" />
+              <MessageSquare className="h-5 w-5 text-[#a78bfa]" />
               <h2 className="font-display text-lg font-semibold text-white/90">Notatki</h2>
               <span className="text-xs text-white/35">{session.notes.length}</span>
             </div>
@@ -774,7 +774,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
                 rows={3}
-                className="w-full min-h-[110px] rounded-xl bg-[#181818] border border-white/[0.06] px-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#2de5ca]/40 focus-visible:bg-white/[0.05] transition-all duration-300 resize-none"
+                className="w-full min-h-[110px] rounded-xl bg-[#181818] border border-white/[0.06] px-4 py-3 text-sm placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#a78bfa]/40 focus-visible:bg-white/[0.05] transition-all duration-300 resize-none"
               />
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <label className="inline-flex items-center gap-2 cursor-pointer group">
@@ -782,7 +782,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     className={cn(
                       'relative grid h-5 w-5 place-items-center rounded-md border transition-all duration-300',
                       isPrivateNote
-                        ? 'bg-gradient-to-br from-[#2de5ca] to-[#147a6b] border-transparent'
+                        ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] border-transparent'
                         : 'border-white/[0.1] bg-white/[0.03] group-hover:border-white/20'
                     )}
                   >
@@ -832,7 +832,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                             className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/15"
                           />
                         ) : (
-                          <div className="grid h-9 w-9 place-items-center rounded-xl ring-1 ring-white/15 bg-gradient-to-br from-[#2de5ca]/20 to-[#147a6b]/20 text-xs font-semibold text-white">
+                          <div className="grid h-9 w-9 place-items-center rounded-xl ring-1 ring-white/15 bg-gradient-to-br from-[#a78bfa]/20 to-[#6d28d9]/20 text-xs font-semibold text-white">
                             {(note.user.name || 'U').charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -847,7 +847,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                               className={cn(
                                 'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border',
                                 note.user.role === 'COACH'
-                                  ? 'bg-[#2de5ca]/10 text-[#8cffef] border-[#2de5ca]/25'
+                                  ? 'bg-[#a78bfa]/10 text-[#c4b5fd] border-[#a78bfa]/25'
                                   : 'bg-blue-400/10 text-blue-300 border-blue-400/25'
                               )}
                             >
@@ -881,7 +881,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
             <div className="flex items-center gap-2.5">
-              <Edit className="h-5 w-5 text-[#2de5ca]" />
+              <Edit className="h-5 w-5 text-[#a78bfa]" />
               <h2 className="font-display text-lg font-semibold text-white/90">Status sesji</h2>
             </div>
           </div>

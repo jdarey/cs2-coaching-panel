@@ -70,7 +70,7 @@ function ResetPasswordForm() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/login" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
               <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
             </div>
@@ -99,7 +99,7 @@ function ResetPasswordForm() {
                 </p>
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#8cffef] hover:text-white transition-colors"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#c4b5fd] hover:text-white transition-colors"
                 >
                   Przejdź do logowania <ArrowLeft className="w-4 h-4 rotate-180" />
                 </Link>
@@ -107,8 +107,8 @@ function ResetPasswordForm() {
             ) : (
               <>
                 <div className="flex items-center gap-2 mb-1">
-                  <KeyRound className="w-4 h-4 text-[#8cffef]" />
-                  <p className="text-[11px] uppercase tracking-widest text-[#8cffef] font-semibold">Nowe hasło</p>
+                  <KeyRound className="w-4 h-4 text-[#c4b5fd]" />
+                  <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-semibold">Nowe hasło</p>
                 </div>
                 <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">Ustaw nowe hasło</h2>
 
@@ -123,7 +123,7 @@ function ResetPasswordForm() {
                   <div className="space-y-2.5">
                     <Label htmlFor="password" className="label-premium mb-0">Nowe hasło</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#c4b5fd]" />
                       <Input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
@@ -150,7 +150,7 @@ function ResetPasswordForm() {
                   <div className="space-y-2.5">
                     <Label htmlFor="confirm" className="label-premium mb-0">Powtórz hasło</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#8cffef]" />
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#c4b5fd]" />
                       <Input
                         id="confirm"
                         type={showPassword ? 'text' : 'password'}
@@ -184,7 +184,7 @@ function ResetPasswordForm() {
 
                 <Link
                   href="/login"
-                  className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-white/55 hover:text-[#8cffef] transition-colors"
+                  className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-white/55 hover:text-[#c4b5fd] transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" /> Wróć do logowania
                 </Link>

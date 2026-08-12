@@ -43,8 +43,8 @@ interface CoachTagsClientProps {
 }
 
 const DEFAULT_COLORS = [
-  '#14b8a6', '#2de5ca', '#2de5ca', '#ec4899',
-  '#fbbf24', '#2de5ca', '#34d399', '#8cffef',
+  '#8b5cf6', '#a78bfa', '#a78bfa', '#ec4899',
+  '#fbbf24', '#a78bfa', '#34d399', '#c4b5fd',
   '#f97316', '#6366f1',
 ]
 
@@ -216,7 +216,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                <s.Icon className="h-5 w-5 text-[#8cffef]" />
+                <s.Icon className="h-5 w-5 text-[#c4b5fd]" />
               </span>
               <div className="min-w-0">
                 <p className="font-display text-2xl font-bold leading-none text-white">
@@ -235,7 +235,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
             placeholder="Szukaj tagu..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/30 transition"
+            className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#8b5cf6]/30 transition"
           />
           {search && (
             <button
@@ -294,7 +294,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => openEditDialog(tag)}
-                        className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#2de5ca]/25 transition"
+                        className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#a78bfa]/25 transition"
                         aria-label="Edytuj"
                       >
                         <Pencil className="h-4 w-4" />
@@ -332,11 +332,11 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                   <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
                     <span
                       className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-                      style={{ color: tag.isGlobal ? '#8cffef' : '#94a3b8' }}
+                      style={{ color: tag.isGlobal ? '#c4b5fd' : '#94a3b8' }}
                     >
                       <span
                         className="h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: tag.isGlobal ? '#14b8a6' : '#64748b' }}
+                        style={{ backgroundColor: tag.isGlobal ? '#8b5cf6' : '#64748b' }}
                       />
                       {tag.isGlobal ? 'Globalny' : 'Prywatny'}
                     </span>
@@ -359,7 +359,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
             className="glass-liquid relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-7 rise-in" >
             <div className="mb-6 flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                <Sparkles className="h-5 w-5 text-[#8cffef]" />
+                <Sparkles className="h-5 w-5 text-[#c4b5fd]" />
               </span>
               <div>
                 <h2 className="font-display text-xl font-bold text-gradient-violet">
@@ -387,7 +387,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     required
                     maxLength={50}
                     disabled={isLoading}
-                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition"
+                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                   />
                 </div>
               </div>
@@ -405,7 +405,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                   maxLength={500}
                   disabled={isLoading}
                   rows={2}
-                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 pl-11 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition resize-none"
+                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 pl-11 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition resize-none"
                 />
               </div>
 

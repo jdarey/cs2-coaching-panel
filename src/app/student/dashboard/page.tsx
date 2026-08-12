@@ -12,8 +12,10 @@ export default async function StudentDashboardPage() {
   }
 
   const userId = (session.user as any).id
+  const now = new Date()
+  const weekAgo = new Date(now.getTime() - 7 * 86400000)
 
-  const [sessions, progress, coach] = await Promise.all([
+  const [sessions, progress, coach, rankEntries, myTags, assignments, coachInfo, weekStats] = await Promise.all([
     prisma.session.findMany({
       where: { studentId: userId, status: { in: ['ACTIVE', 'COMPLETED'] } },
       orderBy: { scheduledAt: 'desc' },
@@ -37,9 +39,37 @@ export default async function StudentDashboardPage() {
       where: { id: userId },
       select: { coach: { select: { id: true, name: true, email: true, avatarUrl: true } } },
     }),
+    prisma.rankEntry.findMany({
+      where: { studentId: userId },
+      orderBy: { recordedAt: 'asc' },
+      take: 12,
+    }),
+    // My mistake tags — aggregated from my sessions' tags
+    prisma.sessionTag.groupBy({
+      by: ['tagId'],
+      where: { session: { studentId: userId } },
+      _count: { tagId: true },
+    }),
+    prisma.assignment.findMany({
+      where: { studentId: userId },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        coach: { select: { id: true, name: true, avatarUrl: true } },
+      },
+    }),
+    // Weekly deltas
+    prisma.$transaction([
+      prisma.videoProgress.count({ where: { userId, updatedAt: { gte: weekAgo }, status: { in: ['WATCHED', 'IMPLEMENTED'] } } }),
+      prisma.assignment.count({ where: { studentId: userId, completedAt: { gte: weekAgo } } }),
+      prisma.session.count({ where: { studentId: userId, createdAt: { gte: weekAgo } } }),
+    ]),
   ])
 
-  // Calculate stats
+  // Stats
   const stats = {
     totalVideos: progress.length,
     pending: progress.filter((p) => p.status === 'PENDING').length,
@@ -50,7 +80,24 @@ export default async function StudentDashboardPage() {
     activeSessions: sessions.filter((s) => s.status === 'ACTIVE').length,
   }
 
-  // Convert Date fields to strings for client component
+  // My mistakes with tag details
+  const tagDetails = await prisma.tag.findMany({
+    where: { id: { in: myTags.map((t) => t.tagId) } },
+    select: { id: true, name: true, color: true },
+  })
+  const tagMap = new Map(tagDetails.map((t) => [t.id, t]))
+  const myMistakes: { tag: { id: string; name: string; color: string } | null; count: number }[] = myTags
+    .map((t) => ({ tag: tagMap.get(t.tagId) ?? null, count: t._count.tagId }))
+    .filter((t): t is { tag: { id: string; name: string; color: string }; count: number } => t.tag !== null)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6)
+
+  // Assignments: due soon / overdue
+  const pendingAssignments = assignments.filter((a) => a.status === 'PENDING')
+  const overdueAssignments = pendingAssignments.filter((a) => a.dueDate && a.dueDate < now).length
+  const dueSoonAssignments = pendingAssignments.filter((a) => a.dueDate && a.dueDate >= now && a.dueDate < new Date(now.getTime() + 3 * 86400000)).length
+
+  // Sessions/coach serialization for the client
   const sessionsForClient = sessions.map((s) => ({
     ...s,
     scheduledAt: s.scheduledAt?.toISOString() ?? null,
@@ -67,5 +114,30 @@ export default async function StudentDashboardPage() {
     session: p.session ? { ...p.session } : undefined,
   }))
 
-  return <StudentDashboardClient initialStats={stats} initialSessions={sessionsForClient} initialProgress={progressForClient} initialCoach={coach?.coach ?? null} />
+  const rankForClient = rankEntries.map((r) => ({
+    ...r,
+    recordedAt: r.recordedAt.toISOString(),
+    createdAt: r.createdAt.toISOString(),
+  }))
+
+  const assignmentsForClient = assignments.map((a) => ({
+    ...a,
+    dueDate: a.dueDate?.toISOString() ?? null,
+    completedAt: a.completedAt?.toISOString() ?? null,
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+  }))
+
+  return (
+    <StudentDashboardClient
+      initialStats={stats}
+      initialSessions={sessionsForClient}
+      initialProgress={progressForClient}
+      initialCoach={coach?.coach ?? null}
+      initialRank={rankForClient}
+      initialMistakes={myMistakes}
+      initialAssignments={assignmentsForClient}
+      weekly={{ videosDone: weekStats[0], tasksDone: weekStats[1], sessionsThisWeek: weekStats[2], overdueAssignments, dueSoonAssignments }}
+    />
+  )
 }

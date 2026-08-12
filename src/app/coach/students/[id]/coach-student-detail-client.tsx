@@ -61,11 +61,11 @@ interface Assignment {
 }
 
 const PROGRESS_DOTS = [
-  { key: 'total', label: 'Filmy', color: '#14b8a6' },
+  { key: 'total', label: 'Filmy', color: '#8b5cf6' },
   { key: 'pending', label: 'Do oglądania', color: '#fbbf24' },
-  { key: 'watching', label: 'Ogląda', color: '#2de5ca' },
+  { key: 'watching', label: 'Ogląda', color: '#a78bfa' },
   { key: 'watched', label: 'Obejrzane', color: '#34d399' },
-  { key: 'implemented', label: 'Wdrożone', color: '#2de5ca' },
+  { key: 'implemented', label: 'Wdrożone', color: '#a78bfa' },
 ] as const
 
 export function CoachStudentDetailClient({
@@ -353,7 +353,7 @@ export function CoachStudentDetailClient({
           {/* Create form */}
           <div className="glass-card rounded-3xl p-5 md:p-6 mb-5 relative overflow-hidden">
             <p className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-[#8cffef]" />
+              <Plus className="w-4 h-4 text-[#c4b5fd]" />
               Nowe zadanie dla ucznia
             </p>
             <div className="grid gap-3 md:grid-cols-2">
@@ -361,18 +361,18 @@ export function CoachStudentDetailClient({
                 value={form.title}
                 onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
                 placeholder="Tytuł zadania (np. 30 min praktyki strafe'ów)"
-                className="md:col-span-2 rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                className="md:col-span-2 rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#a78bfa]/40 transition-colors"
               />
               <input
                 value={form.description}
                 onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
                 placeholder="Opis / instrukcja (opcjonalnie)"
-                className="md:col-span-2 rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                className="md:col-span-2 rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#a78bfa]/40 transition-colors"
               />
               <select
                 value={form.videoId}
                 onChange={(e) => setForm((s) => ({ ...s, videoId: e.target.value }))}
-                className="rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white focus:outline-none focus:border-[#2de5ca]/40 transition-colors [&>option]:bg-[#0a0c0e]"
+                className="rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white focus:outline-none focus:border-[#a78bfa]/40 transition-colors [&>option]:bg-[#0a0c0e]"
               >
                 <option value="">Bez filmu</option>
                 {coachVideos.map((v) => (
@@ -383,7 +383,7 @@ export function CoachStudentDetailClient({
                 type="date"
                 value={form.dueDate}
                 onChange={(e) => setForm((s) => ({ ...s, dueDate: e.target.value }))}
-                className="rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white focus:outline-none focus:border-[#2de5ca]/40 transition-colors [color-scheme:dark]"
+                className="rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white focus:outline-none focus:border-[#a78bfa]/40 transition-colors [color-scheme:dark]"
               />
             </div>
             {error && <p className="mt-3 text-xs text-red-300">{error}</p>}
@@ -423,8 +423,8 @@ export function CoachStudentDetailClient({
                       className={cn(
                         'relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300',
                         done
-                          ? 'bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white ring-1 ring-white/25'
-                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#2de5ca]/40 hover:text-[#8cffef]',
+                          ? 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white ring-1 ring-white/25'
+                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]',
                       )}
                     >
                       {done ? <Check className="w-4 h-4" strokeWidth={3} /> : <ClipboardList className="w-4 h-4" />}

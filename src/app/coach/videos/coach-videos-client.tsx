@@ -346,7 +346,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Szukaj filmu po tytule lub opisie..."
-              className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#14b8a6]/30 transition"
+              className="glass-liquid h-12 w-full rounded-2xl pl-11 pr-11 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#8b5cf6]/30 transition"
               aria-label="Szukaj filmów"
             />
             {search && (
@@ -376,7 +376,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   )}
                 >
                   {active && (
-                    <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#2de5ca]/25 to-[#147a6b]/25 ring-1 ring-[#2de5ca]/30" />
+                    <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#a78bfa]/25 to-[#6d28d9]/25 ring-1 ring-[#a78bfa]/30" />
                   )}
                   <span className="relative">{t.label}</span>
                 </button>
@@ -393,7 +393,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full px-3.5 h-8 text-xs font-medium transition-all',
                 !activeTag
-                  ? 'text-white ring-1 ring-[#2de5ca]/40 bg-[#2de5ca]/10'
+                  ? 'text-white ring-1 ring-[#a78bfa]/40 bg-[#a78bfa]/10'
                   : 'glass-liquid text-white/60 hover:text-white'
               )}
             >
@@ -474,7 +474,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         </div>
                       )}
                       {/* Gradient hover overlay */}
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2de5ca]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#a78bfa]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
 
                     {/* Duration pill bottom-right */}
@@ -548,7 +548,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => openEditDialog(video)}
-                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#2de5ca]/25 transition"
+                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#a78bfa]/25 transition"
                           aria-label="Edytuj film"
                         >
                           <Pencil className="h-4 w-4" />
@@ -584,7 +584,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <Sparkles className="h-5 w-5 text-[#8cffef]" />
+                  <Sparkles className="h-5 w-5 text-[#c4b5fd]" />
                 </span>
                 <div>
                   <h2 id="video-dialog-title" className="font-display text-xl font-bold text-gradient-violet">
@@ -611,7 +611,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                       required
                       disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                     />
                   </div>
                 </div>
@@ -630,7 +630,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       onChange={handleUrlChange}
                       required
                       disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                     />
                   </div>
                   <p className="text-xs text-white/40">
@@ -651,7 +651,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     maxLength={2000}
                     disabled={isLoading}
                     rows={3}
-                    className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition resize-none"
+                    className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition resize-none"
                   />
                 </div>
 
@@ -693,7 +693,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     })}
                   </div>
                   {tags.length === 0 && (
-                    <p className="text-xs text-white/40">Brak dostępnych tagów. Dodaj tagi w sekcji <a href="/coach/tags" className="text-[#8cffef] hover:underline">Tagi</a>.</p>
+                    <p className="text-xs text-white/40">Brak dostępnych tagów. Dodaj tagi w sekcji <a href="/coach/tags" className="text-[#c4b5fd] hover:underline">Tagi</a>.</p>
                   )}
                 </div>
 
@@ -741,7 +741,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
             >
               <div className="mb-6 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
-                  <UserPlus className="h-5 w-5 text-[#8cffef]" />
+                  <UserPlus className="h-5 w-5 text-[#c4b5fd]" />
                 </span>
                 <div>
                   <h2 id="assign-dialog-title" className="font-display text-xl font-bold text-gradient-violet">
@@ -765,7 +765,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       onChange={(e) => setAssignFormData((prev) => ({ ...prev, studentId: e.target.value, sessionId: '' }))}
                       required
                       disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                     >
                       <option value="">Wybierz ucznia...</option>
                       {students.map((s) => (
@@ -789,7 +789,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       value={assignFormData.sessionId}
                       onChange={(e) => setAssignFormData((prev) => ({ ...prev, sessionId: e.target.value }))}
                       disabled={isLoading || !assignFormData.studentId}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition"
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                     >
                       <option value="">Automatycznie (znajdź lub utwórz)</option>
                       {assignFormData.studentId &&
@@ -815,7 +815,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                       checked={assignFormData.createNewSession}
                       onChange={(e) => setAssignFormData((prev) => ({ ...prev, createNewSession: e.target.checked }))}
                       disabled={isLoading}
-                      className="h-4 w-4 rounded border-white/20 bg-white/[0.03] text-[#2de5ca] focus:ring-2 focus:ring-[#14b8a6]/30 transition"
+                      className="h-4 w-4 rounded border-white/20 bg-white/[0.03] text-[#a78bfa] focus:ring-2 focus:ring-[#8b5cf6]/30 transition"
                     />
                     <span className="text-xs font-medium text-white/75">Utwórz nową sesję</span>
                   </label>
@@ -830,7 +830,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         value={assignFormData.newSessionTitle}
                         onChange={(e) => setAssignFormData((prev) => ({ ...prev, newSessionTitle: e.target.value }))}
                         disabled={isLoading}
-                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#2de5ca]/40 focus:ring-2 focus:ring-[#14b8a6]/25 transition"
+                        className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                       />
                     </div>
                   )}

@@ -22,12 +22,12 @@ export function PageHeader({ icon: Icon, label, title, subtitle, children }: Pag
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.035] to-transparent" />
       <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 px-5 sm:px-7 py-6">
         <div className="flex items-start gap-4 min-w-0">
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] ring-1 ring-white/20">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/20">
             <Icon className="h-5 w-5 text-white" strokeWidth={2.2} />
           </div>
           <div className="space-y-1.5 min-w-0">
             {label && (
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2de5ca]/80">{label}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a78bfa]/80">{label}</p>
             )}
             <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gradient-vantor leading-[1.05]">
               {title}

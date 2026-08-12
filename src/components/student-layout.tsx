@@ -62,7 +62,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
   if ((user as any)?.role !== 'STUDENT') return null
 
   return (
-    <div className="relative min-h-screen bg-[#050607] font-sans text-white overflow-x-clip">
+    <div className="relative min-h-screen bg-[#07060c] font-sans text-white overflow-x-clip">
       <AuroraBackground />
 
       {/* Mobile overlay */}
@@ -95,7 +95,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                 className="flex items-center gap-3 group"
                 onClick={() => setMobileSidebarOpen(false)}
               >
-                <div className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#14b8a6]">
+                <div className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6]">
                   <GraduationCap className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
                 </div>
@@ -125,20 +125,20 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                             className={cn(
                               'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
                               active
-                                ? 'text-white bg-[#2de5ca]/[0.08]'
+                                ? 'text-white bg-[#a78bfa]/[0.08]'
                                 : 'text-[#f4f6f7]/[0.55] hover:text-[#f4f6f7]/[0.9] hover:bg-white/[0.04]',
                             )}
                           >
                             <span
                               className={cn(
                                 'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full transition-opacity duration-200',
-                                active ? 'bg-[#2de5ca] opacity-100' : 'opacity-0',
+                                active ? 'bg-[#a78bfa] opacity-100' : 'opacity-0',
                               )}
                             />
                             <item.icon
                               className={cn(
                                 'relative w-[18px] h-[18px] shrink-0 transition-colors duration-200',
-                                active ? 'text-[#2de5ca]' : 'text-[#f4f6f7]/[0.5] group-hover:text-[#f4f6f7]/[0.8]',
+                                active ? 'text-[#a78bfa]' : 'text-[#f4f6f7]/[0.5] group-hover:text-[#f4f6f7]/[0.8]',
                               )}
                               strokeWidth={2.1}
                             />
@@ -161,20 +161,20 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                       className={cn(
                         'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
                         pathname === '/student/settings'
-                          ? 'text-white bg-[#2de5ca]/[0.08]'
+                          ? 'text-white bg-[#a78bfa]/[0.08]'
                           : 'text-[#f4f6f7]/[0.55] hover:text-[#f4f6f7]/[0.9] hover:bg-white/[0.04]',
                       )}
                     >
                       <span
                         className={cn(
                           'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full transition-opacity duration-200',
-                          pathname === '/student/settings' ? 'bg-[#2de5ca] opacity-100' : 'opacity-0',
+                          pathname === '/student/settings' ? 'bg-[#a78bfa] opacity-100' : 'opacity-0',
                         )}
                       />
                       <Settings
                         className={cn(
                           'relative w-[18px] h-[18px] shrink-0',
-                          pathname === '/student/settings' ? 'text-[#2de5ca]' : 'text-[#f4f6f7]/[0.5] group-hover:text-[#f4f6f7]/[0.8]',
+                          pathname === '/student/settings' ? 'text-[#a78bfa]' : 'text-[#f4f6f7]/[0.5] group-hover:text-[#f4f6f7]/[0.8]',
                         )}
                         strokeWidth={2.1}
                       />
@@ -191,7 +191,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-9 w-9 shrink-0 rounded-lg ring-1 ring-white/15">
                     <AvatarImage src={(user as any)?.avatarUrl || ''} alt={user?.name || ''} />
-                    <AvatarFallback className="rounded-lg bg-gradient-to-br from-[#2de5ca] to-[#14b8a6] text-white font-display font-semibold text-sm">
+                    <AvatarFallback className="rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white font-display font-semibold text-sm">
                       {user?.name?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -229,7 +229,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br from-[#2de5ca] to-[#14b8a6]">
+              <div className="w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6]">
                 <GraduationCap className="w-4 h-4 text-white" strokeWidth={2.2} />
               </div>
               <span className="font-display font-bold text-sm">CS2 Coaching</span>

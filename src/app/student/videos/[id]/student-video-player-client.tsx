@@ -65,11 +65,11 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
                     pointer-transparent, so clicks still reach the player. */}
                 <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-between gap-3 px-3 bg-gradient-to-b from-black/85 via-black/55 to-transparent">
                   <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/20">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#8cffef]" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#c4b5fd]" />
                     <span className="max-w-[220px] truncate">{studentName}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/50 ring-1 ring-white/15">
-                    <Film className="h-3.5 w-3.5 text-[#8cffef]" />
+                    <Film className="h-3.5 w-3.5 text-[#c4b5fd]" />
                     Wideo treningowe
                   </span>
                 </div>
@@ -101,9 +101,9 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
               <Link
                 key={s.id}
                 href={`/student/sessions/${s.id}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/65 bg-white/[0.04] border border-white/[0.08] hover:text-white hover:border-[#2de5ca]/30 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/65 bg-white/[0.04] border border-white/[0.08] hover:text-white hover:border-[#a78bfa]/30 transition-colors"
               >
-                <BookOpen className="w-3.5 h-3.5 text-[#8cffef]" />
+                <BookOpen className="w-3.5 h-3.5 text-[#c4b5fd]" />
                 {s.title}
               </Link>
             ))}

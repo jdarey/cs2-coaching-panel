@@ -679,14 +679,14 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       {/* 5. Buffering spinner */}
       {isBuffering && !isEnded && !showThumbnail && !isReinitialising && (
         <div className="absolute inset-0 z-35 flex items-center justify-center bg-black/75 backdrop-blur-sm pointer-events-none">
-          <Loader2 className="w-10 h-10 text-[#2de5ca] animate-spin" />
+          <Loader2 className="w-10 h-10 text-[#a78bfa] animate-spin" />
         </div>
       )}
 
       {/* 6. Quality-change reinit overlay */}
       {isReinitialising && (
         <div className="absolute inset-0 z-40 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 pointer-events-none">
-          <Loader2 className="w-9 h-9 text-[#2de5ca] animate-spin" />
+          <Loader2 className="w-9 h-9 text-[#a78bfa] animate-spin" />
           <p className="text-white/50 text-[11px] font-semibold tracking-widest uppercase">
             {userPickedRef.current
               ? `Zmiana jakości na ${qualityLabel(reinitVqRef.current)}…`
@@ -718,7 +718,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <div className="absolute inset-0 bg-black/20" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-black/50 border border-white/20 text-[#2de5ca] flex items-center justify-center backdrop-blur-md shadow-2xl shadow-black/80 hover:scale-110 active:scale-95 transition-all duration-300 hover:bg-[#2de5ca]/10 hover:border-[#2de5ca]/40">
+            <div className="w-20 h-20 rounded-full bg-black/50 border border-white/20 text-[#a78bfa] flex items-center justify-center backdrop-blur-md shadow-2xl shadow-black/80 hover:scale-110 active:scale-95 transition-all duration-300 hover:bg-[#a78bfa]/10 hover:border-[#a78bfa]/40">
               <Play className="w-8 h-8 fill-current ml-1.5" />
             </div>
           </div>
@@ -734,7 +734,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       {!showThumbnail && (!isPlaying || isEnded) && !isReinitialising && (
         <button
           onClick={togglePlay}
-          className="absolute z-50 w-16 h-16 rounded-full bg-black/60 border border-white/20 text-[#2de5ca] flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 backdrop-blur-md shadow-2xl shadow-black/80 pointer-events-auto hover:bg-[#2de5ca]/10 hover:border-[#2de5ca]/30"
+          className="absolute z-50 w-16 h-16 rounded-full bg-black/60 border border-white/20 text-[#a78bfa] flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 backdrop-blur-md shadow-2xl shadow-black/80 pointer-events-auto hover:bg-[#a78bfa]/10 hover:border-[#a78bfa]/30"
           title="Odtwórz"
         >
           {isEnded ? <RotateCcw className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-1" />}
@@ -746,14 +746,14 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
            right) is fully covered. */}
       {isEnded && (
         <div className="absolute inset-0 z-45 bg-[#0a0a0a]/95 flex flex-col items-center justify-center gap-4 text-center px-6 transition-all duration-500">
-          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-[#2de5ca] mb-2">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-[#a78bfa] mb-2">
             <RotateCcw className="w-8 h-8" />
           </div>
           <h3 className="text-white font-bold text-lg max-w-md">{title}</h3>
           <p className="text-white/40 text-xs max-w-sm">Wideo dobiegło końca. Możesz obejrzeć je ponownie.</p>
           <button
             onClick={togglePlay}
-            className="mt-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-black bg-[#2de5ca] hover:bg-[#26d0b7] transition-all duration-300 shadow-lg shadow-[#2de5ca]/20 hover:scale-105 active:scale-95 cursor-pointer pointer-events-auto"
+            className="mt-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-black bg-[#a78bfa] hover:bg-[#26d0b7] transition-all duration-300 shadow-lg shadow-[#a78bfa]/20 hover:scale-105 active:scale-95 cursor-pointer pointer-events-auto"
           >
             Odtwórz ponownie
           </button>
@@ -772,26 +772,26 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
             type="range" min={0} max={duration || 100} value={currentTime}
             onChange={handleSeekChange}
             className="w-full h-1 rounded-lg appearance-none cursor-pointer outline-none bg-white/10 transition-all duration-300 hover:h-1.5 focus:outline-none"
-            style={{ background: `linear-gradient(to right,#2de5ca 0%,#2de5ca ${duration?(currentTime/duration)*100:0}%,rgba(255,255,255,0.15) ${duration?(currentTime/duration)*100:0}%,rgba(255,255,255,0.15) 100%)` }}
+            style={{ background: `linear-gradient(to right,#a78bfa 0%,#a78bfa ${duration?(currentTime/duration)*100:0}%,rgba(255,255,255,0.15) ${duration?(currentTime/duration)*100:0}%,rgba(255,255,255,0.15) 100%)` }}
           />
         </div>
 
         {/* Buttons row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={togglePlay} className="text-white hover:text-[#2de5ca] transition-colors focus:outline-none" title={isPlaying?'Pauza':'Odtwórz'}>
+            <button onClick={togglePlay} className="text-white hover:text-[#a78bfa] transition-colors focus:outline-none" title={isPlaying?'Pauza':'Odtwórz'}>
               {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
             </button>
 
             <div className="flex items-center gap-2 group/volume">
-              <button onClick={toggleMute} className="text-white hover:text-[#2de5ca] transition-colors focus:outline-none" title={isMuted?'Odcisz':'Wycisz'}>
+              <button onClick={toggleMute} className="text-white hover:text-[#a78bfa] transition-colors focus:outline-none" title={isMuted?'Odcisz':'Wycisz'}>
                 {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
               <input
                 type="range" min={0} max={100} value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
                 className="w-0 group-hover/volume:w-16 h-1 rounded-lg appearance-none cursor-pointer outline-none bg-white/15 transition-all duration-300 focus:outline-none hover:h-1.5 opacity-0 group-hover/volume:opacity-100"
-                style={{ background: `linear-gradient(to right,#2de5ca 0%,#2de5ca ${isMuted?0:volume}%,rgba(255,255,255,0.15) ${isMuted?0:volume}%,rgba(255,255,255,0.15) 100%)` }}
+                style={{ background: `linear-gradient(to right,#a78bfa 0%,#a78bfa ${isMuted?0:volume}%,rgba(255,255,255,0.15) ${isMuted?0:volume}%,rgba(255,255,255,0.15) 100%)` }}
               />
             </div>
 
@@ -817,11 +817,11 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
                         key={q}
                         onClick={() => setQuality(q)}
                         className={`w-full text-left px-3 py-2 text-xs font-medium transition-all duration-150 flex items-center justify-between gap-3 ${
-                          currentQuality === q ? 'text-[#2de5ca] bg-[#2de5ca]/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                          currentQuality === q ? 'text-[#a78bfa] bg-[#a78bfa]/10' : 'text-white/70 hover:text-white hover:bg-white/5'
                         }`}
                       >
                         <span>{qualityLabel(q)}</span>
-                        {currentQuality === q && <span className="w-1.5 h-1.5 rounded-full bg-[#2de5ca] flex-shrink-0" />}
+                        {currentQuality === q && <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa] flex-shrink-0" />}
                       </button>
                     ))}
                   </div>
@@ -829,16 +829,16 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
                 <button
                   id="yt-quality-btn"
                   onClick={(e) => { e.stopPropagation(); setShowQualityMenu(v => !v); resetControlsTimer() }}
-                  className={`flex items-center gap-1.5 text-xs font-semibold transition-colors focus:outline-none ${showQualityMenu ? 'text-[#2de5ca]' : 'text-white/70 hover:text-white'}`}
+                  className={`flex items-center gap-1.5 text-xs font-semibold transition-colors focus:outline-none ${showQualityMenu ? 'text-[#a78bfa]' : 'text-white/70 hover:text-white'}`}
                   title="Zmień jakość"
                 >
-                  <Settings className={`w-4 h-4 transition-transform duration-300 ${showQualityMenu ? 'rotate-45 text-[#2de5ca]' : ''}`} />
+                  <Settings className={`w-4 h-4 transition-transform duration-300 ${showQualityMenu ? 'rotate-45 text-[#a78bfa]' : ''}`} />
                   <span className="text-[11px]">{qualityLabel(currentQuality)}</span>
                 </button>
               </div>
             )}
 
-            <button onClick={toggleFullscreen} className="text-white hover:text-[#2de5ca] transition-colors focus:outline-none" title={isFullscreen?'Wyjdź z pełnego ekranu':'Pełny ekran'}>
+            <button onClick={toggleFullscreen} className="text-white hover:text-[#a78bfa] transition-colors focus:outline-none" title={isFullscreen?'Wyjdź z pełnego ekranu':'Pełny ekran'}>
               {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </button>
           </div>

@@ -9,7 +9,7 @@ interface DiscordNotificationInput {
   coachId: string
   title: string
   description: string
-  color?: number // Discord embed color (decimal). Default: teal #2de5ca
+  color?: number // Discord embed color (decimal). Default: teal #a78bfa
   fields?: { name: string; value: string; inline?: boolean }[]
 }
 

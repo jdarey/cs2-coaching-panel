@@ -1,138 +1,273 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { cn, formatDate, formatDateTime, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
-import { Plus, Users, BookOpen, Video, ArrowRight, Activity, MessageSquare, MessageSquareHeart } from 'lucide-react'
-import Link from 'next/link'
+import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import {
+  Plus, Users, BookOpen, Video, ArrowRight, Activity, MessageSquare, MessageSquareHeart,
+  AlertTriangle, Clock3, CalendarClock, TrendingDown, TrendingUp, Minus, CheckCircle2,
+  Inbox, Flame,
+} from 'lucide-react'
 
-interface Stats {
+type Reason = { key: string; label: string }
+
+interface AttentionStudent {
+  id: string
+  name: string | null
+  email: string | null
+  avatarUrl: string | null
+  unread: number
+  pending: number
+  overdue: number
+  inactiveDays: number
+  hasUpcoming: boolean
+  score: number
+  reasons: Reason[]
+  videoCount: number
+}
+
+interface CoachDashboardInitial {
   studentsCount: number
   sessionsCount: number
   videosCount: number
   tagsCount: number
   effectiveness: number
+  assignmentRate: number
+  overdueAssignments: number
+  attentionNeeding: number
+  attention: AttentionStudent[]
+  mistakeTrends: { tag: { id: string; name: string; color: string }; thisMonth: number; lastMonth: number }[]
   recentSessions: any[]
-  recentStudents: any[]
+  sessionsThisWeek: number
+  doneThisWeek: number
+  activeStudents: number
+  upcomingCount: number
 }
 
-interface CoachDashboardClientProps {
-  initialStats: Stats
+const REASON_STYLE: Record<string, string> = {
+  unread: 'bg-[#a78bfa]/[0.12] text-[#c4b5fd] ring-[#a78bfa]/30',
+  overdue: 'bg-red-500/[0.12] text-red-300 ring-red-500/30',
+  pending: 'bg-white/[0.05] text-white/60 ring-white/10',
+  nosession: 'bg-amber-500/[0.12] text-amber-300 ring-amber-500/30',
+  inactive: 'bg-sky-500/[0.12] text-sky-300 ring-sky-500/30',
 }
 
-export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps) {
-  const { studentsCount, sessionsCount, videosCount, tagsCount, effectiveness, recentSessions, recentStudents } = initialStats
+export function CoachDashboardClient({ initial }: { initial: CoachDashboardInitial }) {
+  const router = useRouter()
+  useLiveRefresh(() => router.refresh())
+
+  const {
+    studentsCount, sessionsCount, videosCount, tagsCount, effectiveness,
+    assignmentRate, overdueAssignments, attentionNeeding, attention, mistakeTrends,
+    recentSessions, sessionsThisWeek, doneThisWeek, activeStudents, upcomingCount,
+  } = initial
 
   const statCards = [
-    { name: 'Uczniowie', value: studentsCount, icon: Users, href: '/coach/students', gradient: 'from-[#2de5ca] to-[#8cffef]', hint: 'aktywni podopieczni' },
-    { name: 'Sesje', value: sessionsCount, icon: BookOpen, href: '/coach/sessions', gradient: 'from-[#34d399] to-[#16a34a]', hint: 'zaplanowane treningi' },
-    { name: 'Filmy', value: videosCount, icon: Video, href: '/coach/videos', gradient: 'from-[#14b8a6] to-[#147a6b]', hint: 'w bibliotece' },
+    { name: 'Uczniowie', value: studentsCount, icon: Users, href: '/coach/students', gradient: 'from-[#a78bfa] to-[#8b5cf6]', hint: `${activeStudents} aktywnych w tym tygodniu` },
+    { name: 'Sesje', value: sessionsCount, icon: BookOpen, href: '/coach/sessions', gradient: 'from-[#34d399] to-[#16a34a]', hint: `${upcomingCount} nadchodzących` },
+    { name: 'Filmy', value: videosCount, icon: Video, href: '/coach/videos', gradient: 'from-[#8b5cf6] to-[#6d28d9]', hint: 'w bibliotece' },
     { name: 'Tagi', value: tagsCount, icon: Activity, href: '/coach/tags', gradient: 'from-[#fbbf24] to-[#f97316]', hint: 'kategorie błędów' },
   ]
+
+  const alertCards = [
+    { count: overdueAssignments, label: 'zadań po terminie', href: '/coach/students', icon: Clock3, tone: 'text-red-300 bg-red-500/[0.12] ring-red-500/25' },
+    { count: attentionNeeding, label: 'uczniów wymaga uwagi', href: '/coach/students', icon: AlertTriangle, tone: 'text-amber-300 bg-amber-500/[0.12] ring-amber-500/25' },
+    { count: upcomingCount, label: 'nadchodzących sesji', href: '/coach/sessions', icon: CalendarClock, tone: 'text-[#c4b5fd] bg-[#a78bfa]/[0.12] ring-[#a78bfa]/25' },
+    { count: studentsCount - activeStudents, label: 'nieaktywnych 7 dni', href: '/coach/students', icon: Inbox, tone: 'text-sky-300 bg-sky-500/[0.12] ring-sky-500/25' },
+  ]
+
+  const maxTrend = Math.max(1, ...mistakeTrends.map((t) => t.thisMonth))
 
   return (
     <CoachLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {/* =========================== PAGE HEADER =========================== */}
         <PageHeader
           icon={Activity}
           title="Dashboard trenera"
-          subtitle="Uczniowie, sesje i materiały w jednym miejscu."
+          subtitle="Kto potrzebuje uwagi, co działa i co rośnie — w jednym miejscu."
         >
           <Link
             href="/coach/sessions"
-            className={cn(
-              'group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white',
-              'btn-darey',
-              'ring-1 ring-white/20 hover:-translate-y-0.5 transition-all duration-300',
-            )}
+            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white btn-darey ring-1 ring-white/20 hover:-translate-y-0.5 transition-all duration-300"
           >
             <Plus className="h-4 w-4" />
             Nowa sesja
           </Link>
           <Link
             href="/coach/videos"
-            className={cn(
-              'group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold',
-              'bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#2de5ca]/25 hover:bg-white/[0.07]',
-              'backdrop-blur-xl hover:-translate-y-0.5 transition-all duration-300',
-            )}
+            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold bg-white/[0.04] text-white/85 ring-1 ring-white/[0.10] hover:ring-[#a78bfa]/30 hover:bg-white/[0.07] backdrop-blur-xl hover:-translate-y-0.5 transition-all duration-300"
           >
             <Plus className="h-4 w-4" />
             Dodaj film
           </Link>
         </PageHeader>
 
-        {/* =========================== EFFECTIVENESS HERO =========================== */}
-        <div className="rise-in mb-8 glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8" style={{ animationDelay: '0.04s' }}>
-          <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#147a6b]/20 blur-3xl animate-aurora pointer-events-none" />
+        {/* ===== ATTENTION ALERTS ===== */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {alertCards.map((a, i) => (
+            <Link
+              key={a.label}
+              href={a.href}
+              className="rise-in group flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
+              style={{ animationDelay: `${i * 50}ms` }}
+            >
+              <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1', a.tone)}>
+                <a.icon className="h-4 w-4" />
+              </span>
+              <span>
+                <span className="block font-display text-xl font-bold leading-none tabular-nums">{a.count}</span>
+                <span className="block text-[11px] text-white/45 mt-1 leading-tight">{a.label}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
 
-          <div className="relative flex flex-col md:flex-row md:items-center gap-6">
-            {/* Big number */}
-            <div className="flex items-center gap-5">
-              <div className="relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#8cffef] to-[#14b8a6] ring-1 ring-white/30 shadow-lg shadow-black/30">
-                <Activity className="h-7 w-7 text-white" />
+        {/* ===== PRIORITY QUEUE — who needs you now ===== */}
+        <div className="rise-in glass-liquid relative overflow-hidden rounded-3xl p-6 mb-8" style={{ animationDelay: '80ms' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/25">
+                <AlertTriangle className="h-4 w-4 text-white" />
               </div>
-              <div>
-                <p className="font-display text-5xl font-bold text-gradient-mesh leading-none tabular-nums">
-                  {effectiveness}%
+              <h3 className="font-display text-lg font-semibold text-white/90">Kolejka priorytetów</h3>
+              <span className="text-[11px] text-white/35 font-medium">— kto potrzebuje Cię teraz</span>
+            </div>
+            <Link href="/coach/students" className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#a78bfa]/30 hover:text-white hover:bg-white/[0.07] transition-all">
+              Wszyscy uczniowie <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          {attention.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-10 text-center">
+              <CheckCircle2 className="w-8 h-8 mx-auto mb-3 text-[#34d399]" />
+              <p className="text-sm text-white/60">Brak uczniów. Dodaj pierwszego ucznia, aby zacząć.</p>
+            </div>
+          ) : attention.filter((a) => a.score > 0).length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-10 text-center">
+              <CheckCircle2 className="w-8 h-8 mx-auto mb-3 text-[#34d399]" />
+              <p className="text-sm text-white/60">Wszystko pod kontrolą — nikt nie czeka na reakcję.</p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {attention.filter((a) => a.score > 0).slice(0, 6).map((s, i) => (
+                <Link
+                  key={s.id}
+                  href={`/coach/students/${s.id}`}
+                  className={cn(
+                    'group relative flex flex-wrap items-center gap-3 rounded-2xl p-3.5 ring-1 transition-all duration-300',
+                    'bg-white/[0.02] ring-white/[0.05] hover:bg-white/[0.04] hover:ring-white/[0.12]',
+                    i === 0 && 'ring-[#a78bfa]/25 bg-[#a78bfa]/[0.04]',
+                  )}
+                >
+                  <div className="relative h-10 w-10 shrink-0">
+                    {s.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.avatarUrl} alt={s.name || s.email || 'Uczeń'} className="h-10 w-10 rounded-xl object-cover ring-1 ring-white/15" />
+                    ) : (
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-sm font-semibold text-white ring-1 ring-white/25">
+                        {(s.name || s.email || 'U')[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    {s.unread > 0 && (
+                      <span className="absolute -top-1 -right-1 grid h-4 min-w-[16px] place-items-center rounded-full bg-[#a78bfa] px-1 text-[9px] font-bold text-white ring-2 ring-[#0a0c0e]">
+                        {s.unread}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-white/90 group-hover:text-white">{s.name || s.email}</p>
+                    <p className="text-[11px] text-white/40 mt-0.5">{s.videoCount} filmów przypisanych</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {s.reasons.map((r) => (
+                      <span key={r.key} className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset', REASON_STYLE[r.key] || REASON_STYLE.pending)}>
+                        {r.label}
+                      </span>
+                    ))}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ===== EFFECTIVENESS + PULSE ===== */}
+        <div className="grid gap-6 lg:grid-cols-3 mb-8">
+          <div className="rise-in lg:col-span-2 glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8" style={{ animationDelay: '140ms' }}>
+            <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-[#6d28d9]/20 blur-3xl animate-aurora pointer-events-none" />
+            <div className="relative flex flex-col md:flex-row md:items-center gap-6">
+              <div className="flex items-center gap-5">
+                <div className="relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/30 shadow-lg shadow-black/30">
+                  <Activity className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <p className="font-display text-5xl font-bold text-gradient-mesh leading-none tabular-nums">{effectiveness}%</p>
+                  <p className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-white/45">Realizacja treningów</p>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h2 className="font-display text-xl font-semibold text-gradient-vantor">Skuteczność treningowa</h2>
+                <p className="mt-1.5 text-sm text-white/55 leading-relaxed max-w-xl">
+                  Ile przypisanych filmów Twoi uczniowie faktycznie obejrzeli i wdrożyli.
+                  {effectiveness < 50 && sessionsCount > 0 && ' Warto przypomnieć uczniom o zaległościach.'}
                 </p>
-                <p className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-white/45">
-                  Realizacja treningów
-                </p>
+                {/* Assignment progress */}
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-white/45 mb-1.5">
+                    <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#34d399]" /> Zadania treningowe</span>
+                    <span className="tabular-nums font-semibold text-white/70">{assignmentRate}% ukończone</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6] transition-all duration-1000" style={{ width: `${assignmentRate}%` }} />
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Text + actions */}
-            <div className="flex-1 text-left">
-              <h2 className="font-display mt-2 md:mt-0 text-xl sm:text-2xl font-semibold text-gradient-vantor">
-                Skuteczność treningowa
-              </h2>
-              <p className="mt-1.5 text-sm text-white/55 leading-relaxed max-w-xl">
-                Ile przypisanych filmów Twoi uczniowie faktycznie obejrzeli i wdrożyli.
-                {effectiveness < 50 && sessionsCount > 0 && ' Warto przypomnieć uczniom o zaległościach.'}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <Link
-                  href="/coach/students"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#2de5ca]/25 hover:bg-white/[0.08] transition-all"
-                >
-                  Postępy uczniów <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-                <Link
-                  href="/coach/messages"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#2de5ca]/25 hover:bg-white/[0.08] transition-all"
-                >
-                  <MessageSquare className="h-3.5 w-3.5" /> Napisz do uczniów
-                </Link>
-                <Link
-                  href="/coach/feedback"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-3.5 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/[0.08] hover:ring-[#2de5ca]/25 hover:bg-white/[0.08] transition-all"
-                >
-                  <MessageSquareHeart className="h-3.5 w-3.5" /> Opinie uczniów
-                </Link>
+          {/* Weekly pulse */}
+          <div className="rise-in glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/25">
+                <Flame className="h-4 w-4 text-white" />
               </div>
+              <h3 className="font-display text-lg font-semibold text-white/90">Puls tygodnia</h3>
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: 'Sesje utworzone', value: sessionsThisWeek, icon: BookOpen, color: '#34d399' },
+                { label: 'Zadania ukończone', value: doneThisWeek, icon: CheckCircle2, color: '#a78bfa' },
+                { label: 'Aktywni uczniowie', value: activeStudents, icon: Users, color: '#fbbf24' },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between rounded-xl bg-white/[0.02] px-3.5 py-2.5 ring-1 ring-white/[0.05]">
+                  <span className="flex items-center gap-2 text-sm text-white/65">
+                    <row.icon className="h-4 w-4" style={{ color: row.color }} />
+                    {row.label}
+                  </span>
+                  <span className="font-display text-lg font-bold tabular-nums" style={{ color: row.color }}>{row.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* =========================== STATS GRID =========================== */}
+        {/* ===== STATS GRID ===== */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {statCards.map((stat, i) => (
-            <div key={stat.name} className="rise-in h-full" style={{ animationDelay: `${0.08 + i * 0.06}s` }}>
+            <div key={stat.name} className="rise-in h-full" style={{ animationDelay: `${220 + i * 50}ms` }}>
               <Link
                 href={stat.href}
-                className={cn(
-                  'glass-liquid group relative flex h-full flex-col overflow-hidden rounded-3xl p-6',
-                  'transition-all duration-500 border border-white/[0.06] hover:border-[#2de5ca]/25',
-                )}
+                className="glass-liquid group relative flex h-full flex-col overflow-hidden rounded-3xl p-6 transition-all duration-500 border border-white/[0.06] hover:border-[#a78bfa]/25"
               >
                 <div className="flex items-start justify-between">
                   <div className="relative grid h-12 w-12 place-items-center rounded-2xl ring-1 ring-white/30 shadow-lg shadow-black/30">
                     <div className={cn('absolute inset-0 rounded-2xl bg-gradient-to-br opacity-95', stat.gradient)} />
                     <stat.icon className="relative h-5 w-5 text-white" />
                   </div>
-                  <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#8cffef] group-hover:translate-x-0.5 transition-all duration-300" />
+                  <ArrowRight className="h-4 w-4 text-white/25 group-hover:text-[#c4b5fd] group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
                 <div className="mt-5">
                   <p className="font-display text-3xl font-bold text-white tabular-nums">{stat.value}</p>
@@ -145,10 +280,55 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
           ))}
         </div>
 
-        {/* =========================== SESSIONS + STUDENTS =========================== */}
+        {/* ===== MISTAKE TRENDS + RECENT ===== */}
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
-          {/* Recent Sessions */}
-          <div className="rise-in lg:col-span-2 glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '0.34s' }}>
+          {/* Mistake trends */}
+          <div className="rise-in glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '420ms' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#f97316] to-[#ef4444] ring-1 ring-white/25">
+                  <TrendingDown className="h-4 w-4 text-white" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-white/90">Trendy błędów</h3>
+              </div>
+              <Link href="/coach/tags" className="text-[11px] text-white/40 hover:text-[#c4b5fd] transition-colors font-medium">
+                zarządzaj tagami
+              </Link>
+            </div>
+            {mistakeTrends.length === 0 ? (
+              <p className="text-sm text-white/40 text-center py-8">Brak oznaczonych błędów — dodaj tagi do sesji.</p>
+            ) : (
+              <div className="space-y-3">
+                {mistakeTrends.slice(0, 6).map((t) => {
+                  const delta = t.thisMonth - t.lastMonth
+                  const w = Math.round((t.thisMonth / maxTrend) * 100)
+                  return (
+                    <div key={t.tag.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-white/70 font-medium">{t.tag.name}</span>
+                        <span className="flex items-center gap-1.5 text-xs">
+                          <span className="text-white/50 tabular-nums">{t.thisMonth}</span>
+                          {delta > 0 ? (
+                            <span className="inline-flex items-center gap-0.5 text-red-300"><TrendingUp className="h-3 w-3" />+{delta}</span>
+                          ) : delta < 0 ? (
+                            <span className="inline-flex items-center gap-0.5 text-[#34d399]"><TrendingDown className="h-3 w-3" />{delta}</span>
+                          ) : (
+                            <Minus className="h-3 w-3 text-white/30" />
+                          )}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(4, w)}%`, background: t.tag.color || '#a78bfa' }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Recent sessions */}
+          <div className="rise-in lg:col-span-2 glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '460ms' }}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/30">
@@ -156,21 +336,14 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                 </div>
                 <h3 className="font-display text-lg font-semibold text-white/90">Ostatnie sesje</h3>
               </div>
-              <Link
-                href="/coach/sessions"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#2de5ca]/25 hover:text-white hover:bg-white/[0.07] transition-all"
-              >
+              <Link href="/coach/sessions" className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#a78bfa]/30 hover:text-white hover:bg-white/[0.07] transition-all">
                 Wszystkie <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-
             {recentSessions.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-8 text-center">
                 <p className="text-sm text-white/55">Brak sesji. Utwórz swoją pierwszą sesję.</p>
-                <Link
-                  href="/coach/sessions"
-                  className="relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 hover:-translate-y-0.5 transition-all"
-                >
+                <Link href="/coach/sessions" className="relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 hover:-translate-y-0.5 transition-all">
                   <Plus className="h-3.5 w-3.5" /> Utwórz sesję
                 </Link>
               </div>
@@ -180,20 +353,14 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
                   <Link
                     key={session.id}
                     href={`/coach/sessions/${session.id}`}
-                    className={cn(
-                      'group relative flex items-center gap-4 rounded-2xl p-3.5',
-                      'bg-white/[0.02] ring-1 ring-white/[0.05] hover:ring-white/[0.12]',
-                      'hover:bg-white/[0.04] transition-all duration-300',
-                    )}
+                    className="group relative flex items-center gap-4 rounded-2xl p-3.5 bg-white/[0.02] ring-1 ring-white/[0.05] hover:ring-white/[0.12] hover:bg-white/[0.04] transition-all duration-300"
                   >
                     <div className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#16a34a] ring-1 ring-white/30">
                       <BookOpen className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-white/90 group-hover:text-white">{session.title}</p>
-                      <p className="truncate text-xs text-white/45 mt-0.5">
-                        {session.student?.name || session.student?.email || 'Uczeń'}
-                      </p>
+                      <p className="truncate text-xs text-white/45 mt-0.5">{session.student?.name || session.student?.email || 'Uczeń'}</p>
                       <div className="mt-2 flex items-center gap-3 text-[11px] text-white/45">
                         <span className="inline-flex items-center gap-1"><Video className="h-3 w-3" /> {session._count?.videos ?? 0} filmów</span>
                         <span className="inline-flex items-center gap-1"><Activity className="h-3 w-3" /> {session._count?.tags ?? 0} tagów</span>
@@ -212,79 +379,8 @@ export function CoachDashboardClient({ initialStats }: CoachDashboardClientProps
               </div>
             )}
           </div>
-
-          {/* Recent Students */}
-          <div className="rise-in glass-liquid relative overflow-hidden rounded-3xl p-6" style={{ animationDelay: '0.42s' }}>
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#8cffef] ring-1 ring-white/30">
-                  <Users className="h-4 w-4 text-white" />
-                </div>
-                <h3 className="font-display text-lg font-semibold text-white/90">Uczniowie</h3>
-              </div>
-              <Link
-                href="/coach/students"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/[0.08] hover:ring-[#2de5ca]/25 hover:text-white hover:bg-white/[0.07] transition-all"
-              >
-                Wszyscy <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-
-            {recentStudents.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-8 text-center">
-                <p className="text-sm text-white/55">Brak uczniów. Dodaj pierwszego ucznia.</p>
-                <Link
-                  href="/coach/students"
-                  className="relative inline-flex items-center gap-2 overflow-hidden rounded-full mt-4 px-4 py-2 text-xs font-semibold text-white btn-darey ring-1 ring-white/20 hover:-translate-y-0.5 transition-all"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Dodaj ucznia
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {recentStudents.map((student) => {
-                  const initial = (student.name || student.email || 'U').charAt(0).toUpperCase()
-                  return (
-                    <Link
-                      key={student.id}
-                      href={`/coach/students/${student.id}`}
-                      className={cn(
-                        'group relative flex items-center gap-3 rounded-2xl p-3',
-                        'bg-white/[0.02] ring-1 ring-white/[0.05] hover:ring-white/[0.12]',
-                        'hover:bg-white/[0.04] transition-all duration-300',
-                      )}
-                    >
-                      <div className="relative h-11 w-11 shrink-0">
-                        {student.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={student.avatarUrl}
-                            alt={student.name || student.email || 'Uczeń'}
-                            className="h-11 w-11 rounded-xl object-cover ring-1 ring-white/15"
-                          />
-                        ) : (
-                          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] text-sm font-semibold text-white ring-1 ring-white/30">
-                            {initial}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-white/90 group-hover:text-white">{student.name || student.email}</p>
-                        <p className="truncate text-[11px] text-white/45 mt-0.5">{student.email}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-semibold text-white/85 tabular-nums">{student._count?.videoProgress ?? 0}</p>
-                        <p className="text-[11px] text-white/45">filmów</p>
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* =========================== FOOTER =========================== */}
         <div className="mt-10 flex items-center justify-center gap-2 text-[11px] text-white/25 font-medium tracking-wide">
           <span className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
           <span className="uppercase tracking-[0.25em]">Twoja drużyna, Twój postęp</span>
