@@ -1,39 +1,60 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { useRealtime } from '@/hooks/use-realtime'
 
-/** Small unread badge for nav items. Polls the lightweight /api/messages/unread
- *  endpoint every 30s (only while the tab is visible) and refreshes on navigation. */
+/** Unread badge for nav items. Picks up new events instantly via SSE,
+ *  refreshes on window focus and on navigation, and polls every 15s as a
+ *  fallback (only while the tab is visible). */
 export function UnreadBadge({ kind }: { kind: 'messages' | 'feedback' }) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const myId = (session?.user as any)?.id
   const [count, setCount] = useState(0)
 
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      try {
-        const res = await fetch('/api/messages/unread', { cache: 'no-store' })
-        if (!res.ok) return
-        const data = await res.json()
-        if (!cancelled) setCount(kind === 'messages' ? (data.messages ?? 0) : (data.feedback ?? 0))
-      } catch {
-        /* ignore */
-      }
+  const load = async () => {
+    try {
+      const res = await fetch('/api/messages/unread', { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json()
+      setCount(kind === 'messages' ? (data.messages ?? 0) : (data.feedback ?? 0))
+    } catch {
+      /* ignore */
     }
+  }
+
+  // Instant push: a new message event bumps the badge without waiting for poll.
+  useRealtime((event) => {
+    if (event.type !== 'message:new') return
+    if (kind !== 'messages') return
+    const msg = (event.payload as any)?.message
+    if (!msg) return
+    // Only incoming messages increase the unread count.
+    if (myId && msg.senderId === myId) return
+    setCount((c) => c + 1)
+  })
+
+  useEffect(() => {
     load()
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') load()
-    }, 30000)
+    }, 15000)
+    const onFocus = () => load()
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
     return () => {
-      cancelled = true
       clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, kind])
 
   if (count <= 0) return null
   return (
-    <span className="relative ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-[#2de5ca] text-white text-[10px] font-bold grid place-items-center shadow-[0_0_12px_rgba(20,184,166,0.7)]">
+    <span className="relative ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-[#a78bfa] text-white text-[10px] font-bold grid place-items-center shadow-[0_0_12px_rgba(20,184,166,0.7)]">
       {count > 99 ? '99+' : count}
     </span>
   )

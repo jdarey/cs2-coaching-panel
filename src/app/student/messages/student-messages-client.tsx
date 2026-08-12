@@ -5,9 +5,10 @@ import { useSession } from 'next-auth/react'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, spotlightHandler } from '@/lib/utils'
+import { useRealtime } from '@/hooks/use-realtime'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
-import { MessageSquare, Send, Loader2, GraduationCap } from 'lucide-react'
+import { MessageSquare, Send, Loader2, GraduationCap, Check, CheckCheck } from 'lucide-react'
 
 type Message = { id: string; senderId: string; receiverId: string; content: string; readAt: string | null; createdAt: string }
 type Coach = { id: string; name: string | null; email: string | null; avatarUrl: string | null }
@@ -67,6 +68,15 @@ export function StudentMessagesClient() {
     return () => clearInterval(interval)
   }, [coach, loadThread])
 
+  // Instant delivery: SSE push reloads the thread the moment the coach replies.
+  useRealtime((event) => {
+    if (event.type !== 'message:new') return
+    const msg = (event.payload as any)?.message
+    if (msg && (msg.senderId === coach?.id || msg.receiverId === coach?.id)) {
+      loadThread()
+    }
+  })
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length])
@@ -124,7 +134,7 @@ export function StudentMessagesClient() {
           <div className="px-5 py-4 border-b border-white/[0.06] flex items-center gap-3">
             <Avatar className="h-10 w-10 rounded-full ring-1 ring-white/10">
               <AvatarImage src={coach.avatarUrl || ''} alt={coach.name || ''} />
-              <AvatarFallback className="rounded-full bg-[#14b8a6] text-white text-sm font-semibold">
+              <AvatarFallback className="rounded-full bg-[#8b5cf6] text-white text-sm font-semibold">
                 {(coach.name || coach.email || 'T')[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -144,12 +154,15 @@ export function StudentMessagesClient() {
                     className={cn(
                       'max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed',
                       mine
-                        ? 'bg-gradient-to-br from-[#14b8a6] to-[#14b8a6] text-white rounded-br-md'
+                        ? 'bg-gradient-to-br from-[#8b5cf6] to-[#8b5cf6] text-white rounded-br-md'
                         : 'bg-white/[0.06] border border-white/[0.08] text-white/90 rounded-bl-md',
                     )}
                   >
                     <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                    <p className={cn('mt-1 text-[10px]', mine ? 'text-white/60' : 'text-white/35')}>{timeLabel(m.createdAt)}</p>
+                    <div className={cn('mt-1 flex items-center gap-1 text-[10px]', mine ? 'text-white/60' : 'text-white/35')}>
+                      <span>{timeLabel(m.createdAt)}</span>
+                      {mine && (m.readAt ? <CheckCheck className="w-3 h-3 text-[#c4b5fd]" /> : <Check className="w-3 h-3 text-white/45" />)}
+                    </div>
                   </div>
                 </div>
               )

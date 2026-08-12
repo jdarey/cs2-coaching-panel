@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
 import { sendDiscordNotification } from '@/lib/discord'
+import { publishToUsers } from '@/lib/realtime'
 
 // Validate that two users are allowed to talk: a coach with their own student
 // (either direction), and only in that relationship.
@@ -162,6 +163,9 @@ export async function POST(request: NextRequest) {
       select: { id: true, senderId: true, receiverId: true, content: true, readAt: true, createdAt: true },
     })
 
+    // Push to both parties instantly over SSE (fire-and-forget).
+    publishToUsers([user.id, receiverId], { type: 'message:new', payload: { message } })
+
     // Email + Discord notifications to the receiver/coach (fire-and-forget —
     // the message is already stored; a notification failure must not fail the
     // request).
@@ -182,9 +186,9 @@ export async function POST(request: NextRequest) {
             <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #0d0d0d; border-radius: 16px; color: #e5e7eb;">
               <p style="font-size: 20px; font-weight: 700; color: #ffffff; margin: 0 0 8px;">Nowa wiadomość</p>
               <p style="color: #9ca3af; line-height: 1.6;"><strong style="color: #ffffff;">${senderName}</strong> napisał(a):</p>
-              <div style="margin: 20px 0; padding: 16px 20px; border-radius: 12px; background: #1a1a1a; border-left: 3px solid #2de5ca; color: #e5e7eb; line-height: 1.6;">${message.content.replace(/</g, '&lt;').replace(/\n/g, '<br/>')}</div>
+              <div style="margin: 20px 0; padding: 16px 20px; border-radius: 12px; background: #1a1a1a; border-left: 3px solid #a78bfa; color: #e5e7eb; line-height: 1.6;">${message.content.replace(/</g, '&lt;').replace(/\n/g, '<br/>')}</div>
               <p style="text-align: center; margin: 24px 0;">
-                <a href="${link}" style="display: inline-block; padding: 12px 28px; border-radius: 12px; background: #2de5ca; color: #062a24; font-weight: 700; text-decoration: none;">Otwórz czat</a>
+                <a href="${link}" style="display: inline-block; padding: 12px 28px; border-radius: 12px; background: #a78bfa; color: #062a24; font-weight: 700; text-decoration: none;">Otwórz czat</a>
               </p>
             </div>
           `,

@@ -5,9 +5,10 @@ import { useSession } from 'next-auth/react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { cn, spotlightHandler } from '@/lib/utils'
+import { useRealtime } from '@/hooks/use-realtime'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
-import { MessageSquare, Send, ArrowLeft, Inbox, Loader2 } from 'lucide-react'
+import { MessageSquare, Send, ArrowLeft, Inbox, Loader2, Check, CheckCheck } from 'lucide-react'
 
 type ChatUser = { id: string; name: string | null; email: string | null; avatarUrl: string | null }
 type Message = { id: string; senderId: string; receiverId: string; content: string; readAt: string | null; createdAt: string }
@@ -72,6 +73,19 @@ export function CoachMessagesClient() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId])
+
+  // Instant delivery: new message events reload the list; if it concerns the
+  // open thread, the thread itself refreshes immediately too.
+  useRealtime((event) => {
+    if (event.type !== 'message:new') return
+    const msg = (event.payload as any)?.message
+    if (msg) {
+      loadConversations()
+      if (activeId && (msg.senderId === activeId || msg.receiverId === activeId)) {
+        loadThread(activeId)
+      }
+    }
+  })
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -139,12 +153,12 @@ export function CoachMessagesClient() {
                     onClick={() => setActiveId(c.id)}
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors duration-200 border-b border-white/[0.04]',
-                      activeId === c.id ? 'bg-[#14b8a6]/15' : 'hover:bg-white/[0.04]',
+                      activeId === c.id ? 'bg-[#8b5cf6]/15' : 'hover:bg-white/[0.04]',
                     )}
                   >
                     <Avatar className="h-10 w-10 rounded-full ring-1 ring-white/10 shrink-0">
                       <AvatarImage src={c.avatarUrl || ''} alt={c.name || ''} />
-                      <AvatarFallback className="rounded-full bg-[#14b8a6] text-white text-sm font-semibold">
+                      <AvatarFallback className="rounded-full bg-[#8b5cf6] text-white text-sm font-semibold">
                         {(c.name || c.email || '?')[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -162,7 +176,7 @@ export function CoachMessagesClient() {
                       </p>
                     </div>
                     {c.unread > 0 && (
-                      <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-[#2de5ca] text-white text-[10px] font-bold grid place-items-center">
+                      <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-[#a78bfa] text-white text-[10px] font-bold grid place-items-center">
                         {c.unread}
                       </span>
                     )}
@@ -179,7 +193,7 @@ export function CoachMessagesClient() {
           >
             {!active ? (
               <div className="flex-1 flex flex-col items-center justify-center p-10 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#14b8a6]/15 border border-[#2de5ca]/30 grid place-items-center mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#8b5cf6]/15 border border-[#a78bfa]/30 grid place-items-center mb-4">
                   <MessageSquare className="w-7 h-7 text-[#8FA3FF]" />
                 </div>
                 <p className="text-white/70 font-semibold">Wybierz rozmowę</p>
@@ -193,7 +207,7 @@ export function CoachMessagesClient() {
                   </button>
                   <Avatar className="h-9 w-9 rounded-full ring-1 ring-white/10">
                     <AvatarImage src={active.avatarUrl || ''} alt={active.name || ''} />
-                    <AvatarFallback className="rounded-full bg-[#14b8a6] text-white text-xs font-semibold">
+                    <AvatarFallback className="rounded-full bg-[#8b5cf6] text-white text-xs font-semibold">
                       {(active.name || active.email || '?')[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -215,12 +229,15 @@ export function CoachMessagesClient() {
                           className={cn(
                             'max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed',
                             mine
-                              ? 'bg-gradient-to-br from-[#14b8a6] to-[#14b8a6] text-white rounded-br-md'
+                              ? 'bg-gradient-to-br from-[#8b5cf6] to-[#8b5cf6] text-white rounded-br-md'
                               : 'bg-white/[0.06] border border-white/[0.08] text-white/90 rounded-bl-md',
                           )}
                         >
                           <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                          <p className={cn('mt-1 text-[10px]', mine ? 'text-white/60' : 'text-white/35')}>{timeLabel(m.createdAt)}</p>
+                          <div className={cn('mt-1 flex items-center gap-1 text-[10px]', mine ? 'text-white/60' : 'text-white/35')}>
+                            <span>{timeLabel(m.createdAt)}</span>
+                            {mine && (m.readAt ? <CheckCheck className="w-3 h-3 text-[#c4b5fd]" /> : <Check className="w-3 h-3 text-white/45" />)}
+                          </div>
                         </div>
                       </div>
                     )
