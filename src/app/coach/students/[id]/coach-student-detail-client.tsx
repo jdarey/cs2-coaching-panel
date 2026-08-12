@@ -37,6 +37,11 @@ interface StudentDetail {
   name: string | null
   avatarUrl: string | null
   createdAt: string
+  steamId: string | null
+  steamVanity: string | null
+  faceitNickname: string | null
+  faceitElo: number | null
+  faceitLevel: number | null
 }
 
 interface SessionSummary {
@@ -73,6 +78,44 @@ const PROGRESS_DOTS = [
   { key: 'watched', label: 'Obejrzane', color: '#34d399' },
   { key: 'implemented', label: 'Wdrożone', color: '#a78bfa' },
 ] as const
+
+// Steam brand mark (inline SVG — lucide has no brand icons).
+function SteamIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M12 2C6.48 2 2 6.48 2 12c0 4.2 2.55 7.78 6.17 9.36l3.05-1.74a2.05 2.05 0 0 1 2.76.72c.98 1.5 3.05 1.85 4.55.87 1.5-.98 1.85-3.05.87-4.55-.33-.5-.77-.9-1.3-1.17v-3.49c0-4.83-3.9-8.75-8.73-8.75Z"
+        fill="#66c0f4"
+        opacity="0.2"
+      />
+      <path
+        d="M8.62 13.4 6.6 14.5a1.9 1.9 0 0 1-.72 2.59 1.9 1.9 0 0 1-2.59-.72 1.9 1.9 0 0 1 .72-2.59l2.04-1.14a3.4 3.4 0 1 1 3.4-5.88l3.02 2.15a3.4 3.4 0 1 1-3.85 5.5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="9.06" cy="13.62" r="0.8" fill="currentColor" />
+      <path d="M14.6 8.5a2.6 2.6 0 1 1 3.7 3.65" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// Faceit brand mark (inline SVG).
+function FaceitIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="3" fill="currentColor" opacity="0.18" />
+      <path
+        d="M7 9.5 5.2 12 7 14.5M11 8l-2.4 8M15.5 8l-1.4 8M19 9.5 17.2 12 19 14.5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 export function CoachStudentDetailClient({
   student,
@@ -243,6 +286,20 @@ export function CoachStudentDetailClient({
   const pendingCount = assignments.filter((a) => a.status === 'PENDING').length
   const doneCount = assignments.length - pendingCount
 
+  // Link to the student's Steam profile: prefer the numeric steam64 (profiles/
+  // URL is stable), fall back to the vanity name if only that is stored.
+  const steamUrl = student.steamId
+    ? `https://steamcommunity.com/profiles/${student.steamId}`
+    : student.steamVanity
+      ? `https://steamcommunity.com/id/${encodeURIComponent(student.steamVanity)}`
+      : null
+
+  // Link to the student's Faceit profile when a nickname is known; otherwise
+  // point at Faceit search (still useful — shows the ELO badge from Leetify).
+  const faceitUrl = student.faceitNickname
+    ? `https://faceit.com/pl/players/${encodeURIComponent(student.faceitNickname)}`
+    : 'https://www.faceit.com/pl/'
+
   return (
     <CoachLayout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -278,6 +335,39 @@ export function CoachStudentDetailClient({
                   <Calendar className="w-3.5 h-3.5" />
                   Uczeń od {formatDate(student.createdAt)}
                 </p>
+                {(student.steamId || student.steamVanity || student.faceitNickname || student.faceitElo != null || student.faceitLevel != null) && (
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                    {steamUrl && (
+                      <a
+                        href={steamUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Profil Steam"
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#66c0f4]/40 hover:bg-[#66c0f4]/[0.08] transition-all duration-300"
+                      >
+                        <SteamIcon className="w-4 h-4" />
+                        Steam
+                      </a>
+                    )}
+                    {(student.faceitNickname || student.faceitElo != null || student.faceitLevel != null) && (
+                      <a
+                        href={faceitUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Profil Faceit"
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#ff5500]/40 hover:bg-[#ff5500]/[0.08] transition-all duration-300"
+                      >
+                        <FaceitIcon className="w-4 h-4" />
+                        {student.faceitElo != null ? `${student.faceitElo} ELO` : student.faceitLevel != null ? `Poziom ${student.faceitLevel}` : 'Faceit'}
+                        {student.faceitLevel != null && (
+                          <span className="ml-0.5 inline-flex items-center rounded-md bg-[#ff5500]/15 border border-[#ff5500]/25 px-1.5 py-0.5 text-[10px] font-bold text-[#ff9a5c]">
+                            Lv.{student.faceitLevel}
+                          </span>
+                        )}
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

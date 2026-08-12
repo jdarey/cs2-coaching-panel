@@ -117,6 +117,7 @@ export async function fetchLeetifyProfile(steamId: string): Promise<LeetifyProfi
 
 export interface LeetifyMatch {
   externalId: string
+  dataSource: string | null // 'faceit' | 'matchmaking' | 'matchmaking_competitive' | ...
   map: string
   outcome: 'WIN' | 'LOSS' | 'DRAW'
   score: [number, number] | null
@@ -154,6 +155,7 @@ export async function fetchLeetifyRecentMatches(steamId: string, limit = 5): Pro
 
     const mapMatch = (g: any): LeetifyMatch => ({
       externalId: g.id || `${g.finished_at}-${g.map_name}`,
+      dataSource: g.data_source || null,
       map: normalizeMapName(g.map_name || 'Inna'),
       outcome: g.outcome === 'win' ? 'WIN' : g.outcome === 'loss' ? 'LOSS' : 'DRAW',
       score: Array.isArray(g.score) && g.score.length === 2 ? [g.score[0], g.score[1]] : null,
@@ -174,6 +176,77 @@ export async function fetchLeetifyRecentMatches(steamId: string, limit = 5): Pro
     return [...faceitMatches, ...others].slice(0, limit)
   } catch {
     return []
+  }
+}
+
+export interface LeetifyMatchDetails {
+  matchId: string
+  dataSource: string | null
+  dataSourceMatchId: string | null // Faceit match id / Premier share code
+  finishedAt: string
+  map: string
+  teamScores: { teamNumber: number; score: number }[]
+  players: {
+    steam64Id: string
+    name: string | null
+    team: number | null
+    kills: number | null
+    deaths: number | null
+    assists: number | null
+    kdRatio: number | null
+    hsPercent: number | null
+    adr: number | null
+    dpr: number | null
+    rating: number | null
+    mvps: number | null
+    leetifyRating: number | null
+    score: number | null
+    [key: string]: unknown
+  }[]
+}
+
+// Fetch full per-player match details from Leetify's public API (keyless).
+// Endpoint: GET /v2/matches/{gameId} — returns rich per-player stats (kills,
+// deaths, HS%, ADR, DPR, utility, counter-strafing, trades, multi-kills…).
+export async function fetchLeetifyMatchDetails(gameId: string): Promise<LeetifyMatchDetails | null> {
+  try {
+    const url = `${LEETIFY_API}/v2/matches/${encodeURIComponent(gameId)}`
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) return null
+    const data = await res.json()
+    if (!data || !data.id) return null
+
+    const players = (Array.isArray(data.stats) ? data.stats : []).map((s: any) => ({
+      steam64Id: s.steam64_id || null,
+      name: s.name || null,
+      team: typeof s.initial_team_number === 'number' ? s.initial_team_number : null,
+      kills: typeof s.total_kills === 'number' ? s.total_kills : null,
+      deaths: typeof s.total_deaths === 'number' ? s.total_deaths : null,
+      assists: typeof s.total_assists === 'number' ? s.total_assists : null,
+      kdRatio: typeof s.kd_ratio === 'number' ? s.kd_ratio : null,
+      hsPercent: typeof s.accuracy_head === 'number' ? s.accuracy_head * 100 : null,
+      adr: typeof s.total_damage === 'number' && typeof s.rounds_count === 'number' && s.rounds_count > 0 ? s.total_damage / s.rounds_count : null,
+      dpr: typeof s.dpr === 'number' ? s.dpr : null,
+      rating: typeof s.leetify_rating === 'number' ? s.leetify_rating : null,
+      mvps: typeof s.mvps === 'number' ? s.mvps : null,
+      leetifyRating: typeof s.leetify_rating === 'number' ? s.leetify_rating : null,
+      score: typeof s.score === 'number' ? s.score : null,
+      ...s,
+    }))
+
+    return {
+      matchId: data.id,
+      dataSource: data.data_source || null,
+      dataSourceMatchId: data.data_source_match_id || null,
+      finishedAt: data.finished_at || '',
+      map: normalizeMapName(data.map_name || 'Inna'),
+      teamScores: Array.isArray(data.team_scores)
+        ? data.team_scores.map((t: any) => ({ teamNumber: t.team_number, score: t.score }))
+        : [],
+      players,
+    }
+  } catch {
+    return null
   }
 }
 

@@ -89,6 +89,25 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  // Custom cookie name. The default `next-auth.session-token` has been used
+  // since the app started — before the JWT was slimmed down (avatars used to
+  // live in the token as multi-hundred-KB base64 data URIs). Anyone who logged
+  // in back then still has that oversized cookie stored for up to 30 days and
+  // the browser sends it on EVERY request, blowing past Vercel's 10KB request
+  // header limit → 494 REQUEST_HEADER_TOO_LARGE on first page load. Rotating
+  // the cookie name makes those stale cookies inert (they no longer match) so
+  // every visitor gets a fresh, tiny token.
+  cookies: {
+    sessionToken: {
+      name: 'cs2-coaching.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   // Never use the https cookie prefix locally: NEXTAUTH_URL can point at the
   // production domain while developing, which would otherwise produce a
   // Secure `__Secure-` cookie that browsers refuse over plain http.

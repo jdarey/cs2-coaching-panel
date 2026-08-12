@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { fetchFaceitLegacy, fetchLeetifyProfile } from '@/lib/gaming'
 import { CoachStudentDetailClient } from './coach-student-detail-client'
 
 export default async function CoachStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,6 +24,9 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
       avatarUrl: true,
       createdAt: true,
       coachId: true,
+      steamId: true,
+      steamVanity: true,
+      faceitNickname: true,
     },
   })
 
@@ -59,6 +63,27 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
     take: 100,
   })
 
+  // Fresh Faceit ELO for the profile header. Prefer the saved Faceit nickname
+  // (Faceit legacy API, keyless); fall back to Leetify by Steam ID.
+  let faceitElo: number | null = null
+  let faceitLevel: number | null = null
+  let faceitNickname: string | null = student.faceitNickname || null
+  if (student.faceitNickname) {
+    const legacy = await fetchFaceitLegacy(student.faceitNickname)
+    if (legacy) {
+      faceitElo = legacy.elo
+      faceitLevel = legacy.skillLevel
+      faceitNickname = legacy.nickname || faceitNickname
+    }
+  }
+  if (faceitElo == null && student.steamId) {
+    const leetify = await fetchLeetifyProfile(student.steamId)
+    if (leetify) {
+      faceitElo = leetify.faceitElo
+      faceitLevel = leetify.faceitLevel
+    }
+  }
+
   return (
     <CoachStudentDetailClient
       student={{
@@ -67,6 +92,11 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
         name: student.name,
         avatarUrl: student.avatarUrl,
         createdAt: student.createdAt.toISOString(),
+        steamId: student.steamId,
+        steamVanity: student.steamVanity,
+        faceitNickname,
+        faceitElo,
+        faceitLevel,
       }}
       progressStats={progressStats}
       sessions={sessions.map((s) => ({

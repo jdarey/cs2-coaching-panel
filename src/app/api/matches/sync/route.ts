@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyProfile, fetchLeetifyRecentMatches, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
+import { fetchLeetifyProfile, fetchLeetifyRecentMatches, fetchLeetifyMatchDetails, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 import { analyzeMatch, matchVerdict, recordSkillSnapshot } from '@/lib/ai-coach'
 
 export const dynamic = 'force-dynamic'
@@ -97,6 +97,15 @@ export async function POST(request: NextRequest) {
         skipped++
         continue
       }
+      // Faceit matches only: resolve the Faceit match id so the UI can link to
+      // the original match on Faceit (Leetify's list endpoint doesn't include it,
+      // but the per-match detail endpoint does).
+      const isFaceit = m.dataSource === 'faceit'
+      let platformMatchId: string | null = null
+      if (isFaceit) {
+        const details = await fetchLeetifyMatchDetails(m.externalId)
+        platformMatchId = details?.dataSourceMatchId || null
+      }
       const match = await prisma.matchLog.create({
         data: {
           studentId,
@@ -106,8 +115,9 @@ export async function POST(request: NextRequest) {
           kills: null,
           deaths: null,
           reflection: analyzeMatch(aiProfile, m),
-          source: 'FACEIT',
+          source: isFaceit ? 'FACEIT' : 'PREMIER',
           externalId: m.externalId,
+          platformMatchId,
           createdAt: new Date(m.finishedAt),
           // Accurate per-match stats straight from Leetify
           leetifyRating: m.leetifyRating,

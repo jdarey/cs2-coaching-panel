@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn, formatDateTime } from '@/lib/utils'
 import {
-  Swords, Trophy, Loader2, TrendingUp, TrendingDown, Crosshair, Inbox, Search, X, Minus,
+  Swords, Trophy, Loader2, TrendingUp, TrendingDown, Crosshair, Inbox, Search, X, Minus, Sparkles, ExternalLink, Bot,
 } from 'lucide-react'
 
 interface Match {
@@ -21,6 +21,8 @@ interface Match {
   deaths: number | null
   reflection: string | null
   source: string
+  faceitUrl: string | null
+  leetifyUrl: string | null
   createdAt: string
   student: { id: string; name: string | null; email: string; avatarUrl: string | null }
   leetifyRating: number | null
@@ -228,10 +230,40 @@ export function CoachMatchesClient() {
                             {m.eloChange > 0 ? '+' : ''}{m.eloChange} ELO
                           </span>
                         )}
+                        {m.source === 'FACEIT' && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 rounded-full px-2 py-0.5">
+                            <Bot className="w-3 h-3" /> Faceit
+                          </span>
+                        )}
+                        {m.source === 'PREMIER' && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 bg-sky-500/[0.1] border border-sky-500/25 rounded-full px-2 py-0.5">
+                            <Trophy className="w-3 h-3" /> Premier
+                          </span>
+                        )}
+                        {m.faceitUrl && (
+                          <a
+                            href={m.faceitUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/60 hover:text-[#8cffef] bg-white/[0.04] border border-white/[0.08] hover:border-[#2de5ca]/30 rounded-full px-2.5 py-1 transition"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Mecz na Faceit
+                          </a>
+                        )}
+                        {!m.faceitUrl && m.leetifyUrl && (
+                          <a
+                            href={m.leetifyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/60 hover:text-[#8cffef] bg-white/[0.04] border border-white/[0.08] hover:border-[#2de5ca]/30 rounded-full px-2.5 py-1 transition"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Mecz na Leetify
+                          </a>
+                        )}
                         <span className="text-[11px] text-white/35 ml-auto">{formatDateTime(m.createdAt)}</span>
                       </div>
 
-                      {m.source === 'FACEIT' && (m.leetifyRating != null || m.reactionMs != null || m.preaim != null || m.accuracyHead != null || m.sprayAccuracy != null) && (
+                      {(m.source === 'FACEIT' || m.source === 'PREMIER') && (m.leetifyRating != null || m.reactionMs != null || m.preaim != null || m.accuracyHead != null || m.sprayAccuracy != null) && (
                         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                           {m.leetifyRating != null && (
                             <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
@@ -271,6 +303,15 @@ export function CoachMatchesClient() {
                           {m.reflection}
                         </p>
                       )}
+
+                      <div className="mt-2 flex items-center gap-2">
+                        <Link
+                          href={`/student/matches/${m.id}`}
+                          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-white/55 hover:text-white glass hover:border-[#a78bfa]/30 transition"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-[#c4b5fd]" /> Szczegóły meczu
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>

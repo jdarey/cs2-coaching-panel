@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header'
 import { cn, formatDateTime } from '@/lib/utils'
 import {
   Swords, Trophy, Trash2, Loader2, Plus, TrendingUp, TrendingDown, Minus,
-  Crosshair, Inbox, Sparkles, Check, RefreshCw, Bot, Calendar, ChevronDown, ChevronUp,
+  Crosshair, Inbox, Sparkles, Check, RefreshCw, Bot, Calendar, ChevronDown, ChevronUp, ExternalLink,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -20,6 +20,8 @@ interface Match {
   reflection: string | null
   source: string
   externalId: string | null
+  faceitUrl: string | null
+  leetifyUrl: string | null
   createdAt: string
   leetifyRating: number | null
   preaim: number | null
@@ -29,21 +31,10 @@ interface Match {
   sprayAccuracy: number | null
 }
 
-const MAPS = ['Mirage', 'Inferno', 'Nuke', 'Ancient', 'Anubis', 'Dust2', 'Vertigo', 'Overpass', 'Train', 'Office', 'Inna']
-
 export function StudentMatchesClient() {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [form, setForm] = useState({
-    map: 'Mirage',
-    result: 'WIN',
-    eloChange: '',
-    kills: '',
-    deaths: '',
-    reflection: '',
-  })
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [expandedAi, setExpandedAi] = useState<string | null>(null)
@@ -78,34 +69,6 @@ export function StudentMatchesClient() {
     const eloTotal = matches.reduce((acc, m) => acc + m.eloChange, 0)
     return { wins, losses, draws, total, wr, streak, eloTotal }
   }, [matches])
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      const res = await fetch('/api/matches', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          map: form.map,
-          result: form.result,
-          eloChange: form.eloChange ? parseInt(form.eloChange) : 0,
-          kills: form.kills ? parseInt(form.kills) : null,
-          deaths: form.deaths ? parseInt(form.deaths) : null,
-          reflection: form.reflection || null,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setMatches((prev) => [data, ...prev])
-        setForm({ map: 'Mirage', result: 'WIN', eloChange: '', kills: '', deaths: '', reflection: '' })
-      }
-    } catch {
-      /* ignore */
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const syncFaceit = async () => {
     setSyncing(true)
@@ -154,7 +117,7 @@ export function StudentMatchesClient() {
           icon={Swords}
           label="Codzienny tracking"
           title="Log meczów"
-          subtitle="Po każdym meczu zapisz wynik, mapę i refleksję. Trener widzi Twoje postępy i serie — a Ty masz dowód rozwoju."
+          subtitle={'Twoje zsynchronizowane mecze z pełnymi statystykami i analizą AI. Kliknij „Synchronizuj”, a ostatnie mecze pojawią się automatycznie.'}
         >
           <button
             onClick={syncFaceit}
@@ -244,117 +207,9 @@ export function StudentMatchesClient() {
           </div>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          {/* Add match form */}
-          <div className="glass-liquid rise-in rounded-3xl p-6 lg:col-span-2 h-fit" style={{ animationDelay: '280ms' }}>
-            <h2 className="font-display text-lg font-bold text-white/90 mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-[#c4b5fd]" />
-              Dodaj mecz
-            </h2>
-            <form onSubmit={submit} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-white/45">Mapa</label>
-                  <select
-                    value={form.map}
-                    onChange={(e) => setForm((p) => ({ ...p, map: e.target.value }))}
-                    disabled={saving}
-                    className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 transition"
-                  >
-                    {MAPS.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-white/45">Wynik</label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {(['WIN', 'LOSS', 'DRAW'] as const).map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setForm((p) => ({ ...p, result: r }))}
-                        className={cn(
-                          'h-11 rounded-xl text-xs font-bold transition-all',
-                          form.result === r
-                            ? r === 'WIN'
-                              ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40'
-                              : r === 'LOSS'
-                                ? 'bg-red-500/20 text-red-300 ring-1 ring-red-500/40'
-                                : 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40'
-                            : 'bg-white/[0.03] text-white/40 border border-white/[0.08]',
-                        )}
-                      >
-                        {r === 'WIN' ? 'W' : r === 'LOSS' ? 'P' : 'R'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-white/45">Zmiana ELO</label>
-                  <input
-                    type="number"
-                    placeholder="+25"
-                    value={form.eloChange}
-                    onChange={(e) => setForm((p) => ({ ...p, eloChange: e.target.value }))}
-                    disabled={saving}
-                    className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#a78bfa]/40 transition"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-white/45">Zabójstwa</label>
-                  <input
-                    type="number"
-                    placeholder="24"
-                    value={form.kills}
-                    onChange={(e) => setForm((p) => ({ ...p, kills: e.target.value }))}
-                    disabled={saving}
-                    className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#a78bfa]/40 transition"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-white/45">Śmierci</label>
-                  <input
-                    type="number"
-                    placeholder="16"
-                    value={form.deaths}
-                    onChange={(e) => setForm((p) => ({ ...p, deaths: e.target.value }))}
-                    disabled={saving}
-                    className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#a78bfa]/40 transition"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-white/45">Refleksja — co poszło dobrze / co poprawić</label>
-                <textarea
-                  value={form.reflection}
-                  onChange={(e) => setForm((p) => ({ ...p, reflection: e.target.value }))}
-                  disabled={saving}
-                  maxLength={1000}
-                  rows={3}
-                  placeholder="np. Dobre rotacje, ale za wolne reagowanie na AWP..."
-                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#a78bfa]/40 transition resize-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={saving}
-                className="relative w-full inline-flex items-center justify-center gap-2 rounded-2xl h-12 text-sm font-semibold text-white btn-darey overflow-hidden disabled:opacity-50"
-              >
-                <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20" />
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
-                Zaloguj mecz
-              </button>
-            </form>
-          </div>
-
+        <div>
           {/* Matches feed */}
-          <div className="lg:col-span-3 space-y-3">
+          <div className="space-y-3">
             {loading ? (
               <div className="glass-liquid rounded-3xl flex items-center justify-center py-20 text-white/40">
                 <Loader2 className="w-5 h-5 animate-spin mr-3" /> Ładowanie meczów…
@@ -362,8 +217,8 @@ export function StudentMatchesClient() {
             ) : matches.length === 0 ? (
               <div className="glass-liquid rounded-3xl py-16 px-6 text-center">
                 <Swords className="w-12 h-12 mx-auto mb-4 text-white/25" />
-                <p className="text-white/55">Nie masz jeszcze zalogowanych meczów.</p>
-                <p className="text-sm text-white/35 mt-1">Dodaj mecz ręcznie albo kliknij „Synchronizuj z Faceitem" — ostatnie 5 meczów z analizą AI pojawi się automatycznie.</p>
+                <p className="text-white/55">Nie masz jeszcze zsynchronizowanych meczów.</p>
+                <p className="text-sm text-white/35 mt-1">Kliknij „Synchronizuj z Faceitem" — ostatnie 5 meczów z pełnymi statystykami i analizą AI pojawi się automatycznie.</p>
                 <Link href="/student/settings" className="inline-flex items-center gap-1.5 mt-3 text-xs text-[#c4b5fd] hover:text-white transition-colors">
                   <Calendar className="w-3.5 h-3.5" /> Ustaw Steam ID w ustawieniach
                 </Link>
@@ -420,6 +275,31 @@ export function StudentMatchesClient() {
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 rounded-full px-2 py-0.5">
                               <Bot className="w-3 h-3" /> Faceit
                             </span>
+                          )}
+                          {m.source === 'PREMIER' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 bg-sky-500/[0.1] border border-sky-500/25 rounded-full px-2 py-0.5">
+                              <Trophy className="w-3 h-3" /> Premier
+                            </span>
+                          )}
+                          {m.faceitUrl && (
+                            <a
+                              href={m.faceitUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/60 hover:text-[#8cffef] bg-white/[0.04] border border-white/[0.08] hover:border-[#2de5ca]/30 rounded-full px-2.5 py-1 transition"
+                            >
+                              <ExternalLink className="w-3 h-3" /> Mecz na Faceit
+                            </a>
+                          )}
+                          {!m.faceitUrl && m.leetifyUrl && (
+                            <a
+                              href={m.leetifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/60 hover:text-[#8cffef] bg-white/[0.04] border border-white/[0.08] hover:border-[#2de5ca]/30 rounded-full px-2.5 py-1 transition"
+                            >
+                              <ExternalLink className="w-3 h-3" /> Mecz na Leetify
+                            </a>
                           )}
                           <span className="text-[11px] text-white/35 ml-auto">{formatDateTime(m.createdAt)}</span>
                         </div>
@@ -505,14 +385,22 @@ export function StudentMatchesClient() {
                         ) : null}
                       </div>
 
-                      <button
-                        onClick={() => remove(m.id)}
-                        disabled={deletingId === m.id}
-                        className="shrink-0 grid h-9 w-9 place-items-center rounded-xl text-white/40 hover:text-red-300 hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100"
-                        aria-label="Usuń mecz"
-                      >
-                        {deletingId === m.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                      </button>
+                      <div className="shrink-0 flex items-center gap-2">
+                        <Link
+                          href={`/student/matches/${m.id}`}
+                          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-xs font-semibold text-white/60 hover:text-white glass hover:border-[#a78bfa]/30 transition opacity-0 group-hover:opacity-100"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" /> Szczegóły
+                        </Link>
+                        <button
+                          onClick={() => remove(m.id)}
+                          disabled={deletingId === m.id}
+                          className="grid h-9 w-9 place-items-center rounded-xl text-white/40 hover:text-red-300 hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100"
+                          aria-label="Usuń mecz"
+                        >
+                          {deletingId === m.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )

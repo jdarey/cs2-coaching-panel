@@ -421,8 +421,9 @@ model MatchLog {
   kills      Int?
   deaths     Int?
   reflection String? // what went well / what to improve (AI analysis for Faceit matches)
-  source     String   @default("MANUAL") // MANUAL | FACEIT
-  externalId String?  @unique // Faceit/Leetify match id (dedupe)
+  source     String   @default("MANUAL") // MANUAL | FACEIT | PREMIER
+  externalId String?  @unique // Leetify game id (dedupe)
+  platformMatchId String? // Faceit match id / Premier share code — used to link to the original match on Faceit
   createdAt  DateTime @default(now())
 
   // Per-match stats from Leetify (Faceit matches) — accurate match numbers

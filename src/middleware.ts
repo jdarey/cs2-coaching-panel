@@ -24,19 +24,44 @@ function rateLimit(key: string, limit: number, windowMs: number): boolean {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  // In development the session cookie is a plain (non-Secure, non-`__Secure-`)
-  // cookie because auth.ts sets useSecureCookies:false. getToken must look for
-  // the same name or it won't find the session even though the user is logged in.
+  // Custom cookie name — must match the `cookies.sessionToken` config in
+  // auth.ts. The default `next-auth.session-token` was rotated so that stale
+  // oversized cookies from the pre-slimmed-down JWT era stop being sent (they
+  // caused Vercel 494 REQUEST_HEADER_TOO_LARGE on first page load).
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-    ...(process.env.NODE_ENV === 'development'
-      ? { cookieName: 'next-auth.session-token', secureCookie: false }
-      : {}),
+    cookieName: 'cs2-coaching.session-token',
+    secureCookie: process.env.NODE_ENV === 'production',
   })
 
-  // Security headers
+  // Actively expire the OLD session cookies. Anyone who logged in before the
+  // JWT was slimmed down still has a multi-hundred-KB session token stored —
+  // NextAuth v4 chunks tokens over ~3.9KB into `next-auth.session-token.0`,
+  // `.1`, … so one oversized JWT becomes dozens of cookies that the browser
+  // sends on EVERY request, blowing past Vercel's 10KB request-header limit →
+  // 494 REQUEST_HEADER_TOO_LARGE on first page load. Clearing them (by prefix)
+  // on any passing response makes them vanish on the next navigation, so those
+  // users get a fresh small cookie under the new name.
   const response = NextResponse.next()
+  // Plain + `__Secure-`/`__Host-` variants, because production cookies get the
+  // secure prefix while development ones don't.
+  const stalePrefixes = ['next-auth.session-token', 'next-auth.callback-url', 'next-auth.csrf-token', 'next-auth.pkce.code_verifier', 'next-auth.state', 'next-auth.nonce']
+  const allStalePrefixes = stalePrefixes.flatMap((p) => [p, `__Secure-${p}`, `__Host-${p}`])
+  for (const cookie of request.cookies.getAll()) {
+    const isStale = allStalePrefixes.some((prefix) => cookie.name === prefix || cookie.name.startsWith(prefix + '.'))
+    if (isStale) {
+      response.cookies.set(cookie.name, '', {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: cookie.name.startsWith('__Secure-') || cookie.name.startsWith('__Host-'),
+        maxAge: 0,
+      })
+    }
+  }
+
+  // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
