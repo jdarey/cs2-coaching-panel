@@ -24,6 +24,8 @@ import {
   Activity,
   Sparkles,
   TrendingUp,
+  Send,
+  Gift,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
@@ -56,10 +58,42 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
   const [students, setStudents] = useState<Student[]>(initialStudents)
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [inviteLoading, setInviteLoading] = useState(false)
   const [formData, setFormData] = useState({ email: '', name: '', password: '' })
+  const [inviteEmail, setInviteEmail] = useState('')
   const { toast } = useToast()
+
+  const handleInviteStudent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteEmail.trim()) return
+    setInviteLoading(true)
+
+    try {
+      const res = await fetch('/api/coach/students/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({ title: 'Błąd', description: data.error, variant: 'destructive' })
+        return
+      }
+
+      setInviteDialogOpen(false)
+      setInviteEmail('')
+      toast({ title: 'Sukces', description: 'Zaproszenie wysłane na email ucznia' })
+    } catch {
+      toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
+    } finally {
+      setInviteLoading(false)
+    }
+  }
 
   const filteredStudents = students.filter(
     (s) =>
@@ -182,14 +216,23 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
           title="Uczniowie"
           subtitle="Zarządzaj swoimi uczniami i śledź ich postępy"
         >
-          <button
-            onClick={openAddDialog}
-            className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white btn-primary-gradient"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Dodaj ucznia</span>
-            <span className="sm:hidden">Dodaj</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setInviteDialogOpen(true)}
+              className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300"
+            >
+              <Gift className="h-4 w-4" />
+              <span className="hidden sm:inline">Zaproś ucznia</span>
+            </button>
+            <button
+              onClick={openAddDialog}
+              className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white btn-primary-gradient"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Dodaj ucznia</span>
+              <span className="sm:hidden">Dodaj</span>
+            </button>
+          </div>
         </PageHeader>
 
         {/* ===== Stats strip ===== */}
@@ -515,6 +558,72 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 >
                   {isLoading ? <Loader2 className="relative w-4 h-4 animate-spin" /> : null}
                   <span className="relative">{editingStudent ? 'Zapisz' : 'Dodaj ucznia'}</span>
+                </button>
+              </DialogFooter>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== Invite Student Dialog ===== */}
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent className="max-w-md p-0 border-transparent bg-transparent shadow-none sm:rounded-3xl">
+          <div className="glass-liquid rounded-3xl p-7 sm:p-8 relative overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#a78bfa]/10 blur-3xl animate-aurora-slow pointer-events-none" />
+            <div className="absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-[#fbbf24]/10 blur-3xl animate-aurora pointer-events-none" />
+
+            <DialogHeader className="relative">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f59e0b]">
+                  <Gift className="w-5 h-5 text-white" strokeWidth={2.2} />
+                  <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
+                </div>
+                <DialogTitle className="font-display text-xl font-bold text-gradient-violet">
+                  Zaproś ucznia do drużyny
+                </DialogTitle>
+              </div>
+            </DialogHeader>
+
+            <form onSubmit={handleInviteStudent} className="relative space-y-4 mt-5">
+              <div className="space-y-2">
+                <Label htmlFor="inviteEmail" className="text-sm font-medium text-white/70">
+                  Email ucznia <span className="text-[#c4b5fd]">*</span>
+                </Label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#c4b5fd] transition-colors duration-300 pointer-events-none" />
+                  <Input
+                    id="inviteEmail"
+                    name="email"
+                    type="email"
+                    placeholder="uczen@email.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    required
+                    disabled={inviteLoading}
+                    className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8b5cf6]/25 focus-visible:border-[#a78bfa]/40 transition-all duration-300"
+                  />
+                </div>
+                <p className="text-[11px] text-white/40">Uczeń otrzyma email z linkiem do rejestracji. Link wygasa po 7 dniach.</p>
+              </div>
+
+              <DialogFooter className="mt-6 gap-2 sm:space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setInviteDialogOpen(false)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300"
+                >
+                  Anuluj
+                </button>
+                <button
+                  type="submit"
+                  disabled={inviteLoading || !inviteEmail.trim()}
+                  className=" relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white overflow-hidden transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                  }}
+                >
+                  {inviteLoading ? <Loader2 className="relative w-4 h-4 animate-spin" /> : null}
+                  <span className="relative">Wyślij zaproszenie</span>
                 </button>
               </DialogFooter>
             </form>

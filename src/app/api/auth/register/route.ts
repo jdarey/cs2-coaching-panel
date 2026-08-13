@@ -6,7 +6,31 @@ import { registerSchema } from '@/lib/validations'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const validated = registerSchema.parse(body)
+    const { inviteToken, ...registrationData } = body
+    const validated = registerSchema.parse(registrationData)
+
+    // If invite token provided, validate it
+    let invite: { coachId: string; email: string; usedAt: Date | null; expiresAt: Date } | null = null
+    if (inviteToken) {
+      invite = await prisma.studentInvite.findUnique({
+        where: { token: inviteToken },
+        select: { coachId: true, email: true, usedAt: true, expiresAt: true },
+      })
+
+      if (!invite) {
+        return NextResponse.json({ error: 'Nieprawidłowy token zaproszenia' }, { status: 400 })
+      }
+      if (invite.usedAt) {
+        return NextResponse.json({ error: 'To zaproszenie zostało już wykorzystane' }, { status: 400 })
+      }
+      if (invite.expiresAt < new Date()) {
+        return NextResponse.json({ error: 'Token zaproszenia wygasł' }, { status: 400 })
+      }
+      // Ensure email matches invite
+      if (invite.email !== validated.email) {
+        return NextResponse.json({ error: 'Email nie zgadza się z zaproszeniem' }, { status: 400 })
+      }
+    }
 
     const existingUser = await prisma.user.findUnique({
       where: { email: validated.email },
@@ -24,6 +48,8 @@ export async function POST(request: NextRequest) {
         passwordHash,
         name: validated.name,
         role: validated.role,
+        // Associate with coach if invite provided
+        coachId: invite?.coachId || null,
       },
       select: {
         id: true,
@@ -33,6 +59,14 @@ export async function POST(request: NextRequest) {
         createdAt: true,
       },
     })
+
+    // Mark invite as used
+    if (inviteToken) {
+      await prisma.studentInvite.update({
+        where: { token: inviteToken },
+        data: { usedAt: new Date() },
+      })
+    }
 
     return NextResponse.json(user, { status: 201 })
   } catch (error) {

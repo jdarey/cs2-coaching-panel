@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
@@ -9,11 +9,16 @@ import { RedirectOverlay } from '@/components/redirect-overlay'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Mail, Lock, User, AlertCircle, Sparkles, ChevronRight, GraduationCap as GraduationCapIcon, ShieldCheck as ShieldCheckIcon } from 'lucide-react'
+import { Loader2, Mail, Lock, User, AlertCircle, Sparkles, ChevronRight, GraduationCap as GraduationCapIcon, ShieldCheck as ShieldCheckIcon, CheckCircle2, Gift } from 'lucide-react'
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
+
+  const inviteToken = searchParams.get('invite')
+  const [inviteValid, setInviteValid] = useState<boolean | null>(null)
+  const [inviteData, setInviteData] = useState<{ email: string; coachName: string } | null>(null)
 
   const [formData, setFormData] = useState({
     email: '',
@@ -26,6 +31,30 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [redirecting, setRedirecting] = useState(false)
+
+  // Validate invite token on mount
+  useEffect(() => {
+    if (inviteToken) {
+      fetch(`/api/coach/students/invite/${inviteToken}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.valid) {
+            setInviteValid(true)
+            setInviteData({ email: data.email, coachName: data.coachName })
+            setFormData((prev) => ({ ...prev, email: data.email, role: 'STUDENT' }))
+          } else {
+            setInviteValid(false)
+            toast({ title: 'Nieprawidłowe zaproszenie', description: data.error || 'Token wygasł lub jest nieprawidłowy', variant: 'destructive' })
+          }
+        })
+        .catch(() => {
+          setInviteValid(false)
+          toast({ title: 'Błąd', description: 'Nie udało się zweryfikować zaproszenia', variant: 'destructive' })
+        })
+    } else {
+      setInviteValid(true) // No token = normal registration
+    }
+  }, [inviteToken])
 
   const validateField = (name: string, value: string) => {
     switch (name) {
@@ -50,6 +79,8 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
+    // Don't allow changing email if it came from invite
+    if (name === 'email' && inviteValid && inviteData) return
     setFormData((prev) => ({ ...prev, [name]: value }))
     setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, value) }))
   }
@@ -80,6 +111,7 @@ export default function RegisterPage() {
           password: formData.password,
           name: formData.name || undefined,
           role: formData.role,
+          inviteToken: inviteToken || undefined,
         }),
       })
 
@@ -94,8 +126,14 @@ export default function RegisterPage() {
         return
       }
 
+      // Mark invite as used
+      if (inviteToken) {
+        try {
+          await fetch(`/api/coach/students/invite/${inviteToken}/use`, { method: 'POST' })
+        } catch { /* ignore */ }
+      }
+
       toast({ title: 'Konto utworzone', description: 'Pomyślnie zarejestrowano. Logowanie…' })
-      // Premium SaaS transition before landing on the login page.
       setRedirecting(true)
       setIsLoading(true)
     } catch {
@@ -107,9 +145,50 @@ export default function RegisterPage() {
   }
 
   const roles: { key: 'STUDENT' | 'COACH'; label: string; sub: string; Icon: typeof GraduationCapIcon; color: string; ring: string }[] = [
-    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#a78bfa] to-[#c4b5fd]', ring: 'rgba(45,229,202,0.4)' },
+    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#a78bfa] to-[#c4b5fd]', ring: 'rgba(167,139,250,0.4)' },
     { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', Icon: ShieldCheckIcon, color: 'from-[#a78bfa] to-[#8b5cf6]', ring: 'rgba(20,184,166,0.4)' },
   ]
+
+  // If invite is invalid, show error state
+  if (inviteToken && inviteValid === false) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
+        <AuroraBackground variant="auth" />
+        <div className="relative z-10 w-full max-w-md animate-rise-in text-center">
+          <div className="animate-rise-in-delay-1 relative rounded-3xl glass-card p-10 md:p-12">
+            <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
+              <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%)' }} />
+            </div>
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/20 mb-6">
+                <AlertCircle className="w-8 h-8 text-red-400" />
+              </div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Nieprawidłowe zaproszenie</h2>
+              <p className="text-white/50 mb-8 max-w-sm mx-auto">Ten link zaproszenia wygasł, został już wykorzystany lub jest nieprawidłowy. Skontaktuj się z trenerem, aby otrzymał nowy link.</p>
+              <Link href="/register" className="btn-darey relative inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold">
+                Spróbuj ponownie
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Wait for invite validation
+  if (inviteToken && inviteValid === null) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
+        <AuroraBackground variant="auth" />
+        <div className="relative z-10 w-full max-w-md animate-rise-in">
+          <div className="animate-rise-in-delay-1 relative rounded-3xl glass-card p-10 md:p-12 text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-[#c4b5fd] mx-auto mb-4" />
+            <p className="text-white/60">Weryfikuję zaproszenie…</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
@@ -132,18 +211,18 @@ export default function RegisterPage() {
           </Link>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest text-white/55 font-semibold mb-5">
             <span className="live-dot" />
-            Dołącz do drużyny
+            {inviteData ? 'Zaproszenie do drużyny' : 'Dołącz do drużyny'}
           </div>
           <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-vantor mb-3">
             CS2 Coaching
           </h1>
-          <p className="text-white/45 text-sm font-light">Utwórz nowe konto</p>
+          <p className="text-white/45 text-sm font-light">{inviteData ? `Zaproszony przez: ${inviteData.coachName}` : 'Utwórz nowe konto'}</p>
         </div>
 
         {/* Auth card */}
         <div className="animate-rise-in animate-rise-in-delay-1 relative rounded-3xl glass-card p-7 md:p-10">
           <div className="absolute inset-0 rounded-3xl pointer-events-none overflow-hidden">
-            <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(45,229,202,0.4) 0%, transparent 70%)' }} />
+            <div className="absolute -top-24 -left-20 w-52 h-52 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.4) 0%, transparent 70%)' }} />
           </div>
 
           <div className="relative z-10">
@@ -153,6 +232,13 @@ export default function RegisterPage() {
             </div>
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">Załóż konto</h2>
 
+            {inviteData && (
+              <div className="mb-5 flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 animate-rise-in-delay-2">
+                <Gift className="w-4.5 h-4.5 flex-shrink-0" />
+                <span>Zaproszono przez <strong>{inviteData.coachName}</strong> — email jest wstępnie wypełniony</span>
+              </div>
+            )}
+
             {formError && (
               <div className="mb-5 flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-sm text-red-300 bg-red-500/10 border border-red-500/20 animate-rise-in-delay-2">
                 <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
@@ -161,48 +247,50 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5 animate-rise-in-delay-2" style={{ animationDelay: '100ms' }}>
-              {/* Role selector */}
-              <div className="space-y-3">
-                <Label className="label-premium">Kim chcesz być?</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {roles.map((r) => {
-                    const Icon = r.Icon
-                    const active = formData.role === r.key
-                    return (
-                      <button
-                        type="button"
-                        key={r.key}
-                        onClick={() => setFormData((prev) => ({ ...prev, role: r.key }))}
-                        className={cn(
-                          'relative group flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border transition-all duration-300 overflow-hidden',
-                          active
-                            ? 'border-[#a78bfa]/50 bg-[#a78bfa]/10'
-                            : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]',
-                        )}
-                      >
-                        <div
-                          className={cn('relative p-3.5 rounded-xl bg-gradient-to-br grid place-items-center', r.color)}
-                          style={{ boxShadow: active ? `0 12px 32px -8px ${r.ring}` : 'none' }}
+              {/* Role selector - hidden if invite */}
+              {!inviteData && (
+                <div className="space-y-3">
+                  <Label className="label-premium">Kim chcesz być?</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {roles.map((r) => {
+                      const Icon = r.Icon
+                      const active = formData.role === r.key
+                      return (
+                        <button
+                          type="button"
+                          key={r.key}
+                          onClick={() => setFormData((prev) => ({ ...prev, role: r.key }))}
+                          className={cn(
+                            'relative group flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border transition-all duration-300 overflow-hidden',
+                            active
+                              ? 'border-[#a78bfa]/50 bg-[#a78bfa]/10'
+                              : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]',
+                          )}
                         >
-                          <Icon className="w-6 h-6 text-white" strokeWidth={2.2} />
-                          <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
-                        </div>
-                        <div className="text-center">
-                          <p className="font-semibold text-sm">{r.label}</p>
-                          <p className="text-[11px] text-white/45">{r.sub}</p>
-                        </div>
-                        {active && (
-                          <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#a78bfa]" />
-                        )}
-                      </button>
-                    )
-                  })}
+                          <div
+                            className={cn('relative p-3.5 rounded-xl bg-gradient-to-br grid place-items-center', r.color)}
+                            style={{ boxShadow: active ? `0 12px 32px -8px ${r.ring}` : 'none' }}
+                          >
+                            <Icon className="w-6 h-6 text-white" strokeWidth={2.2} />
+                            <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
+                          </div>
+                          <div className="text-center">
+                            <p className="font-semibold text-sm">{r.label}</p>
+                            <p className="text-[11px] text-white/45">{r.sub}</p>
+                          </div>
+                          {active && (
+                            <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#a78bfa]" />
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Email */}
               <div className="space-y-2.5">
-                <Label htmlFor="email" className="label-premium">Email</Label>
+                <Label htmlFor="email" className="label-premium">{inviteData ? 'Email (z zaproszenia)' : 'Email'}</Label>
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/35 transition-colors group-focus-within:text-[#c4b5fd]" />
                   <Input
@@ -213,7 +301,7 @@ export default function RegisterPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    disabled={isLoading}
+                    disabled={isLoading || !!inviteData}
                     autoComplete="email"
                     aria-invalid={!!fieldErrors.email}
                     className="input-premium pl-12"
@@ -299,7 +387,7 @@ export default function RegisterPage() {
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Utwórz konto
+                    {inviteData ? 'Dołącz do trenera' : 'Utwórz konto'}
                     <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </span>
                 )}
@@ -332,4 +420,25 @@ export default function RegisterPage() {
 
 function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(' ')
+}
+
+export default function RegisterPage() {
+  return (
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
+      <AuroraBackground variant="auth" />
+      <Suspense fallback={
+        <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
+          <AuroraBackground variant="auth" />
+          <div className="relative z-10 w-full max-w-md animate-rise-in">
+            <div className="animate-rise-in-delay-1 relative rounded-3xl glass-card p-10 md:p-12 text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-[#c4b5fd] mx-auto mb-4" />
+              <p className="text-white/60">Weryfikuję zaproszenie…</p>
+            </div>
+          </div>
+        </div>
+      }>
+        <RegisterForm />
+      </Suspense>
+    </div>
+  )
 }

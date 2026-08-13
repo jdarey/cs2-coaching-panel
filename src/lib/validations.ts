@@ -9,6 +9,7 @@ export const loginSchema = z.object({
 export const registerSchema = loginSchema.extend({
   name: z.string().min(2, 'Imię musi mieć minimum 2 znaki').optional(),
   role: z.enum(['COACH', 'STUDENT']),
+  inviteToken: z.string().optional(),
 })
 
 // Tags

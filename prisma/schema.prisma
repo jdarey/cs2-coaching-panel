@@ -96,6 +96,7 @@ model User {
   // Coach private notes on students
   coachNotes    CoachStudentNote[] @relation("CoachNotesAsCoach")
   studentCoachNotes CoachStudentNote[] @relation("CoachNotesAsStudent")
+  studentInvites    StudentInvite[]
 
   @@index([coachId])
   @@index([email])
@@ -113,6 +114,22 @@ model CoachStudentNote {
   student User @relation("CoachNotesAsStudent", fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([coachId, studentId])
+}
+
+// Student invitation tokens (magic link)
+model StudentInvite {
+  id        String   @id @default(cuid())
+  coachId   String
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
 }
 
 // One-time password reset tokens (hashed at rest).
