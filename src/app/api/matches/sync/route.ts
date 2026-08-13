@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { fetchLeetifyProfile, fetchLeetifyRecentMatches, fetchLeetifyMatchDetails, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 import { analyzeMatch, matchVerdict, recordSkillSnapshot } from '@/lib/ai-coach'
+import { purgeMatchesWhere } from '@/lib/matches'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,15 +89,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Purge matches synced from a DIFFERENT Steam account (or pre-tagging
-    // legacy rows with a NULL account), so a student who changed their Steam
-    // link never keeps another player's matches in the log. Note: Prisma's
-    // `not` does not match NULL, so legacy rows must be matched explicitly.
+    // Purge matches synced from a DIFFERENT Steam account (or untagged legacy
+    // rows), so a student who changed their Steam link never keeps another
+    // player's matches in the log. Logic lives in lib/matches (unit-tested).
     const purged = await prisma.matchLog.deleteMany({
-      where: {
-        studentId,
-        OR: [{ syncedSteamId: null }, { syncedSteamId: { not: steamId } }],
-      },
+      where: purgeMatchesWhere(studentId, steamId),
     })
 
     // Save only new matches (dedupe by externalId)

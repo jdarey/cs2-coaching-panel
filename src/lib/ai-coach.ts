@@ -170,7 +170,14 @@ export function analyzeWeaknesses(profile: LeetifyProfileLike): Weakness[] {
   return out.sort((a, b) => (a.value ?? 100) - (b.value ?? 100))
 }
 
-/** Per-match analysis: what went wrong / what to keep doing, in Polish. */
+/**
+ * Per-match analysis: what went wrong / what to keep doing, in Polish.
+ *
+ * Every claim is backed by a real comparison between the match's own stats
+ * (LeetifyMatch) and the player's season averages (profile.stats) — never
+ * generic filler or speculation. If there is no number to compare, the
+ * analysis says exactly that instead of guessing.
+ */
 export function analyzeMatch(
   profile: LeetifyProfileLike,
   m: LeetifyMatch,
@@ -183,68 +190,50 @@ export function analyzeMatch(
     ? `Wygrana${scoreText ? ` ${scoreText}` : ''} na ${m.map}.`
     : `Przegrana${scoreText ? ` ${scoreText}` : ''} na ${m.map}.`
 
-  // 1) Match-level stats vs season averages
+  // 1) Match-level stats vs season averages — only rows with BOTH numbers
+  // present can produce a claim.
   const stats = profile.stats || {}
-  const avgPreaim = statValue(stats, 'preaim')
   const avgReaction = statValue(stats, 'reaction_time_ms')
+  const avgPreaim = statValue(stats, 'preaim')
   const avgHead = statValue(stats, 'accuracy_head')
   const avgSpray = statValue(stats, 'spray_accuracy')
   const avgSpotted = statValue(stats, 'accuracy_enemy_spotted')
 
-  const issues: string[] = []
-  const strengths: string[] = []
+  type Cmp = { label: string; match: number | null; avg: number | null; unit: string; worseIfHigher: boolean; threshold: number }
+  const cmps: Cmp[] = [
+    { label: 'czas reakcji', match: m.reactionTimeMs, avg: avgReaction, unit: ' ms', worseIfHigher: true, threshold: 40 },
+    { label: 'pre-aim', match: m.preaim, avg: avgPreaim, unit: '%', worseIfHigher: false, threshold: 1.5 },
+    { label: 'celność w głowę', match: m.accuracyHead, avg: avgHead, unit: '%', worseIfHigher: false, threshold: 4 },
+    { label: 'kontrola spraya', match: m.sprayAccuracy, avg: avgSpray, unit: '%', worseIfHigher: false, threshold: 5 },
+    { label: 'celność przy widocznym wrogu', match: m.accuracyEnemySpotted, avg: avgSpotted, unit: '%', worseIfHigher: false, threshold: 6 },
+  ].filter((c) => c.match != null && c.avg != null)
 
-  if (m.reactionTimeMs != null && avgReaction != null && m.reactionTimeMs > avgReaction + 40) {
-    issues.push(`czas reakcji ${pl(m.reactionTimeMs)} ms (średnia ${pl(avgReaction)} ms)`)
-  }
-  if (m.preaim != null && avgPreaim != null && m.preaim < avgPreaim - 1.5) {
-    issues.push(`pre-aim ${pl(m.preaim, 1)}% (średnia ${pl(avgPreaim, 1)}%)`)
-  }
-  if (m.accuracyHead != null && avgHead != null && m.accuracyHead < avgHead - 4) {
-    issues.push(`celność w głowę ${pl(m.accuracyHead)}% (średnia ${pl(avgHead)}%)`)
-  }
-  if (m.sprayAccuracy != null && avgSpray != null && m.sprayAccuracy < avgSpray - 5) {
-    issues.push(`kontrola spraya ${pl(m.sprayAccuracy)}% (średnia ${pl(avgSpray)}%)`)
-  }
-  if (m.accuracyEnemySpotted != null && avgSpotted != null && m.accuracyEnemySpotted < avgSpotted - 6) {
-    issues.push(`celność przy widocznym wrogu ${pl(m.accuracyEnemySpotted)}% (średnia ${pl(avgSpotted)}%)`)
-  }
+  const fmtCmp = (c: Cmp) => `${c.label} ${pl(c.match!, 1)}${c.unit} (średnia ${pl(c.avg!, 1)}${c.unit})`
+  const isWorse = (c: Cmp) => (c.worseIfHigher ? c.match! > c.avg! + c.threshold : c.match! < c.avg! - c.threshold)
+  const isBetter = (c: Cmp) => (c.worseIfHigher ? c.match! < c.avg! - c.threshold : c.match! > c.avg! + c.threshold)
 
-  if (m.reactionTimeMs != null && avgReaction != null && m.reactionTimeMs < avgReaction - 40) {
-    strengths.push(`reakcja ${pl(m.reactionTimeMs)} ms — lepiej niż Twoja średnia`)
-  }
-  if (m.preaim != null && avgPreaim != null && m.preaim > avgPreaim + 1.5) {
-    strengths.push(`pre-aim ${pl(m.preaim, 1)}% — powyżej średniej`)
-  }
-  if (m.accuracyHead != null && avgHead != null && m.accuracyHead > avgHead + 4) {
-    strengths.push(`celność w głowę ${pl(m.accuracyHead)}%`)
-  }
-  if (m.sprayAccuracy != null && avgSpray != null && m.sprayAccuracy > avgSpray + 5) {
-    strengths.push(`kontrola spraya ${pl(m.sprayAccuracy)}%`)
-  }
+  const issues = cmps.filter(isWorse)
+  const strengths = cmps.filter(isBetter)
 
   if (issues.length > 0) {
-    parts.push(`${opener} Zawiodło najbardziej: ${issues.join(', ')}.`)
+    parts.push(`${opener} Zawiodło najbardziej: ${issues.map(fmtCmp).join(', ')}.`)
+  } else if (cmps.length > 0) {
+    // Verified: no stat was meaningfully below the season average.
+    parts.push(`${opener} Żadna z mierzonych statystyk nie była znacząco poniżej Twojej średniej sezonowej.`)
   } else {
-    parts.push(
-      won
-        ? `${opener} Gra na poziomie Twojej średniej lub wyżej — solidny występ.`
-        : `${opener} Bez wyraźnych spadków względem średniej — porażka wynikała raczej z przeciwnika niż z Twojej gry indywidualnej.`,
-    )
+    // No match numbers at all — state that plainly instead of guessing.
+    parts.push(`${opener} Brak danych porównawczych dla tego meczu — połącz konto Leetify, aby analiza opierała się na liczbach.`)
   }
 
   if (strengths.length > 0) {
-    parts.push(`Trzymaj poziom: ${strengths.join(', ')}.`)
+    parts.push(`Trzymaj poziom: ${strengths.map(fmtCmp).join(', ')}.`)
   }
 
-  // 2) Biggest weakness context
+  // 2) Biggest season weakness — clearly labeled as a season-level (not
+  // match-level) finding, so it can't be mistaken for this match's verdict.
   const weakest = analyzeWeaknesses(profile)[0]
   if (weakest) {
-    if (issues.length > 0) {
-      parts.push(`Ogólnie Twoja największa luka to ${weakest.label} — ${weakest.advice}`)
-    } else {
-      parts.push(`Następny krok: pracuj nad ${weakest.label} — ${weakest.advice}`)
-    }
+    parts.push(`Poza tym meczem — Twoja największa luka w całym sezonie to ${weakest.label} (${weakest.value}%): ${weakest.advice}`)
   }
 
   return parts.join(' ')
@@ -384,25 +373,44 @@ export function suggestRoutineForWeakness(weakness: Weakness): RoutineSuggestion
   )
 }
 
-/** Short one-liner verdict for a match (used on compact cards). */
+/**
+ * Short one-liner verdict for a match (used on compact cards).
+ *
+ * Also strictly data-driven: it names the single biggest verified deviation
+ * from the season average, and says plainly when there is none.
+ */
 export function matchVerdict(profile: LeetifyProfileLike, m: LeetifyMatch): string {
   const stats = profile.stats || {}
   const avgReaction = statValue(stats, 'reaction_time_ms')
   const avgHead = statValue(stats, 'accuracy_head')
   const avgPreaim = statValue(stats, 'preaim')
+  const avgSpray = statValue(stats, 'spray_accuracy')
+
+  const deviations: string[] = []
+  const over: string[] = []
+
+  if (m.reactionTimeMs != null && avgReaction != null) {
+    if (m.reactionTimeMs > avgReaction + 40) deviations.push(`reakcja ${pl(m.reactionTimeMs)} ms (śr. ${pl(avgReaction)} ms)`)
+    else if (m.reactionTimeMs < avgReaction - 40) over.push(`reakcja ${pl(m.reactionTimeMs)} ms`)
+  }
+  if (m.accuracyHead != null && avgHead != null) {
+    if (m.accuracyHead < avgHead - 4) deviations.push(`celność w głowę ${pl(m.accuracyHead)}% (śr. ${pl(avgHead)}%)`)
+    else if (m.accuracyHead > avgHead + 4) over.push(`celność w głowę ${pl(m.accuracyHead)}%`)
+  }
+  if (m.preaim != null && avgPreaim != null) {
+    if (m.preaim < avgPreaim - 1.5) deviations.push(`pre-aim ${pl(m.preaim, 1)}% (śr. ${pl(avgPreaim, 1)}%)`)
+    else if (m.preaim > avgPreaim + 1.5) over.push(`pre-aim ${pl(m.preaim, 1)}%`)
+  }
+  if (m.sprayAccuracy != null && avgSpray != null) {
+    if (m.sprayAccuracy < avgSpray - 5) deviations.push(`kontrola spraya ${pl(m.sprayAccuracy)}% (śr. ${pl(avgSpray)}%)`)
+    else if (m.sprayAccuracy > avgSpray + 5) over.push(`kontrola spraya ${pl(m.sprayAccuracy)}%`)
+  }
 
   if (m.outcome === 'WIN') {
-    return 'Solidna wygrana — trzymaj tempo i powtarzaj ten poziom.'
+    if (deviations.length > 0) return `Wygrana, ale ${deviations[0]} poniżej Twojej średniej.`
+    if (over.length > 0) return `Wygrana — ${over[0]} ponad Twoją średnią.`
+    return 'Wygrana — statystyki na poziomie Twojej średniej sezonowej.'
   }
-  // loss
-  if (m.reactionTimeMs != null && avgReaction != null && m.reactionTimeMs > avgReaction + 40) {
-    return 'Zawiodła reakcja — rozgrzewka refleksu przed następną grą.'
-  }
-  if (m.accuracyHead != null && avgHead != null && m.accuracyHead < avgHead - 4) {
-    return 'Zawiodła celność — 20 min DM z fokusem na głowę.'
-  }
-  if (m.preaim != null && avgPreaim != null && m.preaim < avgPreaim - 1.5) {
-    return 'Zawiódł pre-aim — crosshair trzymaj na wysokości głowy.'
-  }
-  return 'Zawiodły szczegóły — przeanalizuj VOD rund, które przegrałeś.'
+  if (deviations.length > 0) return `Porażka — ${deviations[0]} poniżej Twojej średniej.`
+  return 'Porażka bez wyraźnego spadku względem Twojej średniej — przejrzyj VOD przegranych rund.'
 }
