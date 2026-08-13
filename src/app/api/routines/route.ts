@@ -81,8 +81,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = routineSchema.parse(body)
 
-    // Verify videos belong to coach if provided
-    const videoIds = validated.tasks.map((t) => t.videoId).filter(Boolean) as string[]
+    // Verify videos belong to coach if provided (dedupe so the same video
+    // assigned to multiple tasks doesn't trip the count check)
+    const videoIds = Array.from(new Set(validated.tasks.map((t) => t.videoId).filter(Boolean) as string[]))
     if (videoIds.length) {
       const count = await prisma.video.count({
         where: { id: { in: videoIds }, coachId: userId },

@@ -29,7 +29,6 @@ import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { getRank, getLevel } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
-import { SkillProgressChart } from '@/components/skill-progress-chart'
 
 interface StudentDetail {
   id: string
@@ -121,7 +120,6 @@ export function CoachStudentDetailClient({
     profile: { name: string | null; totalMatches: number | null; winrate: number | null; rating: Record<string, number | null> }
     weaknesses: { key: string; label: string; value: number | null; advice: string }[]
     suggestedRoutine: { title: string; description: string; tasks: { title: string; day: number; minutes: number }[] } | null
-    snapshots: { createdAt: string; aim: number | null; positioning: number | null; utility: number | null; clutch: number | null; opening: number | null }[]
   } | null>(null)
   const [creatingRoutine, setCreatingRoutine] = useState(false)
   const [routineCreated, setRoutineCreated] = useState<string | null>(null)
@@ -523,12 +521,6 @@ export function CoachStudentDetailClient({
               </div>
             </div>
 
-            {/* Progress over time */}
-            {aiData.snapshots.length >= 2 && (
-              <div className="mt-6 border-t border-white/[0.07] pt-6">
-                <SkillProgressChart snapshots={aiData.snapshots} />
-              </div>
-            )}
             </>
           ) : null}
         </div>

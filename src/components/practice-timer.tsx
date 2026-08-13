@@ -22,12 +22,26 @@ export function PracticeTimer({ minutes, taskTitle, onComplete, onClose }: Pract
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const audioRef = useRef<AudioContext | null>(null)
 
-  const beep = useCallback(() => {
+  // Create + unlock the AudioContext inside a user gesture (Start click),
+  // otherwise browsers block autoplay and the finish alarm never plays.
+  const ensureAudio = useCallback(() => {
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext
-      if (!Ctx) return
+      if (!Ctx) return null
       if (!audioRef.current) audioRef.current = new Ctx()
-      const ctx = audioRef.current
+      if (audioRef.current.state === 'suspended') {
+        audioRef.current.resume().catch(() => undefined)
+      }
+      return audioRef.current
+    } catch {
+      return null
+    }
+  }, [])
+
+  const beep = useCallback(() => {
+    try {
+      const ctx = ensureAudio()
+      if (!ctx) return
       const notes = [523.25, 659.25, 783.99, 1046.5] // C5 E5 G5 C6 — victory arpeggio
       notes.forEach((freq, i) => {
         const osc = ctx.createOscillator()
@@ -46,7 +60,7 @@ export function PracticeTimer({ minutes, taskTitle, onComplete, onClose }: Pract
     } catch {
       /* audio unavailable — fine */
     }
-  }, [])
+  }, [ensureAudio])
 
   useEffect(() => {
     if (running && secondsLeft > 0) {
@@ -87,12 +101,9 @@ export function PracticeTimer({ minutes, taskTitle, onComplete, onClose }: Pract
 
   const toggle = () => {
     if (finished) return
-    // Resume AudioContext on user gesture (browsers block autoplay otherwise)
-    try {
-      if (audioRef.current?.state === 'suspended') audioRef.current.resume()
-    } catch {
-      /* ignore */
-    }
+    // Create + resume AudioContext inside this click — the user gesture that
+    // unlocks audio for the finish alarm (browsers block autoplay otherwise)
+    ensureAudio()
     setRunning((r) => !r)
   }
 

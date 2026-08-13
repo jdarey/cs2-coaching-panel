@@ -68,21 +68,8 @@ export async function GET(request: NextRequest) {
     const weaknesses = analyzeWeaknesses(aiProfile).slice(0, 3)
     const primary = weaknesses[0] ?? null
 
-    // Record a skill snapshot so the progress chart grows over time
+    // Record a skill snapshot so the history is kept in the DB
     await recordSkillSnapshot(studentId, aiProfile)
-    const snapshots = await prisma.skillSnapshot.findMany({
-      where: { studentId },
-      orderBy: { createdAt: 'asc' },
-      take: 30,
-    })
-    const snapshotsForClient = snapshots.map((s) => ({
-      createdAt: s.createdAt.toISOString(),
-      aim: s.aim,
-      positioning: s.positioning,
-      utility: s.utility,
-      clutch: s.clutch,
-      opening: s.opening,
-    }))
 
     return NextResponse.json({
       profile: {
@@ -104,7 +91,6 @@ export async function GET(request: NextRequest) {
         advice: w.advice,
       })),
       suggestedRoutine: primary ? suggestRoutineForWeakness(primary) : null,
-      snapshots: snapshotsForClient,
     })
   } catch (error) {
     console.error('AI analysis error:', error)

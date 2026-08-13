@@ -15,7 +15,7 @@ export default async function StudentDashboardPage() {
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 86400000)
 
-  const [sessions, progress, coach, rankEntries, myTags, assignments, coachInfo, weekStats, routines, practice, skillSnapshots] = await Promise.all([
+  const [sessions, progress, coach, rankEntries, myTags, assignments, coachInfo, weekStats, routines, practice] = await Promise.all([
     prisma.session.findMany({
       where: { studentId: userId, status: { in: ['ACTIVE', 'COMPLETED'] } },
       orderBy: { scheduledAt: 'desc' },
@@ -83,11 +83,6 @@ export default async function StudentDashboardPage() {
     prisma.practiceSession.findMany({
       where: { studentId: userId, createdAt: { gte: new Date(now.getTime() - 8 * 7 * 86400000) } },
       select: { minutes: true, createdAt: true },
-      orderBy: { createdAt: 'asc' },
-    }),
-    // Skill snapshots (Leetify) — my progress over time
-    prisma.skillSnapshot.findMany({
-      where: { studentId: userId },
       orderBy: { createdAt: 'asc' },
     }),
   ])
@@ -198,15 +193,6 @@ export default async function StudentDashboardPage() {
     .filter((p) => p.createdAt >= startOfWeek)
     .reduce((acc, p) => acc + p.minutes, 0)
 
-  const skillSnapshotsForClient = skillSnapshots.map((s) => ({
-    createdAt: s.createdAt.toISOString(),
-    aim: s.aim,
-    positioning: s.positioning,
-    utility: s.utility,
-    clutch: s.clutch,
-    opening: s.opening,
-  }))
-
   return (
     <StudentDashboardClient
       initialStats={stats}
@@ -223,7 +209,6 @@ export default async function StudentDashboardPage() {
         thisWeek: thisWeekPractice,
         sessions: practice.length,
       }}
-      initialSkillSnapshots={skillSnapshotsForClient}
       weekly={{ videosDone: weekStats[0], tasksDone: weekStats[1], sessionsThisWeek: weekStats[2], overdueAssignments, dueSoonAssignments }}
     />
   )

@@ -16,7 +16,6 @@ import {
 import Link from 'next/link'
 import { getRank, nextRank, getLevel, getStreak } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
-import { SkillProgressChart, type SkillSnapshot } from '@/components/skill-progress-chart'
 
 interface Session {
   id: string
@@ -98,7 +97,6 @@ interface StudentDashboardClientProps {
     thisWeek: number
     sessions: number
   }
-  initialSkillSnapshots: SkillSnapshot[]
   weekly: { videosDone: number; tasksDone: number; sessionsThisWeek: number; overdueAssignments: number; dueSoonAssignments: number }
 }
 
@@ -114,7 +112,6 @@ export function StudentDashboardClient({
   initialAssignments,
   initialRoutines,
   initialPractice,
-  initialSkillSnapshots,
   weekly,
 }: StudentDashboardClientProps) {
   const router = useRouter()
@@ -480,37 +477,6 @@ export function StudentDashboardClient({
             </div>
           </div>
         </div>
-
-        {/* ===== SKILL PROGRESS ===== */}
-        {initialSkillSnapshots.length >= 2 ? (
-          <div className="animate-rise-in glass-liquid relative overflow-hidden rounded-3xl p-6 md:p-7 mb-8" style={{ animationDelay: '210ms' }}>
-            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[#8b5cf6]/15 blur-3xl pointer-events-none" />
-            <div className="relative z-10">
-              <SkillProgressChart snapshots={initialSkillSnapshots} />
-            </div>
-          </div>
-        ) : (
-          <div className="animate-rise-in glass-liquid relative overflow-hidden rounded-3xl p-6 mb-8" style={{ animationDelay: '210ms' }}>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] ring-1 ring-white/25">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display text-lg font-semibold text-white/90">Postęp słabości w czasie</h3>
-                <p className="text-sm text-white/45 mt-0.5">
-                  Gdy trener zsynchronizuje Twoje mecze z Faceita (Steam ID w ustawieniach), zobaczysz tu wykres, czy Twoje wyniki (celność, pozycje, utility…) rosną z tygodnia na tydzień.
-                </p>
-              </div>
-              <Link
-                href="/student/settings"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white glass hover:border-[#a78bfa]/40 hover:text-[#c4b5fd] transition-all duration-300 shrink-0"
-              >
-                <Sparkles className="w-4 h-4 text-[#a78bfa]" />
-                Połącz Faceit
-              </Link>
-            </div>
-          </div>
-        )}
 
         {/* ===== MISTAKES + WEEKLY ===== */}
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
