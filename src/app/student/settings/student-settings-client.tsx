@@ -605,7 +605,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                         </p>
                       </div>
                       <a
-                        href={`https://faceit.com/pl/players/${encodeURIComponent(faceitResult.nickname)}`}
+                        href={`https://www.faceit.com/pl/players/${encodeURIComponent(faceitResult.nickname)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="ml-auto inline-flex items-center gap-1.5 text-xs text-white/45 hover:text-white transition-colors"

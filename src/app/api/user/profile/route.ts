@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
+import { resolveSteamIdentifier } from '@/lib/gaming'
 import { z } from 'zod'
 
 // Avatars are stored as base64 data URIs in the DB (no file storage). The
@@ -81,11 +81,7 @@ export async function PUT(request: NextRequest) {
     // pasted it (link, name, or ID).
     if (typeof validated.steamVanity === 'string' && validated.steamVanity.trim()) {
       const raw = validated.steamVanity.trim()
-      const parsed = parseSteamIdentifier(raw)
-      let steamId: string | null = parsed.type === 'steam64' ? parsed.value : null
-      if (!steamId && parsed.type === 'vanity') {
-        steamId = await resolveSteamVanity(parsed.value)
-      }
+      const steamId = await resolveSteamIdentifier(raw)
       if (steamId) {
         data.steamId = steamId
         data.steamVanity = raw

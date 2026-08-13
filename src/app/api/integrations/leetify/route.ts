@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { parseSteamIdentifier, resolveSteamVanity, fetchLeetifyProfile, fetchFaceitLegacy } from '@/lib/gaming'
+import { parseSteamIdentifier, resolveSteamIdentifier, fetchLeetifyProfile, fetchFaceitLegacy } from '@/lib/gaming'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,15 +39,25 @@ export async function GET(request: NextRequest) {
       if (parsed.type === 'steam64') {
         steamId = parsed.value
         source = 'steam64'
-      } else if (parsed.type === 'vanity') {
-        const resolved = await resolveSteamVanity(parsed.value)
+      } else if (parsed.type === 'vanity' || parsed.type === 'short') {
+        // Steam profile URL/vanity/short link — resolve to steam64.
+        const isFullUrl = /steamcommunity\.com|s\.team/i.test(identifier)
+        const resolved = await resolveSteamIdentifier(identifier)
         if (resolved) {
           steamId = resolved
-          source = `vanity:${parsed.value}`
-        } else {
-          // Maybe it's a Faceit nickname instead
+          source = parsed.type === 'short' ? `short:${parsed.value}` : `vanity:${parsed.value}`
+        } else if (parsed.type === 'vanity' && !isFullUrl) {
+          // A bare name that isn't a resolvable Steam vanity — maybe it's a Faceit nickname
           faceitNick = parsed.value
           source = 'faceit-nickname'
+        } else {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: `Nie udało się rozpoznać linku Steam „${identifier}”. Sprawdź, czy link prowadzi do Twojego profilu Steam i czy profil nie jest prywatny.`,
+            },
+            { status: 404 },
+          )
         }
       } else {
         // Not a Steam identifier at all — treat as Faceit nickname

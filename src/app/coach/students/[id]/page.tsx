@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchFaceitLegacy, fetchLeetifyProfile } from '@/lib/gaming'
+import { fetchFaceitLegacy, fetchLeetifyProfile, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 import { CoachStudentDetailClient } from './coach-student-detail-client'
 
 export default async function CoachStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -68,6 +68,19 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
   let faceitElo: number | null = null
   let faceitLevel: number | null = null
   let faceitNickname: string | null = student.faceitNickname || null
+
+  // Older profiles may only have the vanity URL stored (steamId null) — resolve
+  // it to a numeric steam64 so Leetify can be queried.
+  let steamId = student.steamId
+  if (!steamId && student.steamVanity) {
+    const parsed = parseSteamIdentifier(student.steamVanity)
+    if (parsed.type === 'steam64') {
+      steamId = parsed.value
+    } else if (parsed.type === 'vanity') {
+      steamId = await resolveSteamVanity(parsed.value)
+    }
+  }
+
   if (student.faceitNickname) {
     const legacy = await fetchFaceitLegacy(student.faceitNickname)
     if (legacy) {
@@ -76,8 +89,8 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
       faceitNickname = legacy.nickname || faceitNickname
     }
   }
-  if (faceitElo == null && student.steamId) {
-    const leetify = await fetchLeetifyProfile(student.steamId)
+  if (faceitElo == null && steamId) {
+    const leetify = await fetchLeetifyProfile(steamId)
     if (leetify) {
       faceitElo = leetify.faceitElo
       faceitLevel = leetify.faceitLevel

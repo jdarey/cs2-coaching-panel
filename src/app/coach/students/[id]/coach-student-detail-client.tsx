@@ -79,40 +79,20 @@ const PROGRESS_DOTS = [
   { key: 'implemented', label: 'Wdrożone', color: '#a78bfa' },
 ] as const
 
-// Steam brand mark (inline SVG — lucide has no brand icons).
+// Official Steam brand mark (simple-icons path, filled with currentColor).
 function SteamIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M12 2C6.48 2 2 6.48 2 12c0 4.2 2.55 7.78 6.17 9.36l3.05-1.74a2.05 2.05 0 0 1 2.76.72c.98 1.5 3.05 1.85 4.55.87 1.5-.98 1.85-3.05.87-4.55-.33-.5-.77-.9-1.3-1.17v-3.49c0-4.83-3.9-8.75-8.73-8.75Z"
-        fill="#66c0f4"
-        opacity="0.2"
-      />
-      <path
-        d="M8.62 13.4 6.6 14.5a1.9 1.9 0 0 1-.72 2.59 1.9 1.9 0 0 1-2.59-.72 1.9 1.9 0 0 1 .72-2.59l2.04-1.14a3.4 3.4 0 1 1 3.4-5.88l3.02 2.15a3.4 3.4 0 1 1-3.85 5.5Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <circle cx="9.06" cy="13.62" r="0.8" fill="currentColor" />
-      <path d="M14.6 8.5a2.6 2.6 0 1 1 3.7 3.65" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg role="img" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
     </svg>
   )
 }
 
-// Faceit brand mark (inline SVG).
+// Official FACEIT brand mark (simple-icons path).
 function FaceitIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="3" fill="currentColor" opacity="0.18" />
-      <path
-        d="M7 9.5 5.2 12 7 14.5M11 8l-2.4 8M15.5 8l-1.4 8M19 9.5 17.2 12 19 14.5"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg role="img" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M23.999 2.705a.167.167 0 00-.312-.1 1141.27 1141.27 0 00-6.053 9.375H.218c-.221 0-.301.282-.11.352 7.227 2.73 17.667 6.836 23.5 9.134.15.06.39-.08.39-.18z" />
     </svg>
   )
 }
@@ -287,18 +267,26 @@ export function CoachStudentDetailClient({
   const doneCount = assignments.length - pendingCount
 
   // Link to the student's Steam profile: prefer the numeric steam64 (profiles/
-  // URL is stable), fall back to the vanity name if only that is stored.
+  // URL is stable), fall back to the vanity name. steamVanity may be stored as
+  // a bare name OR a full URL (e.g. https://steamcommunity.com/id/jdarey/) —
+  // extract just the name so the link is never double-encoded.
   const steamUrl = student.steamId
     ? `https://steamcommunity.com/profiles/${student.steamId}`
     : student.steamVanity
-      ? `https://steamcommunity.com/id/${encodeURIComponent(student.steamVanity)}`
+      ? (() => {
+          const m = student.steamVanity.match(/steamcommunity\.com\/id\/([^/\s?]+)/)
+          const vanity = m ? m[1] : student.steamVanity.replace(/^https?:\/\//, '').replace(/\/$/, '')
+          return `https://steamcommunity.com/id/${encodeURIComponent(vanity)}`
+        })()
       : null
 
-  // Link to the student's Faceit profile when a nickname is known; otherwise
-  // point at Faceit search (still useful — shows the ELO badge from Leetify).
+  // Link to the student's Faceit profile ONLY when a real nickname is known.
+  // Without it the ELO badge comes from Leetify, but there is no profile to
+  // open — so render a non-link badge instead of sending the user to the
+  // Faceit homepage (which looked like a broken profile link).
   const faceitUrl = student.faceitNickname
-    ? `https://faceit.com/pl/players/${encodeURIComponent(student.faceitNickname)}`
-    : 'https://www.faceit.com/pl/'
+    ? `https://www.faceit.com/pl/players/${encodeURIComponent(student.faceitNickname)}`
+    : null
 
   return (
     <CoachLayout>
@@ -349,23 +337,37 @@ export function CoachStudentDetailClient({
                         Steam
                       </a>
                     )}
-                    {(student.faceitNickname || student.faceitElo != null || student.faceitLevel != null) && (
-                      <a
-                        href={faceitUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Profil Faceit"
-                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#ff5500]/40 hover:bg-[#ff5500]/[0.08] transition-all duration-300"
-                      >
-                        <FaceitIcon className="w-4 h-4" />
-                        {student.faceitElo != null ? `${student.faceitElo} ELO` : student.faceitLevel != null ? `Poziom ${student.faceitLevel}` : 'Faceit'}
-                        {student.faceitLevel != null && (
-                          <span className="ml-0.5 inline-flex items-center rounded-md bg-[#ff5500]/15 border border-[#ff5500]/25 px-1.5 py-0.5 text-[10px] font-bold text-[#ff9a5c]">
-                            Lv.{student.faceitLevel}
-                          </span>
-                        )}
-                      </a>
-                    )}
+                    {(student.faceitNickname || student.faceitElo != null || student.faceitLevel != null) &&
+                      (faceitUrl ? (
+                        <a
+                          href={faceitUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Profil Faceit: ${student.faceitNickname}`}
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#ff5500]/40 hover:bg-[#ff5500]/[0.08] transition-all duration-300"
+                        >
+                          <FaceitIcon className="w-4 h-4" />
+                          {student.faceitElo != null ? `${student.faceitElo} ELO` : student.faceitLevel != null ? `Poziom ${student.faceitLevel}` : 'Faceit'}
+                          {student.faceitLevel != null && (
+                            <span className="ml-0.5 inline-flex items-center rounded-md bg-[#ff5500]/15 border border-[#ff5500]/25 px-1.5 py-0.5 text-[10px] font-bold text-[#ff9a5c]">
+                              Lv.{student.faceitLevel}
+                            </span>
+                          )}
+                        </a>
+                      ) : (
+                        <span
+                          title="Uczeń nie podał nicku Faceit — ELO pochodzi z Leetify. Dodaj nick w ustawieniach ucznia, aby uzyskać link do profilu."
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-semibold text-white/60 bg-white/[0.04] border border-white/[0.08] cursor-default"
+                        >
+                          <FaceitIcon className="w-4 h-4" />
+                          {student.faceitElo != null ? `${student.faceitElo} ELO` : student.faceitLevel != null ? `Poziom ${student.faceitLevel}` : 'Faceit'}
+                          {student.faceitLevel != null && (
+                            <span className="ml-0.5 inline-flex items-center rounded-md bg-[#ff5500]/15 border border-[#ff5500]/25 px-1.5 py-0.5 text-[10px] font-bold text-[#ff9a5c]">
+                              Lv.{student.faceitLevel}
+                            </span>
+                          )}
+                        </span>
+                      ))}
                   </div>
                 )}
               </div>

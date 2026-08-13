@@ -44,17 +44,26 @@ export interface FaceitLegacyProfile {
 }
 
 // Extract steam64 / vanity from a full profile URL or bare identifier.
-// Accepts: https://steamcommunity.com/id/xxx, .../profiles/7656119...,
-// a bare vanity name, or a numeric steam64.
-export function parseSteamIdentifier(identifier: string): { type: 'vanity' | 'steam64' | null; value: string } {
+// Accepts: https://steamcommunity.com/id/xxx, .../user/xxx (new Steam format),
+// .../profiles/7656119..., a bare vanity name, or a numeric steam64.
+// Steam's short share links (s.team/p/xxx) are detected as type 'short' and
+// must be resolved with resolveSteamShortLink() (they don't contain the id).
+export function parseSteamIdentifier(identifier: string): { type: 'vanity' | 'steam64' | 'short' | null; value: string } {
   const trimmed = identifier.trim()
   if (!trimmed) return { type: null, value: '' }
 
   const idMatch = trimmed.match(/steamcommunity\.com\/profiles\/(\d{17})/)
   if (idMatch) return { type: 'steam64', value: idMatch[1] }
 
-  const vanityMatch = trimmed.match(/steamcommunity\.com\/id\/([^/\s?]+)/)
+  // Both /id/ and /user/ are vanity URLs; the XML endpoint works with /id/ for both.
+  const vanityMatch = trimmed.match(/steamcommunity\.com\/(?:id|user)\/([^/\s?#]+)/)
   if (vanityMatch) return { type: 'vanity', value: vanityMatch[1] }
+
+  // Steam short share link: https://s.team/p/xxxxxxxx (or without protocol)
+  if (/^(?:https?:\/\/)?s\.team\/p\/[a-zA-Z0-9_-]+/i.test(trimmed)) {
+    const shortMatch = trimmed.match(/s\.team\/p\/([a-zA-Z0-9_-]+)/i)
+    return { type: 'short', value: shortMatch ? shortMatch[1] : trimmed }
+  }
 
   if (/^\d{17}$/.test(trimmed)) return { type: 'steam64', value: trimmed }
 
@@ -62,6 +71,39 @@ export function parseSteamIdentifier(identifier: string): { type: 'vanity' | 'st
   if (/^[a-zA-Z0-9_-]{2,64}$/.test(trimmed)) return { type: 'vanity', value: trimmed }
 
   return { type: null, value: trimmed }
+}
+
+// Resolve a Steam short share link (s.team/p/xxx) to a numeric steam64 by
+// following the redirect chain (Steam redirects to the full profile URL).
+// Returns null if it can't be resolved. No API key required.
+export async function resolveSteamShortLink(shortCode: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://s.team/p/${encodeURIComponent(shortCode)}`, {
+      redirect: 'follow',
+      headers: { 'User-Agent': 'CS2-Coaching-Panel/1.0' },
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    const finalUrl = res.url || ''
+    const steam64 = finalUrl.match(/profiles\/(\d{17})/)
+    if (steam64) return steam64[1]
+    const vanity = finalUrl.match(/(?:id|user)\/([^/\s?#]+)/)
+    if (vanity) return resolveSteamVanity(vanity[1])
+    return null
+  } catch {
+    return null
+  }
+}
+
+// Resolve any Steam identifier (URL / vanity / short link / steam64) to a
+// numeric steam64 ID. Returns null when the identifier isn't a Steam profile
+// or couldn't be resolved.
+export async function resolveSteamIdentifier(identifier: string): Promise<string | null> {
+  const parsed = parseSteamIdentifier(identifier)
+  if (parsed.type === 'steam64') return parsed.value
+  if (parsed.type === 'vanity') return resolveSteamVanity(parsed.value)
+  if (parsed.type === 'short') return resolveSteamShortLink(parsed.value)
+  return null
 }
 
 // Resolve a Steam vanity name to steam64 using the public XML profile page.
