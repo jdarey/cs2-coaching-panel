@@ -93,8 +93,26 @@ model User {
   // Password reset tokens
   passwordResetTokens PasswordResetToken[]
 
+  // Coach private notes on students
+  coachNotes    CoachStudentNote[] @relation("CoachNotesAsCoach")
+  studentCoachNotes CoachStudentNote[] @relation("CoachNotesAsStudent")
+
   @@index([coachId])
   @@index([email])
+}
+
+model CoachStudentNote {
+  id        String   @id @default(cuid())
+  coachId   String
+  studentId String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coach   User @relation("CoachNotesAsCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student User @relation("CoachNotesAsStudent", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([coachId, studentId])
 }
 
 // One-time password reset tokens (hashed at rest).
