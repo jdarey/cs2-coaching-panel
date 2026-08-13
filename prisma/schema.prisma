@@ -97,6 +97,7 @@ model User {
   coachNotes    CoachStudentNote[] @relation("CoachNotesAsCoach")
   studentCoachNotes CoachStudentNote[] @relation("CoachNotesAsStudent")
   studentInvites    StudentInvite[]
+  sessionTemplates  SessionTemplate[]
 
   @@index([coachId])
   @@index([email])
@@ -130,6 +131,52 @@ model StudentInvite {
 
   @@index([email])
   @@index([token])
+}
+
+// Session templates for reusable session structures
+model SessionTemplate {
+  id          String   @id @default(cuid())
+  coachId     String
+  title       String
+  description String?
+  tags        SessionTemplateTag[]
+  videos      SessionTemplateVideo[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
+}
+
+model SessionTemplateTag {
+  id           String   @id @default(cuid())
+  templateId   String
+  tagId        String
+  note         String?
+  order        Int      @default(0)
+
+  template SessionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tag      Tag            @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, tagId])
+  @@index([templateId])
+  @@index([tagId])
+}
+
+model SessionTemplateVideo {
+  id         String   @id @default(cuid())
+  templateId String
+  videoId    String
+  tagId      String?     // which tag this video addresses (optional)
+  order      Int        @default(0)
+
+  template SessionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  video    Video            @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag      Tag?             @relation(fields: [tagId], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
+  @@index([videoId])
 }
 
 // One-time password reset tokens (hashed at rest).
@@ -200,6 +247,8 @@ model Tag {
   videos      VideoTag[]
   sessions    SessionTag[]
   sessionVideos SessionVideo[]
+  templateTags      SessionTemplateTag[]
+  templateVideos    SessionTemplateVideo[]
 
   @@unique([name, coachId]) // unique per coach
   @@index([coachId])
@@ -224,6 +273,7 @@ model Video {
   sessionVideos SessionVideo[]
   assignments Assignment[]
   routineTasks RoutineTask[]
+  templateVideos SessionTemplateVideo[]
 
   @@index([coachId])
   @@index([isActive])
