@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { parseSteamIdentifier, resolveSteamIdentifier, fetchLeetifyProfile, fetchFaceitLegacy } from '@/lib/gaming'
+import { prisma } from '@/lib/prisma'
+import { parseSteamIdentifier, resolveSteamIdentifier, fetchLeetifyProfile, fetchBestFaceitElo, fetchFaceitLegacy } from '@/lib/gaming'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,18 +67,41 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 1) Prefer Leetify (steam64 -> Premier + Faceit + stats, keyless)
+    // 1) Steam-based: Leetify gives Premier + rating stats (keyless).
+    // Faceit ELO comes from the live Faceit legacy API when the nickname is
+    // known or can be discovered; Leetify's cached faceit_elo is a fallback
+    // (it can be stale — e.g. reports 4000 for a player now at 3437).
     if (steamId) {
       const leetify = await fetchLeetifyProfile(steamId)
       if (leetify) {
+        const best = await fetchBestFaceitElo(steamId, faceitNick)
+
+        // Persist an auto-discovered Faceit nickname on the logged-in user's
+        // profile when they check their own Steam account, so future lookups
+        // use the saved nickname instead of re-discovering it every time.
+        if (best.nickname && best.source === 'faceit') {
+          const me = await prisma.user.findUnique({
+            where: { id: (session.user as any).id },
+            select: { id: true, steamId: true, faceitNickname: true },
+          })
+          if (me && me.steamId === steamId && me.faceitNickname !== best.nickname) {
+            await prisma.user.update({
+              where: { id: me.id },
+              data: { faceitNickname: best.nickname },
+            })
+          }
+        }
+
         return NextResponse.json({
           ok: true,
           source: `leetify:${source || 'steam64'}`,
           steamId: leetify.steamId,
           name: leetify.name,
           premier: leetify.premier,
-          faceitLevel: leetify.faceitLevel,
-          faceitElo: leetify.faceitElo,
+          faceitLevel: best.level ?? leetify.faceitLevel,
+          faceitElo: best.elo ?? leetify.faceitElo,
+          faceitNickname: best.nickname ?? null,
+          faceitSource: best.source,
           winrate: leetify.winrate,
           totalMatches: leetify.totalMatches,
           aim: leetify.aim,

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyProfile, fetchFaceitLegacy, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
+import { fetchLeetifyProfile, fetchBestFaceitElo, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 
       summary.studentsChecked++
       const name = student.name || student.id
-      const entries: { mode: string; rank: string; elo: number | null; note: string }[] = []
+      const entries: { mode: string; rank: string; elo: number | null; source: 'FACEIT_LIVE' | 'LEETIFY'; note: string }[] = []
 
       // 1) Steam-based: Leetify gives Premier + Faceit together (keyless)
       let steamId = student.steamId || null
@@ -63,38 +63,43 @@ export async function GET(request: Request) {
               mode: 'PREMIER',
               rank: `${leetify.premier} Premier`,
               elo: leetify.premier,
-              note: 'Cron: Leetify (automatycznie)',
-            })
-          }
-          if (leetify.faceitElo != null) {
-            entries.push({
-              mode: 'FACEIT',
-              rank: `${leetify.faceitElo} ELO`,
-              elo: leetify.faceitElo,
-              note: `Cron: Leetify (automatycznie)${leetify.faceitLevel != null ? ` · Lv.${leetify.faceitLevel}` : ''}`,
-            })
-          } else if (leetify.faceitLevel != null) {
-            entries.push({
-              mode: 'FACEIT',
-              rank: `Poziom ${leetify.faceitLevel}`,
-              elo: null,
+              source: 'LEETIFY',
               note: 'Cron: Leetify (automatycznie)',
             })
           }
         }
       }
 
-      // 2) Faceit nickname fallback (keyless legacy)
-      if (entries.length === 0 && student.faceitNickname) {
-        const faceit = await fetchFaceitLegacy(student.faceitNickname)
-        if (faceit && faceit.elo != null) {
-          entries.push({
-            mode: 'FACEIT',
-            rank: `${faceit.elo} ELO`,
-            elo: faceit.elo,
-            note: `Cron: Faceit (automatycznie)${faceit.skillLevel != null ? ` · Lv.${faceit.skillLevel}` : ''}`,
-          })
-        }
+      // 2) Faceit: prefer live Faceit legacy (nickname saved OR auto-discovered
+      // from Leetify match history — Steam nick often differs from Faceit nick).
+      // Leetify's cached faceit_elo is a fallback only (it can be stale).
+      const best = await fetchBestFaceitElo(steamId, student.faceitNickname)
+
+      // Persist an auto-discovered Faceit nickname so future syncs use the
+      // saved value instead of re-discovering it via Leetify match details.
+      if (best.nickname && best.nickname !== student.faceitNickname && best.source === 'faceit') {
+        await prisma.user.update({
+          where: { id: student.id },
+          data: { faceitNickname: best.nickname },
+        })
+        summary.details.push(`${name}: wykryto nick Faceit „${best.nickname}”`)
+      }
+      if (best.elo != null) {
+        entries.push({
+          mode: 'FACEIT',
+          rank: `${best.elo} ELO`,
+          elo: best.elo,
+          source: best.source === 'faceit' ? 'FACEIT_LIVE' : 'LEETIFY',
+          note: `Cron: ${best.source === 'faceit' ? `Faceit (na żywo)${best.level != null ? ` · Lv.${best.level}` : ''}` : `Leetify (automatycznie)${best.level != null ? ` · Lv.${best.level}` : ''}`}`,
+        })
+      } else if (best.level != null) {
+        entries.push({
+          mode: 'FACEIT',
+          rank: `Poziom ${best.level}`,
+          elo: null,
+          source: best.source === 'faceit' ? 'FACEIT_LIVE' : 'LEETIFY',
+          note: `Cron: ${best.source === 'faceit' ? 'Faceit (na żywo)' : 'Leetify (automatycznie)'}`,
+        })
       }
 
       if (entries.length === 0) {
@@ -121,6 +126,7 @@ export async function GET(request: Request) {
             mode: entry.mode,
             rank: entry.rank,
             elo: entry.elo,
+            source: entry.source,
             note: entry.note,
           },
         })

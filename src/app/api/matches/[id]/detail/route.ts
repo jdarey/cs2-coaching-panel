@@ -82,6 +82,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         accuracyEnemySpotted: match.accuracyEnemySpotted,
         accuracyHead: match.accuracyHead,
         sprayAccuracy: match.sprayAccuracy,
+        coachNotes: match.coachNotes as { time: number; note: string }[] | null,
+        coachVerdict: match.coachVerdict,
+        coachReviewedAt: match.coachReviewedAt ? match.coachReviewedAt.toISOString() : null,
         student: {
           id: match.student.id,
           name: match.student.name,

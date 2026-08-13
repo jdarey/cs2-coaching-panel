@@ -6,6 +6,11 @@ import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
+const noteSchema = z.object({
+  time: z.number().min(0).max(7200), // seconds into the match/demo
+  note: z.string().min(1).max(500),
+})
+
 const patchSchema = z.object({
   map: z.string().min(1).max(40).optional(),
   result: z.enum(['WIN', 'LOSS', 'DRAW']).optional(),
@@ -13,6 +18,9 @@ const patchSchema = z.object({
   kills: z.number().int().min(0).max(200).optional().nullable(),
   deaths: z.number().int().min(0).max(200).optional().nullable(),
   reflection: z.string().max(1000).optional().nullable(),
+  // Coach demo review — only coaches may set these
+  coachNotes: z.array(noteSchema).max(50).optional(),
+  coachVerdict: z.string().max(3000).optional().nullable(),
 })
 
 async function getOwnedMatch(id: string, userId: string, role: string) {
@@ -46,7 +54,21 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     const body = await request.json()
     const validated = patchSchema.parse(body)
-    const match = await prisma.matchLog.update({ where: { id }, data: validated })
+
+    // Coach review fields are coach-only: students may not fake a review
+    let data: any = { ...validated }
+    if (role !== 'COACH') {
+      delete data.coachNotes
+      delete data.coachVerdict
+    }
+    if (role === 'COACH') {
+      const isReview = 'coachNotes' in data || 'coachVerdict' in data
+      if (isReview) {
+        data.coachReviewedAt = new Date()
+      }
+    }
+
+    const match = await prisma.matchLog.update({ where: { id }, data })
     return NextResponse.json(match)
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {

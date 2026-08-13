@@ -292,6 +292,65 @@ export async function fetchLeetifyMatchDetails(gameId: string): Promise<LeetifyM
   }
 }
 
+// Discover a player's Faceit nickname from their Leetify match history. Leetify
+// indexes Faceit matches and stores each player's in-game Faceit name — the
+// Steam nickname often differs (e.g. 'jdarey' vs 'jdareyy'). This lets us
+// query the live Faceit legacy API (accurate ELO) even when the user never
+// entered their Faceit nickname.
+export async function resolveFaceitNickname(steamId: string): Promise<string | null> {
+  try {
+    const url = `${LEETIFY_API}/v3/profile?steam64_id=${encodeURIComponent(steamId)}`
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) return null
+    const data = await res.json()
+    const games: any[] = Array.isArray(data?.recent_matches) ? data.recent_matches : []
+    const faceitMatch = games.find((g) => g?.data_source === 'faceit')
+    if (!faceitMatch?.id) return null
+
+    const detail = await fetchLeetifyMatchDetails(faceitMatch.id)
+    if (!detail) return null
+    const me = detail.players.find((p) => p.steam64Id === steamId)
+    return me?.name || null
+  } catch {
+    return null
+  }
+}
+
+// Best-effort Faceit ELO lookup, keyless:
+//  1. Live Faceit legacy by nickname (saved nickname, or one discovered from
+//     the player's Leetify match history — Steam nick != Faceit nick often).
+//  2. Leetify as fallback (can be stale, e.g. ZywOo: 4000 vs live 3437).
+// Returns the live ELO/level and the nickname that was used (if any).
+export async function fetchBestFaceitElo(
+  steamId: string | null,
+  savedNickname: string | null,
+): Promise<{ elo: number | null; level: number | null; nickname: string | null; source: 'faceit' | 'leetify' | null }> {
+  // 1) Live Faceit — saved nickname first, otherwise auto-discover it
+  let nickname = savedNickname
+  if (!nickname && steamId) {
+    nickname = await resolveFaceitNickname(steamId)
+  }
+  if (nickname) {
+    const legacy = await fetchFaceitLegacy(nickname)
+    if (legacy && legacy.elo != null) {
+      return { elo: legacy.elo, level: legacy.skillLevel, nickname: legacy.nickname || nickname, source: 'faceit' }
+    }
+  }
+  // 2) Leetify fallback (stale but better than nothing)
+  if (steamId) {
+    const leetify = await fetchLeetifyProfile(steamId)
+    if (leetify) {
+      return {
+        elo: leetify.faceitElo,
+        level: leetify.faceitLevel,
+        nickname,
+        source: 'leetify',
+      }
+    }
+  }
+  return { elo: null, level: null, nickname, source: null }
+}
+
 // Fetch a Faceit player by nickname using the legacy (keyless) endpoint.
 export async function fetchFaceitLegacy(nickname: string): Promise<FaceitLegacyProfile | null> {
   try {

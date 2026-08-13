@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StudentLayout } from '@/components/student-layout'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
 import { CountUp } from '@/components/count-up'
+import { EntranceGate } from '@/components/entrance-gate'
 import {
   Film, Clock, CalendarClock, BookOpen, ArrowRight,  Sparkles, MessageSquare, Flame, Zap, PlayCircle,
   TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks, Timer,
@@ -193,7 +194,9 @@ export function StudentDashboardClient({
 
   return (
     <StudentLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+      <EntranceGate className="max-w-7xl mx-auto px-4 sm:px-6 pb-24" delay={400}>
+        {/* Dashboard content — cards stagger in after the redirect overlay */}
+        <div className="contents">
         {/* ===== Hero Header ===== */}
         <div className="animate-rise-in mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-5">
@@ -783,7 +786,8 @@ export function StudentDashboardClient({
           <Sparkles className="w-3 h-3 text-[#a78bfa]/50" />
           <span className="h-px w-12 bg-gradient-to-l from-transparent to-white/15" />
         </div>
-      </div>
+        </div>
+      </EntranceGate>
     </StudentLayout>
   )
 }

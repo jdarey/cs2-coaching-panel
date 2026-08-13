@@ -11,6 +11,7 @@ import { cn, formatDateTime } from '@/lib/utils'
 import {
   ArrowLeft, Loader2, Swords, Trophy, Crosshair, TrendingUp, TrendingDown, Minus,
   Bot, Crown, Target, Timer, Shield, Flame, Zap, AlertTriangle, Sparkles, ChevronDown, ChevronUp, ExternalLink,
+  Plus, Trash2,
 } from 'lucide-react'
 
 interface MatchDetail {
@@ -32,6 +33,9 @@ interface MatchDetail {
   accuracyEnemySpotted: number | null
   accuracyHead: number | null
   sprayAccuracy: number | null
+  coachNotes: { time: number; note: string }[] | null
+  coachVerdict: string | null
+  coachReviewedAt: string | null
   student: { id: string; name: string | null; email: string; avatarUrl: string | null; steamId: string | null }
 }
 
@@ -135,6 +139,26 @@ export function StudentMatchDetailClient() {
   const [error, setError] = useState<string | null>(null)
   const [showAllPlayers, setShowAllPlayers] = useState(false)
 
+  // Coach review (demo review) state
+  const [coachNotes, setCoachNotes] = useState<{ time: number; note: string }[]>([])
+  const [coachVerdict, setCoachVerdict] = useState('')
+  const [reviewSaving, setReviewSaving] = useState(false)
+  const [reviewMsg, setReviewMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [noteTime, setNoteTime] = useState('')
+  const [noteText, setNoteText] = useState('')
+
+  const parseTime = (v: string): number | null => {
+    const m = v.trim().match(/^(\d{1,2}):(\d{2})$/)
+    if (!m) return null
+    const sec = parseInt(m[1], 10) * 60 + parseInt(m[2], 10)
+    return Number.isFinite(sec) ? sec : null
+  }
+  const fmtTime = (sec: number) => {
+    const m = Math.floor(sec / 60)
+    const s = Math.floor(sec % 60)
+    return `${m}:${String(s).padStart(2, '0')}`
+  }
+
   const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/matches/${matchId}/detail`)
@@ -144,6 +168,8 @@ export function StudentMatchDetailClient() {
         return
       }
       setData(json)
+      setCoachNotes(json.match?.coachNotes || [])
+      setCoachVerdict(json.match?.coachVerdict || '')
     } catch {
       setError('Wystąpił błąd serwera')
     } finally {
@@ -154,6 +180,42 @@ export function StudentMatchDetailClient() {
   useEffect(() => {
     load()
   }, [load])
+
+  const addNote = () => {
+    const sec = parseTime(noteTime)
+    if (sec == null || !noteText.trim()) return
+    setCoachNotes((prev) =>
+      [...prev, { time: sec, note: noteText.trim() }].sort((a, b) => a.time - b.time),
+    )
+    setNoteTime('')
+    setNoteText('')
+  }
+
+  const saveReview = async () => {
+    setReviewSaving(true)
+    setReviewMsg(null)
+    try {
+      const res = await fetch(`/api/matches/${matchId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coachNotes,
+          coachVerdict: coachVerdict.trim() || null,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setReviewMsg({ ok: false, text: json.error || 'Nie udało się zapisać analizy' })
+        return
+      }
+      setData((prev) => (prev ? { ...prev, match: { ...prev.match, coachNotes, coachVerdict: coachVerdict.trim() || null, coachReviewedAt: new Date().toISOString() } } : prev))
+      setReviewMsg({ ok: true, text: 'Analiza zapisana — uczeń widzi ją teraz na swoim profilu meczu.' })
+    } catch {
+      setReviewMsg({ ok: false, text: 'Wystąpił błąd serwera' })
+    } finally {
+      setReviewSaving(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -391,6 +453,146 @@ export function StudentMatchDetailClient() {
             <p className="text-sm text-white/65 leading-relaxed">{match.reflection}</p>
           </div>
         )}
+
+        {/* ===== COACH DEMO REVIEW ===== */}
+        <div className="glass-card rise-in relative rounded-3xl p-6 overflow-hidden border border-[#fbbf24]/25">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+            <div className="flex items-center gap-2.5">
+              <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/20">
+                <Shield className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold text-white/90">Analiza trenera</h2>
+                <p className="text-[11px] text-white/40">
+                  {isCoach
+                    ? 'Przejrzyj demo tego meczu i zostaw uczniowi ocenę z timestampami.'
+                    : match.coachReviewedAt
+                      ? `Ocenione ${formatDateTime(match.coachReviewedAt)}`
+                      : 'Trener nie ocenił jeszcze tego meczu.'}
+                </p>
+              </div>
+            </div>
+            {match.coachReviewedAt && (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/[0.1] border border-amber-500/25 rounded-full px-3 py-1">
+                <Shield className="w-3.5 h-3.5" /> Oceniony przez trenera
+              </span>
+            )}
+          </div>
+
+          {isCoach ? (
+            <div className="mt-4 space-y-4">
+              {/* Timestamped notes */}
+              <div>
+                <p className="text-xs font-medium text-white/55 mb-2">Notatki z timestampami (min:sek demka)</p>
+                <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                  <input
+                    value={noteTime}
+                    onChange={(e) => setNoteTime(e.target.value)}
+                    placeholder="np. 12:34"
+                    className="h-11 w-28 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 transition font-mono tabular-nums"
+                  />
+                  <input
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addNote()}
+                    placeholder="Co zrobił źle / co poprawić w tym momencie…"
+                    className="h-11 flex-1 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                  />
+                  <button
+                    onClick={addNote}
+                    disabled={!noteText.trim() || parseTime(noteTime) == null}
+                    className="inline-flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl text-sm font-semibold text-white btn-darey disabled:opacity-40 transition"
+                  >
+                    <Plus className="w-4 h-4" /> Dodaj
+                  </button>
+                </div>
+                {coachNotes.length === 0 ? (
+                  <p className="text-xs text-white/35">Brak notatek. Dodaj pierwszy punkt — np. moment, w którym padła kluczowa decyzja.</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {coachNotes.map((n, i) => (
+                      <li key={i} className="group flex items-start gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2.5">
+                        <span className="shrink-0 font-mono text-xs font-bold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/20 rounded-lg px-2 py-1 tabular-nums">
+                          {fmtTime(n.time)}
+                        </span>
+                        <p className="flex-1 text-sm text-white/75 leading-relaxed">{n.note}</p>
+                        <button
+                          onClick={() => setCoachNotes((prev) => prev.filter((_, j) => j !== i))}
+                          className="shrink-0 text-white/30 hover:text-red-300 transition"
+                          aria-label="Usuń notatkę"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Verdict / improvement plan */}
+              <div>
+                <p className="text-xs font-medium text-white/55 mb-2">Werdykt i plan poprawy (uczeń to zobaczy)</p>
+                <textarea
+                  value={coachVerdict}
+                  onChange={(e) => setCoachVerdict(e.target.value)}
+                  rows={4}
+                  placeholder={"np. Mecz pokazuje dwie powtarzające się rzeczy: tracisz dźwięki i grasz zbyt agresywnie na B. Do poprawy:\n1. Słuchawki — nie ruszaj się, gdy słyszysz kroki.\n2. Pracuj nad pre-aim na rogach (notatka o 12:34).\nNastępna runda: skup się na przetrwaniu i trade'ach."}
+                  className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 transition resize-none"
+                />
+              </div>
+
+              {reviewMsg && (
+                <p className={cn('text-sm', reviewMsg.ok ? 'text-emerald-300' : 'text-red-300')}>{reviewMsg.text}</p>
+              )}
+
+              <button
+                onClick={saveReview}
+                disabled={reviewSaving}
+                className="relative inline-flex items-center gap-2 rounded-2xl px-6 h-11 text-sm font-semibold text-white btn-darey disabled:opacity-60 transition"
+              >
+                {reviewSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                {reviewSaving ? 'Zapisywanie…' : 'Zapisz analizę dla ucznia'}
+              </button>
+            </div>
+          ) : (
+            /* Student view */
+            <div className="mt-4 space-y-4">
+              {!match.coachReviewedAt ? (
+                <div className="rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.1] px-5 py-8 text-center">
+                  <Shield className="w-8 h-8 mx-auto mb-3 text-amber-300/50" />
+                  <p className="text-sm text-white/50">Trener jeszcze nie przejrzał tego meczu. Daj mu znać w wiadomości, jeśli chcesz analizę tego demka.</p>
+                </div>
+              ) : (
+                <>
+                  {coachVerdict && (
+                    <div className="rounded-2xl bg-amber-500/[0.06] border border-amber-500/20 px-5 py-4">
+                      <p className="text-[10px] uppercase tracking-widest text-amber-300/70 font-semibold mb-2">Werdykt i plan poprawy</p>
+                      <p className="text-sm text-white/75 leading-relaxed whitespace-pre-line">{coachVerdict}</p>
+                    </div>
+                  )}
+                  {coachNotes.length > 0 && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold mb-2">Kluczowe momenty ({coachNotes.length})</p>
+                      <ul className="space-y-1.5">
+                        {coachNotes.map((n, i) => (
+                          <li key={i} className="flex items-start gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2.5">
+                            <span className="shrink-0 font-mono text-xs font-bold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/20 rounded-lg px-2 py-1 tabular-nums">
+                              {fmtTime(n.time)}
+                            </span>
+                            <p className="flex-1 text-sm text-white/75 leading-relaxed">{n.note}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {!coachVerdict && coachNotes.length === 0 && (
+                    <p className="text-sm text-white/45">Trener oznaczył ten mecz jako przejrzany.</p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ===== PLAYERS TABLE ===== */}
         {details && players.length > 0 && (

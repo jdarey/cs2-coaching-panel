@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
+import { RedirectOverlay } from '@/components/redirect-overlay'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,6 +25,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [redirecting, setRedirecting] = useState(false)
 
   const validateField = (name: string, value: string) => {
     switch (name) {
@@ -93,8 +95,9 @@ export default function RegisterPage() {
       }
 
       toast({ title: 'Konto utworzone', description: 'Pomyślnie zarejestrowano. Logowanie…' })
-      router.push('/login?registered=true')
-      router.refresh()
+      // Premium SaaS transition before landing on the login page.
+      setRedirecting(true)
+      setIsLoading(true)
     } catch {
       setFormError('Wystąpił błąd serwera. Spróbuj ponownie.')
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
@@ -110,6 +113,12 @@ export default function RegisterPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
+      <RedirectOverlay
+        to="/login?registered=true"
+        visible={redirecting}
+        label="Przekierowujemy do logowania"
+        stages={['Tworzenie konta', 'Zabezpieczanie sesji', 'Prawie gotowe']}
+      />
       <AuroraBackground variant="auth" />
 
       <div className="relative z-10 w-full max-w-md animate-rise-in">

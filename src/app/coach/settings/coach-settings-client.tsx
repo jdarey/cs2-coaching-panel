@@ -70,11 +70,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     confirmPassword: '',
   })
   const [notifications, setNotifications] = useState({
-    email: initialSettings?.notificationEmail || false,
     discord: initialSettings?.notificationDiscord || false,
-    sessionReminders: true,
-    newStudents: true,
-    progressUpdates: true,
   })
   const [discordWebhook, setDiscordWebhook] = useState(initialSettings?.discordWebhook || '')
   const [apiKeys, setApiKeys] = useState({
@@ -280,12 +276,10 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     { value: 'appearance', label: 'Wygląd', Icon: Globe },
   ] as const
 
-  const toggleItems = [
-    { key: 'email', label: 'Włącz powiadomienia emailowe', desc: 'Główny przełącznik' },
-    { key: 'sessionReminders', label: 'Przypomnienia o sesjach', desc: '24h i 1h przed sesją' },
-    { key: 'newStudents', label: 'Nowi uczniowie', desc: 'Gdy dodasz nowego ucznia' },
-    { key: 'progressUpdates', label: 'Aktualizacje postępu', desc: 'Gdy uczeń obejrzy film lub zmieni status' },
-  ] as const
+  // Notification toggles that actually work: Discord webhook + API keys.
+  // The old sessionReminders/newStudents/progressUpdates toggles were pure UI
+  // decoration (never persisted, never used) — removed as senseless.
+  const toggleItems = [] as const
 
   const themeOptions: { value: 'light' | 'dark' | 'system'; label: string; desc: string; Icon: typeof Sun }[] = [
     { value: 'light', label: 'Jasny', desc: 'Zawsze jasny', Icon: Sun },
@@ -536,45 +530,19 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {toggleItems.map((item) => {
-                  const on = notifications[item.key as keyof typeof notifications]
-                  return (
-                    <div
-                      key={item.key}
-                      className="flex items-center justify-between gap-4 rounded-2xl p-4 glass-liquid"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-white">{item.label}</p>
-                        <p className="text-sm text-white/45">{item.desc}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleNotificationChange(item.key, !on)}
-                        className={cn(
-                          'relative h-9 w-16 shrink-0 rounded-full transition-all',
-                          on
-                            ? 'btn-darey'
-                            : 'glass-tinted'
-                        )}
-                        aria-pressed={on}
-                        role="switch"
-                        aria-checked={on}
-                      >
-                        <span
-                          className={cn(
-                            'absolute top-1 grid h-7 w-7 place-items-center rounded-full transition-all',
-                            on
-                              ? 'left-8 bg-white text-[#6d28d9]'
-                              : 'left-1 bg-white/80 text-white/40'
-                          )}
-                        >
-                          <span className="h-2 w-2 rounded-full bg-current" />
-                        </span>
-                      </button>
-                    </div>
-                  )
-                })}
+              <div className="rounded-2xl p-5 glass-liquid">
+                <div className="flex items-center gap-4 mb-2">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+                    <Bell className="h-5 w-5 text-[#c4b5fd]" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white">Powiadomienia o aktywności</p>
+                    <p className="text-sm text-white/45">
+                      Trener otrzymuje maila przy nowej wiadomości od ucznia oraz feedback. Konfigurujesz je poniżej —
+                      Discord (webhook) i klucze API do automatycznego ELO.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Discord integration */}

@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchFaceitLegacy, fetchLeetifyProfile, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
+import { fetchBestFaceitElo, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
 import { CoachStudentDetailClient } from './coach-student-detail-client'
 
 export default async function CoachStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -63,14 +63,15 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
     take: 100,
   })
 
-  // Fresh Faceit ELO for the profile header. Prefer the saved Faceit nickname
-  // (Faceit legacy API, keyless); fall back to Leetify by Steam ID.
+  // Fresh Faceit ELO for the profile header. Prefer live Faceit legacy API by
+  // nickname (saved or auto-discovered from Leetify match history); fall back
+  // to Leetify's cached value (can be stale).
   let faceitElo: number | null = null
   let faceitLevel: number | null = null
   let faceitNickname: string | null = student.faceitNickname || null
 
   // Older profiles may only have the vanity URL stored (steamId null) — resolve
-  // it to a numeric steam64 so Leetify can be queried.
+  // it to a numeric steam64 so the lookup can be done.
   let steamId = student.steamId
   if (!steamId && student.steamVanity) {
     const parsed = parseSteamIdentifier(student.steamVanity)
@@ -81,20 +82,18 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
     }
   }
 
-  if (student.faceitNickname) {
-    const legacy = await fetchFaceitLegacy(student.faceitNickname)
-    if (legacy) {
-      faceitElo = legacy.elo
-      faceitLevel = legacy.skillLevel
-      faceitNickname = legacy.nickname || faceitNickname
-    }
-  }
-  if (faceitElo == null && steamId) {
-    const leetify = await fetchLeetifyProfile(steamId)
-    if (leetify) {
-      faceitElo = leetify.faceitElo
-      faceitLevel = leetify.faceitLevel
-    }
+  const best = await fetchBestFaceitElo(steamId, student.faceitNickname)
+  faceitElo = best.elo
+  faceitLevel = best.level
+  faceitNickname = best.nickname || student.faceitNickname
+
+  // Persist an auto-discovered Faceit nickname once, so later page loads use
+  // the saved value and skip the Leetify match-history lookup entirely.
+  if (best.nickname && best.nickname !== student.faceitNickname && best.source === 'faceit') {
+    await prisma.user.update({
+      where: { id: student.id },
+      data: { faceitNickname: best.nickname },
+    })
   }
 
   return (

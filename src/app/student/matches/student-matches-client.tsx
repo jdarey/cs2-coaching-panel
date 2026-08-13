@@ -29,6 +29,7 @@ interface Match {
   accuracyEnemySpotted: number | null
   accuracyHead: number | null
   sprayAccuracy: number | null
+  coachReviewed: boolean
 }
 
 export function StudentMatchesClient() {
@@ -279,6 +280,11 @@ export function StudentMatchesClient() {
                           {m.source === 'PREMIER' && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 bg-sky-500/[0.1] border border-sky-500/25 rounded-full px-2 py-0.5">
                               <Trophy className="w-3 h-3" /> Premier
+                            </span>
+                          )}
+                          {m.coachReviewed && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/[0.1] border border-amber-500/25 rounded-full px-2 py-0.5">
+                              <Sparkles className="w-3 h-3" /> Analiza trenera
                             </span>
                           )}
                           {m.faceitUrl && (

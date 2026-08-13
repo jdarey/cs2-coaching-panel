@@ -10,6 +10,7 @@ const rankSchema = z.object({
   mode: z.enum(['PREMIER', 'FACEIT', 'OTHER']).default('PREMIER'),
   rank: z.string().min(1).max(100),
   elo: z.number().int().optional().nullable(),
+  source: z.enum(['FACEIT_LIVE', 'LEETIFY', 'MANUAL']).default('MANUAL'),
   note: z.string().max(500).optional().nullable(),
   recordedAt: z.string().optional().nullable(),
 })
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
         mode: validated.mode,
         rank: validated.rank,
         elo: validated.elo ?? null,
+        source: validated.source,
         note: validated.note ?? null,
         recordedAt: validated.recordedAt ? new Date(validated.recordedAt) : new Date(),
       },

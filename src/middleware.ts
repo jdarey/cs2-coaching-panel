@@ -131,7 +131,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/student/dashboard', request.url))
     }
     if (pathname.startsWith('/student') && role !== 'STUDENT') {
-      return NextResponse.redirect(new URL('/coach/dashboard', request.url))
+      // Coaches may open a student's match detail page to leave a demo
+      // review (timestamped notes + verdict) — everything else under
+      // /student is student-only.
+      const isMatchDetail = /^\/student\/matches\/[^/]+$/.test(pathname)
+      if (!isMatchDetail) {
+        return NextResponse.redirect(new URL('/coach/dashboard', request.url))
+      }
     }
   }
 

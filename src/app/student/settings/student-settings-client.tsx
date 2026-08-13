@@ -66,12 +66,6 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     newPassword: '',
     confirmPassword: '',
   })
-  const [notifications, setNotifications] = useState({
-    email: true,
-    sessionReminders: true,
-    progressUpdates: true,
-    newVideos: true,
-  })
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | 'system')) || 'system'
   )
@@ -206,11 +200,6 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     }
   }
 
-  const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications((prev) => ({ ...prev, [key]: value }))
-    // In real app, save to database
-  }
-
   const saveGaming = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -267,6 +256,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
             mode: 'PREMIER',
             rank: `${data.premier} Premier`,
             elo: data.premier,
+            source: 'LEETIFY',
             note: 'Pobrano automatycznie (Leetify)',
           }),
         })
@@ -280,7 +270,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
             mode: 'FACEIT',
             rank: data.faceitElo != null ? `${data.faceitElo} ELO` : `Poziom ${data.faceitLevel}`,
             elo: data.faceitElo,
-            note: 'Pobrano automatycznie (Leetify)',
+            source: data.faceitSource === 'faceit' ? 'FACEIT_LIVE' : 'LEETIFY',
+            note: data.faceitSource === 'faceit' ? 'Pobrano automatycznie (Faceit na żywo)' : 'Pobrano automatycznie (Leetify)',
           }),
         })
         if (r.ok) saved++
@@ -621,47 +612,24 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
             {/* ===== NOTIFICATIONS ===== */}
             {activeSection === 'notifications' && (
               <div className="space-y-3" style={{ animationDelay: '0.15s' }}>
-                {[
-                  { key: 'email', label: 'Powiadomienia emailowe', desc: 'Otrzymuj emaile o nowych sesjach i filmach', icon: Mail },
-                  { key: 'sessionReminders', label: 'Przypomnienia o sesjach', desc: 'Przypominaj o nadchodzących sesjach', icon: Bell },
-                  { key: 'progressUpdates', label: 'Aktualizacje postępu', desc: 'Informuj o nowych filmach do oglądania', icon: Send },
-                  { key: 'newVideos', label: 'Nowe filmy', desc: 'Powiadamiaj gdy trener doda nowe filmy', icon: Globe },
-                ].map((item) => {
-                  const Icon = item.icon
-                  const on = notifications[item.key as keyof typeof notifications]
-                  return (
-                    <div
-                      key={item.key}
-                      className="group flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
-                    >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="grid place-items-center w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] text-[#c4b5fd] flex-shrink-0">
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-white truncate">{item.label}</p>
-                          <p className="text-sm text-white/45">{item.desc}</p>
-                        </div>
-                      </div>
-                      <button
-                        role="switch"
-                        aria-checked={on}
-                        onClick={() => handleNotificationChange(item.key, !on)}
-                        className={cn(
-                          'relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-300',
-                          on ? 'btn-darey' : 'bg-white/[0.08] border border-white/[0.08]',
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            'inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300',
-                            on ? 'translate-x-6' : 'translate-x-1',
-                          )}
-                        />
-                      </button>
+                {/* Honest info: these toggles were pure decoration before (never
+                    persisted or used). Email on new messages IS sent automatically. */}
+                <div className="rounded-2xl p-5 bg-white/[0.02] border border-white/[0.06]">
+                  <div className="flex items-start gap-3">
+                    <div className="grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20 flex-shrink-0">
+                      <Mail className="w-4 h-4 text-white" />
                     </div>
-                  )
-                })}
+                    <div className="min-w-0">
+                      <p className="font-medium text-white">Powiadomienia emailowe</p>
+                      <p className="text-sm text-white/45 mt-1 leading-relaxed">
+                        Gdy trener napisze do Ciebie wiadomość, dostajesz maila automatycznie — nie musisz nic włączać.
+                      </p>
+                      <p className="text-xs text-white/35 mt-2">
+                        Przypomnienia o sesjach i nowych filmach znajdziesz na dashboardzie (sekcja „Twój tydzień") oraz w powiadomieniach w panelu.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 

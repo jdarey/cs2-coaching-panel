@@ -7,6 +7,7 @@ import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
 import { CountUp } from '@/components/count-up'
+import { EntranceGate } from '@/components/entrance-gate'
 import {
   Plus, Users, BookOpen, Video, ArrowRight, Activity, MessageSquare, MessageSquareHeart,
   AlertTriangle, Clock3, CalendarClock, CheckCircle2,
@@ -92,7 +93,9 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
 
   return (
     <CoachLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+      <EntranceGate className="max-w-7xl mx-auto px-4 sm:px-6 pb-24" delay={400}>
+        {/* Dashboard content — cards stagger in after the redirect overlay */}
+        <div className="contents">
         <PageHeader
           icon={Activity}
           title="Dashboard trenera"
@@ -384,7 +387,8 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
           <span className="uppercase tracking-[0.25em]">Twoja drużyna, Twój postęp</span>
           <span className="h-px w-12 bg-gradient-to-l from-transparent to-white/15" />
         </div>
-      </div>
+        </div>
+      </EntranceGate>
     </CoachLayout>
   )
 }

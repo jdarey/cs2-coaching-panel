@@ -399,6 +399,7 @@ model RankEntry {
   mode       String   @default("PREMIER") // PREMIER | FACEIT
   rank       String   // e.g. 15000 ELO, Level 7, Global Elite...
   elo        Int?
+  source     String   @default("MANUAL") // FACEIT_LIVE | LEETIFY | MANUAL
   note       String?
   recordedAt DateTime @default(now())
   createdAt  DateTime @default(now())
@@ -434,6 +435,12 @@ model MatchLog {
   accuracyEnemySpotted Float?
   accuracyHead       Float?
   sprayAccuracy      Float?
+
+  // Coach demo review — notes with timestamps + verdict (the "demo review"
+  // product every top CS2 coach sells: full review + detailed notes + plan)
+  coachNotes     Json?    // [{ time: 214, note: "..." }]
+  coachVerdict   String?  // summary + what cost the match + improvement plan
+  coachReviewedAt DateTime?
 
   student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
 

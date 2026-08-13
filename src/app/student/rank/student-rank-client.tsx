@@ -13,8 +13,15 @@ interface RankEntry {
   mode: string
   rank: string
   elo: number | null
+  source: string | null
   note: string | null
   recordedAt: string
+}
+
+const SOURCE_LABELS: Record<string, { label: string; color: string; dot: string }> = {
+  FACEIT_LIVE: { label: 'Faceit na żywo', color: '#ff9a5c', dot: '#ff5500' },
+  LEETIFY: { label: 'Leetify', color: '#a78bfa', dot: '#8b5cf6' },
+  MANUAL: { label: 'Ręcznie', color: '#94a3b8', dot: '#64748b' },
 }
 
 type P = {
@@ -71,7 +78,7 @@ export function StudentRankClient() {
         const save = await fetch('/api/ranks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'PREMIER', rank: `${data.premier} Premier`, elo: data.premier, note: 'Pobrano automatycznie (Leetify)' }),
+          body: JSON.stringify({ mode: 'PREMIER', rank: `${data.premier} Premier`, elo: data.premier, source: 'LEETIFY', note: 'Pobrano automatycznie (Leetify)' }),
         })
         if (save.ok) {
           saved++
@@ -88,7 +95,8 @@ export function StudentRankClient() {
             mode: 'FACEIT',
             rank: data.faceitElo != null ? `${data.faceitElo} ELO` : `Poziom ${data.faceitLevel}`,
             elo: data.faceitElo,
-            note: 'Pobrano automatycznie (Leetify)',
+            source: data.faceitSource === 'faceit' ? 'FACEIT_LIVE' : 'LEETIFY',
+            note: data.faceitSource === 'faceit' ? 'Pobrano automatycznie (Faceit na żywo)' : 'Pobrano automatycznie (Leetify)',
           }),
         })
         if (save.ok) {
@@ -422,6 +430,19 @@ export function StudentRankClient() {
                           {e.mode === 'PREMIER' ? 'Premier' : 'Faceit'} · {formatDate(e.recordedAt)}
                           {e.note ? ` · ${e.note}` : ''}
                         </p>
+                        {e.source && SOURCE_LABELS[e.source] && (
+                          <span
+                            className="mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                            style={{
+                              color: SOURCE_LABELS[e.source].color,
+                              background: `${SOURCE_LABELS[e.source].dot}1a`,
+                              border: `1px solid ${SOURCE_LABELS[e.source].dot}33`,
+                            }}
+                          >
+                            <span className="w-1 h-1 rounded-full" style={{ background: SOURCE_LABELS[e.source].dot }} />
+                            {SOURCE_LABELS[e.source].label}
+                          </span>
+                        )}
                       </div>
                       {e.elo != null && (
                         <span className="font-display text-sm font-bold text-[#c4b5fd]">{e.elo}</span>

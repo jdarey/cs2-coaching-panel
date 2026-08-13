@@ -358,6 +358,29 @@
   .rise-in {
     animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
+
+  /* Dashboard entrance gate — cards stay hidden while the redirect overlay
+     plays, then stagger in with their existing rise-in delays once the
+     overlay has faded. Prevents the entrance from happening unseen behind
+     the transition. */
+  .entrance-gate .rise-in,
+  .entrance-gate .animate-rise-in,
+  .entrance-gate .animate-rise-in-delay-1,
+  .entrance-gate .animate-rise-in-delay-2,
+  .entrance-gate .animate-rise-in-delay-3,
+  .entrance-gate .animate-rise-in-delay-4,
+  .entrance-gate .animate-rise-in-delay-5,
+  .entrance-gate .animate-rise-in-delay-6,
+  .entrance-gate .animate-rise-in-delay-7,
+  .entrance-gate .animate-rise-in-delay-8 {
+    animation: none;
+    opacity: 0;
+  }
+  .entrance-gate.entrance-open .rise-in,
+  .entrance-gate.entrance-open .animate-rise-in {
+    animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    opacity: 1; /* hold final state after the animation ends */
+  }
   .animate-rise-in-delay-1 { animation-delay: 50ms; }
   .animate-rise-in-delay-2 { animation-delay: 100ms; }
   .animate-rise-in-delay-3 { animation-delay: 150ms; }
@@ -486,6 +509,90 @@
   @keyframes fade-in-slow {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== SaaS redirect overlay ===== */
+  .redirect-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .redirect-overlay-enter {
+    opacity: 0;
+    animation: redirect-fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes redirect-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .redirect-exit {
+    animation: redirect-fade-out 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  @keyframes redirect-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  .redirect-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    animation: redirect-ring-pulse 2.4s ease-out infinite;
+  }
+  .redirect-ring:nth-child(2) { animation-delay: 0.6s; }
+  .redirect-ring:nth-child(3) { animation-delay: 1.2s; }
+  @keyframes redirect-ring-pulse {
+    0% { transform: scale(0.55); opacity: 0.9; }
+    70% { transform: scale(1.9); opacity: 0; }
+    100% { transform: scale(1.9); opacity: 0; }
+  }
+  .redirect-logo-spin {
+    animation: redirect-logo-spin 1.6s linear infinite;
+  }
+  @keyframes redirect-logo-spin {
+    to { transform: rotate(360deg); }
+  }
+  .redirect-bar {
+    height: 3px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #a78bfa, #7c3aed, #2de5ca, #a78bfa);
+    background-size: 300% 100%;
+    animation: redirect-bar-fill 1.9s cubic-bezier(0.3, 0.6, 0.4, 1) forwards,
+      redirect-bar-slide 2.2s linear infinite;
+  }
+  @keyframes redirect-bar-fill {
+    0% { width: 0%; }
+    30% { width: 38%; }
+    60% { width: 72%; }
+    85% { width: 92%; }
+    100% { width: 100%; }
+  }
+  @keyframes redirect-bar-slide {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+  .redirect-stage {
+    opacity: 0;
+    transform: translateY(14px);
+    animation: redirect-stage-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes redirect-stage-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .redirect-dots::after {
+    content: "";
+    animation: redirect-dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes redirect-dots {
+    0% { content: ""; }
+    25% { content: "."; }
+    50% { content: ".."; }
+    75% { content: "..."; }
+    100% { content: ""; }
   }
 
   .animate-particles {

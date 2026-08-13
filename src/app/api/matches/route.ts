@@ -22,6 +22,16 @@ function withFaceitUrl(match: any) {
   return { ...match, faceitUrl: null, leetifyUrl }
 }
 
+// Expose whether a coach already reviewed this match (badge in the feed).
+function withReviewFlag(match: any) {
+  return {
+    ...match,
+    coachReviewed: Boolean(match.coachReviewedAt),
+    coachVerdict: undefined,
+    coachNotes: undefined,
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -53,7 +63,7 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         take: 200,
       })
-      return NextResponse.json(matches.map(withFaceitUrl))
+      return NextResponse.json(matches.map(withFaceitUrl).map(withReviewFlag))
     }
 
     // Student: own matches
@@ -62,7 +72,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       take: 200,
     })
-    return NextResponse.json(matches.map(withFaceitUrl))
+    return NextResponse.json(matches.map(withFaceitUrl).map(withReviewFlag))
   } catch (error) {
     console.error('Matches GET error:', error)
     return NextResponse.json({ error: 'Błąd pobierania meczów' }, { status: 500 })

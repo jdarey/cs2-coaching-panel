@@ -6,11 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
+import { RedirectOverlay } from '@/components/redirect-overlay'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Loader2, Mail, Lock, AlertCircle, Eye, EyeOff, GraduationCap, ShieldCheck, ArrowRight, ChevronRight,
+  Loader2, Mail, Lock, AlertCircle, Eye, EyeOff, GraduationCap, ShieldCheck, ChevronRight,
 } from 'lucide-react'
 
 function LoginForm() {
@@ -26,6 +27,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,9 +46,10 @@ function LoginForm() {
         setFormError('Nieprawidłowy email lub hasło')
         toast({ title: 'Błąd logowania', description: 'Nieprawidłowy email lub hasło', variant: 'destructive' })
       } else {
-        toast({ title: 'Zalogowano', description: 'Przekierowujemy…' })
-        router.push(callbackUrl)
-        router.refresh()
+        // Premium SaaS transition: full-screen overlay plays a short animated
+        // sequence, then RedirectOverlay navigates to the dashboard.
+        setRedirecting(true)
+        setIsLoading(true)
       }
     } catch {
       setFormError('Wystąpił błąd. Spróbuj ponownie.')
@@ -58,6 +61,12 @@ function LoginForm() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-14 font-sans text-white overflow-hidden">
+      <RedirectOverlay
+        to={callbackUrl}
+        visible={redirecting}
+        label={callbackUrl === '/' ? 'Otwieramy Twój dashboard' : 'Otwieramy żądaną stronę'}
+        stages={['Uwierzytelnianie', 'Weryfikacja sesji', 'Przygotowanie panelu', 'Prawie gotowe']}
+      />
       <AuroraBackground variant="auth" intensity={0.9} />
 
       {/* Single breathing violet glow — the one focal point */}
