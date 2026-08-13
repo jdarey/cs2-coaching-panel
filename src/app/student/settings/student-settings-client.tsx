@@ -210,7 +210,6 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           steamVanity: gaming.steam.trim() || null,
-          steamId: null,
           faceitNickname: gaming.faceit.trim() || null,
         }),
       })

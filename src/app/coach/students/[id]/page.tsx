@@ -80,6 +80,10 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
     } else if (parsed.type === 'vanity') {
       steamId = await resolveSteamVanity(parsed.value)
     }
+    // Persist resolved steamId so AI analysis / future lookups don't need to re-resolve
+    if (steamId && steamId !== student.steamId) {
+      await prisma.user.update({ where: { id: student.id }, data: { steamId } })
+    }
   }
 
   const best = await fetchBestFaceitElo(steamId, student.faceitNickname)
