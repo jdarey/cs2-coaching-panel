@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, BookOpen, Film } from 'lucide-react'
 import { StudentLayout } from '@/components/student-layout'
@@ -21,10 +22,40 @@ interface PlayerVideo {
 interface StudentVideoPlayerClientProps {
   video: PlayerVideo
   studentName: string
+  initialStartSeconds?: number
+  sessionId?: string | null
 }
 
-export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPlayerClientProps) {
+export function StudentVideoPlayerClient({
+  video,
+  studentName,
+  initialStartSeconds = 0,
+  sessionId = null,
+}: StudentVideoPlayerClientProps) {
   const ytId = getVideoId(video.url)
+
+  // Persist playback position (throttled inside the player): status flips to
+  // WATCHING as soon as the student actually watches, and to WATCHED at the
+  // end (>=95%). positionSeconds is the resume point for the next visit.
+  const handleProgress = useCallback(
+    (info: { position: number; duration: number; ended: boolean }) => {
+      const pct =
+        info.duration > 0 ? Math.min(100, Math.round((info.position / info.duration) * 100)) : 0
+      const status = info.ended || pct >= 95 ? 'WATCHED' : pct > 0 ? 'WATCHING' : 'PENDING'
+      void fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          videoId: video.id,
+          sessionId,
+          status,
+          progress: pct,
+          positionSeconds: Math.floor(info.position),
+        }),
+      }).catch(() => {})
+    },
+    [video.id, sessionId]
+  )
   return (
     <StudentLayout>
       {/* Right-click and selection are blocked around the player so the
@@ -51,6 +82,8 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
                 videoId={ytId}
                 title={video.title}
                 studentName={studentName}
+                initialStartSeconds={initialStartSeconds}
+                onProgressChange={handleProgress}
               />
             ) : video.embedUrl ? (
               <>

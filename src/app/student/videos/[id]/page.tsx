@@ -57,6 +57,15 @@ export default async function StudentVideoPlayerPage({ params }: { params: Promi
     ? `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1`
     : getVideoEmbedUrl(video.url)
 
+  // Progress records are keyed by (user, video, session) — use the first
+  // session the video belongs to so the resume point saved by the player is
+  // exactly the one read back here.
+  const sessionId = video.sessionVideos[0]?.session.id ?? null
+  const savedProgress = await prisma.videoProgress.findFirst({
+    where: { userId, videoId: video.id, sessionId },
+    select: { positionSeconds: true, status: true },
+  })
+
   const studentName = (session.user as any).name || (session.user as any).email || 'Uczeń'
 
   return (
@@ -72,6 +81,8 @@ export default async function StudentVideoPlayerPage({ params }: { params: Promi
         tags: video.tags.map((vt) => ({ name: vt.tag.name, color: vt.tag.color })),
       }}
       studentName={studentName}
+      initialStartSeconds={savedProgress?.positionSeconds ?? 0}
+      sessionId={sessionId}
     />
   )
 }

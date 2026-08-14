@@ -7,6 +7,11 @@ interface YoutubeCustomPlayerProps {
   videoId: string
   title?: string
   studentName?: string
+  // Resume point (seconds) — the player starts here instead of 0.
+  initialStartSeconds?: number
+  // Called while watching (throttled to ~5s), on pause, on video end and on
+  // unmount, so the page can persist the resume point to the server.
+  onProgressChange?: (info: { position: number; duration: number; ended: boolean }) => void
 }
 
 const QUALITY_LABELS: Record<string, string> = {
@@ -27,7 +32,13 @@ const QUALITY_LABELS: Record<string, string> = {
 const DEFAULT_VQ = 'hd2160'
 const QUALITY_ORDER = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
 
-export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'Uczeń' }: YoutubeCustomPlayerProps) {
+export function YoutubeCustomPlayer({
+  videoId,
+  title = 'Wideo',
+  studentName = 'Uczeń',
+  initialStartSeconds = 0,
+  onProgressChange,
+}: YoutubeCustomPlayerProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const playerRef     = useRef<any>(null)
 
@@ -78,12 +89,24 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
   const reinitVqRef     = useRef(DEFAULT_VQ)
   const reinitActiveRef = useRef(false)
 
-  // Reset on videoId change
+  // Progress reporting (resume point). The latest position lives in a ref so
+  // the pause/end/unmount flush always sends the freshest value, and the
+  // callback ref avoids stale closures inside intervals and listeners.
+  const onProgressRef = useRef(onProgressChange)
+  useEffect(() => { onProgressRef.current = onProgressChange }, [onProgressChange])
+  const latestPositionRef = useRef(0)
+  const latestDurationRef = useRef(0)
+  const lastSaveAtRef     = useRef(0)
+
+  // Reset on videoId change — resume from the persisted position.
   useEffect(() => {
     isFirstPlay.current  = true
-    reinitStartRef.current = 0
+    reinitStartRef.current = initialStartSeconds ?? 0
     reinitPlayRef.current  = false
     reinitVqRef.current    = DEFAULT_VQ
+    latestPositionRef.current = initialStartSeconds ?? 0
+    latestDurationRef.current = 0
+    lastSaveAtRef.current     = 0
     setShowThumbnail(true)
     setThumbnailFading(false)
     setHasPlayed(false)
@@ -178,7 +201,16 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       events: {
         onReady: (event: any) => {
           setIsReady(true)
-          setDuration(event.target.getDuration() || 0)
+          const readyDur = event.target.getDuration?.() || 0
+          setDuration(readyDur)
+          if (readyDur > 0) latestDurationRef.current = readyDur
+          // Safety: if the resume point is beyond the real duration (e.g. a
+          // different edit of the video), restart from 0 instead of erroring.
+          if (readyDur > 0 && reinitStartRef.current > readyDur - 1) {
+            reinitStartRef.current = 0
+            latestPositionRef.current = 0
+            try { event.target.seekTo(0) } catch (_) {}
+          }
           setVolume(event.target.getVolume())
           setIsMuted(event.target.isMuted())
 
@@ -245,11 +277,23 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
             }, 600)
           } else if (state === 2) {
             setIsPlaying(false); setIsBuffering(false)
+            // Flush the resume point on pause (user stops watching).
+            onProgressRef.current?.({
+              position: latestPositionRef.current,
+              duration: latestDurationRef.current,
+              ended: false,
+            })
           } else if (state === 3) {
             setIsBuffering(true)
           } else if (state === 0) {
             setIsPlaying(false); setIsBuffering(false)
             setIsEnded(true); setShowControls(true)
+            // Finished — persist 100% so the library marks it as watched.
+            onProgressRef.current?.({
+              position: latestDurationRef.current || latestPositionRef.current,
+              duration: latestDurationRef.current,
+              ended: true,
+            })
           }
         },
       },
@@ -264,17 +308,29 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isApiReady, videoId, playerEpoch])
 
-  // 3. Time polling
+  // 3. Time polling — keeps the seek bar in sync AND reports progress to the
+  // parent (throttled to ~5s) so the resume point is persisted while watching.
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isPlaying && playerRef.current?.getCurrentTime) {
       interval = setInterval(() => {
         if (!playerRef.current?.getCurrentTime) return
-        setCurrentTime(playerRef.current.getCurrentTime())
-        if (duration === 0) setDuration(playerRef.current.getDuration() || 0)
+        const pos = playerRef.current.getCurrentTime()
+        const dur = playerRef.current.getDuration?.() || 0
+        latestPositionRef.current = pos
+        if (dur > 0) latestDurationRef.current = dur
+        setCurrentTime(pos)
+        if (duration === 0 && dur > 0) setDuration(dur)
+        // Throttled save: once every ~5s while actively watching.
+        const now = Date.now()
+        if (now - lastSaveAtRef.current >= 5000) {
+          lastSaveAtRef.current = now
+          onProgressRef.current?.({ position: pos, duration: dur || latestDurationRef.current, ended: false })
+        }
       }, 250)
     }
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, duration])
 
   // 4b. Auto mode: surface the ACTUAL quality YouTube's ABR settled on once
@@ -320,6 +376,19 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
     const onChange = () => setIsFullscreen(document.fullscreenElement === containerRef.current)
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  // 5b. Unmount flush — persist the latest position when leaving the page.
+  useEffect(() => {
+    return () => {
+      if (latestPositionRef.current > 0 && latestDurationRef.current > 0) {
+        onProgressRef.current?.({
+          position: latestPositionRef.current,
+          duration: latestDurationRef.current,
+          ended: false,
+        })
+      }
+    }
   }, [])
 
   // 6. Close quality menu on outside click
@@ -416,6 +485,30 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
 
   const mountId = playerId.current
 
+  // Hyde-style UI lockdown at the iframe level: the embed is sealed from
+  // every kind of input so YouTube can never render its own chrome (title bar,
+  // center play button, share / "Watch on YouTube", watermark).
+  //   - pointer-events:none (below) kills ALL mouse input to the iframe.
+  //   - Keyboard focus is the only remaining input path. A cross-origin
+  //     iframe does NOT dispatch focus/focusin events into the parent
+  //     document, so we can't react to a focus handler — instead a light poll
+  //     watches document.activeElement and blurs the iframe the instant it
+  //     gains focus. YouTube stays in the inert "chromeless" state forever:
+  //     no title bar, no center play button, no watermark on pause.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // YouTube sometimes injects the iframe as a sibling of the mount div
+      // (React re-creates the mount node mid-injection), so search the whole
+      // player container instead of the mount.
+      const iframe = containerRef.current?.querySelector('iframe')
+      if (iframe && document.activeElement === iframe) {
+        ;(iframe as HTMLElement).blur()
+      }
+    }, 250)
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId, playerEpoch])
+
   return (
     <div
       ref={containerRef}
@@ -431,6 +524,7 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" style={{ transform: `scale(${1 / canvasScale})`, transformOrigin: 'top left', width: `${canvasScale * 100}%`, height: `${canvasScale * 100}%` }}>
         <div
           id={mountId}
+          tabIndex={-1}
           className="absolute inset-0"
           style={{ width: '100%', height: '100%' }}
         />
@@ -495,6 +589,14 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
               <Play className="w-8 h-8 fill-current ml-1.5" />
             </div>
           </div>
+          {initialStartSeconds > 0 && !hasPlayed && (
+            <div className="absolute top-4 left-4 z-10">
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/20 backdrop-blur-md shadow-lg">
+                <RotateCcw className="w-3 h-3 text-[#a78bfa]" />
+                Wznawiasz od {formatTime(initialStartSeconds)}
+              </span>
+            </div>
+          )}
           {title && (
             <div className="absolute bottom-16 left-5 right-5">
               <p className="text-white font-semibold text-sm line-clamp-2 drop-shadow-lg">{title}</p>

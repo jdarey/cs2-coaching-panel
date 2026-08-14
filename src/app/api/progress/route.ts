@@ -93,6 +93,12 @@ export async function POST(request: NextRequest) {
       note: validated.note,
     }
 
+    // Resume point in seconds — only overwrite when the client sends one, so
+    // status-only updates (e.g. manual dialogs) never wipe the saved position.
+    if (validated.positionSeconds != null) {
+      updateData.positionSeconds = validated.positionSeconds
+    }
+
     if (validated.status === 'WATCHED' || validated.status === 'IMPLEMENTED') {
       updateData.watchedAt = new Date()
     }

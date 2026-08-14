@@ -448,6 +448,9 @@ model VideoProgress {
   status    VideoStatus @default(PENDING)
   watchedAt DateTime?
   progress  Float       @default(0) // 0-100%
+  // Seconds where the student last stopped — the in-app player resumes from
+  // this position instead of the beginning.
+  positionSeconds Float?
   note      String?     // student's personal note
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt

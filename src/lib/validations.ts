@@ -68,6 +68,8 @@ export const videoProgressSchema = z.object({
   sessionId: z.string().optional(),
   status: z.enum(['PENDING', 'WATCHING', 'WATCHED', 'IMPLEMENTED']),
   progress: z.number().min(0).max(100).default(0),
+  // Seconds where the student last stopped — resume point for the player.
+  positionSeconds: z.number().min(0).optional(),
   note: z.string().max(2000).optional(),
 })
 
