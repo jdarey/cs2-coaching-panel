@@ -503,16 +503,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         </div>
       )}
 
-      {/* 8. Center play button (post-thumbnail) */}
-      {!showThumbnail && (!isPlaying || isEnded) && !isReinitialising && (
-        <button
-          onClick={togglePlay}
-          className="absolute z-50 w-16 h-16 rounded-full bg-black/60 border border-white/20 text-[#a78bfa] flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 backdrop-blur-md shadow-2xl shadow-black/80 pointer-events-auto hover:bg-[#a78bfa]/10 hover:border-[#a78bfa]/30"
-          title="Odtwórz"
-        >
-          {isEnded ? <RotateCcw className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-1" />}
-        </button>
-      )}
+      {/* 8. No center button after the thumbnail — the whole video surface
+           stays clean and clickable (click = play/pause). The thumbnail and
+           end screen keep their own actions. */}
 
       {/* 9. Custom end screen — covers the YouTube endscreen, last frame
            slightly visible behind the overlay */}
@@ -532,9 +525,9 @@ export function YoutubeCustomPlayer({ videoId, title = 'Wideo', studentName = 'U
         </div>
       )}
 
-      {/* 10. Controls bar */}
+      {/* 10. Controls bar — slim, subtle; no big black slab */}
       <div
-        className={`absolute bottom-0 left-0 right-0 z-30 px-4 pb-4 pt-10 bg-gradient-to-t from-black via-black/95 to-black/60 transition-all duration-300 ease-out flex flex-col gap-3 pointer-events-auto select-none ${
+        className={`absolute bottom-0 left-0 right-0 z-30 px-4 pb-2.5 pt-2 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-all duration-300 ease-out flex flex-col gap-1.5 pointer-events-auto select-none ${
           showControls || !isPlaying || isEnded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
         } ${showThumbnail || isReinitialising ? 'opacity-0 pointer-events-none' : ''}`}
       >
