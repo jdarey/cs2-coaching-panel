@@ -93,9 +93,11 @@ export default async function StudentPathsPage() {
     modules: p.modules.map((m) => ({
       id: m.id,
       title: m.title,
+      description: m.description,
       order: m.order,
       videos: m.videos.map((v) => ({
         id: v.id,
+        description: v.description,
         video: { id: v.video.id, title: v.video.title, thumbnail: v.video.thumbnail, duration: v.video.duration, url: v.video.url, description: v.video.description },
         status: statusByVideo[v.videoId] ?? 'PENDING',
       })),

@@ -6,9 +6,13 @@ import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
-const videoSchema = z.object({ videoId: z.string().min(1) })
+const videoSchema = z.object({
+  videoId: z.string().min(1),
+  description: z.string().max(2000).optional().nullable(),
+})
 const moduleSchema = z.object({
   title: z.string().min(1).max(120),
+  description: z.string().max(2000).optional().nullable(),
   videos: z.array(videoSchema).default([]),
 })
 const updateSchema = z.object({
@@ -19,6 +23,7 @@ const updateSchema = z.object({
 })
 
 const videoSelect = { id: true, title: true, thumbnail: true, duration: true } as const
+const moduleVideoSelect = { id: true, videoId: true, description: true, order: true, video: { select: videoSelect } } as const
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -41,7 +46,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     include: {
       modules: {
         orderBy: { order: 'asc' },
-        include: { videos: { orderBy: { order: 'asc' }, include: { video: { select: videoSelect } } } },
+        include: { videos: { orderBy: { order: 'asc' }, select: moduleVideoSelect } },
       },
     },
   })
@@ -99,9 +104,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
               modules: {
                 create: modules.map((m, mi) => ({
                   title: m.title.trim(),
+                  description: m.description?.trim() || null,
                   order: mi,
                   videos: {
-                    create: m.videos.map((v, vi) => ({ videoId: v.videoId, order: vi })),
+                    create: m.videos.map((v, vi) => ({ videoId: v.videoId, order: vi, description: v.description?.trim() || null })),
                   },
                 })),
               },
@@ -111,7 +117,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       include: {
         modules: {
           orderBy: { order: 'asc' },
-          include: { videos: { orderBy: { order: 'asc' }, include: { video: { select: videoSelect } } } },
+          include: { videos: { orderBy: { order: 'asc' }, select: moduleVideoSelect } },
         },
       },
     })

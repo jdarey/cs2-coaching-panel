@@ -11,11 +11,13 @@ import { useToast } from '@/hooks/use-toast'
 
 interface PathVideo {
   videoId: string
+  description?: string | null
   video: { id: string; title: string; thumbnail: string | null }
 }
 
 interface PathModule {
   title: string
+  description?: string | null
   videos: PathVideo[]
 }
 
@@ -88,7 +90,7 @@ export function CoachPathsClient() {
       title: p.title,
       description: p.description ?? '',
       isActive: p.isActive,
-      modules: p.modules.map((m) => ({ title: m.title, videos: [...m.videos] })),
+      modules: p.modules.map((m) => ({ title: m.title, description: m.description ?? '', videos: [...m.videos] })),
     })
     setPickerQuery({})
     setQuickUrl({})
@@ -96,11 +98,26 @@ export function CoachPathsClient() {
   }
 
   const addModule = () => {
-    setDraft((d) => ({ ...d, modules: [...d.modules, { title: '', videos: [] }] }))
+    setDraft((d) => ({ ...d, modules: [...d.modules, { title: '', description: '', videos: [] }] }))
   }
 
   const updateModuleTitle = (mi: number, title: string) => {
     setDraft((d) => ({ ...d, modules: d.modules.map((m, i) => (i === mi ? { ...m, title } : m)) }))
+  }
+
+  const updateModuleDescription = (mi: number, description: string) => {
+    setDraft((d) => ({ ...d, modules: d.modules.map((m, i) => (i === mi ? { ...m, description } : m)) }))
+  }
+
+  const updateVideoDescription = (mi: number, vi: number, description: string) => {
+    setDraft((d) => ({
+      ...d,
+      modules: d.modules.map((m, i) =>
+        i === mi
+          ? { ...m, videos: m.videos.map((v, j) => (j === vi ? { ...v, description } : v)) }
+          : m,
+      ),
+    }))
   }
 
   const moveModule = (mi: number, dir: -1 | 1) => {
@@ -199,7 +216,8 @@ export function CoachPathsClient() {
       .filter((m) => m.title.trim() || m.videos.length > 0)
       .map((m) => ({
         title: m.title.trim() || 'Moduł',
-        videos: m.videos.map((v) => ({ videoId: v.videoId })),
+        description: m.description?.trim() || null,
+        videos: m.videos.map((v) => ({ videoId: v.videoId, description: v.description?.trim() || null })),
       }))
     setSaving(true)
     try {
@@ -259,7 +277,7 @@ export function CoachPathsClient() {
         title: `${p.title} (kopia)`,
         description: p.description,
         isActive: p.isActive,
-        modules: p.modules.map((m) => ({ title: m.title, videos: m.videos.map((v) => ({ videoId: v.videoId })) })),
+        modules: p.modules.map((m) => ({ title: m.title, description: m.description, videos: m.videos.map((v) => ({ videoId: v.videoId, description: v.description })) })),
       }),
     })
     if (res.ok) {
@@ -355,8 +373,7 @@ export function CoachPathsClient() {
                           onChange={(e) => updateModuleTitle(mi, e.target.value)}
                           placeholder={`Moduł ${mi + 1} (np. Pre-aim i crosshair placement)`}
                           className="flex-1 min-w-0 rounded-lg px-3 py-2 text-sm bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
-                        />
-                        <div className="flex items-center gap-0.5">
+                        />                        <div className="flex items-center gap-0.5">
                           <button onClick={() => moveModule(mi, -1)} disabled={mi === 0} className="grid place-items-center w-7 h-7 rounded-lg text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition" title="Przesuń moduł w górę">
                             <ChevronUp className="w-3.5 h-3.5" />
                           </button>
@@ -368,28 +385,44 @@ export function CoachPathsClient() {
                           </button>
                         </div>
                       </div>
+                      <textarea
+                        value={m.description ?? ''}
+                        onChange={(e) => updateModuleDescription(mi, e.target.value)}
+                        placeholder="Co uczeń osiągnie w tym module? Wskazówki, kolejność pracy… (opcjonalnie)"
+                        rows={2}
+                        className="w-full rounded-lg px-3 py-2 text-xs leading-relaxed bg-white/[0.02] border border-white/[0.06] text-white/70 placeholder:text-white/25 focus:outline-none focus:border-[#2de5ca]/40 resize-none transition-colors"
+                      />
 
                       <div className="space-y-2">
                         {m.videos.map((v, vi) => (
-                          <div key={v.videoId} className="flex items-center gap-2 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2">
-                            {v.video.thumbnail ? (
-                              <img src={v.video.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
-                            ) : (
-                              <span className="grid place-items-center w-10 h-6 rounded bg-white/[0.04] shrink-0">
-                                <Film className="w-3 h-3 text-white/30" />
-                              </span>
-                            )}
-                            <span className="flex-1 min-w-0 text-sm text-white/75 truncate">{v.video.title}</span>
-                            <span className="text-[10px] text-white/30 tabular-nums">#{vi + 1}</span>
-                            <button onClick={() => moveVideo(mi, vi, -1)} disabled={vi === 0} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
-                              <ChevronUp className="w-3.5 h-3.5" />
-                            </button>
-                            <button onClick={() => moveVideo(mi, vi, 1)} disabled={vi === m.videos.length - 1} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
-                              <ChevronDown className="w-3.5 h-3.5" />
-                            </button>
-                            <button onClick={() => removeVideo(mi, vi)} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-red-300 hover:bg-red-500/10 transition">
-                              <X className="w-3.5 h-3.5" />
-                            </button>
+                          <div key={v.videoId} className="rounded-lg bg-white/[0.03] border border-white/[0.06] overflow-hidden">
+                            <div className="flex items-center gap-2 px-3 py-2">
+                              {v.video.thumbnail ? (
+                                <img src={v.video.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
+                              ) : (
+                                <span className="grid place-items-center w-10 h-6 rounded bg-white/[0.04] shrink-0">
+                                  <Film className="w-3 h-3 text-white/30" />
+                                </span>
+                              )}
+                              <span className="flex-1 min-w-0 text-sm text-white/75 truncate">{v.video.title}</span>
+                              <span className="text-[10px] text-white/30 tabular-nums">#{vi + 1}</span>
+                              <button onClick={() => moveVideo(mi, vi, -1)} disabled={vi === 0} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button onClick={() => moveVideo(mi, vi, 1)} disabled={vi === m.videos.length - 1} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </button>
+                              <button onClick={() => removeVideo(mi, vi)} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-red-300 hover:bg-red-500/10 transition">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <textarea
+                              value={v.description ?? ''}
+                              onChange={(e) => updateVideoDescription(mi, vi, e.target.value)}
+                              placeholder="Notatka do tej lekcji — na co zwrócić uwagę, zadanie do zrobienia po filmie…"
+                              rows={1}
+                              className="w-full px-3 py-1.5 text-xs leading-relaxed bg-white/[0.02] border-t border-white/[0.05] text-white/60 placeholder:text-white/25 focus:outline-none focus:bg-white/[0.03] resize-none transition-colors"
+                            />
                           </div>
                         ))}
 

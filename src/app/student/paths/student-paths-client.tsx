@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 
 interface PathVideo {
   id: string
+  description: string | null
   video: {
     id: string
     title: string
@@ -40,6 +41,7 @@ interface PathVideo {
 interface PathModule {
   id: string
   title: string
+  description: string | null
   order: number
   videos: PathVideo[]
 }
@@ -256,6 +258,9 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                         </span>
                       ) : null}
                     </p>
+                    {nextLesson.video.description && (
+                      <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[#8cffef]/70 max-w-2xl">{nextLesson.video.description}</p>
+                    )}
                   </div>
                   <Link
                     href={`/student/videos/${nextLesson.video.video.id}`}
@@ -390,6 +395,9 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                                     {modDone}/{m.videos.length} lekcji
                                     {modPct > 0 && <span className="ml-2 text-white/35">{modPct}%</span>}
                                   </p>
+                                  {m.description && (
+                                    <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-white/45">{m.description}</p>
+                                  )}
                                 </div>
                                 {allDone(m.videos) && (
                                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 h-5 text-[10px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/25">
@@ -447,7 +455,7 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                                           <Film className="w-3.5 h-3.5 text-white/30" />
                                         </span>
                                       )}
-                                      <span className={cn('flex-1 min-w-0', isDone ? 'text-white/40 line-through decoration-white/20' : 'text-white/80')}>
+                                      <span className={cn('min-w-0 flex-1', isDone ? 'text-white/40 line-through decoration-white/20' : 'text-white/80')}>
                                         <span className="block truncate text-sm group-hover:text-white transition-colors">{v.video.title}</span>
                                         <span className="mt-0.5 flex items-center gap-1 text-[10px]">
                                           {isTextLesson(v) ? (
@@ -460,6 +468,9 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                                             </span>
                                           ) : null}
                                         </span>
+                                        {v.description && (
+                                          <span className="mt-1 block line-clamp-2 text-[11px] leading-relaxed text-white/40">{v.description}</span>
+                                        )}
                                       </span>
                                       {isNext && (
                                         <span className="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 h-6 text-[10px] font-bold text-[#8cffef] bg-[#2de5ca]/15 border border-[#2de5ca]/30">
