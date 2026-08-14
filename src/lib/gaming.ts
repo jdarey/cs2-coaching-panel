@@ -106,19 +106,84 @@ export async function resolveSteamIdentifier(identifier: string): Promise<string
   return null
 }
 
-// Resolve a Steam vanity name to steam64 using the public XML profile page.
-// No API key required. Returns null if the vanity doesn't exist or is private.
+// Resolve the CURRENT Steam identifier for a user row, preferring a fresh
+// resolution of the saved vanity over a possibly stale stored steam64.
+//
+// Why: the stored `steamId` can point at the WRONG account — e.g. it was saved
+// before the student changed their link, or (in seeds/tests) it was copied from
+// the coach's own profile. Always re-resolving the vanity the student actually
+// entered guarantees the AI analysis / match sync / profile page all look at
+// the right person. Falls back to the stored steam64 when the vanity is missing
+// or can't be resolved (transient network hiccup) rather than erroring out.
+// When a fresh resolution differs from the stored ID it is persisted, so the
+// DB self-heals.
+export async function resolveStudentSteamId(
+  student: { steamId: string | null; steamVanity: string | null },
+  persist: (steamId: string) => Promise<void> = async () => {},
+): Promise<string | null> {
+  const { steamId, steamVanity } = student
+
+  if (steamVanity) {
+    const parsed = parseSteamIdentifier(steamVanity)
+    if (parsed.type === 'steam64') {
+      // Numeric profile URL — authoritative, no network needed.
+      if (parsed.value !== steamId) await persist(parsed.value)
+      return parsed.value
+    }
+    if (parsed.type === 'vanity') {
+      const resolved = await resolveSteamVanity(parsed.value)
+      if (resolved) {
+        if (resolved !== steamId) await persist(resolved)
+        return resolved
+      }
+    } else if (parsed.type === 'short') {
+      const resolved = await resolveSteamShortLink(parsed.value)
+      if (resolved) {
+        if (resolved !== steamId) await persist(resolved)
+        return resolved
+      }
+    }
+  }
+
+  return steamId
+}
+
+// Resolve a Steam vanity name to steam64. No API key required.
+//
+// Strategy (most robust first):
+//  1. Follow the redirect chain of https://steamcommunity.com/id/{vanity} and
+//     read the steam64 straight out of the final URL (profiles/7656119… or the
+//     new /user/7656119… format). This works even when the profile is public
+//     but the XML endpoint is rate-limited.
+//  2. Fall back to the XML profile page (?xml=1) when the redirect doesn't
+//     expose a numeric ID.
+// Returns null if the vanity doesn't exist or can't be resolved.
 export async function resolveSteamVanity(vanity: string): Promise<string | null> {
   try {
-    const url = `${STEAM_XML}/id/${encodeURIComponent(vanity)}?xml=1`
-    const res = await fetch(url, {
+    // 1) Redirect-follow: steamcommunity.com redirects /id/{vanity} to the
+    //    canonical /profiles/{steam64} (or the new /user/{steam64}) URL.
+    const res = await fetch(`${STEAM_XML}/id/${encodeURIComponent(vanity)}`, {
+      redirect: 'follow',
       headers: { 'User-Agent': 'CS2-Coaching-Panel/1.0' },
       cache: 'no-store',
     })
-    if (!res.ok) return null
-    const xml = await res.text()
-    const match = xml.match(/<steamID64>\s*(\d{17})\s*<\/steamID64>/)
-    return match ? match[1] : null
+    const finalUrl = res.url || ''
+    const fromRedirect = finalUrl.match(/\/(?:profiles|user)\/(\d{17})/)
+    if (fromRedirect) return fromRedirect[1]
+
+    // 2) XML fallback (some public profiles return the vanity page directly
+    //    without redirecting, e.g. brand-new custom URLs).
+    const xmlUrl = `${STEAM_XML}/id/${encodeURIComponent(vanity)}?xml=1`
+    const xmlRes = await fetch(xmlUrl, {
+      headers: { 'User-Agent': 'CS2-Coaching-Panel/1.0' },
+      cache: 'no-store',
+    })
+    if (xmlRes.ok) {
+      const xml = await xmlRes.text()
+      const match = xml.match(/<steamID64>\s*(\d{17})\s*<\/steamID64>/)
+      if (match) return match[1]
+    }
+    return null
   } catch {
     return null
   }

@@ -26,6 +26,9 @@ import {
   TrendingUp,
   Send,
   Gift,
+  MessageSquare,
+  StickyNote,
+  Calendar,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
@@ -40,6 +43,8 @@ interface Student {
   createdAt: string
   _count: { sessionsAsStudent: number; videoProgress: number }
   progressStats: { total: number; pending: number; watching: number; watched: number; implemented: number }
+  note?: { id: string; content: string; updatedAt: string } | null
+  lastSessionAt?: string | null
 }
 
 interface CoachStudentsClientProps {
@@ -373,6 +378,13 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     {/* Right: action menu — row of glass ghost icons */}
                     <div className="flex items-center gap-2 shrink-0">
                       <Link
+                        href={`/coach/messages?student=${student.id}`}
+                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-emerald-500/[0.08] hover:bg-emerald-500/15 hover:border-emerald-400/30 transition-all duration-300"
+                        title="Napisz wiadomość"
+                      >
+                        <MessageSquare className="w-4 h-4 text-emerald-300 group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />
+                      </Link>
+                      <Link
                         href={`/coach/students/${student.id}`}
                         className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-violet-500/[0.08] hover:bg-violet-500/15 hover:border-[#a78bfa]/30 transition-all duration-300"
                         title="Zobacz szczegóły"
@@ -426,6 +438,22 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                       <span className="text-white/35">Sesje:</span>
                       <span className="text-white/65 font-medium">{student._count.sessionsAsStudent}</span>
                     </span>
+                    {student.lastSessionAt && (
+                      <span className="inline-flex items-center gap-1.5" title="Ostatnia sesja">
+                        <Calendar className="w-3.5 h-3.5 text-[#a78bfa]" />
+                        <span className="text-white/35">Ostatnia sesja:</span>
+                        <span className="text-white/65 font-medium">{formatDate(student.lastSessionAt)}</span>
+                      </span>
+                    )}
+                    {student.note && (
+                      <span
+                        className="inline-flex items-center gap-1.5 text-[#c4b5fd]/80"
+                        title={`Prywatna notatka (${formatDate(student.note.updatedAt)}): ${student.note.content.slice(0, 80)}${student.note.content.length > 80 ? '…' : ''}`}
+                      >
+                        <StickyNote className="w-3.5 h-3.5" />
+                        <span className="font-medium">Notatka</span>
+                      </span>
+                    )}
                     {student.progressStats.total > 0 && (
                       <div className="flex items-center gap-2.5 ml-auto flex-wrap">
                         <span className="inline-flex items-center gap-1.5 text-xs text-white/55">

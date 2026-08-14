@@ -17,7 +17,7 @@ export default async function CoachDemoReviewPage({ params }: { params: Promise<
   const match = await prisma.matchLog.findUnique({
     where: { id },
     include: {
-      student: { select: { id: true, name: true, email: true, avatarUrl: true, steamId: true } },
+      student: { select: { id: true, name: true, email: true, avatarUrl: true, steamId: true, coachId: true } },
     },
   })
 

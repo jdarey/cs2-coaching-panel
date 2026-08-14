@@ -23,6 +23,16 @@ export default async function CoachStudentsPage() {
       avatarUrl: true,
       createdAt: true,
       _count: { select: { sessionsAsStudent: true, videoProgress: true } },
+      studentCoachNotes: {
+        take: 1,
+        orderBy: { updatedAt: 'desc' },
+        select: { id: true, content: true, updatedAt: true },
+      },
+      sessionsAsStudent: {
+        take: 1,
+        orderBy: { scheduledAt: 'desc' },
+        select: { id: true, scheduledAt: true, createdAt: true },
+      },
     },
   })
 
@@ -42,7 +52,17 @@ export default async function CoachStudentsPage() {
         implemented: progress.filter((p) => p.status === 'IMPLEMENTED').length,
       }
 
-      return { ...student, progressStats: stats, createdAt: student.createdAt.toISOString() }
+      const lastSession = student.sessionsAsStudent[0]
+      const lastSessionAt = lastSession?.scheduledAt ?? lastSession?.createdAt ?? null
+      const { sessionsAsStudent: _ss, studentCoachNotes, ...rest } = student
+
+      return {
+        ...rest,
+        progressStats: stats,
+        note: studentCoachNotes[0] ? { ...studentCoachNotes[0], updatedAt: studentCoachNotes[0].updatedAt.toISOString() } : null,
+        lastSessionAt: lastSessionAt ? new Date(lastSessionAt).toISOString() : null,
+        createdAt: student.createdAt.toISOString(),
+      }
     })
   )
 

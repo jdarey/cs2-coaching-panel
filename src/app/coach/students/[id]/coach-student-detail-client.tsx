@@ -22,6 +22,9 @@ import {
   TrendingDown,
   ListChecks,
   Sparkles,
+  StickyNote,
+  Bell,
+  Send,
 } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -124,6 +127,17 @@ export function CoachStudentDetailClient({
   const [creatingRoutine, setCreatingRoutine] = useState(false)
   const [routineCreated, setRoutineCreated] = useState<string | null>(null)
 
+  // Coach private note on this student
+  const [note, setNote] = useState<{ id: string; content: string; updatedAt: string } | null>(null)
+  const [noteDraft, setNoteDraft] = useState('')
+  const [noteLoading, setNoteLoading] = useState(true)
+  const [noteSaving, setNoteSaving] = useState(false)
+  const [noteSavedAt, setNoteSavedAt] = useState<string | null>(null)
+
+  // Email reminder
+  const [reminding, setReminding] = useState(false)
+  const [reminded, setReminded] = useState(false)
+
   const loadAiAnalysis = useCallback(async () => {
     setAiLoading(true)
     setAiError(null)
@@ -146,6 +160,59 @@ export function CoachStudentDetailClient({
   useEffect(() => {
     loadAiAnalysis()
   }, [loadAiAnalysis])
+
+  const loadNote = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/coach/students/${student.id}/note`)
+      if (res.ok) {
+        const data = await res.json()
+        setNote(data.note)
+        setNoteDraft(data.note?.content ?? '')
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setNoteLoading(false)
+    }
+  }, [student.id])
+
+  useEffect(() => {
+    loadNote()
+  }, [loadNote])
+
+  const saveNote = async () => {
+    setNoteSaving(true)
+    try {
+      const res = await fetch(`/api/coach/students/${student.id}/note`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: noteDraft }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setNote(data.note)
+        setNoteDraft(data.note?.content ?? '')
+        setNoteSavedAt(data.note ? new Date().toISOString() : null)
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setNoteSaving(false)
+    }
+  }
+
+  const sendReminder = async () => {
+    if (reminding || reminded) return
+    setReminding(true)
+    try {
+      const res = await fetch(`/api/coach/students/${student.id}/remind`, { method: 'POST' })
+      if (res.ok) setReminded(true)
+    } catch {
+      /* ignore */
+    } finally {
+      setReminding(false)
+    }
+  }
 
   const createSuggestedRoutine = async () => {
     if (!aiData?.suggestedRoutine) return
@@ -372,6 +439,22 @@ export function CoachStudentDetailClient({
             </div>
 
             <div className="flex flex-wrap gap-2 md:ml-auto md:justify-end items-center">
+              <Link
+                href={`/coach/messages?student=${student.id}`}
+                className="inline-flex items-center gap-1.5 rounded-full px-4 h-10 text-sm font-semibold text-white/75 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#2de5ca]/30 hover:bg-[#2de5ca]/[0.06] transition-all duration-300"
+              >
+                <MessageSquare className="w-4 h-4 text-[#2de5ca]" />
+                Wiadomość
+              </Link>
+              <button
+                onClick={sendReminder}
+                disabled={reminding || reminded}
+                title="Wyślij uczniowi przypomnienie e-mail"
+                className="inline-flex items-center gap-1.5 rounded-full px-4 h-10 text-sm font-semibold text-white/75 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#fbbf24]/30 hover:bg-[#fbbf24]/[0.06] transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white/[0.04] disabled:hover:border-white/[0.08]"
+              >
+                {reminded ? <Check className="w-4 h-4 text-emerald-300" /> : reminding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4 text-[#fbbf24]" />}
+                {reminded ? 'Wysłano' : 'Przypomnij'}
+              </button>
               {(() => {
                 const total = progressStats.total ?? 0
                 const completion = total > 0 ? Math.round(((progressStats.watched ?? 0) + (progressStats.implemented ?? 0)) / total * 100) : 0
@@ -399,6 +482,78 @@ export function CoachStudentDetailClient({
                 )
               })}
             </div>
+          </div>
+        </div>
+
+        {/* ===== PRIVATE COACH NOTE ===== */}
+        <div className="glass-card rise-in relative rounded-3xl p-6 md:p-7 mb-8 overflow-hidden" style={{ animationDelay: '40ms' }}>
+          <div className="absolute -top-20 -left-20 w-56 h-56 rounded-full bg-[#2de5ca]/[0.07] blur-3xl pointer-events-none" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="relative grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] ring-1 ring-white/25">
+                <StickyNote className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight">Prywatna notatka</h2>
+                <p className="text-xs text-white/40">Tylko Ty ją widzisz — uczeń nie ma do niej dostępu. Np. cele, słabości, co omówić na następnej sesji.</p>
+              </div>
+              {noteSavedAt && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/80">
+                  <Check className="w-3.5 h-3.5" /> Zapisano
+                </span>
+              )}
+            </div>
+            {noteLoading ? (
+              <div className="flex items-center justify-center py-8 text-white/40">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Ładowanie notatki…
+              </div>
+            ) : (
+              <>
+                <textarea
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                      e.preventDefault()
+                      saveNote()
+                    }
+                  }}
+                  placeholder="Zapisz coś o tym uczniu… (Ctrl+Enter aby zapisać)"
+                  rows={4}
+                  className="w-full rounded-2xl px-4 py-3 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors resize-y leading-relaxed"
+                />
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="text-[11px] text-white/35">
+                    {note
+                      ? `Ostatnia edycja: ${formatDate(note.updatedAt)}`
+                      : 'Brak notatki — pierwszy raz zapiszesz ją tutaj.'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {note && noteDraft.trim() === '' && (
+                      <button
+                        onClick={async () => {
+                          await fetch(`/api/coach/students/${student.id}/note`, { method: 'DELETE' })
+                          setNote(null)
+                          setNoteSavedAt(null)
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl px-3 h-9 text-xs font-medium text-white/50 hover:text-red-300 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Usuń
+                      </button>
+                    )}
+                    <button
+                      onClick={saveNote}
+                      disabled={noteSaving}
+                      className="relative inline-flex items-center gap-2 rounded-xl px-5 h-9 text-sm font-semibold text-white btn-darey overflow-hidden disabled:opacity-60"
+                    >
+                      <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
+                      {noteSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      Zapisz notatkę
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -436,6 +591,22 @@ export function CoachStudentDetailClient({
             </div>
           ) : aiData ? (
             <>
+            {aiData.weaknesses.length > 0 &&
+              (() => {
+                const weakest = [...aiData.weaknesses].sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0]
+                if (!weakest) return null
+                return (
+                  <div className="mb-5 rounded-2xl border border-[#f87171]/25 bg-[#f87171]/[0.06] p-4 flex items-start gap-3">
+                    <Target className="w-5 h-5 text-[#f87171] shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white">
+                        Następny krok: <span className="text-[#fca5a5]">{weakest.label}</span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-white/55 leading-relaxed">{weakest.advice}</p>
+                    </div>
+                  </div>
+                )
+              })()}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Weaknesses */}
               <div className="space-y-4">

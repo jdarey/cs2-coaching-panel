@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
-import { cn, formatDateTime, pl } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 import { CountUp } from '@/components/count-up'
 import { EntranceGate } from '@/components/entrance-gate'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,10 @@ import {
   RotateCcw, Flag, MessageSquare, Zap, Target, Shield, Star, Settings,
 } from 'lucide-react'
 
+function pl(num: number): string {
+  return num.toLocaleString('pl-PL')
+}
+
 interface DemoRound {
   round: number
   side: 'CT' | 'T'
@@ -33,8 +37,7 @@ interface DemoRound {
 interface MatchData {
   id: string
   map: string
-  result: 'WIN' | 'LOSS' | 'DRAW'
-  score: [number, number] | null
+  result: string
   eloChange: number
   kills: number | null
   deaths: number | null
@@ -45,11 +48,10 @@ interface MatchData {
   accuracyEnemySpotted: number | null
   accuracyHead: number | null
   sprayAccuracy: number | null
-  finishedAt: string
-  dataSource: string | null
-  coachNotes: any[] | null
+  createdAt: Date
+  coachNotes: unknown
   coachVerdict: string | null
-  coachReviewedAt: string | null
+  coachReviewedAt: Date | null
   student: { id: string; name: string | null; email: string; avatarUrl: string | null }
 }
 
@@ -96,7 +98,7 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
       setRounds(parsedRounds)
     } else {
       // Generate default 30 rounds
-      const totalRounds = match.score ? match.score[0] + match.score[1] : 30
+      const totalRounds = 30
       const newRounds: DemoRound[] = Array.from({ length: Math.max(totalRounds, 30) }, (_, i) => ({
         round: i + 1,
         side: i < 15 ? 'CT' : 'T',
@@ -178,11 +180,11 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
         <div class="header">
           <div>
             <h1>Demo Review: ${match.map}</h1>
-            <p>${match.student.name || match.student.email} • ${new Date(match.finishedAt).toLocaleDateString('pl-PL')}</p>
+            <p>${match.student.name || match.student.email} • ${new Date(match.createdAt).toLocaleDateString('pl-PL')}</p>
           </div>
           <div style="text-align: right;">
             <span style="font-size: 24px; font-weight: bold; color: ${match.result === 'WIN' ? '#16a34a' : '#dc2626'};">
-              ${match.result} ${match.score ? ` ${match.score[0]}:${match.score[1]}` : ''}
+              ${match.result}
             </span>
             <p style="margin-top: 5px;">ELO: ${match.eloChange > 0 ? '+' : ''}${match.eloChange}</p>
           </div>
@@ -235,7 +237,7 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
         <PageHeader
           icon={Flag}
           title="Demo Review"
-          subtitle={`${match.map} • ${match.student.name || match.student.email} • ${new Date(match.finishedAt).toLocaleDateString('pl-PL')}`}
+          subtitle={`${match.map} • ${match.student.name || match.student.email} • ${new Date(match.createdAt).toLocaleDateString('pl-PL')}`}
         >
           <div className="flex items-center gap-2">
             <Link
@@ -270,7 +272,7 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
                   <h2 className="font-display text-2xl font-bold text-white">{match.map}</h2>
                   <div className="flex items-center gap-4 mt-2 text-sm text-white/60">
                     <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium', match.result === 'WIN' ? 'bg-emerald-500/20 text-emerald-300' : match.result === 'LOSS' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300')}>
-                      {match.result} {match.score ? ` ${match.score[0]}:${match.score[1]}` : ''}
+                      {match.result}
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.05] text-white/60">
                       <Zap className="w-3 h-3" />
@@ -290,10 +292,10 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
                     <p className="text-[11px] uppercase tracking-widest text-white/40">Leetify Rating</p>
                     <p className="font-display text-2xl font-bold text-[#c4b5fd]">{match.leetifyRating ?? '—'}</p>
                   </div>
-                  <div className="glass-liquid p-4 rounded-2xl text-center">
-                    <p className="text-[11px] uppercase tracking-widest text-white/40">Pre-aim</p>
-                    <p className="font-display text-2xl font-bold text-[#34d399]">{match.preamail != null ? `${match.preamail}%` : '—'}</p>
-                  </div>
+                    <div className="glass-liquid p-4 rounded-2xl text-center">
+                      <p className="text-[11px] uppercase tracking-widest text-white/40">Pre-aim</p>
+                      <p className="font-display text-2xl font-bold text-[#34d399]">{match.preaim != null ? `${match.preaim}%` : '—'}</p>
+                    </div>
                   <div className="glass-liquid p-4 rounded-2xl text-center">
                     <p className="text-[11px] uppercase tracking-widest text-white/40">Headshot %</p>
                     <p className="font-display text-2xl font-bold text-[#f87171]">{match.accuracyHead != null ? `${match.accuracyHead}%` : '—'}</p>
@@ -439,14 +441,14 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
                   <button
                     onClick={() => setCurrentRound(Math.max(1, currentRound - 1))}
                     disabled={currentRound === 1}
-                    variant="outline"
+                    className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.10] hover:bg-white/[0.08] transition-all disabled:opacity-30"
                   >
                     <SkipBack className="w-4 h-4 mr-2" /> Poprzednia
                   </button>
                   <button
                     onClick={() => setCurrentRound(Math.min(totalRounds, currentRound + 1))}
                     disabled={currentRound === totalRounds}
-                    variant="outline"
+                    className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.10] hover:bg-white/[0.08] transition-all disabled:opacity-30"
                   >
                     Następna <SkipForward className="w-4 h-4 ml-2" />
                   </button>

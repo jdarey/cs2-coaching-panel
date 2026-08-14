@@ -39,7 +39,6 @@ export async function GET(
       include: {
         tags: { include: { tag: true }, orderBy: { order: 'asc' } },
         videos: { include: { video: { select: { id: true, title: true, thumbnail: true } }, tag: true }, orderBy: { order: 'asc' } },
-        _count: { select: { assignments: true } },
       },
     })
 

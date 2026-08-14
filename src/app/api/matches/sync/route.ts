@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyProfile, fetchLeetifyRecentMatches, fetchLeetifyMatchDetails, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
-import { analyzeMatch, matchVerdict, recordSkillSnapshot } from '@/lib/ai-coach'
+import { fetchLeetifyProfile, fetchLeetifyRecentMatches, fetchLeetifyMatchDetails, resolveStudentSteamId } from '@/lib/gaming'
+import { analyzeMatch, matchVerdict, recordSkillSnapshot, toPercent } from '@/lib/ai-coach'
 import { purgeMatchesWhere } from '@/lib/matches'
 
 export const dynamic = 'force-dynamic'
@@ -38,20 +38,14 @@ export async function POST(request: NextRequest) {
       select: { steamId: true, steamVanity: true, faceitNickname: true },
     })
 
-    // Resolve a saved Steam link/vanity to a numeric steam64 if needed
-    // (older profiles may only have steamVanity stored).
-    let steamId = student?.steamId ?? null
-    if (!steamId && student?.steamVanity) {
-      const parsed = parseSteamIdentifier(student.steamVanity)
-      if (parsed.type === 'steam64') {
-        steamId = parsed.value
-      } else if (parsed.type === 'vanity') {
-        steamId = await resolveSteamVanity(parsed.value)
-      }
-      if (steamId) {
-        await prisma.user.update({ where: { id: studentId }, data: { steamId } })
-      }
-    }
+    // Resolve the student's CURRENT Steam identifier — fresh vanity first, so a
+    // stale/wrong stored steam64 never pulls in another player's matches.
+    const steamId = await resolveStudentSteamId(
+      { steamId: student?.steamId ?? null, steamVanity: student?.steamVanity ?? null },
+      async (resolved) => {
+        await prisma.user.update({ where: { id: studentId }, data: { steamId: resolved } })
+      },
+    )
 
     if (!steamId) {
       return NextResponse.json(
@@ -150,7 +144,7 @@ export async function POST(request: NextRequest) {
         result: c.result,
         verdict: matchVerdict(aiProfile, matches.find((m) => m.externalId === c.externalId)!),
       })),
-      profile: { name: raw.name || null, totalMatches: raw.total_matches ?? null, winrate: raw.winrate ?? null },
+      profile: { name: raw.name || null, totalMatches: raw.total_matches ?? null, winrate: toPercent(raw.winrate ?? null) },
     })
   } catch (error) {
     console.error('Faceit sync error:', error)

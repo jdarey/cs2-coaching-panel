@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchBestFaceitElo, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
+import { fetchBestFaceitElo, resolveStudentSteamId } from '@/lib/gaming'
 import { CoachStudentDetailClient } from './coach-student-detail-client'
 
 export default async function CoachStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -70,21 +70,12 @@ export default async function CoachStudentDetailPage({ params }: { params: Promi
   let faceitLevel: number | null = null
   let faceitNickname: string | null = student.faceitNickname || null
 
-  // Older profiles may only have the vanity URL stored (steamId null) — resolve
-  // it to a numeric steam64 so the lookup can be done.
-  let steamId = student.steamId
-  if (!steamId && student.steamVanity) {
-    const parsed = parseSteamIdentifier(student.steamVanity)
-    if (parsed.type === 'steam64') {
-      steamId = parsed.value
-    } else if (parsed.type === 'vanity') {
-      steamId = await resolveSteamVanity(parsed.value)
-    }
-    // Persist resolved steamId so AI analysis / future lookups don't need to re-resolve
-    if (steamId && steamId !== student.steamId) {
-      await prisma.user.update({ where: { id: student.id }, data: { steamId } })
-    }
-  }
+  // Resolve the student's CURRENT Steam identifier — fresh vanity first, so a
+  // stale/wrong stored steam64 (e.g. copied from another account) never shows
+  // another player's ELO here. Persists the resolved ID when it changed.
+  const steamId = await resolveStudentSteamId(student, async (resolved) => {
+    await prisma.user.update({ where: { id: student.id }, data: { steamId: resolved } })
+  })
 
   const best = await fetchBestFaceitElo(steamId, student.faceitNickname)
   faceitElo = best.elo

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyProfile, parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
-import { analyzeWeaknesses, suggestRoutineForWeakness, recordSkillSnapshot } from '@/lib/ai-coach'
+import { fetchLeetifyProfile, resolveStudentSteamId } from '@/lib/gaming'
+import { analyzeWeaknesses, suggestRoutineForWeakness, recordSkillSnapshot, toPercent } from '@/lib/ai-coach'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,16 +31,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Uczeń nie należy do Ciebie' }, { status: 403 })
     }
 
-    // Resolve a saved Steam link/vanity to a numeric steam64 if needed.
-    let steamId = student.steamId ?? null
-    if (!steamId && student.steamVanity) {
-      const parsed = parseSteamIdentifier(student.steamVanity)
-      if (parsed.type === 'steam64') {
-        steamId = parsed.value
-      } else if (parsed.type === 'vanity') {
-        steamId = await resolveSteamVanity(parsed.value)
-      }
-    }
+    // Resolve the student's CURRENT Steam identifier — fresh vanity first, so a
+    // stale/wrong stored steam64 (e.g. from another account) never hijacks the
+    // analysis. Persists the resolved ID when it changed.
+    const steamId = await resolveStudentSteamId(student, async (resolved) => {
+      await prisma.user.update({ where: { id: studentId }, data: { steamId: resolved } })
+    })
     if (!steamId) {
       return NextResponse.json(
         { error: 'Uczeń nie ma ustawionego Steam ID — dodaj je w ustawieniach ucznia, aby AI mogło analizować jego grę.' },
@@ -75,7 +71,7 @@ export async function GET(request: NextRequest) {
       profile: {
         name: raw.name || student.name || student.email,
         totalMatches: raw.total_matches ?? null,
-        winrate: raw.winrate ?? null,
+        winrate: toPercent(raw.winrate ?? null),
         rating: {
           aim: aiProfile.aim,
           positioning: aiProfile.positioning,

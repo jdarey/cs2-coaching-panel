@@ -56,6 +56,15 @@ export function CoachMessagesClient() {
     loadConversations()
   }, [loadConversations])
 
+  // Deep-link support: /coach/messages?student=<id> opens that conversation.
+  useEffect(() => {
+    if (activeId || conversations.length === 0) return
+    const sid = new URLSearchParams(window.location.search).get('student')
+    if (sid && conversations.some((c) => c.id === sid)) {
+      setActiveId(sid)
+    }
+  }, [conversations, activeId])
+
   useEffect(() => {
     if (activeId) loadThread(activeId)
     // eslint-disable-next-line react-hooks/exhaustive-deps

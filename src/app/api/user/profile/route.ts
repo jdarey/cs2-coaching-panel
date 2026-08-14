@@ -86,7 +86,10 @@ export async function PUT(request: NextRequest) {
         data.steamId = steamId
         data.steamVanity = raw
       } else {
-        data.steamId = null
+        // Keep any previously stored steam64 — a transient resolution failure
+        // (Steam rate-limit, custom vanity) must NOT wipe the working ID. The
+        // AI analysis / sync routes re-resolve the vanity and self-heal.
+        delete data.steamId
       }
     } else if (validated.steamVanity === null || validated.steamVanity === '') {
       // Explicitly cleared — keep steamId in sync
