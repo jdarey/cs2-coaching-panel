@@ -15,13 +15,26 @@ export default async function StudentVideoPlayerPage({ params }: { params: Promi
   const { id } = await params
   const userId = (session.user as any).id
 
-  // Access control: the student may only watch videos assigned to one of
-  // their own sessions.
+  // Access control: the student may watch videos assigned to one of their
+  // own sessions, OR videos that appear in an active training path created
+  // by their own coach (paths link straight into this player).
+  const student = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { coachId: true },
+  })
+
   const video = await prisma.video.findFirst({
     where: {
       id,
       isActive: true,
-      sessionVideos: { some: { session: { studentId: userId } } },
+      OR: [
+        { sessionVideos: { some: { session: { studentId: userId } } } },
+        {
+          pathVideos: {
+            some: { module: { path: { coachId: student?.coachId ?? '', isActive: true } } },
+          },
+        },
+      ],
     },
     include: {
       tags: { include: { tag: true } },

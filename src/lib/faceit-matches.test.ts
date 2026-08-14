@@ -2,17 +2,18 @@ import { test, describe, it, mock } from 'node:test'
 import assert from 'node:assert/strict'
 import { fetchFaceitRecentMatches } from './gaming'
 
-// Fixtures mirroring the official Faceit Open API responses.
+// Fixtures mirroring the official Faceit Open API responses: the history
+// endpoint has NO map field, and results.winner / results.score use the
+// faction KEYS ("faction1"/"faction2"), not the faction UUIDs. The map id
+// comes from the match stats endpoint (round_stats.Map).
 const historyItem = (
   matchId: string,
-  map: string,
   winner: string,
-  score: { f1: string; f2: string },
+  score: { faction1: string; faction2: string },
   finishedAt: string,
 ) => ({
   match_id: matchId,
   finished_at: finishedAt,
-  map,
   teams: {
     faction1: { faction_id: 'f1', players: [{ player_id: 'p-student', nickname: 'jdareyy' }] },
     faction2: { faction_id: 'f2', players: [{ player_id: 'p-enemy', nickname: 'enemy' }] },
@@ -20,9 +21,10 @@ const historyItem = (
   results: { winner, score },
 })
 
-const detail = (kills: number, deaths: number) => ({
+const detail = (kills: number, deaths: number, map = 'de_mirage') => ({
   rounds: [
     {
+      round_stats: { Map: map },
       teams: [
         { faction_id: 'f1', players: [{ player_id: 'p-student', player_stats: { Kills: kills, Deaths: deaths, Assists: 5 } }] },
         { faction_id: 'f2', players: [{ player_id: 'p-enemy', player_stats: { Kills: 10, Deaths: 20, Assists: 2 } }] },
@@ -51,7 +53,7 @@ function mockFaceitApi(items: any[], details: Record<string, any>) {
 describe('fetchFaceitRecentMatches', () => {
   it('maps a win: my team score first, Faceit id as externalId/platformMatchId', async () => {
     const items = [
-      historyItem('m-1', 'de_mirage', 'f1', { f1: '13', f2: '8' }, '2026-08-01T12:00:00.000Z'),
+      historyItem('m-1', 'faction1', { faction1: '13', faction2: '8' }, '2026-08-01T12:00:00.000Z'),
     ]
     mockFaceitApi(items, { 'm-1': detail(22, 12) })
 
@@ -70,8 +72,8 @@ describe('fetchFaceitRecentMatches', () => {
   })
 
   it('maps a loss correctly (winner is the other faction)', async () => {
-    const items = [historyItem('m-2', 'de_dust2', 'f2', { f1: '4', f2: '13' }, '2026-07-30T18:00:00.000Z')]
-    mockFaceitApi(items, { 'm-2': detail(9, 16) })
+    const items = [historyItem('m-2', 'faction2', { faction1: '4', faction2: '13' }, '2026-07-30T18:00:00.000Z')]
+    mockFaceitApi(items, { 'm-2': detail(9, 16, 'de_dust2') })
 
     const matches = await fetchFaceitRecentMatches('jdareyy', 'test-key', 5)
     assert.equal(matches.length, 1)
@@ -82,7 +84,7 @@ describe('fetchFaceitRecentMatches', () => {
 
   it('limits to the requested count', async () => {
     const items = Array.from({ length: 8 }, (_, i) =>
-      historyItem(`m-${i}`, 'de_inferno', 'f1', { f1: '13', f2: `${i}` }, `2026-07-2${i}T12:00:00.000Z`),
+      historyItem(`m-${i}`, 'faction1', { faction1: '13', faction2: `${i}` }, `2026-07-2${i}T12:00:00.000Z`),
     )
     const details: Record<string, any> = {}
     for (let i = 0; i < 8; i++) details[`m-${i}`] = detail(10 + i, 10)

@@ -388,6 +388,103 @@ export async function fetchLeetifyMatchDetails(gameId: string): Promise<LeetifyM
   }
 }
 
+/**
+ * Full per-player scoreboard for a Faceit match straight from the official
+ * Faceit API: GET /matches/{matchId}/stats -> rounds[].teams[].players[].
+ * Returns the same LeetifyMatchDetails shape the detail page consumes.
+ */
+export async function fetchFaceitMatchDetails(
+  matchId: string,
+  apiKey: string,
+): Promise<LeetifyMatchDetails | null> {
+  try {
+    const res = await fetch(`${FACEIT_OPEN_API}/matches/${encodeURIComponent(matchId)}/stats`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const rounds: any[] = Array.isArray(data?.rounds) ? data.rounds : []
+    const round = rounds[0]
+    if (!round) return null
+
+    const roundStats: Record<string, any> = round?.round_stats || {}
+    const teams: any[] = Array.isArray(round?.teams) ? round.teams : []
+
+    const num = (v: any) => {
+      if (v == null || v === '') return null
+      const n = typeof v === 'number' ? v : parseFloat(v)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const players = teams.flatMap((team, ti) => {
+      const ts: Record<string, any> = team?.team_stats || {}
+      return (Array.isArray(team?.players) ? team.players : []).map((p: any) => {
+        const ps: Record<string, any> = p?.player_stats || {}
+        const kills = num(ps.Kills)
+        const deaths = num(ps.Deaths)
+        const kd = num(ps['K/D Ratio'])
+        const hs = num(ps['Headshots %'])
+        return {
+          steam64Id: null, // Faceit stats expose the Faceit id, not Steam
+          faceitId: p?.player_id || null,
+          name: p?.nickname || null,
+          team: ti,
+          kills,
+          deaths,
+          assists: num(ps.Assists),
+          kdRatio: kd != null ? kd : kills != null && deaths ? kills / deaths : null,
+          hsPercent: hs != null ? hs : kills != null && num(ps.Headshots) != null ? ((num(ps.Headshots) as number) / kills) * 100 : null,
+          adr: num(ps.ADR),
+          dpr: null,
+          rating: null, // Faceit has no Leetify rating
+          leetifyRating: null,
+          mvps: num(ps.MVPs),
+          score: num(ps.Score),
+          total_damage: num(ps.Damage),
+          // Faceit-only multi-kills + clutch/entry/flash stats
+          multi2k: num(ps['Double Kills']),
+          multi3k: num(ps['Triple Kills']),
+          multi4k: num(ps['Quadro Kills']),
+          multi5k: num(ps['Penta Kills']),
+          multi1k: kills != null ? kills - (num(ps['Double Kills']) || 0) * 2 - (num(ps['Triple Kills']) || 0) * 3 - (num(ps['Quadro Kills']) || 0) * 4 - (num(ps['Penta Kills']) || 0) * 5 : null,
+          first_kills: num(ps['First Kills']),
+          entry_wins: num(ps['Entry Wins']),
+          entry_count: num(ps['Entry Count']),
+          clutch_kills: num(ps['Clutch Kills']),
+          utility_damage: num(ps['Utility Damage']),
+          flash_count: num(ps['Flash Count']),
+          flash_successes: num(ps['Flash Successes']),
+          enemies_flashed: num(ps['Enemies Flashed']),
+          pistol_kills: num(ps['Pistol Kills']),
+          knife_kills: num(ps['Knife Kills']),
+          zeus_kills: num(ps['Zeus Kills']),
+          sniper_kills: num(ps['Sniper Kills']),
+          team_score: num(ts['Final Score']),
+          team_win: ts['Team Win'] === '1' ? 1 : ts['Team Win'] === '0' ? 0 : null,
+          rounds_count: num(roundStats.Rounds),
+        }
+      })
+    })
+
+    const teamScores = teams
+      .map((t, ti) => ({ teamNumber: ti, score: num(t?.team_stats?.['Final Score']) }))
+      .filter((t): t is { teamNumber: number; score: number } => t.score != null)
+
+    return {
+      matchId,
+      dataSource: 'faceit',
+      dataSourceMatchId: matchId,
+      finishedAt: '',
+      map: normalizeMapName(roundStats.Map || 'Inna'),
+      teamScores,
+      players,
+    }
+  } catch {
+    return null
+  }
+}
+
 // Discover a player's Faceit nickname from their Leetify match history. Leetify
 // indexes Faceit matches and stores each player's in-game Faceit name — the
 // Steam nickname often differs (e.g. 'jdarey' vs 'jdareyy'). This lets us
@@ -479,7 +576,7 @@ export async function fetchFaceitMatchScoreboard(
   matchId: string,
   playerId: string,
   apiKey: string,
-): Promise<{ kills: number | null; deaths: number | null; assists: number | null } | null> {
+): Promise<{ kills: number | null; deaths: number | null; assists: number | null; map: string | null } | null> {
   try {
     // Detailed per-player stats live under /matches/{id}/stats (rounds array) —
     // the bare /matches/{id} endpoint has no rounds at all.
@@ -494,7 +591,11 @@ export async function fetchFaceitMatchScoreboard(
     let deaths = 0
     let assists = 0
     let found = false
+    let map: string | null = null
     for (const round of rounds) {
+      // The map id (de_mirage) lives in the first round's round_stats.
+      const rs = round?.round_stats || {}
+      if (!map && rs.Map) map = rs.Map
       for (const team of Array.isArray(round?.teams) ? round.teams : []) {
         for (const p of Array.isArray(team?.players) ? team.players : []) {
           if (p?.player_id === playerId) {
@@ -507,7 +608,7 @@ export async function fetchFaceitMatchScoreboard(
         }
       }
     }
-    return found ? { kills, deaths, assists } : null
+    return found ? { kills, deaths, assists, map } : null
   } catch {
     return null
   }
@@ -539,28 +640,32 @@ export async function fetchFaceitRecentMatches(
 
     const out: LeetifyMatch[] = []
     for (const item of items) {
-      const teams = item?.teams || {}
-      const factions = [teams.faction1, teams.faction2].filter(Boolean)
-      // Find MY faction (player listed there by id or nickname).
-      const myFaction = factions.find(
-        (f: any) =>
-          f.faction_id === item?.results?.winner ||
-          (Array.isArray(f.players) &&
-            f.players.some(
-              (p: any) =>
-                p?.player_id === playerId || p?.nickname?.toLowerCase() === nickname.toLowerCase(),
-            )),
-      )
-      if (!myFaction) continue
+      const teams: Record<string, any> = item?.teams || {}
+      const factionKeys = Object.keys(teams).filter((k) => teams[k])
 
-      const otherFaction = factions.find((f: any) => f.faction_id !== myFaction.faction_id)
-      const myKey = myFaction.faction_id
-      const scoreMap = item?.results?.score || {}
+      // Find MY faction KEY ("faction1"/"faction2") — the player may be listed
+      // by id or by nickname. results.winner / results.score use these keys,
+      // NOT the faction UUIDs, so we must keep the key, not faction_id.
+      const myKey = factionKeys.find((k) => {
+        const f = teams[k]
+        return (
+          Array.isArray(f?.players) &&
+          f.players.some(
+            (p: any) =>
+              p?.player_id === playerId ||
+              (p?.nickname && p.nickname.toLowerCase() === nickname.toLowerCase()),
+          )
+        )
+      })
+      if (!myKey) continue
+
+      const otherKey = factionKeys.find((k) => k !== myKey)
+      const scoreMap: Record<string, any> = item?.results?.score || {}
       const myScore = parseInt(scoreMap[myKey], 10)
-      const otherScore = otherFaction ? parseInt(scoreMap[otherFaction.faction_id], 10) : NaN
+      const otherScore = otherKey ? parseInt(scoreMap[otherKey], 10) : NaN
       const winner = item?.results?.winner
       const outcome: 'WIN' | 'LOSS' | 'DRAW' =
-        winner === myKey ? 'WIN' : winner === otherFaction?.faction_id ? 'LOSS' : 'DRAW'
+        winner === myKey ? 'WIN' : otherKey !== undefined && winner === otherKey ? 'LOSS' : 'DRAW'
 
       const score: [number, number] | null =
         !Number.isNaN(myScore) && !Number.isNaN(otherScore) ? [myScore, otherScore] : null
@@ -570,7 +675,9 @@ export async function fetchFaceitRecentMatches(
       out.push({
         externalId: item.match_id,
         dataSource: 'faceit',
-        map: normalizeMapName(item.map || 'Inna'),
+        // The history endpoint has NO map field — it comes from the match
+        // stats endpoint instead (round_stats.Map = "de_mirage").
+        map: normalizeMapName(board?.map || item?.map || 'Inna'),
         outcome,
         score,
         leetifyRating: null,

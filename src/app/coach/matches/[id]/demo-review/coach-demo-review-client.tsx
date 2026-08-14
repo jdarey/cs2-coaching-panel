@@ -193,7 +193,6 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
         <div class="stats">
           <div class="stat"><div class="stat-value">${match.kills ?? '—'}</div><div class="stat-label">Kills</div></div>
           <div class="stat"><div class="stat-value">${match.deaths ?? '—'}</div><div class="stat-label">Deaths</div></div>
-          <div class="stat"><div class="stat-value">${match.leetifyRating ?? '—'}</div><div class="stat-label">Leetify Rating</div></div>
           <div class="stat"><div class="stat-value">${match.eloChange > 0 ? '+' : ''}${match.eloChange}</div><div class="stat-label">ELO Change</div></div>
         </div>
 
@@ -289,13 +288,9 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
                     <p className="font-display text-2xl font-bold text-white">{match.kills ?? '—'} / {match.deaths ?? '—'}</p>
                   </div>
                   <div className="glass-liquid p-4 rounded-2xl text-center">
-                    <p className="text-[11px] uppercase tracking-widest text-white/40">Leetify Rating</p>
-                    <p className="font-display text-2xl font-bold text-[#c4b5fd]">{match.leetifyRating ?? '—'}</p>
+                    <p className="text-[11px] uppercase tracking-widest text-white/40">Pre-aim</p>
+                    <p className="font-display text-2xl font-bold text-[#34d399]">{match.preaim != null ? `${match.preaim}%` : '—'}</p>
                   </div>
-                    <div className="glass-liquid p-4 rounded-2xl text-center">
-                      <p className="text-[11px] uppercase tracking-widest text-white/40">Pre-aim</p>
-                      <p className="font-display text-2xl font-bold text-[#34d399]">{match.preaim != null ? `${match.preaim}%` : '—'}</p>
-                    </div>
                   <div className="glass-liquid p-4 rounded-2xl text-center">
                     <p className="text-[11px] uppercase tracking-widest text-white/40">Headshot %</p>
                     <p className="font-display text-2xl font-bold text-[#f87171]">{match.accuracyHead != null ? `${match.accuracyHead}%` : '—'}</p>

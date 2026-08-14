@@ -28,7 +28,7 @@ export default async function StudentPathsPage() {
         include: {
           videos: {
             orderBy: { order: 'asc' },
-            include: { video: { select: { id: true, title: true, thumbnail: true } } },
+            include: { video: { select: { id: true, title: true, thumbnail: true, duration: true, url: true, description: true } } },
           },
         },
       },
@@ -39,12 +39,51 @@ export default async function StudentPathsPage() {
   const progress = videoIds.length
     ? await prisma.videoProgress.findMany({
         where: { userId: user.id, videoId: { in: videoIds } },
-        select: { videoId: true, status: true },
+        select: { videoId: true, status: true, watchedAt: true },
       })
     : []
 
   const statusByVideo: Record<string, string> = {}
-  for (const p of progress) statusByVideo[p.videoId] = p.status
+  const watchedDays = new Set<string>()
+  for (const p of progress) {
+    statusByVideo[p.videoId] = p.status
+    if ((p.status === 'WATCHED' || p.status === 'IMPLEMENTED') && p.watchedAt) {
+      watchedDays.add(p.watchedAt.toISOString().slice(0, 10))
+    }
+  }
+
+  // Consecutive-day streak ending today or yesterday (student still active).
+  const days = Array.from(watchedDays).sort().reverse()
+  let streak = 0
+  const cursor = new Date()
+  for (let i = 0; i < days.length; i++) {
+    const d = new Date(days[i] + 'T00:00:00')
+    const diff = Math.round((cursor.getTime() - d.getTime()) / 86400000)
+    if (diff === streak || diff === streak + 1) {
+      if (diff === streak + 1) cursor.setDate(cursor.getDate() - 1)
+      streak++
+    } else {
+      break
+    }
+  }
+
+  let totalLessons = 0
+  let doneLessons = 0
+  let totalSeconds = 0
+  let doneSeconds = 0
+  for (const p of paths) {
+    for (const m of p.modules) {
+      for (const v of m.videos) {
+        totalLessons++
+        totalSeconds += v.video.duration ?? 0
+        const st = statusByVideo[v.videoId] ?? 'PENDING'
+        if (st === 'WATCHED' || st === 'IMPLEMENTED') {
+          doneLessons++
+          doneSeconds += v.video.duration ?? 0
+        }
+      }
+    }
+  }
 
   const pathsForClient = paths.map((p) => ({
     id: p.id,
@@ -57,11 +96,22 @@ export default async function StudentPathsPage() {
       order: m.order,
       videos: m.videos.map((v) => ({
         id: v.id,
-        video: { id: v.video.id, title: v.video.title, thumbnail: v.video.thumbnail },
+        video: { id: v.video.id, title: v.video.title, thumbnail: v.video.thumbnail, duration: v.video.duration, url: v.video.url, description: v.video.description },
         status: statusByVideo[v.videoId] ?? 'PENDING',
       })),
     })),
   }))
 
-  return <StudentPathsClient paths={pathsForClient} />
+  return (
+    <StudentPathsClient
+      paths={pathsForClient}
+      summary={{
+        totalLessons,
+        doneLessons,
+        totalSeconds,
+        doneSeconds,
+        streak,
+      }}
+    />
+  )
 }

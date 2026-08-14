@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/page-header'
 import { cn, formatDateTime } from '@/lib/utils'
 import {
   ArrowLeft, Loader2, Swords, Trophy, Crosshair, TrendingUp, TrendingDown, Minus,
-  Bot, Crown, Target, Timer, Shield, Flame, Zap, AlertTriangle, Sparkles, ChevronDown, ChevronUp, ExternalLink,
+  Bot, Crown, Target, Timer, Shield, Flame, AlertTriangle, Sparkles, ChevronDown, ChevronUp, ExternalLink,
   Plus, Trash2,
 } from 'lucide-react'
 
@@ -337,7 +337,6 @@ export function StudentMatchDetailClient() {
           <Stat label="K/D" value={me?.kdRatio != null ? me.kdRatio.toFixed(2) : match.kills != null && match.deaths ? (match.kills / match.deaths).toFixed(2) : '—'} icon={Swords} accent="#34d399" />
           <Stat label="HS" value={me?.hsPercent != null ? me.hsPercent.toFixed(1) + '%' : match.accuracyHead != null ? match.accuracyHead.toFixed(1) + '%' : '—'} icon={Target} accent="#fbbf24" />
           <Stat label="ADR" value={me?.adr != null ? Math.round(me.adr).toString() : '—'} icon={Flame} accent="#f97316" hint="śr. obrażenia na rundę" />
-          <Stat label="Rating" value={me?.rating != null ? me.rating.toFixed(3) : match.leetifyRating != null ? match.leetifyRating.toFixed(3) : '—'} icon={Zap} accent="#a78bfa" hint="Leetify" />
         </div>
 
         {me && (
@@ -440,19 +439,6 @@ export function StudentMatchDetailClient() {
             </div>
           </Section>
         </div>
-
-        {/* ===== AI ANALYSIS ===== */}
-        {match.reflection && (
-          <div className="glass-card rise-in relative rounded-3xl p-6 overflow-hidden border border-[#a78bfa]/20">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20">
-                <Bot className="h-4 w-4 text-white" />
-              </div>
-              <h2 className="font-display text-lg font-semibold text-white/90">Analiza AI trenera</h2>
-            </div>
-            <p className="text-sm text-white/65 leading-relaxed">{match.reflection}</p>
-          </div>
-        )}
 
         {/* ===== COACH DEMO REVIEW ===== */}
         <div className="glass-card rise-in relative rounded-3xl p-6 overflow-hidden border border-[#fbbf24]/25">

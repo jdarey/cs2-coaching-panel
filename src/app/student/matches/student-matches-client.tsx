@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header'
 import { cn, formatDateTime } from '@/lib/utils'
 import {
   Swords, Trophy, Trash2, Loader2, Plus, TrendingUp, TrendingDown, Minus,
-  Crosshair, Inbox, Sparkles, Check, RefreshCw, Bot, Calendar, ChevronDown, ChevronUp, ExternalLink,
+  Crosshair, Inbox, Sparkles, Check, RefreshCw, Bot, Calendar, ChevronDown, ExternalLink,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -45,7 +45,6 @@ export function StudentMatchesClient() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string; source?: string | null } | null>(null)
-  const [expandedAi, setExpandedAi] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -357,14 +356,8 @@ export function StudentMatchesClient() {
                           </div>
                         )}
 
-                        {m.source === 'FACEIT' && (m.leetifyRating != null || m.preaim != null || m.reactionMs != null || m.accuracyHead != null || m.sprayAccuracy != null || m.accuracyEnemySpotted != null) && (
+                        {m.source === 'FACEIT' && (m.preaim != null || m.reactionMs != null || m.accuracyHead != null || m.sprayAccuracy != null || m.accuracyEnemySpotted != null) && (
                           <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {m.leetifyRating != null && (
-                              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
-                                <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Rating meczu</p>
-                                <p className="text-sm font-bold text-[#c4b5fd] tabular-nums">{m.leetifyRating.toFixed(2)}</p>
-                              </div>
-                            )}
                             {m.reactionMs != null && (
                               <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
                                 <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Reakcja</p>
@@ -398,33 +391,6 @@ export function StudentMatchesClient() {
                           </div>
                         )}
 
-                        {m.source === 'FACEIT' ? (
-                          <div className="mt-2 rounded-xl border border-[#a78bfa]/20 bg-gradient-to-br from-[#a78bfa]/[0.08] to-[#8b5cf6]/[0.04] overflow-hidden">
-                            <button
-                              onClick={() => setExpandedAi(expandedAi === m.id ? null : m.id)}
-                              className="w-full flex items-center gap-2 px-3.5 py-2.5 text-left group/ai"
-                            >
-                              <span className="grid place-items-center w-6 h-6 rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20 shrink-0">
-                                <Bot className="w-3.5 h-3.5 text-white" />
-                              </span>
-                              <span className="text-xs font-bold uppercase tracking-widest text-[#c4b5fd]">Analiza AI trenera</span>
-                              {expandedAi === m.id ? (
-                                <ChevronUp className="w-3.5 h-3.5 text-white/40 ml-auto" />
-                              ) : (
-                                <ChevronDown className="w-3.5 h-3.5 text-white/40 ml-auto" />
-                              )}
-                            </button>
-                            {expandedAi === m.id && m.reflection && (
-                              <div className="px-3.5 pb-3 pt-1">
-                                <p className="text-sm text-white/60 leading-relaxed">{m.reflection}</p>
-                              </div>
-                            )}
-                          </div>
-                        ) : m.reflection ? (
-                          <p className="mt-2 text-sm text-white/55 leading-relaxed rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2.5">
-                            {m.reflection}
-                          </p>
-                        ) : null}
                       </div>
 
                       <div className="shrink-0 flex items-center gap-2">

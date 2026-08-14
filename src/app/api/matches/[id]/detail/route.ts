@@ -2,14 +2,37 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchLeetifyMatchDetails } from '@/lib/gaming'
+import { fetchFaceitMatchDetails, fetchLeetifyMatchDetails } from '@/lib/gaming'
+
+// Resolve the Faceit API key: env first, then the coach's stored settings.
+async function getFaceitApiKey(coachId: string | null | undefined): Promise<string | null> {
+  if (process.env.FACEIT_API_KEY) return process.env.FACEIT_API_KEY
+  if (!coachId) return null
+  const settings = await prisma.coachSettings.findUnique({
+    where: { coachId },
+    select: { faceitApiKey: true },
+  })
+  return settings?.faceitApiKey || null
+}
 
 export const dynamic = 'force-dynamic'
 
 async function getOwnedMatch(id: string, userId: string, role: string) {
   const match = await prisma.matchLog.findUnique({
     where: { id },
-    include: { student: { select: { id: true, name: true, email: true, avatarUrl: true, steamId: true } } },
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+          steamId: true,
+          faceitNickname: true,
+          coachId: true,
+        },
+      },
+    },
   })
   if (!match) return null
   if (role === 'STUDENT' && match.studentId !== userId) return null
@@ -38,18 +61,34 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Mecz nie znaleziony' }, { status: 404 })
     }
 
-    // For Faceit matches with an external Leetify match id, fetch the full
-    // per-player breakdown live from Leetify (keyless). Manual matches return
-    // just what we have stored.
+    // For Faceit matches, fetch the full per-player scoreboard live from the
+    // official Faceit API (needs the coach's key); fall back to Leetify's
+    // keyless API only when no key is configured. Manual matches return just
+    // what we have stored.
     let details = null
-    if (match.source === 'FACEIT' && match.externalId) {
+    if (match.source === 'FACEIT' && match.platformMatchId) {
+      const coachId = (match.student as any).coachId ?? null
+      const apiKey = await getFaceitApiKey(coachId)
+      if (apiKey) {
+        details = await fetchFaceitMatchDetails(match.platformMatchId, apiKey)
+      }
+    }
+    if (!details && match.source === 'FACEIT' && match.externalId) {
       details = await fetchLeetifyMatchDetails(match.externalId)
     }
 
     const steamId = (match.student as any).steamId || null
+    const faceitNickname = (match.student as any).faceitNickname || null
     const myStats =
-      details && steamId
-        ? details.players.find((p) => String(p.steam64Id) === String(steamId)) || null
+      details && (steamId || faceitNickname)
+        ? details.players.find((p) =>
+            steamId && p.steam64Id ? String(p.steam64Id) === String(steamId) : false,
+          ) ||
+          details.players.find(
+            (p: any) =>
+              faceitNickname && p.name && p.name.toLowerCase() === faceitNickname.toLowerCase(),
+          ) ||
+          null
         : null
 
     // Link to the original match: Faceit matches get their Faceit match URL,

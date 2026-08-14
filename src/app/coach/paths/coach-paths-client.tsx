@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
-  GraduationCap, Plus, Pencil, Trash2, Loader2, X, ChevronUp, ChevronDown, Film, FolderOpen, CheckCircle2, Save, Eye, EyeOff,
+  GraduationCap, Plus, Pencil, Trash2, Loader2, X, ChevronUp, ChevronDown, Film, FolderOpen, CheckCircle2, Save, Eye, EyeOff, Copy, Search, Link2,
 } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
@@ -31,7 +31,10 @@ interface Path {
 interface CoachVideo {
   id: string
   title: string
+  thumbnail: string | null
 }
+
+const URL_HINT = /youtube\.com|youtu\.be|vimeo\.com|drive\.google\.com/i
 
 export function CoachPathsClient() {
   const { toast } = useToast()
@@ -48,6 +51,12 @@ export function CoachPathsClient() {
     isActive: true,
     modules: [],
   })
+
+  // Per-module state for the picker + quick-add-by-link
+  const [pickerQuery, setPickerQuery] = useState<Record<number, string>>({})
+  const [quickUrl, setQuickUrl] = useState<Record<number, string>>({})
+  const [quickBusy, setQuickBusy] = useState<Record<number, boolean>>({})
+  const [pickerOpen, setPickerOpen] = useState<Record<number, boolean>>({})
 
   const load = useCallback(async () => {
     try {
@@ -68,6 +77,8 @@ export function CoachPathsClient() {
   const openCreate = () => {
     setEditingId(null)
     setDraft({ title: '', description: '', isActive: true, modules: [] })
+    setPickerQuery({})
+    setQuickUrl({})
     setBuilderOpen(true)
   }
 
@@ -79,6 +90,8 @@ export function CoachPathsClient() {
       isActive: p.isActive,
       modules: p.modules.map((m) => ({ title: m.title, videos: [...m.videos] })),
     })
+    setPickerQuery({})
+    setQuickUrl({})
     setBuilderOpen(true)
   }
 
@@ -90,6 +103,16 @@ export function CoachPathsClient() {
     setDraft((d) => ({ ...d, modules: d.modules.map((m, i) => (i === mi ? { ...m, title } : m)) }))
   }
 
+  const moveModule = (mi: number, dir: -1 | 1) => {
+    setDraft((d) => {
+      const target = mi + dir
+      if (target < 0 || target >= d.modules.length) return d
+      const modules = [...d.modules]
+      ;[modules[mi], modules[target]] = [modules[target], modules[mi]]
+      return { ...d, modules }
+    })
+  }
+
   const addVideoToModule = (mi: number, videoId: string) => {
     if (!videoId) return
     const v = videos.find((x) => x.id === videoId)
@@ -98,10 +121,51 @@ export function CoachPathsClient() {
       ...d,
       modules: d.modules.map((m, i) =>
         i === mi && !m.videos.some((mv) => mv.videoId === videoId)
-          ? { ...m, videos: [...m.videos, { videoId, video: { id: videoId, title: v.title, thumbnail: null } }] }
+          ? { ...m, videos: [...m.videos, { videoId, video: { id: videoId, title: v.title, thumbnail: v.thumbnail ?? null } }] }
           : m,
       ),
     }))
+    setPickerQuery((q) => ({ ...q, [mi]: '' }))
+    setPickerOpen((o) => ({ ...o, [mi]: false }))
+  }
+
+  // Quick-add: paste a link, we create the video and drop it into the module.
+  const quickAddByUrl = async (mi: number) => {
+    const url = (quickUrl[mi] ?? '').trim()
+    if (!url) return
+    if (!URL_HINT.test(url) && !/^https?:\/\//.test(url)) {
+      toast({ title: 'To nie wygląda na link', description: 'Wklej link z YouTube, Vimeo albo Google Drive', variant: 'destructive' })
+      return
+    }
+    setQuickBusy((b) => ({ ...b, [mi]: true }))
+    try {
+      const res = await fetch('/api/videos/quick-add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast({ title: 'Nie udało się dodać filmu', description: data.error || 'Błąd', variant: 'destructive' })
+        return
+      }
+      const created: CoachVideo = { id: data.id, title: data.title, thumbnail: data.thumbnail ?? null }
+      setVideos((prev) => [created, ...prev.filter((v) => v.id !== created.id)])
+      setDraft((d) => ({
+        ...d,
+        modules: d.modules.map((m, i) =>
+          i === mi && !m.videos.some((mv) => mv.videoId === created.id)
+            ? { ...m, videos: [...m.videos, { videoId: created.id, video: { id: created.id, title: created.title, thumbnail: created.thumbnail } }] }
+            : m,
+        ),
+      }))
+      setQuickUrl((q) => ({ ...q, [mi]: '' }))
+      toast({ title: 'Dodano film', description: `„${created.title}" w module` })
+    } catch {
+      toast({ title: 'Błąd sieci', description: 'Nie udało się dodać filmu', variant: 'destructive' })
+    } finally {
+      setQuickBusy((b) => ({ ...b, [mi]: false }))
+    }
   }
 
   const removeVideo = (mi: number, vi: number) => {
@@ -187,8 +251,28 @@ export function CoachPathsClient() {
     }
   }
 
+  const duplicate = async (p: Path) => {
+    const res = await fetch('/api/paths', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: `${p.title} (kopia)`,
+        description: p.description,
+        isActive: p.isActive,
+        modules: p.modules.map((m) => ({ title: m.title, videos: m.videos.map((v) => ({ videoId: v.videoId })) })),
+      }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setPaths((prev) => [data.path, ...prev])
+      toast({ title: 'Skopiowano', description: 'Ścieżka zduplikowana — edytuj kopię' })
+    } else {
+      toast({ title: 'Błąd', description: 'Nie udało się skopiować', variant: 'destructive' })
+    }
+  }
+
   const remove = async (p: Path) => {
-    if (!confirm(`Usunąć ścieżkę „${p.title}"?`)) return
+    if (!confirm(`Usunąć ścieżkę „${p.title}\"?`)) return
     const res = await fetch(`/api/paths/${p.id}`, { method: 'DELETE' })
     if (res.ok) setPaths((prev) => prev.filter((x) => x.id !== p.id))
   }
@@ -254,56 +338,133 @@ export function CoachPathsClient() {
 
               {/* Modules */}
               <div className="space-y-3">
-                {draft.modules.map((m, mi) => (
-                  <div key={mi} className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FolderOpen className="w-4 h-4 text-[#2de5ca] shrink-0" />
-                      <input
-                        value={m.title}
-                        onChange={(e) => updateModuleTitle(mi, e.target.value)}
-                        placeholder={`Moduł ${mi + 1} (np. Pre-aim i crosshair placement)`}
-                        className="flex-1 min-w-0 rounded-lg px-3 py-2 text-sm bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
-                      />
-                      <button onClick={() => removeModule(mi)} className="grid place-items-center w-8 h-8 rounded-lg text-white/35 hover:text-red-300 hover:bg-red-500/10 transition">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {m.videos.map((v, vi) => (
-                        <div key={v.videoId} className="flex items-center gap-2 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2">
-                          <Film className="w-3.5 h-3.5 text-white/35 shrink-0" />
-                          <span className="flex-1 min-w-0 text-sm text-white/75 truncate">{v.video.title}</span>
-                          <span className="text-[10px] text-white/30 tabular-nums">#{vi + 1}</span>
-                          <button onClick={() => moveVideo(mi, vi, -1)} disabled={vi === 0} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
+                {draft.modules.map((m, mi) => {
+                  const query = (pickerQuery[mi] ?? '').trim().toLowerCase()
+                  const results = query ? videos.filter((v) => v.title.toLowerCase().includes(query)) : videos
+                  const isOpen = !!pickerOpen[mi]
+                  const isUrl = /^https?:\/\//.test(query) || URL_HINT.test(query)
+                  return (
+                    <div key={mi} className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="grid place-items-center w-6 h-6 rounded-lg text-[10px] font-bold text-white bg-gradient-to-br from-[#2de5ca] to-[#147a6b] shrink-0">
+                          {mi + 1}
+                        </span>
+                        <FolderOpen className="w-4 h-4 text-[#2de5ca] shrink-0" />
+                        <input
+                          value={m.title}
+                          onChange={(e) => updateModuleTitle(mi, e.target.value)}
+                          placeholder={`Moduł ${mi + 1} (np. Pre-aim i crosshair placement)`}
+                          className="flex-1 min-w-0 rounded-lg px-3 py-2 text-sm bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                        />
+                        <div className="flex items-center gap-0.5">
+                          <button onClick={() => moveModule(mi, -1)} disabled={mi === 0} className="grid place-items-center w-7 h-7 rounded-lg text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition" title="Przesuń moduł w górę">
                             <ChevronUp className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => moveVideo(mi, vi, 1)} disabled={vi === m.videos.length - 1} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
+                          <button onClick={() => moveModule(mi, 1)} disabled={mi === draft.modules.length - 1} className="grid place-items-center w-7 h-7 rounded-lg text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition" title="Przesuń moduł w dół">
                             <ChevronDown className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => removeVideo(mi, vi)} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-red-300 hover:bg-red-500/10 transition">
-                            <X className="w-3.5 h-3.5" />
+                          <button onClick={() => removeModule(mi)} className="grid place-items-center w-7 h-7 rounded-lg text-white/35 hover:text-red-300 hover:bg-red-500/10 transition">
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      ))}
-                      <div className="flex items-center gap-2">
-                        <select
-                          value=""
-                          onChange={(e) => {
-                            addVideoToModule(mi, e.target.value)
-                            e.target.value = ''
-                          }}
-                          className="flex-1 rounded-lg px-3 py-2 text-sm bg-white/[0.04] border border-white/[0.08] text-white/70 focus:outline-none focus:border-[#2de5ca]/40 transition-colors [&>option]:bg-[#0a0c0e]"
-                        >
-                          <option value="">+ Dodaj film do modułu…</option>
-                          {videos.map((v) => (
-                            <option key={v.id} value={v.id}>{v.title}</option>
-                          ))}
-                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        {m.videos.map((v, vi) => (
+                          <div key={v.videoId} className="flex items-center gap-2 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2">
+                            {v.video.thumbnail ? (
+                              <img src={v.video.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
+                            ) : (
+                              <span className="grid place-items-center w-10 h-6 rounded bg-white/[0.04] shrink-0">
+                                <Film className="w-3 h-3 text-white/30" />
+                              </span>
+                            )}
+                            <span className="flex-1 min-w-0 text-sm text-white/75 truncate">{v.video.title}</span>
+                            <span className="text-[10px] text-white/30 tabular-nums">#{vi + 1}</span>
+                            <button onClick={() => moveVideo(mi, vi, -1)} disabled={vi === 0} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => moveVideo(mi, vi, 1)} disabled={vi === m.videos.length - 1} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 transition">
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => removeVideo(mi, vi)} className="grid place-items-center w-7 h-7 rounded-md text-white/35 hover:text-red-300 hover:bg-red-500/10 transition">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+
+                        {/* Searchable picker */}
+                        <div className="relative">
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                              <input
+                                value={pickerQuery[mi] ?? ''}
+                                onChange={(e) => {
+                                  setPickerQuery((q) => ({ ...q, [mi]: e.target.value }))
+                                  setPickerOpen((o) => ({ ...o, [mi]: true }))
+                                }}
+                                onFocus={() => setPickerOpen((o) => ({ ...o, [mi]: true }))}
+                                onBlur={() => setTimeout(() => setPickerOpen((o) => ({ ...o, [mi]: false })), 150)}
+                                placeholder="Szukaj filmu z biblioteki…"
+                                className="w-full rounded-lg pl-9 pr-3 py-2 text-sm bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                              />
+                            </div>
+                            <input
+                              value={quickUrl[mi] ?? ''}
+                              onChange={(e) => setQuickUrl((q) => ({ ...q, [mi]: e.target.value }))}
+                              onKeyDown={(e) => { if (e.key === 'Enter') quickAddByUrl(mi) }}
+                              placeholder="lub wklej link…"
+                              className="w-40 rounded-lg px-3 py-2 text-sm bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-[#2de5ca]/40 transition-colors"
+                            />
+                            <button
+                              onClick={() => quickAddByUrl(mi)}
+                              disabled={quickBusy[mi]}
+                              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 h-9 text-xs font-semibold text-[#2de5ca] bg-[#2de5ca]/[0.08] border border-[#2de5ca]/25 hover:bg-[#2de5ca]/[0.14] disabled:opacity-50 transition"
+                              title="Dodaj film z linku"
+                            >
+                              {quickBusy[mi] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
+                              Dodaj
+                            </button>
+                          </div>
+
+                          {isOpen && query.length > 0 && (
+                            <div className="absolute left-0 right-0 top-full mt-1.5 z-30 max-h-56 overflow-y-auto rounded-xl border border-white/10 bg-[#0c0e13]/95 backdrop-blur-xl shadow-2xl shadow-black/60">
+                              {isUrl && !results.length && (
+                                <button
+                                  onMouseDown={(e) => { e.preventDefault(); quickAddByUrl(mi) }}
+                                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-semibold text-[#2de5ca] hover:bg-[#2de5ca]/[0.08] transition"
+                                >
+                                  <Link2 className="w-3.5 h-3.5" /> Dodaj film z tego linku
+                                </button>
+                              )}
+                              {results.length === 0 && !isUrl && (
+                                <p className="px-3 py-2.5 text-xs text-white/40">Brak wyników — wklej link, aby dodać nowy film</p>
+                              )}
+                              {results.slice(0, 8).map((v) => (
+                                <button
+                                  key={v.id}
+                                  onMouseDown={(e) => { e.preventDefault(); addVideoToModule(mi, v.id) }}
+                                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.05] transition"
+                                >
+                                  {v.thumbnail ? (
+                                    <img src={v.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
+                                  ) : (
+                                    <span className="grid place-items-center w-10 h-6 rounded bg-white/[0.05] shrink-0">
+                                      <Film className="w-3 h-3 text-white/30" />
+                                    </span>
+                                  )}
+                                  <span className="min-w-0 flex-1 truncate text-xs text-white/80">{v.title}</span>
+                                  <Plus className="w-3.5 h-3.5 text-white/30 shrink-0" />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -380,6 +541,13 @@ export function CoachPathsClient() {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => duplicate(p)}
+                      title="Duplikuj ścieżkę"
+                      className="grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-[#2de5ca]/10 hover:border-[#2de5ca]/30 transition-all"
+                    >
+                      <Copy className="w-4 h-4 text-[#2de5ca]/80" />
+                    </button>
                     <button
                       onClick={() => toggleActive(p)}
                       title={p.isActive ? 'Ukryj przed uczniami' : 'Pokaż uczniom'}

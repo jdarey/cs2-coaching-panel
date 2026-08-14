@@ -296,14 +296,8 @@ export function CoachMatchesClient() {
                         <span className="text-[11px] text-white/35 ml-auto">{formatDateTime(m.createdAt)}</span>
                       </div>
 
-                      {(m.source === 'FACEIT' || m.source === 'PREMIER') && (m.leetifyRating != null || m.reactionMs != null || m.preaim != null || m.accuracyHead != null || m.sprayAccuracy != null) && (
-                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                          {m.leetifyRating != null && (
-                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
-                              <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Rating</p>
-                              <p className="text-sm font-bold text-[#c4b5fd] tabular-nums">{m.leetifyRating.toFixed(2)}</p>
-                            </div>
-                          )}
+                      {(m.source === 'FACEIT' || m.source === 'PREMIER') && (m.reactionMs != null || m.preaim != null || m.accuracyHead != null || m.sprayAccuracy != null) && (
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                           {m.reactionMs != null && (
                             <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2">
                               <p className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Reakcja</p>
@@ -329,12 +323,6 @@ export function CoachMatchesClient() {
                             </div>
                           )}
                         </div>
-                      )}
-
-                      {m.reflection && (
-                        <p className="mt-2 text-sm text-white/55 leading-relaxed rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2.5">
-                          {m.reflection}
-                        </p>
                       )}
 
                       <div className="mt-2 flex items-center gap-2">
