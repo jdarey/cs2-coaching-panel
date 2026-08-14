@@ -500,26 +500,42 @@ export function YoutubeCustomPlayer({
   }, [showQualityMenu])
 
   // Actions
+  // YouTube's destroy() strips the methods off the player object, so a click
+  // landing during a quality rebuild used to crash with "mute is not a
+  // function". Only call the player when the requested method still exists,
+  // and swallow any not-ready errors on top.
+  const livePlayer = (method: string) => {
+    const p = playerRef.current as any
+    return p && typeof p[method] === 'function' ? p : null
+  }
+
   const togglePlay = () => {
-    if (!playerRef.current) return
-    if (isEnded) { playerRef.current.seekTo(0); playerRef.current.playVideo(); setIsEnded(false); return }
-    if (isPlaying) { playerRef.current.pauseVideo() }
-    else           { if (isFirstPlay.current) isFirstPlay.current = false; playerRef.current.playVideo() }
+    const p = livePlayer(isPlaying ? 'pauseVideo' : 'playVideo')
+    if (!p) return
+    try {
+      if (isEnded) { p.seekTo(0); p.playVideo(); setIsEnded(false); return }
+      if (isPlaying) { p.pauseVideo() }
+      else           { if (isFirstPlay.current) isFirstPlay.current = false; p.playVideo() }
+    } catch (_) {}
     resetControlsTimer()
   }
 
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = parseFloat(e.target.value)
     setCurrentTime(v)
-    playerRef.current?.seekTo?.(v, true)
+    const p = livePlayer('seekTo')
+    if (p) { try { p.seekTo(v, true) } catch (_) {} }
     resetControlsTimer()
   }
 
   const toggleMute = () => {
-    if (!playerRef.current) return
+    const p = livePlayer('mute')
+    if (!p || typeof p.unMute !== 'function') return
     const muted = !isMuted
     setIsMuted(muted)
-    muted ? playerRef.current.mute() : (playerRef.current.unMute(), playerRef.current.setVolume(volume))
+    try {
+      muted ? p.mute() : (p.unMute(), p.setVolume(volume))
+    } catch (_) {}
     saveVolume(volume, muted)
     resetControlsTimer()
   }
@@ -527,9 +543,12 @@ export function YoutubeCustomPlayer({
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = parseInt(e.target.value, 10)
     setVolume(v); setIsMuted(v === 0)
-    if (playerRef.current?.setVolume) {
-      playerRef.current.setVolume(v)
-      v > 0 ? playerRef.current.unMute() : playerRef.current.mute()
+    const p = livePlayer('setVolume')
+    if (p) {
+      try {
+        p.setVolume(v)
+        v > 0 ? p.unMute() : p.mute()
+      } catch (_) {}
     }
     saveVolume(v, v === 0)
     resetControlsTimer()
@@ -540,7 +559,8 @@ export function YoutubeCustomPlayer({
   // setPlaybackQuality is a soft request ABR overrides, but the vq URL param
   // is honored at player load.
   const setQuality = (q: string) => {
-    if (!playerRef.current) return
+    const p = livePlayer('getCurrentTime')
+    if (!p || typeof p.getPlayerState !== 'function') return
     userPickedRef.current = true
     // Going back to Auto: drop the stale "actual" so the label re-settles
     // from the fresh player instead of flashing an old value.
@@ -548,8 +568,8 @@ export function YoutubeCustomPlayer({
       autoQualityRef.current = null
       setAutoQuality(null)
     }
-    const t = playerRef.current.getCurrentTime?.() ?? 0
-    const wasPlaying = playerRef.current.getPlayerState?.() === 1
+    const t = p.getCurrentTime?.() ?? 0
+    const wasPlaying = p.getPlayerState?.() === 1
     reinitStartRef.current = t
     reinitPlayRef.current  = wasPlaying
     reinitVqRef.current    = q
