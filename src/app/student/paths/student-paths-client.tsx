@@ -19,6 +19,7 @@ import {
   Trophy,
   Target,
   CalendarCheck,
+  RotateCcw,
 } from 'lucide-react'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
@@ -36,6 +37,8 @@ interface PathVideo {
     description: string | null
   }
   status: string
+  // Seconds where the student last stopped — resume point (0 = none).
+  positionSeconds: number
 }
 
 interface PathModule {
@@ -59,6 +62,25 @@ const DONE_STATUSES = ['WATCHED', 'IMPLEMENTED']
 // A lesson that is plain text (Google Doc / Notion link, or no media at all)
 // has no thumbnail — render it as a reading card, not a video card.
 const isTextLesson = (v: PathVideo) => !v.video.thumbnail
+
+const fmtTime = (sec: number) => {
+  const s = Math.max(0, Math.floor(sec || 0))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+// Viewing progress of one lesson: a completed lesson counts fully, a video
+// in progress counts its watched share (position/duration), everything else
+// counts zero. This is what powers the resume bars on cards and modules.
+const viewingWeight = (v: PathVideo) => {
+  if (DONE_STATUSES.includes(v.status)) return 1
+  if (v.status === 'WATCHING' && v.positionSeconds > 0 && (v.video.duration ?? 0) > 0) {
+    return Math.min(1, v.positionSeconds / (v.video.duration as number))
+  }
+  return 0
+}
+
+const viewingPct = (videos: PathVideo[]) =>
+  videos.length ? Math.round((videos.reduce((a, v) => a + viewingWeight(v), 0) / videos.length) * 100) : 0
 
 // Distinct gradient covers so every course feels like its own product.
 const COVERS = [
@@ -118,12 +140,23 @@ const fmtTotal = (sec: number) => {
 
 export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary: Summary }) {
   // Auto-open the course that holds the next lesson — the learner lands on
-  // the exact spot they should continue from, no hunting.
+  // the exact spot they should continue from, no hunting. A video that is
+  // mid-watch with a saved position wins over the next pending lesson, so
+  // "Continue learning" resumes where the student actually stopped.
   const nextLesson = useMemo(() => {
     for (const p of paths) {
       for (const m of p.modules) {
+        for (const v of m.videos) {
+          if (v.status === 'WATCHING' && v.positionSeconds > 0) {
+            return { path: p, module: m, video: v, resume: true }
+          }
+        }
+      }
+    }
+    for (const p of paths) {
+      for (const m of p.modules) {
         const firstPending = m.videos.find((v) => !DONE_STATUSES.includes(v.status))
-        if (firstPending) return { path: p, module: m, video: firstPending }
+        if (firstPending) return { path: p, module: m, video: firstPending, resume: false }
       }
     }
     return null
@@ -233,22 +266,27 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
 
             {nextLesson ? (() => {
               const textLesson = isTextLesson(nextLesson.video)
+              const resuming = nextLesson.resume
               return (
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-7">
                   <div className="relative hidden sm:grid place-items-center h-16 w-16 shrink-0">
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] blur-lg opacity-50 animate-pulse" />
                     <div className="relative grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] ring-1 ring-white/30 shadow-[0_10px_40px_-10px_rgba(45,229,202,0.6)]">
-                      {textLesson ? <BookOpen className="h-7 w-7 text-white" /> : <PlayCircle className="h-7 w-7 text-white" />}
+                      {resuming ? <RotateCcw className="h-7 w-7 text-white" /> : textLesson ? <BookOpen className="h-7 w-7 text-white" /> : <PlayCircle className="h-7 w-7 text-white" />}
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#8cffef]/80">
-                      <Flame className="h-3 w-3" /> {textLesson ? 'Kontynuuj czytanie' : 'Kontynuuj naukę'}
+                      <Flame className="h-3 w-3" /> {resuming ? 'Wznów naukę' : textLesson ? 'Kontynuuj czytanie' : 'Kontynuuj naukę'}
                     </p>
                     <h2 className="mt-1 truncate font-display text-xl sm:text-2xl font-bold">{nextLesson.video.video.title}</h2>
                     <p className="mt-0.5 text-xs text-white/45 truncate">
                       {nextLesson.path.title} · {nextLesson.module.title}
-                      {textLesson ? (
+                      {resuming ? (
+                        <span className="inline-flex items-center gap-1 ml-2 text-[#8cffef]/80 font-semibold">
+                          <RotateCcw className="h-3 w-3" /> Wznów od {fmtTime(nextLesson.video.positionSeconds)}
+                        </span>
+                      ) : textLesson ? (
                         <span className="inline-flex items-center gap-1 ml-2 text-white/35">
                           <FileText className="h-3 w-3" /> lekcja tekstowa
                         </span>
@@ -267,7 +305,12 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                     className="group inline-flex shrink-0 items-center gap-2 rounded-2xl px-6 h-12 text-sm font-semibold text-white btn-darey shadow-[0_8px_32px_-8px_rgba(45,229,202,0.55)] hover:-translate-y-0.5 transition-all"
                   >
                     <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20" />
-                    {textLesson ? 'Czytaj lekcję' : 'Oglądaj teraz'}
+                    {resuming ? (
+                      <>
+                        <RotateCcw className="h-4 w-4" />
+                        Wznów od {fmtTime(nextLesson.video.positionSeconds)}
+                      </>
+                    ) : textLesson ? 'Czytaj lekcję' : 'Oglądaj teraz'}
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 </div>
@@ -299,6 +342,7 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
               const all = p.modules.flatMap((m) => m.videos)
               const done = all.filter((v) => DONE_STATUSES.includes(v.status)).length
               const pct = all.length ? Math.round((done / all.length) * 100) : 0
+              const viewPct = viewingPct(all)
               const isOpen = open[p.id]
               const [from, to] = COVERS[pi % COVERS.length]
               const mins = totalMinutes(p)
@@ -364,6 +408,18 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                             {done}/{all.length} obejrzanych
                           </span>
                         </div>
+
+                        {/* Viewing progress bar — counts mid-watch videos by
+                            their watched share, not only completed lessons. */}
+                        <div className="mt-3 flex items-center gap-3">
+                          <div className="h-1.5 w-full max-w-[280px] rounded-full bg-white/[0.07] overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${viewPct}%`, background: `linear-gradient(90deg, ${from}, ${to})` }}
+                            />
+                          </div>
+                          <span className="shrink-0 text-[10px] font-semibold tabular-nums text-white/40">{viewPct}% obejrzane</span>
+                        </div>
                       </div>
 
                       <div className="flex shrink-0 items-center gap-3">
@@ -380,6 +436,7 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                         {p.modules.map((m, mi) => {
                           const modDone = m.videos.filter((v) => DONE_STATUSES.includes(v.status)).length
                           const modPct = m.videos.length ? Math.round((modDone / m.videos.length) * 100) : 0
+                          const modViewPct = viewingPct(m.videos)
                           return (
                             <div key={m.id || mi} className="overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03]">
                               <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.06]">
@@ -404,10 +461,10 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                                     <CheckCircle2 className="w-3 h-3" /> Moduł ukończony
                                   </span>
                                 )}
-                                <div className="hidden sm:block w-24 h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+                                <div className="w-20 sm:w-24 h-1.5 shrink-0 rounded-full bg-white/[0.07] overflow-hidden">
                                   <div
                                     className="h-full rounded-full transition-all duration-700"
-                                    style={{ width: `${modPct}%`, background: `linear-gradient(90deg, ${from}, ${to})` }}
+                                    style={{ width: `${modViewPct}%`, background: `linear-gradient(90deg, ${from}, ${to})` }}
                                   />
                                 </div>
                               </div>
@@ -468,6 +525,22 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                                             </span>
                                           ) : null}
                                         </span>
+                                        {v.status === 'WATCHING' && v.positionSeconds > 0 && (v.video.duration ?? 0) > 0 && (
+                                          <span className="mt-1.5 flex items-center gap-2">
+                                            <span className="h-1 w-16 rounded-full bg-white/[0.08] overflow-hidden">
+                                              <span
+                                                className="block h-full rounded-full"
+                                                style={{
+                                                  width: `${Math.min(100, Math.round((v.positionSeconds / (v.video.duration as number)) * 100))}%`,
+                                                  background: `linear-gradient(90deg, ${from}, ${to})`,
+                                                }}
+                                              />
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#8cffef]/80">
+                                              <RotateCcw className="h-2.5 w-2.5" /> Wznów od {fmtTime(v.positionSeconds)}
+                                            </span>
+                                          </span>
+                                        )}
                                         {v.description && (
                                           <span className="mt-1 block line-clamp-2 text-[11px] leading-relaxed text-white/40">{v.description}</span>
                                         )}

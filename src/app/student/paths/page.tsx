@@ -39,14 +39,16 @@ export default async function StudentPathsPage() {
   const progress = videoIds.length
     ? await prisma.videoProgress.findMany({
         where: { userId: user.id, videoId: { in: videoIds } },
-        select: { videoId: true, status: true, watchedAt: true },
+        select: { videoId: true, status: true, watchedAt: true, positionSeconds: true },
       })
     : []
 
   const statusByVideo: Record<string, string> = {}
+  const posByVideo: Record<string, number> = {}
   const watchedDays = new Set<string>()
   for (const p of progress) {
     statusByVideo[p.videoId] = p.status
+    posByVideo[p.videoId] = p.positionSeconds ?? 0
     if ((p.status === 'WATCHED' || p.status === 'IMPLEMENTED') && p.watchedAt) {
       watchedDays.add(p.watchedAt.toISOString().slice(0, 10))
     }
@@ -100,6 +102,7 @@ export default async function StudentPathsPage() {
         description: v.description,
         video: { id: v.video.id, title: v.video.title, thumbnail: v.video.thumbnail, duration: v.video.duration, url: v.video.url, description: v.video.description },
         status: statusByVideo[v.videoId] ?? 'PENDING',
+        positionSeconds: posByVideo[v.videoId] ?? 0,
       })),
     })),
   }))

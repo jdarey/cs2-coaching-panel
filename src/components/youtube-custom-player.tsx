@@ -69,10 +69,11 @@ export function YoutubeCustomPlayer({
   // Once the user picks a quality manually, stop second-guessing YouTube's ABR.
   const userPickedRef = useRef(false)
 
-  // Canvas scale: 6x makes YouTube's ABR stream the highest available quality
-  // (default / Auto). When the user picks a specific quality, the player is
-  // rebuilt at true 1x so the vq URL parameter is honored exactly.
-  const canvasScale = vq === DEFAULT_VQ || vq === 'auto' ? 6 : 1
+  // The iframe is rendered at true 1:1. (A 6x upscale was once used to push
+  // ABR to the highest quality, but on wide screens the 600% layer exceeds
+  // the GPU tile size and renders a visible horizontal seam across the
+  // middle of the video. vq=hd2160 in the URL + requestBest() on ready force
+  // the maximum quality at load, so the artifact is not worth the cost.)
 
   // Thumbnail
   const [showThumbnail,   setShowThumbnail]   = useState(true)
@@ -254,6 +255,23 @@ export function YoutubeCustomPlayer({
             }
           }
           requestBest(event.target)
+
+          // Rebuild resilience: after a quality switch the player is
+          // re-created with start+autoplay — YouTube sometimes leaves it
+          // buffering forever instead of resuming (a known embed quirk). If
+          // playback hasn't started within a few seconds, nudge it.
+          if (reinitPlayRef.current) {
+            let attempts = 0
+            const tryResume = setInterval(() => {
+              attempts++
+              try {
+                const st = event.target.getPlayerState?.()
+                if (st === 1) { clearInterval(tryResume); return }
+                if (st === 2 || st === 3 || st === 5) event.target.playVideo()
+              } catch (_) {}
+              if (attempts > 6) clearInterval(tryResume)
+            }, 1000)
+          }
 
           if (reinitActiveRef.current) {
             reinitActiveRef.current = false
@@ -517,11 +535,10 @@ export function YoutubeCustomPlayer({
       onMouseLeave={() => { isPlaying && !isEnded && setShowControls(false); setShowQualityMenu(false) }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. YouTube iframe on a ${canvasScale}x canvas scaled back to the
-           container — 6x drives ABR to the highest available quality (Auto);
-           1x makes a picked vq stick exactly. The YouTube UI is completely
-           covered by the opaque layers below. */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" style={{ transform: `scale(${1 / canvasScale})`, transformOrigin: 'top left', width: `${canvasScale * 100}%`, height: `${canvasScale * 100}%` }}>
+      {/* 1. YouTube iframe at true 1:1 — full quality via vq URL param, no
+           GPU layer scaling (see note above). The YouTube UI is completely
+           inert: pointer-events-none + focus lockdown below. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div
           id={mountId}
           tabIndex={-1}

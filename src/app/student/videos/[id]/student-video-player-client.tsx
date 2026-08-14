@@ -47,7 +47,9 @@ export function StudentVideoPlayerClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           videoId: video.id,
-          sessionId,
+          // Path videos have no session — omit the key entirely so Zod's
+          // optional() accepts it (null would fail validation with 400).
+          ...(sessionId ? { sessionId } : {}),
           status,
           progress: pct,
           positionSeconds: Math.floor(info.position),
