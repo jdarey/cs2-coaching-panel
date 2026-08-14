@@ -8,6 +8,8 @@ import { PageHeader } from '@/components/page-header'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
 import { CountUp } from '@/components/count-up'
 import { EntranceGate } from '@/components/entrance-gate'
+import { AnnouncementsFeed } from '@/components/community/announcements-feed'
+import { LeaderboardWidget } from '@/components/community/leaderboard-widget'
 import {
   Plus, Users, BookOpen, Video, ArrowRight, Activity, MessageSquare, MessageSquareHeart,
   AlertTriangle, Clock3, CalendarClock, CheckCircle2,
@@ -116,6 +118,16 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
             Dodaj film
           </Link>
         </PageHeader>
+
+        {/* ===== Społeczność: ogłoszenia + ranking tygodnia ===== */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+          <div className="rise-in" style={{ animationDelay: '20ms' }}>
+            <AnnouncementsFeed variant="coach" />
+          </div>
+          <div className="rise-in" style={{ animationDelay: '60ms' }}>
+            <LeaderboardWidget variant="coach" />
+          </div>
+        </div>
 
         {/* ===== ATTENTION ALERTS ===== */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

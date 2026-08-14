@@ -11,7 +11,7 @@ import { AuroraBackground } from '@/components/aurora-background'
 import { UnreadBadge } from '@/components/unread-badge'
 import {
   LayoutDashboard, Users, BookOpen, Video, Tag, Settings, LogOut, Menu, X,
-  ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords,
+  ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords, Megaphone,
 } from 'lucide-react'
 
 type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback' }
@@ -34,6 +34,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
     label: 'Komunikacja',
     items: [
       { name: 'Wiadomości', href: '/coach/messages', icon: MessageSquare, badge: 'messages' },
+      { name: 'Ogłoszenia', href: '/coach/announcements', icon: Megaphone },
       { name: 'Opinie uczniów', href: '/coach/feedback', icon: MessageSquareHeart, badge: 'feedback' },
     ],
   },

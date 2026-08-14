@@ -9,6 +9,8 @@ import { StudentLayout } from '@/components/student-layout'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
 import { CountUp } from '@/components/count-up'
 import { EntranceGate } from '@/components/entrance-gate'
+import { AnnouncementsFeed } from '@/components/community/announcements-feed'
+import { LeaderboardWidget } from '@/components/community/leaderboard-widget'
 import {
   Film, Clock, CalendarClock, BookOpen, ArrowRight,  Sparkles, MessageSquare, Flame, Zap, PlayCircle,
   TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks, Timer,
@@ -222,6 +224,16 @@ export function StudentDashboardClient({
           <p className="text-white/45 text-lg max-w-2xl font-light tracking-wide">
             Dziś robisz jeden krok. Potem następny. To wszystko się sumuje.
           </p>
+        </div>
+
+        {/* ===== Społeczność: ogłoszenia + ranking tygodnia ===== */}
+        <div className="grid gap-4 lg:grid-cols-2 mb-8">
+          <div className="animate-rise-in" style={{ animationDelay: '20ms' }}>
+            <AnnouncementsFeed variant="student" />
+          </div>
+          <div className="animate-rise-in" style={{ animationDelay: '60ms' }}>
+            <LeaderboardWidget variant="student" />
+          </div>
         </div>
 
         {/* ===== DZIŚ — what matters today ===== */}

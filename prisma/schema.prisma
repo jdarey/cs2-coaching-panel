@@ -99,8 +99,42 @@ model User {
   studentInvites    StudentInvite[]
   sessionTemplates  SessionTemplate[]
 
+  // Skool-style community: announcements the coach publishes + comments on videos
+  announcements Announcement[]
+  videoComments VideoComment[]
+
   @@index([coachId])
   @@index([email])
+}
+
+// Coach announcements broadcast to all of their students (Skool-style feed).
+model Announcement {
+  id        String   @id @default(cuid())
+  coachId   String
+  title     String
+  content   String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
+  @@index([createdAt])
+}
+
+// Community discussion under a video (students ask, coach answers).
+model VideoComment {
+  id        String   @id @default(cuid())
+  videoId   String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  video  Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
 }
 
 model CoachStudentNote {
@@ -274,6 +308,7 @@ model Video {
   assignments Assignment[]
   routineTasks RoutineTask[]
   templateVideos SessionTemplateVideo[]
+  comments    VideoComment[]
 
   @@index([coachId])
   @@index([isActive])

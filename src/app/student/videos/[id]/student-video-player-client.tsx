@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, BookOpen, Film } from 'lucide-react'
 import { StudentLayout } from '@/components/student-layout'
 import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import { VideoComments } from '@/components/community/video-comments'
 import { getVideoId } from '@/lib/utils'
 
 interface PlayerVideo {
@@ -138,6 +139,9 @@ export function StudentVideoPlayerClient({ video, studentName }: StudentVideoPla
             Film jest dostępny tylko w tym panelu — nie udostępniaj go poza aplikacją.
           </p>
         </div>
+
+        {/* ===== Community discussion ===== */}
+        <VideoComments videoId={video.id} myRole="student" />
       </div>
     </StudentLayout>
   )
