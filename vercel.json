@@ -56,6 +56,10 @@
     {
       "path": "/api/cron/faceit-sync",
       "schedule": "0 4 * * 1"
+    },
+    {
+      "path": "/api/cron/matches-sync",
+      "schedule": "0 5 * * 1"
     }
   ]
 }

@@ -234,6 +234,9 @@ export interface LeetifyMatch {
   accuracyEnemySpotted: number | null
   accuracyHead: number | null
   sprayAccuracy: number | null
+  kills: number | null
+  deaths: number | null
+  platformMatchId: string | null // Faceit match id / Premier share code (from the API)
   finishedAt: string
 }
 
@@ -248,39 +251,67 @@ export function normalizeMapName(raw: string): string {
     .join('')
 }
 
-// Fetch the player's recent matches from Leetify's public API (keyless) by
-// steam64. Leetify aggregates ALL matchmaking — including Faceit — with per
-// match stats (preaim, reaction, accuracy, score). Faceit matches are
-// preferred; when fewer than `limit` exist, other matchmaking fills the rest.
+// Fetch the player's recent FACEIT matches from Leetify's official public API
+// (keyless) by steam64. Uses /v3/profile/matches — the full match list (not the
+// profile's capped recent_matches which mixes Premier/wingman in). Each entry
+// is a full match detail, so we can pick the player's own row from `stats` and
+// derive the outcome and score from the team scores — no guessing.
 export async function fetchLeetifyRecentMatches(steamId: string, limit = 5): Promise<LeetifyMatch[]> {
   try {
-    const url = `${LEETIFY_API}/v3/profile?steam64_id=${encodeURIComponent(steamId)}`
+    const url = `${LEETIFY_API}/v3/profile/matches?steam64_id=${encodeURIComponent(steamId)}`
     const res = await fetch(url, { cache: 'no-store' })
     if (!res.ok) return []
-    const data = await res.json()
-    const games: any[] = Array.isArray(data?.recent_matches) ? data.recent_matches : []
+    const matches: any[] = await res.json()
+    if (!Array.isArray(matches)) return []
 
-    const mapMatch = (g: any): LeetifyMatch => ({
-      externalId: g.id || `${g.finished_at}-${g.map_name}`,
-      dataSource: g.data_source || null,
-      map: normalizeMapName(g.map_name || 'Inna'),
-      outcome: g.outcome === 'win' ? 'WIN' : g.outcome === 'loss' ? 'LOSS' : 'DRAW',
-      score: Array.isArray(g.score) && g.score.length === 2 ? [g.score[0], g.score[1]] : null,
-      leetifyRating: typeof g.leetify_rating === 'number' ? g.leetify_rating : null,
-      preaim: typeof g.preaim === 'number' ? g.preaim : null,
-      reactionTimeMs: typeof g.reaction_time_ms === 'number' ? g.reaction_time_ms : null,
-      accuracyEnemySpotted: typeof g.accuracy_enemy_spotted === 'number' ? g.accuracy_enemy_spotted : null,
-      accuracyHead: typeof g.accuracy_head === 'number' ? g.accuracy_head : null,
-      sprayAccuracy: typeof g.spray_accuracy === 'number' ? g.spray_accuracy : null,
-      finishedAt: g.finished_at || new Date().toISOString(),
-    })
+    const mapMatch = (m: any): LeetifyMatch | null => {
+      const stats = (Array.isArray(m?.stats) ? m.stats : []).find((s: any) => s?.steam64_id === steamId)
+      // Determine MY team and score from the team scores table.
+      let score: [number, number] | null = null
+      let outcome: 'WIN' | 'LOSS' | 'DRAW' = 'DRAW'
+      if (Array.isArray(m?.team_scores) && m.team_scores.length === 2 && stats) {
+        const mine = m.team_scores.find((t: any) => t.team_number === stats.initial_team_number)
+        const theirs = m.team_scores.find((t: any) => t.team_number !== stats.initial_team_number)
+        if (mine && theirs && typeof mine.score === 'number' && typeof theirs.score === 'number') {
+          score = [mine.score, theirs.score]
+          outcome = mine.score > theirs.score ? 'WIN' : mine.score < theirs.score ? 'LOSS' : 'DRAW'
+        }
+      }
+      return {
+        externalId: m?.id || `${m?.finished_at}-${m?.map_name}`,
+        dataSource: m?.data_source || null,
+        map: normalizeMapName(m?.map_name || 'Inna'),
+        outcome,
+        score,
+        leetifyRating: stats && typeof stats.leetify_rating === 'number' ? stats.leetify_rating : null,
+        preaim: stats && typeof stats.preaim === 'number' ? stats.preaim : null,
+        // The match detail API reports reaction time in seconds — convert to ms
+        // to stay consistent with the profile stats (reaction_time_ms).
+        reactionTimeMs:
+          stats && typeof stats.reaction_time === 'number'
+            ? Math.round(stats.reaction_time * 1000)
+            : stats && typeof stats.reaction_time_ms === 'number'
+              ? stats.reaction_time_ms
+              : null,
+        // Accuracy values come from the match detail as fractions (0..1) while
+        // the profile's season averages are 0..100 percentages — normalize to
+        // percentages so the AI verdict and the UI compare like with like.
+        accuracyEnemySpotted:
+          stats && typeof stats.accuracy_enemy_spotted === 'number' ? stats.accuracy_enemy_spotted * 100 : null,
+        accuracyHead: stats && typeof stats.accuracy_head === 'number' ? stats.accuracy_head * 100 : null,
+        sprayAccuracy: stats && typeof stats.spray_accuracy === 'number' ? stats.spray_accuracy * 100 : null,
+        kills: stats && typeof stats.total_kills === 'number' ? stats.total_kills : null,
+        deaths: stats && typeof stats.total_deaths === 'number' ? stats.total_deaths : null,
+        platformMatchId: m?.data_source_match_id || null,
+        finishedAt: m?.finished_at || new Date().toISOString(),
+      }
+    }
 
-    const all = games.map(mapMatch)
-    // Faceit first, then fill with other matchmaking if needed
-    const faceitMatches = all.filter((_, i) => games[i]?.data_source === 'faceit')
-    if (faceitMatches.length >= limit) return faceitMatches.slice(0, limit)
-    const others = all.filter((_, i) => games[i]?.data_source !== 'faceit')
-    return [...faceitMatches, ...others].slice(0, limit)
+    const all = matches.map(mapMatch).filter((x): x is LeetifyMatch => x !== null)
+    return all
+      .filter((m) => m.dataSource === 'faceit')
+      .sort((a, b) => new Date(b.finishedAt).getTime() - new Date(a.finishedAt).getTime())
+      .slice(0, limit)
   } catch {
     return []
   }
@@ -414,6 +445,150 @@ export async function fetchBestFaceitElo(
     }
   }
   return { elo: null, level: null, nickname, source: null }
+}
+
+// ---------------------------------------------------------------------------
+// Official Faceit Open API (data/v4) — match HISTORY. Leetify only indexes
+// matches users manually upload (Faceit demos are now paid), so the match log
+// must come straight from Faceit. Needs an API key (env FACEIT_API_KEY or the
+// coach's CoachSettings.faceitApiKey — free at developers.faceit.com).
+// ---------------------------------------------------------------------------
+const FACEIT_OPEN_API = 'https://open.faceit.com/data/v4'
+
+/** Resolve a Faceit player's player_id by nickname via the Open API. */
+export async function fetchFaceitPlayerId(nickname: string, apiKey: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${FACEIT_OPEN_API}/players?nickname=${encodeURIComponent(nickname)}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data?.player_id || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Full per-player scoreboard of a Faceit match (kills/deaths/assists). The
+ * match history endpoint only lists players — stats need one detail call each.
+ * Values are summed across rounds (each round repeats the aggregate scoreboard).
+ */
+export async function fetchFaceitMatchScoreboard(
+  matchId: string,
+  playerId: string,
+  apiKey: string,
+): Promise<{ kills: number | null; deaths: number | null; assists: number | null } | null> {
+  try {
+    const res = await fetch(`${FACEIT_OPEN_API}/matches/${encodeURIComponent(matchId)}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const rounds: any[] = Array.isArray(data?.rounds) ? data.rounds : []
+    let kills = 0
+    let deaths = 0
+    let assists = 0
+    let found = false
+    for (const round of rounds) {
+      for (const team of Array.isArray(round?.teams) ? round.teams : []) {
+        for (const p of Array.isArray(team?.players) ? team.players : []) {
+          if (p?.player_id === playerId) {
+            found = true
+            const ps = p.player_stats || {}
+            kills += typeof ps.Kills === 'number' ? ps.Kills : parseInt(ps.Kills, 10) || 0
+            deaths += typeof ps.Deaths === 'number' ? ps.Deaths : parseInt(ps.Deaths, 10) || 0
+            assists += typeof ps.Assists === 'number' ? ps.Assists : parseInt(ps.Assists, 10) || 0
+          }
+        }
+      }
+    }
+    return found ? { kills, deaths, assists } : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The student's latest FACEIT matches straight from the official Faceit API.
+ * Returns the same LeetifyMatch shape the rest of the pipeline consumes
+ * (aim/accuracy fields stay null — Faceit does not expose them; the AI
+ * analysis simply skips missing metrics).
+ */
+export async function fetchFaceitRecentMatches(
+  nickname: string,
+  apiKey: string,
+  limit = 5,
+): Promise<LeetifyMatch[]> {
+  const playerId = await fetchFaceitPlayerId(nickname, apiKey)
+  if (!playerId) return []
+
+  try {
+    const res = await fetch(`${FACEIT_OPEN_API}/players/${playerId}/history?game=cs2&limit=${Math.min(limit * 2, 20)}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    const items: any[] = Array.isArray(data?.items) ? data.items : []
+    if (items.length === 0) return []
+
+    const out: LeetifyMatch[] = []
+    for (const item of items) {
+      const teams = item?.teams || {}
+      const factions = [teams.faction1, teams.faction2].filter(Boolean)
+      // Find MY faction (player listed there by id or nickname).
+      const myFaction = factions.find(
+        (f: any) =>
+          f.faction_id === item?.results?.winner ||
+          (Array.isArray(f.players) &&
+            f.players.some(
+              (p: any) =>
+                p?.player_id === playerId || p?.nickname?.toLowerCase() === nickname.toLowerCase(),
+            )),
+      )
+      if (!myFaction) continue
+
+      const otherFaction = factions.find((f: any) => f.faction_id !== myFaction.faction_id)
+      const myKey = myFaction.faction_id
+      const scoreMap = item?.results?.score || {}
+      const myScore = parseInt(scoreMap[myKey], 10)
+      const otherScore = otherFaction ? parseInt(scoreMap[otherFaction.faction_id], 10) : NaN
+      const winner = item?.results?.winner
+      const outcome: 'WIN' | 'LOSS' | 'DRAW' =
+        winner === myKey ? 'WIN' : winner === otherFaction?.faction_id ? 'LOSS' : 'DRAW'
+
+      const score: [number, number] | null =
+        !Number.isNaN(myScore) && !Number.isNaN(otherScore) ? [myScore, otherScore] : null
+
+      const board = await fetchFaceitMatchScoreboard(item.match_id, playerId, apiKey)
+
+      out.push({
+        externalId: item.match_id,
+        dataSource: 'faceit',
+        map: normalizeMapName(item.map || 'Inna'),
+        outcome,
+        score,
+        leetifyRating: null,
+        preaim: null,
+        reactionTimeMs: null,
+        accuracyEnemySpotted: null,
+        accuracyHead: null,
+        sprayAccuracy: null,
+        kills: board?.kills ?? null,
+        deaths: board?.deaths ?? null,
+        platformMatchId: item.match_id,
+        finishedAt: item.finished_at || new Date().toISOString(),
+      })
+
+      if (out.length >= limit) break
+    }
+    return out
+  } catch {
+    return []
+  }
 }
 
 // Fetch a Faceit player by nickname using the legacy (keyless) endpoint.

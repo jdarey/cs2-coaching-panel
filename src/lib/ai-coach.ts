@@ -6,7 +6,7 @@
 import { prisma } from './prisma'
 import { LeetifyMatch } from './gaming'
 
-interface LeetifyProfileLike {
+export interface LeetifyProfileLike {
   aim: number | null
   positioning: number | null
   utility: number | null

@@ -23,6 +23,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
       { name: 'Moje sesje', href: '/student/sessions', icon: BookOpen },
       { name: 'Filmy do oglądania', href: '/student/videos', icon: Video },
+      { name: 'Ścieżki treningowe', href: '/student/paths', icon: GraduationCap },
       { name: 'Mój postęp', href: '/student/progress', icon: BarChart2 },
       { name: 'Zadania treningowe', href: '/student/tasks', icon: ClipboardList },
       { name: 'Log meczów', href: '/student/matches', icon: Swords },

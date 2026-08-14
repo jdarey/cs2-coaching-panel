@@ -35,6 +35,9 @@ function match(overrides: Partial<Parameters<typeof analyzeMatch>[1]> = {}): Par
     accuracyEnemySpotted: 42,
     accuracyHead: 22,
     sprayAccuracy: 30,
+    kills: 15,
+    deaths: 17,
+    platformMatchId: '1-test',
     ...overrides,
   }
 }

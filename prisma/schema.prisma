@@ -103,6 +103,9 @@ model User {
   announcements Announcement[]
   videoComments VideoComment[]
 
+  // Training paths (Skool-style courses: ordered modules of videos)
+  trainingPaths TrainingPath[]
+
   @@index([coachId])
   @@index([email])
 }
@@ -121,6 +124,48 @@ model Announcement {
 
   @@index([coachId])
   @@index([createdAt])
+}
+
+// Training path = Skool-style course: ordered modules, each with ordered videos.
+model TrainingPath {
+  id          String            @id @default(cuid())
+  coachId     String
+  title       String
+  description String?
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  coach   User             @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  modules TrainingModule[]
+
+  @@index([coachId])
+}
+
+model TrainingModule {
+  id     String @id @default(cuid())
+  pathId String
+  title  String
+  order  Int    @default(0)
+
+  path   TrainingPath          @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  videos TrainingModuleVideo[]
+
+  @@index([pathId])
+}
+
+model TrainingModuleVideo {
+  id       String @id @default(cuid())
+  moduleId String
+  videoId  String
+  order    Int    @default(0)
+
+  module TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  video  Video          @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, videoId])
+  @@index([moduleId])
+  @@index([videoId])
 }
 
 // Community discussion under a video (students ask, coach answers).
@@ -309,6 +354,7 @@ model Video {
   routineTasks RoutineTask[]
   templateVideos SessionTemplateVideo[]
   comments    VideoComment[]
+  pathVideos  TrainingModuleVideo[]
 
   @@index([coachId])
   @@index([isActive])
