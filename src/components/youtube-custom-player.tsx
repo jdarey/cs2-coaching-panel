@@ -66,6 +66,11 @@ export function YoutubeCustomPlayer({
   const [isPlaying,    setIsPlaying]    = useState(false)
   const [isBuffering,  setIsBuffering]  = useState(false)
   const [isEnded,      setIsEnded]      = useState(false)
+  // Short-lived center cover on pause: YouTube renders its own big center
+  // button in the paused state for the first few seconds, then fades it out.
+  // We cover it for the same window so it is never visible.
+  const [pauseFlash, setPauseFlash] = useState(false)
+  const pauseFlashTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [currentTime,  setCurrentTime]  = useState(0)
   const [duration,     setDuration]     = useState(0)
   const [volume,       setVolume]       = useState(() => loadVolume().volume)
@@ -138,6 +143,8 @@ export function YoutubeCustomPlayer({
     setIsPlaying(false)
     setIsBuffering(false)
     setIsEnded(false)
+    setPauseFlash(false)
+    if (pauseFlashTimeoutRef.current) clearTimeout(pauseFlashTimeoutRef.current)
     setCurrentTime(0)
     setDuration(0)
     setAvailableQualities([])
@@ -359,6 +366,13 @@ export function YoutubeCustomPlayer({
             }, 600)
           } else if (state === 2) {
             setIsPlaying(false); setIsBuffering(false)
+            // YouTube shows its own paused chrome (title bar, center play
+            // button) for the first seconds, then fades to the inactive
+            // state. Cover that window with our own center cover so no YT
+            // button is ever visible on pause.
+            setPauseFlash(true)
+            if (pauseFlashTimeoutRef.current) clearTimeout(pauseFlashTimeoutRef.current)
+            pauseFlashTimeoutRef.current = setTimeout(() => setPauseFlash(false), 6000)
             // Flush the resume point on pause (user stops watching).
             onProgressRef.current?.({
               position: latestPositionRef.current,
@@ -475,6 +489,7 @@ export function YoutubeCustomPlayer({
   // 5b. Unmount flush — persist the latest position when leaving the page.
   useEffect(() => {
     return () => {
+      if (pauseFlashTimeoutRef.current) clearTimeout(pauseFlashTimeoutRef.current)
       if (latestPositionRef.current > 0 && latestDurationRef.current > 0) {
         onProgressRef.current?.({
           position: latestPositionRef.current,
@@ -679,10 +694,40 @@ export function YoutubeCustomPlayer({
         <div className="absolute inset-0 z-50 bg-black pointer-events-none" />
       )}
 
-      {/* 4. Paused state — the video frame stays fully visible. YouTube's own
-           paused overlay can't appear: the iframe never receives mouse events
-           (pointer-events-none) and our center play button (z-50) sits exactly
-           where YouTube's would. */}
+      {/* 3d. PAUSED STATE — YouTube renders its own chrome inside the
+           cross-origin iframe whenever the video is paused (title bar and
+           "Więcej filmów" chip, big center play button, share button,
+           YouTube logo). We cannot inject CSS into the iframe (that is what
+           the Hyde extension does inside youtube.com), so we cover those
+           zones with our own branded overlay: the paused state speaks OUR
+           design language and no YouTube UI is visible. */}
+      {!isPlaying && hasPlayed && !isEnded && !showThumbnail && !isReinitialising && (
+        <div className="absolute inset-0 z-35 pointer-events-none select-none" aria-hidden="true">
+          {/* Top strip — covers YT's title bar and the "Więcej filmów" chip */}
+          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/90 via-black/45 to-transparent" />
+          {/* Bottom strip — covers YT's logo / share button behind the controls */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+          {/* Center cover — hides YT's big center play button (soft, blends
+              with the frame, fades after a few seconds like YT's own) */}
+          {pauseFlash && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-black/60 ring-1 ring-white/10" />
+            </div>
+          )}
+          {/* Our own paused chip — the top-left looks deliberate */}
+          <div className="absolute top-4 left-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/85 bg-black/60 ring-1 ring-white/15 backdrop-blur-md">
+              <Pause className="w-3 h-3 text-[#a78bfa]" />
+              Wstrzymano
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Paused state — the video frame stays fully visible and YouTube's
+           own paused chrome is covered by our branded overlay (3d). The
+           iframe never receives mouse events (pointer-events-none) and the
+           focus lockdown keeps it inert, so no YT UI can resurface. */}
 
       {/* 4b. Quality change confirmation — the switch is instant, so always
            show explicit feedback that the click registered. */}
@@ -776,7 +821,7 @@ export function YoutubeCustomPlayer({
 
       {/* 10. Controls bar — slim, subtle; no big black slab */}
       <div
-        className={`absolute bottom-0 left-0 right-0 z-30 px-4 pb-2.5 pt-2 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-all duration-300 ease-out flex flex-col gap-1.5 pointer-events-auto select-none ${
+        className={`absolute bottom-0 left-0 right-0 z-30 px-4 pb-2.5 pt-2 bg-gradient-to-t from-black/75 via-black/35 to-transparent transition-all duration-300 ease-out flex flex-col gap-1.5 pointer-events-auto select-none ${
           showControls || !isPlaying || isEnded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
         } ${showThumbnail || isReinitialising ? 'opacity-0 pointer-events-none' : ''}`}
       >
