@@ -198,9 +198,20 @@ export function YoutubeCustomPlayer({
         loop:           0,
         enablejsapi:    1,
         origin:         window.location.origin,
+        // No YouTube tracking cookies — the embed loads from youtube-nocookie.
+        host:           'https://www.youtube-nocookie.com',
       },
+      // Override the iframe title the moment the embed exists — YouTube sets
+      // it to the real video title, which leaks out of the chromeless player
+      // (screen readers, tooltips). Ours says what it is: a training video.
       events: {
         onReady: (event: any) => {
+          // Override the iframe title — YouTube sets it to the real video
+          // title, which leaks out of the chromeless player (screen readers,
+          // tooltips). Ours says what it is: a training video. YouTube
+          // sometimes injects the iframe as a sibling of the mount div, so
+          // search the whole container.
+          try { const f = containerRef.current?.querySelector('iframe'); if (f) f.title = 'Wideo treningowe' } catch (_) {}
           setIsReady(true)
           const readyDur = event.target.getDuration?.() || 0
           setDuration(readyDur)
@@ -317,7 +328,19 @@ export function YoutubeCustomPlayer({
       },
     })
 
+    // Safety net: YouTube may create the iframe slightly later than onReady;
+    // keep the title ours no matter when the element lands in the DOM.
+    const titleFixers = [600, 1600].map((ms) =>
+      setTimeout(() => {
+        try {
+          const f = containerRef.current?.querySelector('iframe')
+          if (f) f.title = 'Wideo treningowe'
+        } catch (_) {}
+      }, ms)
+    )
+
     return () => {
+      titleFixers.forEach(clearTimeout)
       if (playerRef.current) {
         try { playerRef.current.destroy() } catch (_) {}
         playerRef.current = null
