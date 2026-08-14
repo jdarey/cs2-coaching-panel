@@ -82,6 +82,11 @@ export function YoutubeCustomPlayer({
   const [autoQuality,        setAutoQuality]        = useState<string | null>(null)
   const autoQualityRef = useRef<string | null>(null)
   const [showQualityMenu,    setShowQualityMenu]    = useState(false)
+  // "Jakość zmieniona" confirmation toast — the switch itself is instant and
+  // the visual difference can be subtle, so the user always gets explicit
+  // feedback that the click registered.
+  const [qualityToast, setQualityToast] = useState<string | null>(null)
+  const qualityToastTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [playerEpoch, setPlayerEpoch] = useState(0)
   const [vq, setVq] = useState<string>(DEFAULT_VQ)
   const vqRef = useRef<string>(DEFAULT_VQ)
@@ -310,6 +315,28 @@ export function YoutubeCustomPlayer({
             }, 1000)
           }
 
+          // Manual picks are pinned harder: after the initial requestBest, keep
+          // re-asserting the chosen quality for ~40s so YouTube's ABR cannot
+          // silently drop it right after the rebuild.
+          const chosen = reinitVqRef.current
+          const userChose = chosen !== DEFAULT_VQ && chosen !== 'auto'
+          if (userChose) {
+            let pins = 0
+            const pinQuality = setInterval(() => {
+              pins++
+              const player = playerRef.current
+              if (!player?.getPlaybackQuality) return
+              const available = player.getAvailableQualityLevels?.() ?? []
+              if (available.includes(chosen)) {
+                try {
+                  if (player.setPlaybackQualityRange) player.setPlaybackQualityRange({ min: chosen, max: chosen })
+                  if (player.getPlaybackQuality?.() !== chosen) player.setPlaybackQuality?.(chosen)
+                } catch (_) {}
+              }
+              if (pins > 4) clearInterval(pinQuality)
+            }, 10000)
+          }
+
           if (reinitActiveRef.current) {
             reinitActiveRef.current = false
             setIsReinitialising(false)
@@ -530,6 +557,11 @@ export function YoutubeCustomPlayer({
     setVq(q)
     vqRef.current = q
     setShowQualityMenu(false)
+    // Confirm the change visibly — even when the picture difference is subtle
+    // (e.g. picking the quality ABR already uses), the user sees it registered.
+    if (qualityToastTimeoutRef.current) clearTimeout(qualityToastTimeoutRef.current)
+    setQualityToast(qualityLabel(q))
+    qualityToastTimeoutRef.current = setTimeout(() => setQualityToast(null), 2600)
     setIsReinitialising(true)
     reinitActiveRef.current = true
     setPlayerEpoch(e => e + 1)
@@ -631,6 +663,17 @@ export function YoutubeCustomPlayer({
            paused overlay can't appear: the iframe never receives mouse events
            (pointer-events-none) and our center play button (z-50) sits exactly
            where YouTube's would. */}
+
+      {/* 4b. Quality change confirmation — the switch is instant, so always
+           show explicit feedback that the click registered. */}
+      {qualityToast && (
+        <div className="absolute top-4 right-4 z-40 pointer-events-none animate-rise-in">
+          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-[#8cffef] bg-black/70 ring-1 ring-[#2de5ca]/30 backdrop-blur-md shadow-lg">
+            <Settings className="w-3 h-3" />
+            Jakość: {qualityToast}
+          </span>
+        </div>
+      )}
 
       {/* 5. Buffering spinner — semi-transparent so the frame stays visible */}
       {isBuffering && !isEnded && !showThumbnail && !isReinitialising && (
