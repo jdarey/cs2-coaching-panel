@@ -30,7 +30,7 @@ const QUALITY_LABELS: Record<string, string> = {
 // Default: start at the highest quality (Auto). vq is a URL-level request
 // honored at player load — the only mechanism YouTube embeds reliably obey.
 const DEFAULT_VQ = 'hd2160'
-const QUALITY_ORDER = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
+const QUALITY_ORDER = ['highres', 'hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
 
 // Volume persistence — the player remembers the user's volume and mute across
 // sessions (localStorage). Applied on every player build so a quality switch
@@ -298,8 +298,8 @@ export function YoutubeCustomPlayer({
                 }
                 player.setPlaybackQuality?.(targetQuality)
               } catch (_) {}
-              if (retries < 2) {
-                setTimeout(() => requestBest(player, retries + 1), 600 * (retries + 1))
+              if (retries < 3) {
+                setTimeout(() => requestBest(player, retries + 1), 500 * (retries + 1))
               }
             }
           }
@@ -323,16 +323,17 @@ export function YoutubeCustomPlayer({
           }
 
           // Manual picks are pinned harder: after the initial requestBest, keep
-          // re-asserting the chosen quality for ~40s so YouTube's ABR cannot
-          // silently drop it right after the rebuild.
+          // re-asserting the chosen quality so YouTube's ABR cannot silently
+          // drop it right after the rebuild. More aggressive early, then taper.
           const chosen = reinitVqRef.current
           const userChose = chosen !== DEFAULT_VQ && chosen !== 'auto'
           if (userChose) {
             let pins = 0
-            const pinQuality = setInterval(() => {
-              pins++
+            const intervals = [1000, 3000, 5000, 10000, 15000]
+            const pinQuality = () => {
+              if (pins >= intervals.length) return
               const player = playerRef.current
-              if (!player?.getPlaybackQuality) return
+              if (!player?.getPlaybackQuality) { pins++; pinQuality(); return }
               const available = player.getAvailableQualityLevels?.() ?? []
               if (available.includes(chosen)) {
                 try {
@@ -340,8 +341,10 @@ export function YoutubeCustomPlayer({
                   if (player.getPlaybackQuality?.() !== chosen) player.setPlaybackQuality?.(chosen)
                 } catch (_) {}
               }
-              if (pins > 4) clearInterval(pinQuality)
-            }, 10000)
+              pins++
+              if (pins < intervals.length) setTimeout(pinQuality, intervals[pins])
+            }
+            pinQuality()
           }
 
           if (reinitActiveRef.current) {
@@ -602,7 +605,7 @@ export function YoutubeCustomPlayer({
     setPlayerEpoch(e => e + 1)
     setTimeout(() => {
       if (reinitActiveRef.current) { reinitActiveRef.current = false; setIsReinitialising(false) }
-    }, 8000)
+    }, 5000)
     resetControlsTimer()
   }
 
@@ -880,7 +883,13 @@ export function YoutubeCustomPlayer({
                       <span>Auto</span>
                       {(!userPickedRef.current || currentQuality === 'auto') && <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa] flex-shrink-0" />}
                     </button>
-                    {availableQualities.filter((q) => q !== 'auto').map((q) => (
+                    {(() => {
+              // Show all available qualities from YouTube, ordered by QUALITY_ORDER
+              // but also include any qualities YouTube returns that aren't in our list
+              const ytQualities = availableQualities.filter(q => q !== 'auto')
+              const ordered = QUALITY_ORDER.filter(q => ytQualities.includes(q))
+              const remaining = ytQualities.filter(q => !QUALITY_ORDER.includes(q))
+              return [...ordered, ...remaining].map((q) => (
                       <button
                         key={q}
                         onClick={() => setQuality(q)}
@@ -903,7 +912,7 @@ export function YoutubeCustomPlayer({
                   <Settings className={`w-4 h-4 transition-transform duration-300 ${showQualityMenu ? 'rotate-45 text-[#a78bfa]' : ''}`} />
                   <span className="text-[11px]">
                     {(() => {
-                      const isAuto = vqRef.current === DEFAULT_VQ || vqRef.current === 'auto'
+const isAuto = vqRef.current === DEFAULT_VQ || vqRef.current === 'auto' || vqRef.current === 'highres'
                       if (isAuto) return autoQuality ? qualityLabel(autoQuality) : 'Auto'
                       return qualityLabel(currentQuality)
                     })()}
