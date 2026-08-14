@@ -32,6 +32,25 @@ const QUALITY_LABELS: Record<string, string> = {
 const DEFAULT_VQ = 'hd2160'
 const QUALITY_ORDER = ['hd2160', 'hd1440', 'hd1080', 'hd720', 'large', 'medium', 'small']
 
+// Volume persistence — the player remembers the user's volume and mute across
+// sessions (localStorage). Applied on every player build so a quality switch
+// or page reload never resets the volume to 100%.
+const VOLUME_KEY = 'darey-player-volume'
+const loadVolume = (): { volume: number; muted: boolean } => {
+  try {
+    const raw = localStorage.getItem(VOLUME_KEY)
+    if (raw) {
+      const p = JSON.parse(raw)
+      const volume = typeof p?.volume === 'number' ? Math.min(100, Math.max(0, p.volume)) : 100
+      return { volume, muted: !!p?.muted }
+    }
+  } catch (_) {}
+  return { volume: 100, muted: false }
+}
+const saveVolume = (volume: number, muted: boolean) => {
+  try { localStorage.setItem(VOLUME_KEY, JSON.stringify({ volume, muted })) } catch (_) {}
+}
+
 export function YoutubeCustomPlayer({
   videoId,
   title = 'Wideo',
@@ -49,8 +68,8 @@ export function YoutubeCustomPlayer({
   const [isEnded,      setIsEnded]      = useState(false)
   const [currentTime,  setCurrentTime]  = useState(0)
   const [duration,     setDuration]     = useState(0)
-  const [volume,       setVolume]       = useState(100)
-  const [isMuted,      setIsMuted]      = useState(false)
+  const [volume,       setVolume]       = useState(() => loadVolume().volume)
+  const [isMuted,      setIsMuted]      = useState(() => loadVolume().muted)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -223,8 +242,15 @@ export function YoutubeCustomPlayer({
             latestPositionRef.current = 0
             try { event.target.seekTo(0) } catch (_) {}
           }
-          setVolume(event.target.getVolume())
-          setIsMuted(event.target.isMuted())
+          // Apply the user's remembered volume/mute to every fresh player
+          // instance (a quality rebuild otherwise resets the volume to 100%).
+          const storedVol = loadVolume()
+          try {
+            event.target.setVolume(storedVol.volume)
+            storedVol.muted ? event.target.mute() : event.target.unMute()
+          } catch (_) {}
+          setVolume(storedVol.volume)
+          setIsMuted(storedVol.muted)
 
           // Force disable captions
           try {
@@ -464,8 +490,10 @@ export function YoutubeCustomPlayer({
 
   const toggleMute = () => {
     if (!playerRef.current) return
-    const muted = !isMuted; setIsMuted(muted)
+    const muted = !isMuted
+    setIsMuted(muted)
     muted ? playerRef.current.mute() : (playerRef.current.unMute(), playerRef.current.setVolume(volume))
+    saveVolume(volume, muted)
     resetControlsTimer()
   }
 
@@ -476,6 +504,7 @@ export function YoutubeCustomPlayer({
       playerRef.current.setVolume(v)
       v > 0 ? playerRef.current.unMute() : playerRef.current.mute()
     }
+    saveVolume(v, v === 0)
     resetControlsTimer()
   }
 
@@ -516,6 +545,21 @@ export function YoutubeCustomPlayer({
       ? containerRef.current.requestFullscreen().catch(console.error)
       : document.exitFullscreen().catch(console.error)
   }
+
+  // F11 lock: the browser fullscreen is blocked and redirected to the
+  // player's own fullscreen, so our controls stay visible and the layout
+  // keeps its design even in fullscreen.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'F11') {
+        e.preventDefault()
+        toggleFullscreen()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const formatTime = (secs: number) => {
     if (isNaN(secs) || secs < 0) return '0:00'
