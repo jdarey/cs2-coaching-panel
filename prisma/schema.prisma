@@ -592,6 +592,7 @@ model MatchLog {
   externalId String?  @unique // Leetify game id (dedupe)
   platformMatchId String? // Faceit match id / Premier share code — used to link to the original match on Faceit
   syncedSteamId String? // steam64 the match was synced from — used to purge matches when the student switches accounts
+  syncSource    String? // FACEIT_API (na żywo z Faceit) | LEETIFY (fallback — tylko ręcznie dodane) | MANUAL
   createdAt  DateTime @default(now())
 
   // Per-match stats from Leetify (Faceit matches) — accurate match numbers

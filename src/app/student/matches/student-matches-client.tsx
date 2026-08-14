@@ -30,20 +30,31 @@ interface Match {
   accuracyHead: number | null
   sprayAccuracy: number | null
   coachReviewed: boolean
+  syncSource: string | null
+}
+
+interface MatchStatus {
+  faceitKeyConfigured: boolean
+  studentNicknames: Record<string, string | null>
 }
 
 export function StudentMatchesClient() {
   const [matches, setMatches] = useState<Match[]>([])
+  const [status, setStatus] = useState<MatchStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
-  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string; source?: string | null } | null>(null)
   const [expandedAi, setExpandedAi] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/matches')
-      if (res.ok) setMatches(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        setMatches(Array.isArray(data) ? data : data.matches || [])
+        setStatus(data.status || null)
+      }
     } catch {
       /* ignore */
     } finally {
@@ -86,6 +97,7 @@ export function StudentMatchesClient() {
       }
       setSyncMsg({
         ok: true,
+        source: data.source || null,
         text:
           data.created.length > 0
             ? `Zaimportowano ${data.created.length} meczów z analizą AI (${data.skipped} już było)`
@@ -131,6 +143,22 @@ export function StudentMatchesClient() {
           </button>
         </PageHeader>
 
+        {/* Honesty banner — the log can only show real Faceit matches when a
+            Faceit API key is configured. Leetify fallback is incomplete. */}
+        {status && !status.faceitKeyConfigured && matches.length > 0 && (
+          <div className="animate-rise-in rounded-2xl px-5 py-4 text-sm border border-amber-500/25 bg-gradient-to-br from-amber-500/[0.08] to-orange-500/[0.04] flex items-start gap-3" style={{ animationDelay: '0ms' }}>
+            <Bot className="w-4 h-4 shrink-0 text-amber-300 mt-0.5" />
+            <div className="flex-1 space-y-1">
+              <p className="font-semibold text-amber-200">Ten log może nie pokazywać wszystkich Twoich ostatnich meczów</p>
+              <p className="text-white/60 text-[13px] leading-relaxed">
+                Mecze pobierane są teraz z Leetify (zapasowe źródło), a Leetify zawiera tylko mecze dodane ręcznie.
+                Aby log zawsze pokazywał dokładnie 5 ostatnich meczów z Faceita, trener musi dodać darmowy klucz API Faceit
+                w <span className="text-white/80 font-medium">Ustawieniach trenera</span> (developers.faceit.com).
+              </p>
+            </div>
+          </div>
+        )}
+
         {syncMsg && (
           <div
             className={cn(
@@ -142,7 +170,15 @@ export function StudentMatchesClient() {
             style={{ animationDelay: '0ms' }}
           >
             {syncMsg.ok ? <Check className="w-4 h-4 shrink-0" /> : <Bot className="w-4 h-4 shrink-0" />}
-            <span className="flex-1">{syncMsg.text}</span>
+            <span className="flex-1">
+              {syncMsg.text}
+              {syncMsg.source === 'LEETIFY' && (
+                <span className="ml-2 text-amber-200/90">— źródło: Leetify (może być niekompletne)</span>
+              )}
+              {syncMsg.source === 'FACEIT_API' && (
+                <span className="ml-2 text-emerald-200/90">— źródło: Faceit API (na żywo)</span>
+              )}
+            </span>
             <button onClick={() => setSyncMsg(null)} className="text-white/50 hover:text-white transition shrink-0" aria-label="Zamknij">
               ×
             </button>

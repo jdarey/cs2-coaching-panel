@@ -481,7 +481,9 @@ export async function fetchFaceitMatchScoreboard(
   apiKey: string,
 ): Promise<{ kills: number | null; deaths: number | null; assists: number | null } | null> {
   try {
-    const res = await fetch(`${FACEIT_OPEN_API}/matches/${encodeURIComponent(matchId)}`, {
+    // Detailed per-player stats live under /matches/{id}/stats (rounds array) —
+    // the bare /matches/{id} endpoint has no rounds at all.
+    const res = await fetch(`${FACEIT_OPEN_API}/matches/${encodeURIComponent(matchId)}/stats`, {
       headers: { Authorization: `Bearer ${apiKey}` },
       cache: 'no-store',
     })
@@ -580,7 +582,12 @@ export async function fetchFaceitRecentMatches(
         kills: board?.kills ?? null,
         deaths: board?.deaths ?? null,
         platformMatchId: item.match_id,
-        finishedAt: item.finished_at || new Date().toISOString(),
+        // Faceit Open API returns Unix timestamps in SECONDS — convert to ms
+        // so the match shows its real date instead of 1970.
+        finishedAt:
+          typeof item.finished_at === 'number'
+            ? new Date(item.finished_at * 1000).toISOString()
+            : item.finished_at || new Date().toISOString(),
       })
 
       if (out.length >= limit) break

@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
       purged: result.purged,
       summary: result.verdicts ?? [],
       profile: result.profile ?? null,
+      source: result.source ?? null,
+      faceitKeyConfigured: result.faceitKeyConfigured ?? null,
     })
   } catch (error) {
     console.error('Faceit sync error:', error)

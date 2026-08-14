@@ -25,6 +25,7 @@ import {
   Camera,
   Gamepad2,
   KeyRound,
+  HelpCircle,
 } from 'lucide-react'
 
 interface User {
@@ -78,6 +79,8 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     faceitApiKey: initialSettings?.faceitApiKey || '',
   })
   const [apiKeysSaved, setApiKeysSaved] = useState(false)
+  const [faceitTest, setFaceitTest] = useState<{ state: 'idle' | 'loading' | 'ok' | 'bad'; message: string }>({ state: 'idle', message: '' })
+  const [showFaceitGuide, setShowFaceitGuide] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | 'system')) || 'system'
   )
@@ -265,6 +268,31 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleFaceitKeyTest = async () => {
+    setFaceitTest({ state: 'loading', message: 'Sprawdzam klucz…' })
+    try {
+      const res = await fetch('/api/integrations/faceit/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: apiKeys.faceitApiKey.trim() || null }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setFaceitTest({
+          state: 'ok',
+          message: `✓ Klucz działa${data.nickname ? ` — test na profilu „${data.nickname}”` : ''}${data.elo != null ? `, ${data.elo} ELO` : ''}`,
+        })
+        toast({ title: 'Klucz działa', description: 'Faceit API odpowiada poprawnie' })
+      } else {
+        setFaceitTest({ state: 'bad', message: `✗ ${data.error || 'Klucz nie działa'}` })
+        toast({ title: 'Klucz nie działa', description: data.error || 'Sprawdź klucz', variant: 'destructive' })
+      }
+    } catch {
+      setFaceitTest({ state: 'bad', message: '✗ Nie udało się połączyć z serwerem' })
+      toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
     }
   }
 
@@ -671,8 +699,75 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 focus:border-[#a78bfa]/40 transition"
                       />
                     </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={handleFaceitKeyTest}
+                        disabled={faceitTest.state === 'loading'}
+                        className="inline-flex items-center gap-1.5 rounded-xl px-3.5 h-9 text-xs font-semibold bg-white/[0.05] ring-1 ring-white/[0.10] text-white/85 hover:bg-white/[0.09] hover:ring-[#2de5ca]/30 disabled:opacity-60 transition"
+                      >
+                        {faceitTest.state === 'loading' ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Shield className="h-3.5 w-3.5" />
+                        )}
+                        Testuj klucz
+                      </button>
+                      {faceitTest.state === 'ok' && (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-500/15">✓</span>
+                          {faceitTest.message.replace(/^✓ /, '')}
+                        </span>
+                      )}
+                      {faceitTest.state === 'bad' && (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-300 max-w-full">
+                          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-red-500/15">✗</span>
+                          <span className="min-w-0 break-words">{faceitTest.message.replace(/^✗ /, '')}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowFaceitGuide((v) => !v)}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#8cffef] hover:text-white transition"
+                      >
+                        <HelpCircle className="h-3.5 w-3.5" />
+                        {showFaceitGuide ? 'Ukryj instrukcję' : 'Jak wygenerować klucz?'}
+                      </button>
+                    </div>
+                    {showFaceitGuide && (
+                      <div className="rounded-xl border border-[#2de5ca]/20 bg-[#2de5ca]/[0.04] p-4 text-sm text-white/75">
+                        <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#8cffef]/80">
+                          Krok po kroku — developers.faceit.com
+                        </p>
+                        <ol className="space-y-2">
+                          <li className="flex gap-2.5">
+                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#2de5ca]/15 text-[11px] font-bold text-[#8cffef]">1</span>
+                            <span>Wejdź na <a href="https://developers.faceit.com" target="_blank" rel="noopener noreferrer" className="font-medium text-[#8cffef] underline decoration-[#2de5ca]/40 hover:decoration-[#2de5ca]">developers.faceit.com</a> i kliknij <span className="text-white">Sign in</span> (zaloguj się kontem Faceit).</span>
+                          </li>
+                          <li className="flex gap-2.5">
+                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#2de5ca]/15 text-[11px] font-bold text-[#8cffef]">2</span>
+                            <span>W górnym menu wejdź w <span className="text-white">My Apps</span> i kliknij <span className="text-white">Register new app</span>.</span>
+                          </li>
+                          <li className="flex gap-2.5">
+                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#2de5ca]/15 text-[11px] font-bold text-[#8cffef]">3</span>
+                            <span>Wypełnij formularz — nazwa aplikacji (np. „Darey Coaching”), strona (np. <span className="text-white">https://cs2-coaching-panel-ten.vercel.app</span>), kategoria <span className="text-white">Games</span> i potwierdź.</span>
+                          </li>
+                          <li className="flex gap-2.5">
+                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#2de5ca]/15 text-[11px] font-bold text-[#8cffef]">4</span>
+                            <span>Na stronie aplikacji kliknij <span className="text-white">Generate new key</span> — pojawi się klucz zaczynający się od <span className="text-white">‎2e79-…</span> (lub inny ciąg).</span>
+                          </li>
+                          <li className="flex gap-2.5">
+                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#2de5ca]/15 text-[11px] font-bold text-[#8cffef]">5</span>
+                            <span>Skopiuj cały klucz, wklej go w polu powyżej i kliknij <span className="text-white">Testuj klucz</span> — przy zielonym ✓ zapisz klucz.</span>
+                          </li>
+                        </ol>
+                        <p className="mt-3 text-xs text-white/50">
+                          Klucz jest darmowy i nie ma limitu liczby kluczy. Trzymaj go w tajemnicy — daje dostęp do odczytu danych Faceit.
+                        </p>
+                      </div>
+                    )}
                     <p className="text-xs text-white/40">
-                      Bez klucza Faceit działa też (przez publiczne endpointy) — klucz podnosi limity zapytań.
+                      Bez klucza mecze idą z Leetify (tylko ręcznie dodane). Z kluczem log pokazuje dokładnie 5 ostatnich meczów z Faceita.
                     </p>
                   </div>
 

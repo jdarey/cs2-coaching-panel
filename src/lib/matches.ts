@@ -55,9 +55,15 @@ export interface StudentMatchSyncResult {
   created: number
   skipped: number
   purged: number
+  /** Stale fallback rows removed after a successful Faceit sync. */
+  trimmed?: number
   profile?: { name: string | null; totalMatches: number | null; winrate: number | null }
   verdicts?: { id: string; map: string; result: string; verdict: string }[]
   createdMatches?: any[]
+  /** Where the matches actually came from — drives the honesty banner in the UI. */
+  source?: 'FACEIT_API' | 'LEETIFY' | null
+  /** Whether a Faceit API key is configured anywhere (env or coach settings). */
+  faceitKeyConfigured?: boolean
 }
 
 export async function syncStudentMatches(studentId: string): Promise<StudentMatchSyncResult> {
@@ -119,7 +125,7 @@ export async function syncStudentMatches(studentId: string): Promise<StudentMatc
   }
 
   let matches: LeetifyMatch[] = []
-  let sourceNote = ''
+  let sourceUsed: 'FACEIT_API' | 'LEETIFY' | null = null
   if (faceitKey) {
     let nickname = student.faceitNickname
     if (!nickname && steamId) {
@@ -127,21 +133,23 @@ export async function syncStudentMatches(studentId: string): Promise<StudentMatc
     }
     if (nickname) {
       matches = await fetchFaceitRecentMatches(nickname, faceitKey, 5)
-      if (matches.length > 0) sourceNote = 'Faceit API (na żywo)'
+      if (matches.length > 0) sourceUsed = 'FACEIT_API'
     }
   }
 
   // ---- Source 2: Leetify (fallback only) -----------------------------------
+  // Leetify only indexes matches the user manually uploaded (Faceit demos are
+  // now paid), so this fallback is INHERENTLY incomplete — the UI must say so.
   if (matches.length === 0 && steamId) {
     matches = await fetchLeetifyRecentMatches(steamId, 5)
-    if (matches.length > 0) sourceNote = 'Leetify (fallback)'
+    if (matches.length > 0) sourceUsed = 'LEETIFY'
   }
 
   if (matches.length === 0) {
     const hint = !faceitKey
       ? 'Brak klucza API Faceit — dodaj go w Ustawieniach coacha (lub zmienną FACEIT_API_KEY), a uczniom uzupełnij nick Faceit.'
       : 'Nie znaleziono meczów Faceit dla tego nicku. Sprawdź, czy nick jest poprawny i czy gracz gra w CS2.'
-    return { ...base, name: student.name, ok: false, error: hint }
+    return { ...base, name: student.name, ok: false, error: hint, source: null, faceitKeyConfigured: Boolean(faceitKey) }
   }
 
   // Purge matches synced from a DIFFERENT Steam account (or untagged legacy
@@ -161,11 +169,28 @@ export async function syncStudentMatches(studentId: string): Promise<StudentMatc
     // Dedupe per student: the same Faceit lobby appears in the history of
     // every participant, so a globally-unique externalId must be scoped to
     // this student's log.
+    // Dedupe on BOTH ids: the same Faceit match may already exist in the log
+    // with a Leetify externalId (synced before the Faceit key) but the same
+    // platformMatchId — without this we'd create a visible duplicate.
     const existing = await prisma.matchLog.findFirst({
-      where: { externalId: m.externalId, studentId },
+      where: {
+        studentId,
+        OR: [{ externalId: m.externalId }, { platformMatchId: m.platformMatchId }],
+      },
       select: { id: true },
     })
     if (existing) {
+      // Upgrade the old row to the accurate Faceit data (kills/deaths/date)
+      // instead of skipping it — keeps the log exact now that we have the key.
+      await prisma.matchLog.updateMany({
+        where: { id: existing.id },
+        data: {
+          kills: m.kills ?? undefined,
+          deaths: m.deaths ?? undefined,
+          createdAt: new Date(m.finishedAt),
+          syncSource: sourceUsed ?? undefined,
+        },
+      })
       skipped++
       continue
     }
@@ -183,6 +208,7 @@ export async function syncStudentMatches(studentId: string): Promise<StudentMatc
         externalId: m.externalId,
         platformMatchId: m.platformMatchId,
         syncedSteamId: steamId ?? null,
+        syncSource: sourceUsed ?? undefined,
         createdAt: new Date(m.finishedAt),
         leetifyRating: m.leetifyRating,
         preaim: m.preaim,
@@ -202,6 +228,26 @@ export async function syncStudentMatches(studentId: string): Promise<StudentMatc
     })
   }
 
+  // Keep the log exact: when we have the real Faceit history, trim stale
+  // fallback rows (Leetify) that are outside the last-5 window, so the log
+  // shows exactly the 5 most recent Faceit matches — never a mix of sources.
+  let trimmed = 0
+  if (sourceUsed === 'FACEIT_API' && matches.length > 0) {
+    const keepIds = matches.map((m) => m.externalId)
+    const stale = await prisma.matchLog.findMany({
+      where: {
+        studentId,
+        OR: [{ syncSource: null }, { syncSource: 'LEETIFY' }],
+        externalId: { notIn: keepIds },
+      },
+      select: { id: true },
+    })
+    if (stale.length > 0) {
+      const del = await prisma.matchLog.deleteMany({ where: { id: { in: stale.map((s) => s.id) } } })
+      trimmed = del.count
+    }
+  }
+
   return {
     ...base,
     name: student.name,
@@ -209,8 +255,11 @@ export async function syncStudentMatches(studentId: string): Promise<StudentMatc
     created,
     skipped,
     purged: purgedCount,
+    trimmed,
     profile: { name: profileName, totalMatches, winrate },
     verdicts,
     createdMatches,
+    source: sourceUsed,
+    faceitKeyConfigured: Boolean(faceitKey),
   }
 }

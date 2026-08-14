@@ -32,19 +32,30 @@ interface Match {
   accuracyHead: number | null
   sprayAccuracy: number | null
   coachReviewed: boolean
+  syncSource: string | null
+}
+
+interface MatchStatus {
+  faceitKeyConfigured: boolean
+  studentNicknames: Record<string, string | null>
 }
 
 export function CoachMatchesClient() {
   const router = useRouter()
   useLiveRefresh(() => router.refresh())
   const [matches, setMatches] = useState<Match[]>([])
+  const [status, setStatus] = useState<MatchStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/matches')
-      if (res.ok) setMatches(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        setMatches(Array.isArray(data) ? data : data.matches || [])
+        setStatus(data.status || null)
+      }
     } catch {
       /* ignore */
     } finally {
@@ -94,6 +105,22 @@ export function CoachMatchesClient() {
           title="Mecze uczniów"
           subtitle="Feed meczów zalogowanych przez uczniów — serie, winrate i refleksje w jednym miejscu."
         />
+
+        {/* Honesty banner — Faceit API key is the ONLY way to get the real last-5 matches */}
+        {status && !status.faceitKeyConfigured && matches.length > 0 && (
+          <div className="animate-rise-in rounded-2xl px-5 py-4 text-sm border border-amber-500/25 bg-gradient-to-br from-amber-500/[0.08] to-orange-500/[0.04] flex items-start gap-3" style={{ animationDelay: '0ms' }}>
+            <Bot className="w-4 h-4 shrink-0 text-amber-300 mt-0.5" />
+            <div className="flex-1 space-y-1">
+              <p className="font-semibold text-amber-200">Log meczów jest niekompletny — brak klucza API Faceit</p>
+              <p className="text-white/60 text-[13px] leading-relaxed">
+                Mecze pobierane są teraz z Leetify (zapasowe źródło), a Leetify zawiera tylko mecze dodane ręcznie — stąd rozjazd z prawdziwymi wynikami.
+                Aby log zawsze pokazywał dokładnie <span className="text-white/80 font-medium">5 ostatnich meczów z Faceita</span>, dodaj darmowy klucz API
+                w <Link href="/coach/settings" className="text-[#8cffef] underline decoration-[#2de5ca]/40 underline-offset-2 hover:text-white transition-colors">Ustawieniach trenera</Link>{' '}
+                (developers.faceit.com → klucz jest darmowy).
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <section className="grid gap-4 grid-cols-2 sm:grid-cols-4">

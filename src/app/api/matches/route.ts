@@ -32,6 +32,18 @@ function withReviewFlag(match: any) {
   }
 }
 
+// Whether a Faceit API key is configured for this coach (env or CoachSettings).
+// Drives the "incomplete Leetify log" warning in the UI.
+async function faceitKeyConfiguredFor(coachId: string | null | undefined): Promise<boolean> {
+  if (process.env.FACEIT_API_KEY) return true
+  if (!coachId) return false
+  const settings = await prisma.coachSettings.findUnique({
+    where: { coachId },
+    select: { faceitApiKey: true },
+  })
+  return Boolean(settings?.faceitApiKey)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -63,7 +75,18 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         take: 200,
       })
-      return NextResponse.json(matches.map(withFaceitUrl).map(withReviewFlag))
+      const students = await prisma.user.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, faceitNickname: true },
+      })
+      const nicknameMap = new Map(students.map((s) => [s.id, s.faceitNickname]))
+      return NextResponse.json({
+        matches: matches.map(withFaceitUrl).map(withReviewFlag),
+        status: {
+          faceitKeyConfigured: await faceitKeyConfiguredFor((session.user as any).coachId ?? (session.user as any).id),
+          studentNicknames: Object.fromEntries(ids.map((id) => [id, nicknameMap.get(id) || null])),
+        },
+      })
     }
 
     // Student: own matches
@@ -72,7 +95,17 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       take: 200,
     })
-    return NextResponse.json(matches.map(withFaceitUrl).map(withReviewFlag))
+    const student = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { coachId: true, faceitNickname: true },
+    })
+    return NextResponse.json({
+      matches: matches.map(withFaceitUrl).map(withReviewFlag),
+      status: {
+        faceitKeyConfigured: await faceitKeyConfiguredFor(student?.coachId),
+        studentNicknames: { [userId]: student?.faceitNickname || null },
+      },
+    })
   } catch (error) {
     console.error('Matches GET error:', error)
     return NextResponse.json({ error: 'Błąd pobierania meczów' }, { status: 500 })

@@ -41,7 +41,7 @@ function mockFaceitApi(items: any[], details: Record<string, any>) {
       return new Response(JSON.stringify({ items }), { status: 200 })
     }
     if (u.includes('/matches/')) {
-      const id = u.split('/matches/')[1]
+      const id = u.split('/matches/')[1].replace(/\/stats$/, '')
       return new Response(JSON.stringify(details[id] ?? {}), { status: 200 })
     }
     return new Response('{}', { status: 404 })
