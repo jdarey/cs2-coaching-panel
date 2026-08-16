@@ -287,33 +287,9 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
               onContextMenu={(e) => e.preventDefault()}
             >
               {activeVideo && activeVideoYtId ? (
-                <YoutubeCustomPlayer
-                  videoId={activeVideoYtId}
-                  title={activeVideo.title}
-                  studentName={session.student.name || 'Uczeń'}
-                />
+                <YoutubeCustomPlayer videoId={activeVideoYtId} title={activeVideo.title} />
               ) : activeEmbedUrl ? (
-                <>
-                  <ProtectedEmbed
-                    src={activeEmbedUrl}
-                    title={activeVideo?.title || 'Wideo'}
-                    studentName={session.student.name || 'Uczeń'}
-                    studentEmail={session.student.email}
-                  />
-                  {/* Branding bar: an opaque strip across the top of the embedded
-                      player hides the host's logo, title and share controls. It is
-                      pointer-transparent, so clicks still reach the player. */}
-                  <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-between gap-3 px-3 bg-gradient-to-b from-black/85 via-black/55 to-transparent">
-                    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/20">
-                      <Lock className="h-3.5 w-3.5 text-[#c4b5fd]" />
-                      <span className="max-w-[220px] truncate">{session.student.name || 'Uczeń'}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white/70 bg-black/50 ring-1 ring-white/15">
-                      <Film className="h-3.5 w-3.5 text-[#c4b5fd]" />
-                      Wideo treningowe
-                    </span>
-                  </div>
-                </>
+                <ProtectedEmbed src={activeEmbedUrl} title={activeVideo?.title || 'Wideo'} />
               ) : activeVideo ? (
                 <a
                   href={activeVideo.url}

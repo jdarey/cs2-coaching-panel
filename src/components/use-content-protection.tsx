@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-export interface WatermarkPos { x: number; y: number; rot: number }
-
 interface UseContentProtectionOptions {
   // Whether the video is currently playing — used to warn on tab-hide.
   isPlaying?: boolean
@@ -14,7 +12,6 @@ interface UseContentProtectionOptions {
 export function useContentProtection(opts: UseContentProtectionOptions = {}) {
   const { isPlaying = false, onDevtoolsOpen } = opts
 
-  const [watermarkPos, setWatermarkPos] = useState<WatermarkPos>({ x: 4, y: 82, rot: -8 })
   const [devtoolsOpen, setDevtoolsOpen] = useState(false)
   const [captureWarn, setCaptureWarn] = useState(false)
   const toastRef = useRef<NodeJS.Timeout | null>(null)
@@ -29,10 +26,10 @@ export function useContentProtection(opts: UseContentProtectionOptions = {}) {
     toastRef.current = setTimeout(() => setCaptureWarn(false), ms)
   }
 
-  // Block the shortcuts that expose the stream: F12 / Ctrl+Shift+I/J/C
-  // (DevTools), Ctrl+U (source), Ctrl+S (save page), Ctrl+P (print),
-  // PrintScreen / Alt+PrintScreen (capture). F12 and the print-screen keys
-  // also flash a warning so the user knows it is watched.
+  // Block the shortcuts that expose the stream or enable page capture:
+  // F12 / Ctrl+Shift+I/J/C (DevTools), Ctrl+U (source), Ctrl+S (save page),
+  // Ctrl+P (print), PrintScreen / Alt+PrintScreen (capture). F12 and the
+  // print-screen keys also flash a warning so the user knows it is watched.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
@@ -66,28 +63,8 @@ export function useContentProtection(opts: UseContentProtectionOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devtoolsOpen])
 
-  // The identity watermark drifts slowly between spots so a recording can't
-  // simply crop a static corner.
-  useEffect(() => {
-    const spots: WatermarkPos[] = [
-      { x: 4, y: 82, rot: -8 },
-      { x: 12, y: 10, rot: 6 },
-      { x: 78, y: 84, rot: 10 },
-      { x: 72, y: 8, rot: -6 },
-      { x: 40, y: 88, rot: 4 },
-      { x: 30, y: 6, rot: -4 },
-    ]
-    let i = 0
-    const interval = setInterval(() => {
-      i = (i + 1) % spots.length
-      setWatermarkPos(spots[i])
-    }, 40000)
-    return () => clearInterval(interval)
-  }, [])
-
   // Warn when the tab is hidden while the video plays (a common screen-
-  // recording setup). The video keeps playing; the toast reminds the viewer
-  // that their identity is burned into the frame.
+  // recording setup). The video keeps playing; the toast reminds the viewer.
   useEffect(() => {
     if (!isPlaying) return
     const onVis = () => {
@@ -98,5 +75,5 @@ export function useContentProtection(opts: UseContentProtectionOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying])
 
-  return { watermarkPos, devtoolsOpen, captureWarn, flashCaptureWarn }
+  return { devtoolsOpen, captureWarn, flashCaptureWarn }
 }

@@ -7,29 +7,25 @@ import { ContentProtectionOverlay } from './content-protection-overlay'
 interface ProtectedEmbedProps {
   src: string
   title: string
-  studentName?: string
-  studentEmail?: string
   // Vimeo origin — used for the pause command and playing-state tracking.
   // Defaults to Vimeo, which is the only raw embed used by the app.
   embedOrigin?: string
 }
 
 // Wraps a raw <iframe> embed (Vimeo, generic) with the same protection as the
-// YouTube player: identity watermark, blocked shortcuts, DevTools detection
-// with auto-pause, and the tab-hide warning. Playing state is tracked through
-// the embed's postMessage events so the tab-hide warning only fires while the
-// video actually plays.
+// YouTube player: blocked shortcuts, DevTools detection with auto-pause, and
+// the tab-hide warning. Playing state is tracked through the embed's
+// postMessage events so the tab-hide warning only fires while the video
+// actually plays.
 export function ProtectedEmbed({
   src,
   title,
-  studentName = 'Uczeń',
-  studentEmail,
   embedOrigin = 'https://player.vimeo.com',
 }: ProtectedEmbedProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const { watermarkPos, devtoolsOpen, captureWarn } = useContentProtection({
+  const { devtoolsOpen, captureWarn } = useContentProtection({
     isPlaying,
     onDevtoolsOpen: () => {
       setIsPlaying(false)
@@ -68,13 +64,7 @@ export function ProtectedEmbed({
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
       />
-      <ContentProtectionOverlay
-        studentName={studentName}
-        studentEmail={studentEmail}
-        watermarkPos={watermarkPos}
-        devtoolsOpen={devtoolsOpen}
-        captureWarn={captureWarn}
-      />
+      <ContentProtectionOverlay devtoolsOpen={devtoolsOpen} captureWarn={captureWarn} />
     </div>
   )
 }

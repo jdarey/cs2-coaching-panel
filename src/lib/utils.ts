@@ -48,8 +48,11 @@ export function truncate(str: string, length: number) {
 // YouTube-only id extractor. Use this whenever the decision is "render the
 // YouTube player or not" — getVideoId also returns Vimeo ids, which would
 // mount a broken YouTube player on a Vimeo video.
+// Covers watch?v=, youtu.be/, embed/, shorts/, live/ and youtube-nocookie.
 export function getYouTubeId(url: string): string | null {
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)
+  const m = url.match(
+    /(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^&\n?#]+)/
+  )
   return m ? m[1] : null
 }
 

@@ -402,14 +402,11 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     <YoutubeCustomPlayer
                       videoId={getYouTubeId(currentVideo.url) as string}
                       title={currentVideo.title}
-                      studentName={session.student.name || 'Uczeń'}
                     />
                   ) : currentVideo && getVideoEmbedUrl(currentVideo.url) ? (
                     <ProtectedEmbed
                       src={getVideoEmbedUrl(currentVideo.url) as string}
                       title={currentVideo.title}
-                      studentName={session.student.name || 'Uczeń'}
-                      studentEmail={session.student.email}
                     />
                   ) : (
                     <div className="relative h-full w-full grid place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(45,229,202,0.12),transparent_60%),radial-gradient(circle_at_70%_80%,rgba(124,58,237,0.12),transparent_55%)]">
