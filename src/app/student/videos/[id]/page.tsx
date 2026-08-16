@@ -67,6 +67,7 @@ export default async function StudentVideoPlayerPage({ params }: { params: Promi
   })
 
   const studentName = (session.user as any).name || (session.user as any).email || 'Uczeń'
+  const studentEmail = (session.user as any).email || undefined
 
   return (
     <StudentVideoPlayerClient
@@ -81,6 +82,7 @@ export default async function StudentVideoPlayerPage({ params }: { params: Promi
         tags: video.tags.map((vt) => ({ name: vt.tag.name, color: vt.tag.color })),
       }}
       studentName={studentName}
+      studentEmail={studentEmail}
       initialStartSeconds={savedProgress?.positionSeconds ?? 0}
       sessionId={sessionId}
     />

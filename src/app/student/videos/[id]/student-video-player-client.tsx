@@ -22,6 +22,7 @@ interface PlayerVideo {
 interface StudentVideoPlayerClientProps {
   video: PlayerVideo
   studentName: string
+  studentEmail?: string
   initialStartSeconds?: number
   sessionId?: string | null
 }
@@ -29,6 +30,7 @@ interface StudentVideoPlayerClientProps {
 export function StudentVideoPlayerClient({
   video,
   studentName,
+  studentEmail,
   initialStartSeconds = 0,
   sessionId = null,
 }: StudentVideoPlayerClientProps) {
@@ -84,6 +86,7 @@ export function StudentVideoPlayerClient({
                 videoId={ytId}
                 title={video.title}
                 studentName={studentName}
+                studentEmail={studentEmail}
                 initialStartSeconds={initialStartSeconds}
                 onProgressChange={handleProgress}
               />

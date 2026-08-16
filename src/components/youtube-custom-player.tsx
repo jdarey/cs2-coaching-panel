@@ -1,12 +1,15 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, RotateCcw, Loader2, Settings } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, RotateCcw, Loader2, Settings, ShieldAlert, ShieldCheck } from 'lucide-react'
 
 interface YoutubeCustomPlayerProps {
   videoId: string
   title?: string
   studentName?: string
+  // Leak-identification: the student's email is burned into the watermark,
+  // so any screen recording that leaks can be traced back to the account.
+  studentEmail?: string
   // Resume point (seconds) — the player starts here instead of 0.
   initialStartSeconds?: number
   // Called while watching (throttled to ~5s), on pause, on video end and on
@@ -55,6 +58,7 @@ export function YoutubeCustomPlayer({
   videoId,
   title = 'Wideo',
   studentName = 'Uczeń',
+  studentEmail,
   initialStartSeconds = 0,
   onProgressChange,
 }: YoutubeCustomPlayerProps) {
@@ -107,6 +111,16 @@ export function YoutubeCustomPlayer({
   const warmupRef = useRef<any>(null)
   const warmupSideRef = useRef<'a' | 'b' | null>(null)
   const warmupTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Content protection: a drifting identity watermark + deterrent layers
+  // (blocked shortcuts, DevTools detection, tab-hide warning). Absolute
+  // prevention of screen capture is impossible in a browser (OBS, phone
+  // camera, hardware capture), but the watermark makes ANY leak traceable
+  // to the account it came from.
+  const [watermarkPos, setWatermarkPos] = useState({ x: 4, y: 82, rot: -8 })
+  const [devtoolsOpen, setDevtoolsOpen] = useState(false)
+  const [captureWarn, setCaptureWarn] = useState(false)
+  const captureWarnRef = useRef<{ toast: NodeJS.Timeout | null; overlay: NodeJS.Timeout | null }>({ toast: null, overlay: null })
 
   // The iframe is rendered at true 1:1. (A 6x upscale was once used to push
   // ABR to the highest quality, but on wide screens the 600% layer exceeds
@@ -878,6 +892,93 @@ export function YoutubeCustomPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, playerEpoch])
 
+  // 9b. CONTENT PROTECTION — block the shortcuts that expose the stream:
+  // F12 / Ctrl+Shift+I/J/C (DevTools), Ctrl+U (source), Ctrl+S (save page),
+  // Ctrl+P (print), PrintScreen / Alt+PrintScreen (capture). F12 and the
+  // print-screen keys also flash a warning so the user knows it is watched.
+  useEffect(() => {
+    const flashWarn = () => {
+      setCaptureWarn(true)
+      if (captureWarnRef.current.toast) clearTimeout(captureWarnRef.current.toast)
+      captureWarnRef.current.toast = setTimeout(() => setCaptureWarn(false), 3000)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase()
+      const ctrl = e.ctrlKey || e.metaKey
+      if (e.key === 'F12') { e.preventDefault(); flashWarn(); return }
+      if (e.key === 'PrintScreen') { e.preventDefault(); flashWarn(); return }
+      if (ctrl && e.shiftKey && (k === 'i' || k === 'j' || k === 'c')) { e.preventDefault(); flashWarn(); return }
+      if (ctrl && (k === 'u' || k === 's' || k === 'p')) { e.preventDefault(); return }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [])
+
+  // 9c. CONTENT PROTECTION — detect an open DevTools panel (docked) via the
+  // classic outer-vs-inner size delta. When open: pause the video and show a
+  // blocking overlay until it is closed. (Undocked DevTools in its own window
+  // cannot be detected from the page — that is a hard browser limitation.)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const ow = window.outerWidth, ih = window.innerHeight, iw = window.innerWidth, oh = window.outerHeight
+      if (ow <= 0 || oh <= 0) return
+      const w = ow - iw, h = oh - ih
+      // Real docked DevTools steals a lot of space on EXACTLY ONE side
+      // (right: w large / h small, bottom: h large / w small). Requiring the
+      // other dimension to stay near-normal avoids false positives (browser
+      // zoom, embedded webviews like this preview pane, which inflate both).
+      const open = (w > 160 && h < 120) || (h > 160 && w < 120)
+      if (open === devtoolsOpen) return
+      setDevtoolsOpen(open)
+      if (open) {
+        // Pause playback so nothing plays (and nothing can be captured) while
+        // DevTools is open.
+        const p = livePlayer('pauseVideo')
+        if (p && typeof p.pauseVideo === 'function') {
+          try { p.pauseVideo() } catch (_) {}
+        }
+        setIsPlaying(false)
+        setShowControls(true)
+      }
+    }, 1500)
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devtoolsOpen])
+
+  // 9d. CONTENT PROTECTION — the identity watermark drifts slowly between
+  // spots so a recording can't simply crop a static corner.
+  useEffect(() => {
+    const spots = [
+      { x: 4, y: 82, rot: -8 },
+      { x: 12, y: 10, rot: 6 },
+      { x: 78, y: 84, rot: 10 },
+      { x: 72, y: 8, rot: -6 },
+      { x: 40, y: 88, rot: 4 },
+      { x: 30, y: 6, rot: -4 },
+    ]
+    let i = 0
+    const interval = setInterval(() => {
+      i = (i + 1) % spots.length
+      setWatermarkPos(spots[i])
+    }, 40000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // 9e. CONTENT PROTECTION — warn when the tab is hidden while the video
+  // plays (a common screen-recording setup). The video keeps playing; the
+  // toast reminds the viewer that their identity is burned into the frame.
+  useEffect(() => {
+    const onVis = () => {
+      if (document.hidden && isPlaying) {
+        setCaptureWarn(true)
+        if (captureWarnRef.current.toast) clearTimeout(captureWarnRef.current.toast)
+        captureWarnRef.current.toast = setTimeout(() => setCaptureWarn(false), 7000)
+      }
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [isPlaying])
+
   return (
     <div
       ref={containerRef}
@@ -1025,6 +1126,61 @@ export function YoutubeCustomPlayer({
       {/* 8. No center button after the thumbnail — the whole video surface
            stays clean and clickable (click = play/pause). The thumbnail and
            end screen keep their own actions. */}
+
+      {/* 8b. CONTENT PROTECTION — identity watermark. Subtle, drifts between
+           spots every 40s; any screen recording that leaks can be traced to
+           this account. Below the click overlay so it never blocks input. */}
+      <div
+        className="pointer-events-none select-none absolute z-20 transition-all duration-[3000ms] ease-in-out"
+        style={{
+          left: `${watermarkPos.x}%`,
+          top: `${watermarkPos.y}%`,
+          transform: `rotate(${watermarkPos.rot}deg) translateZ(0)`,
+        }}
+        aria-hidden="true"
+      >
+        <span
+          className="inline-block whitespace-nowrap text-[11px] font-medium tracking-wide text-white/90"
+          style={{
+            opacity: 0.2,
+            textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 1px rgba(0,0,0,0.9)',
+          }}
+        >
+          © {studentName}
+          {studentEmail ? ` · ${studentEmail}` : ''}
+        </span>
+      </div>
+
+      {/* 8c. CONTENT PROTECTION — DevTools-open blocker. The video is paused
+           and the overlay stays until the panel is closed (docked DevTools
+           only; undocked cannot be detected by any page). */}
+      {devtoolsOpen && (
+        <div className="absolute inset-0 z-60 bg-black/92 backdrop-blur-md flex flex-col items-center justify-center gap-4 text-center px-6">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#a78bfa] mb-1">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h3 className="text-white font-bold text-lg">Treść chroniona</h3>
+          <p className="text-white/45 text-xs max-w-sm leading-relaxed">
+            Narzędzia deweloperskie pozwalają wyciągnąć bezpośredni link do strumienia wideo.
+            Zamknij panel, aby kontynuować oglądanie.
+          </p>
+          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/70 bg-white/[0.04] ring-1 ring-white/10 mt-1">
+            <ShieldCheck className="w-3 h-3 text-[#a78bfa]" />
+            Twój nick jest naniesiony na ten film
+          </span>
+        </div>
+      )}
+
+      {/* 8d. CONTENT PROTECTION — warning toast on blocked shortcuts and on
+           tab-hide while playing (possible screen recording). */}
+      {captureWarn && !devtoolsOpen && (
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-60 pointer-events-none animate-rise-in">
+          <span className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-semibold text-amber-200 bg-black/85 ring-1 ring-amber-400/30 backdrop-blur-md shadow-2xl shadow-black/60">
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
+            Ekran monitorowany — Twój nick i e-mail są naniesione na film
+          </span>
+        </div>
+      )}
 
       {/* 9. Custom end screen — covers the YouTube endscreen, last frame
            slightly visible behind the overlay */}
