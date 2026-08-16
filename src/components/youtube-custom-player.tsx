@@ -98,6 +98,16 @@ export function YoutubeCustomPlayer({
   // Once the user picks a quality manually, stop second-guessing YouTube's ABR.
   const userPickedRef = useRef(false)
 
+  // Two player mounts ("a"/"b") so a quality UP-switch can warm up a hidden
+  // player at the target vq while the current one keeps playing, then swap in
+  // a single frame — no black screen, no 3-8s rebuild, no double audio (the
+  // warm-up player is muted until promoted). Downswitches don't rebuild at all.
+  const [activeSide, setActiveSide] = useState<'a' | 'b'>('a')
+  const activeSideRef = useRef<'a' | 'b'>('a')
+  const warmupRef = useRef<any>(null)
+  const warmupSideRef = useRef<'a' | 'b' | null>(null)
+  const warmupTimerRef = useRef<NodeJS.Timeout | null>(null)
+
   // The iframe is rendered at true 1:1. (A 6x upscale was once used to push
   // ABR to the highest quality, but on wide screens the 600% layer exceeds
   // the GPU tile size and renders a visible horizontal seam across the
@@ -157,9 +167,14 @@ export function YoutubeCustomPlayer({
     setThumbSrc(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
     userPickedRef.current = false
     if (overlayTimeoutRef.current) clearTimeout(overlayTimeoutRef.current)
-  }, [videoId])
+    // Clean up any pending warm-up player and reset to mount "a".
+    if (warmupRef.current) { try { warmupRef.current.destroy() } catch (_) {} warmupRef.current = null }
+    warmupSideRef.current = null
+    if (warmupTimerRef.current) { clearTimeout(warmupTimerRef.current); warmupTimerRef.current = null }
+    activeSideRef.current = 'a'
+    setActiveSide('a')
 
-  const playerId = useRef(`yt-player-${videoId}`)
+  }, [videoId])
 
   // 1. Load YouTube IFrame API
   useEffect(() => {
@@ -187,6 +202,52 @@ export function YoutubeCustomPlayer({
     return () => { window.removeEventListener('youtube-api-ready', onApiReady); clearInterval(interval) }
   }, [])
 
+  // Shared playback-state handler — used by BOTH the main player and the
+  // promoted warm-up player so UI state (playing/paused/buffering/ended,
+  // resume-point flush) keeps working after a quality swap.
+  const applyPlayerState = (state: number, target: any) => {
+    if (state === 1) {
+      setIsPlaying(true)
+      setIsBuffering(false)
+      setIsEnded(false)
+      setHasPlayed(true)
+      const qualities: string[] = target.getAvailableQualityLevels?.() ?? []
+      if (qualities.length > 0) setAvailableQualities(qualities)
+      setThumbnailFading(true)
+      if (overlayTimeoutRef.current) clearTimeout(overlayTimeoutRef.current)
+      overlayTimeoutRef.current = setTimeout(() => {
+        setShowThumbnail(false)
+        setThumbnailFading(false)
+      }, 600)
+    } else if (state === 2) {
+      setIsPlaying(false); setIsBuffering(false)
+      // YouTube shows its own paused chrome (title bar, center play
+      // button) for the first seconds, then fades to the inactive
+      // state. Cover that window with our own center cover so no YT
+      // button is ever visible on pause.
+      setPauseFlash(true)
+      if (pauseFlashTimeoutRef.current) clearTimeout(pauseFlashTimeoutRef.current)
+      pauseFlashTimeoutRef.current = setTimeout(() => setPauseFlash(false), 6000)
+      // Flush the resume point on pause (user stops watching).
+      onProgressRef.current?.({
+        position: latestPositionRef.current,
+        duration: latestDurationRef.current,
+        ended: false,
+      })
+    } else if (state === 3) {
+      setIsBuffering(true)
+    } else if (state === 0) {
+      setIsPlaying(false); setIsBuffering(false)
+      setIsEnded(true); setShowControls(true)
+      // Finished — persist 100% so the library marks it as watched.
+      onProgressRef.current?.({
+        position: latestDurationRef.current || latestPositionRef.current,
+        duration: latestDurationRef.current,
+        ended: true,
+      })
+    }
+  }
+
   // 2. Build player whenever API is ready OR playerEpoch changes (quality rebuild)
   useEffect(() => {
     if (!isApiReady) return
@@ -197,8 +258,15 @@ export function YoutubeCustomPlayer({
       try { playerRef.current.destroy() } catch (_) {}
       playerRef.current = null
     }
+    if (warmupRef.current) {
+      try { warmupRef.current.destroy() } catch (_) {}
+      warmupRef.current = null
+    }
+    if (warmupTimerRef.current) { clearTimeout(warmupTimerRef.current); warmupTimerRef.current = null }
+    warmupSideRef.current = null
 
-    const mountId = playerId.current
+    const side    = activeSideRef.current
+    const mountId = `yt-player-${videoId}-${side}`
     const mount   = document.getElementById(mountId)
     if (!mount) return
 
@@ -242,7 +310,7 @@ export function YoutubeCustomPlayer({
           // tooltips). Ours says what it is: a training video. YouTube
           // sometimes injects the iframe as a sibling of the mount div, so
           // search the whole container.
-          try { const f = containerRef.current?.querySelector('iframe'); if (f) f.title = 'Wideo treningowe' } catch (_) {}
+          try { containerRef.current?.querySelectorAll('iframe').forEach(f => { f.title = 'Wideo treningowe' }) } catch (_) {}
           setIsReady(true)
           const readyDur = event.target.getDuration?.() || 0
           setDuration(readyDur)
@@ -352,49 +420,7 @@ export function YoutubeCustomPlayer({
             setIsReinitialising(false)
           }
         },
-        onStateChange: (event: any) => {
-          const state = event.data
-          if (state === 1) {
-            setIsPlaying(true)
-            setIsBuffering(false)
-            setIsEnded(false)
-            setHasPlayed(true)
-            const qualities: string[] = event.target.getAvailableQualityLevels?.() ?? []
-            if (qualities.length > 0) setAvailableQualities(qualities)
-            setThumbnailFading(true)
-            if (overlayTimeoutRef.current) clearTimeout(overlayTimeoutRef.current)
-            overlayTimeoutRef.current = setTimeout(() => {
-              setShowThumbnail(false)
-              setThumbnailFading(false)
-            }, 600)
-          } else if (state === 2) {
-            setIsPlaying(false); setIsBuffering(false)
-            // YouTube shows its own paused chrome (title bar, center play
-            // button) for the first seconds, then fades to the inactive
-            // state. Cover that window with our own center cover so no YT
-            // button is ever visible on pause.
-            setPauseFlash(true)
-            if (pauseFlashTimeoutRef.current) clearTimeout(pauseFlashTimeoutRef.current)
-            pauseFlashTimeoutRef.current = setTimeout(() => setPauseFlash(false), 6000)
-            // Flush the resume point on pause (user stops watching).
-            onProgressRef.current?.({
-              position: latestPositionRef.current,
-              duration: latestDurationRef.current,
-              ended: false,
-            })
-          } else if (state === 3) {
-            setIsBuffering(true)
-          } else if (state === 0) {
-            setIsPlaying(false); setIsBuffering(false)
-            setIsEnded(true); setShowControls(true)
-            // Finished — persist 100% so the library marks it as watched.
-            onProgressRef.current?.({
-              position: latestDurationRef.current || latestPositionRef.current,
-              duration: latestDurationRef.current,
-              ended: true,
-            })
-          }
-        },
+        onStateChange: (event: any) => applyPlayerState(event.data, event.target),
       },
     })
 
@@ -403,8 +429,7 @@ export function YoutubeCustomPlayer({
     const titleFixers = [600, 1600].map((ms) =>
       setTimeout(() => {
         try {
-          const f = containerRef.current?.querySelector('iframe')
-          if (f) f.title = 'Wideo treningowe'
+          containerRef.current?.querySelectorAll('iframe').forEach(f => { f.title = 'Wideo treningowe' })
         } catch (_) {}
       }, ms)
     )
@@ -415,9 +440,34 @@ export function YoutubeCustomPlayer({
         try { playerRef.current.destroy() } catch (_) {}
         playerRef.current = null
       }
+      if (warmupRef.current) {
+        try { warmupRef.current.destroy() } catch (_) {}
+        warmupRef.current = null
+      }
+      if (warmupTimerRef.current) { clearTimeout(warmupTimerRef.current); warmupTimerRef.current = null }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isApiReady, videoId, playerEpoch])
+
+  // 2b. Visibility sync — YouTube replaces each mount div with the iframe
+  // (copying its id + class), so React's refs to those divs go stale and class
+  // flips never reach the real element. Set opacity imperatively by id instead,
+  // re-asserting a couple of times to catch the iframe the moment it lands.
+  useEffect(() => {
+    const sync = () => {
+      document.querySelectorAll('[id^="yt-player-"]').forEach(el => {
+        const html = el as HTMLElement
+        const side = html.id.endsWith('-a') ? 'a' : 'b'
+        const on = html.id === `yt-player-${videoId}-${activeSide}`
+        html.style.transition = 'opacity 0.3s'
+        html.style.opacity = on ? '1' : '0'
+      })
+    }
+    sync()
+    const t1 = setTimeout(sync, 60)
+    const t2 = setTimeout(sync, 500)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [activeSide, videoId, playerEpoch])
 
   // 3. Time polling — keeps the seek bar in sync AND reports progress to the
   // parent (throttled to ~5s) so the resume point is persisted while watching.
@@ -576,9 +626,147 @@ export function YoutubeCustomPlayer({
   // is the only mechanism that reliably changes quality on YouTube embeds —
   // setPlaybackQuality is a soft request ABR overrides, but the vq URL param
   // is honored at player load.
+  // Promote the hidden warm-up player to be the visible one, in a single
+  // frame: flip which mount is shown, hand over the player reference, apply
+  // the user's saved volume (the warm-up was muted to avoid double audio),
+  // then destroy the old player a tick later.
+  const promoteWarmup = (w: any) => {
+    if (!warmupRef.current || warmupRef.current !== w) return
+    if (warmupTimerRef.current) { clearTimeout(warmupTimerRef.current); warmupTimerRef.current = null }
+    const old = playerRef.current
+    playerRef.current = w
+    warmupRef.current = null
+    const side = warmupSideRef.current
+    warmupSideRef.current = null
+    // Apply the user's remembered volume to the newly visible player.
+    const storedVol = loadVolume()
+    try {
+      w.setVolume(storedVol.volume)
+      storedVol.muted ? w.mute() : w.unMute()
+    } catch (_) {}
+    setVolume(storedVol.volume)
+    setIsMuted(storedVol.muted)
+    // Flip the visible mount.
+    if (side) { activeSideRef.current = side; setActiveSide(side) }
+    setIsReinitialising(false)
+    reinitActiveRef.current = false
+    // Refresh qualities/duration from the new player.
+    const qualities: string[] = w.getAvailableQualityLevels?.() ?? []
+    if (qualities.length > 0) setAvailableQualities(qualities)
+    const dur = w.getDuration?.() || 0
+    if (dur > 0) { setDuration(dur); latestDurationRef.current = dur }
+    // Sync play state.
+    const st = w.getPlayerState?.()
+    setIsPlaying(st === 1)
+    setIsBuffering(st === 3)
+    if (st === 1) { setHasPlayed(true); setShowThumbnail(false); setThumbnailFading(false) }
+    // Destroy the old player after a tick so the new iframe paints first.
+    setTimeout(() => { if (old) { try { old.destroy() } catch (_) {} } }, 60)
+    // Re-fix the title on whatever iframe is now visible.
+    setTimeout(() => {
+      try { containerRef.current?.querySelectorAll('iframe').forEach(f => { f.title = 'Wideo treningowe' }) } catch (_) {}
+    }, 150)
+    resetControlsTimer()
+  }
+
+  // Abort a warm-up that failed (e.g. embed error) — keep the old player.
+  const abortWarmup = () => {
+    if (warmupRef.current) { try { warmupRef.current.destroy() } catch (_) {} warmupRef.current = null }
+    warmupSideRef.current = null
+    if (warmupTimerRef.current) { clearTimeout(warmupTimerRef.current); warmupTimerRef.current = null }
+    setIsReinitialising(false)
+    reinitActiveRef.current = false
+    // Re-apply volume to the still-visible old player.
+    const storedVol = loadVolume()
+    try {
+      const p = playerRef.current
+      if (p?.setVolume) { p.setVolume(storedVol.volume); storedVol.muted ? p.mute() : p.unMute() }
+    } catch (_) {}
+    resetControlsTimer()
+  }
+
+  // Warm-up swap for an UP-switch: build a hidden player at the target vq on
+  // the inactive mount while the current player keeps playing; promote it the
+  // moment it is actually playing (or shortly after it is ready). No black
+  // screen, no spinner — the old quality plays until the new one is live.
+  const startWarmup = (q: string, startSec: number, autoplay: boolean) => {
+    const win = window as any
+    if (!win.YT || !win.YT.Player) {
+      // API not ready — fall back to the classic rebuild.
+      setIsReinitialising(true); reinitActiveRef.current = true; setPlayerEpoch(e => e + 1); return
+    }
+    if (warmupRef.current) { try { warmupRef.current.destroy() } catch (_) {} warmupRef.current = null }
+    if (warmupTimerRef.current) { clearTimeout(warmupTimerRef.current); warmupTimerRef.current = null }
+    const targetSide = activeSideRef.current === 'a' ? 'b' : 'a'
+    const mountId = `yt-player-${videoId}-${targetSide}`
+    const mount = document.getElementById(mountId)
+    if (!mount) { setIsReinitialising(true); reinitActiveRef.current = true; setPlayerEpoch(e => e + 1); return }
+    warmupSideRef.current = targetSide
+
+    const warm = new win.YT.Player(mountId, {
+      videoId,
+      playerVars: {
+        autoplay: 0, // we start playback manually after muting (no double audio)
+        controls:       0,
+        disablekb:      1,
+        fs:             0,
+        modestbranding: 1,
+        rel:            0,
+        showinfo:       0,
+        iv_load_policy: 3,
+        cc_load_policy: 0,
+        cc_lang_pref: 'off',
+        hl: 'pl',
+        playsinline:    1,
+        wmode:          'opaque',
+        start:          startSec > 0 ? Math.floor(startSec) : undefined,
+        vq:             q === 'auto' ? undefined : q,
+        color:          'white',
+        loop:           0,
+        enablejsapi:    1,
+        origin:         window.location.origin,
+        host:           'https://www.youtube-nocookie.com',
+      },
+      events: {
+        onReady: (event: any) => {
+          const w = event.target
+          // Mute while hidden — the visible old player is the only audio source.
+          try { w.mute() } catch (_) {}
+          try { w.seekTo(startSec, true) } catch (_) {}
+          if (autoplay) { try { w.playVideo() } catch (_) {} }
+          const tryPromote = () => {
+            if (warmupRef.current !== w) return
+            const st = w.getPlayerState?.()
+            if (st === 1 || st === 3 || (st === 2 && !autoplay)) promoteWarmup(w)
+          }
+          tryPromote()
+          const poll = setInterval(tryPromote, 300)
+          warmupTimerRef.current = setTimeout(() => {
+            clearInterval(poll)
+            // Safety: promote anyway after ~6s rather than risk a stuck state.
+            if (warmupRef.current === w) promoteWarmup(w)
+          }, 6000)
+        },
+        onStateChange: (event: any) => {
+          const w = event.target
+          // Once promoted, this player is the active one — drive the UI
+          // (play/pause/end/progress flush) exactly like the main player.
+          if (playerRef.current === w) { applyPlayerState(event.data, w); return }
+          if (warmupRef.current !== w) return
+          if (event.data === 1 || event.data === 3 || (event.data === 2 && !autoplay)) promoteWarmup(w)
+        },
+        onError: () => abortWarmup(),
+      },
+    })
+    warmupRef.current = warm
+  }
+
   const setQuality = (q: string) => {
     const p = livePlayer('getCurrentTime')
     if (!p || typeof p.getPlayerState !== 'function') return
+    // Capture whether the user had a manual quality BEFORE this click — the
+    // flag flips to true below, and currentQ must reflect the PRE-click state.
+    const hadPicked = userPickedRef.current
     userPickedRef.current = true
     // Going back to Auto: drop the stale "actual" so the label re-settles
     // from the fresh player instead of flashing an old value.
@@ -588,25 +776,50 @@ export function YoutubeCustomPlayer({
     }
     const t = p.getCurrentTime?.() ?? 0
     const wasPlaying = p.getPlayerState?.() === 1
-    reinitStartRef.current = t
-    reinitPlayRef.current  = wasPlaying
-    reinitVqRef.current    = q
+
+    // DOWN-switch (lower quality): instant, no rebuild. YouTube honors
+    // setPlaybackQuality for lower qualities immediately; re-assert briefly so
+    // ABR doesn't bounce back up during the handoff.
+    // NOTE: currentQ uses the PRE-click state (hadPicked + OLD vqRef), computed
+    // BEFORE vqRef.current is mutated below.
+    const currentQ = hadPicked && vqRef.current && vqRef.current !== 'auto'
+      ? vqRef.current
+      : (autoQualityRef.current || DEFAULT_VQ)
+    const targetRank = QUALITY_ORDER.indexOf(q)
+    const currentRank = QUALITY_ORDER.indexOf(currentQ)
+    const isDownswitch = q !== 'auto' && targetRank > currentRank && currentRank >= 0
+
+    // Confirm the change visibly — even when the picture difference is subtle
+    // (e.g. picking the quality ABR already uses), the user sees it registered.
     setCurrentQuality(q)
     setVq(q)
     vqRef.current = q
     setShowQualityMenu(false)
-    // Confirm the change visibly — even when the picture difference is subtle
-    // (e.g. picking the quality ABR already uses), the user sees it registered.
     if (qualityToastTimeoutRef.current) clearTimeout(qualityToastTimeoutRef.current)
     setQualityToast(qualityLabel(q))
     qualityToastTimeoutRef.current = setTimeout(() => setQualityToast(null), 2600)
-    setIsReinitialising(true)
-    reinitActiveRef.current = true
-    setPlayerEpoch(e => e + 1)
-    setTimeout(() => {
-      if (reinitActiveRef.current) { reinitActiveRef.current = false; setIsReinitialising(false) }
-    }, 5000)
     resetControlsTimer()
+
+    if (isDownswitch) {
+      try {
+        if (p.setPlaybackQualityRange) p.setPlaybackQualityRange({ min: q, max: q })
+        p.setPlaybackQuality?.(q)
+      } catch (_) {}
+      let pins = 0
+      const pin = setInterval(() => {
+        pins++
+        if (pins > 3 || playerRef.current !== p) { clearInterval(pin); return }
+        try { p.setPlaybackQuality?.(q) } catch (_) {}
+      }, 700)
+      return
+    }
+
+    // UP-switch (or Auto): warm-up swap — keep the current quality playing
+    // while a hidden player loads the new one, then promote in one frame.
+    reinitStartRef.current = t
+    reinitPlayRef.current  = wasPlaying
+    reinitVqRef.current    = q
+    startWarmup(q, t, wasPlaying)
   }
 
   const toggleFullscreen = () => {
@@ -638,8 +851,6 @@ export function YoutubeCustomPlayer({
 
   const qualityLabel = (q: string) => QUALITY_LABELS[q] ?? 'Auto'
 
-  const mountId = playerId.current
-
   // Hyde-style UI lockdown at the iframe level: the embed is sealed from
   // every kind of input so YouTube can never render its own chrome (title bar,
   // center play button, share / "Watch on YouTube", watermark).
@@ -654,11 +865,14 @@ export function YoutubeCustomPlayer({
     const interval = setInterval(() => {
       // YouTube sometimes injects the iframe as a sibling of the mount div
       // (React re-creates the mount node mid-injection), so search the whole
-      // player container instead of the mount.
-      const iframe = containerRef.current?.querySelector('iframe')
-      if (iframe && document.activeElement === iframe) {
-        ;(iframe as HTMLElement).blur()
-      }
+      // player container instead of the mount. With two mounts, blur whatever
+      // iframe currently has focus.
+      const iframes = containerRef.current?.querySelectorAll('iframe') ?? []
+      iframes.forEach((iframe) => {
+        if (document.activeElement === iframe) {
+          ;(iframe as HTMLElement).blur()
+        }
+      })
     }, 250)
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -672,14 +886,22 @@ export function YoutubeCustomPlayer({
       onMouseLeave={() => { isPlaying && !isEnded && setShowControls(false); setShowQualityMenu(false) }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. YouTube iframe at true 1:1 — full quality via vq URL param, no
+      {/* 1. YouTube iframes at true 1:1 — full quality via vq URL param, no
            GPU layer scaling (see note above). The YouTube UI is completely
-           inert: pointer-events-none + focus lockdown below. */}
+           inert: pointer-events:none + focus lockdown below. Two mounts so a
+           quality UP-switch can warm up a hidden player (mount "b") while the
+           current one keeps playing, then swap in one frame. */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div
-          id={mountId}
+          id={`yt-player-${videoId}-a`}
           tabIndex={-1}
-          className="absolute inset-0"
+          className={`absolute inset-0 transition-opacity duration-300 ${activeSide === 'a' ? 'opacity-100' : 'opacity-0'}`}
+          style={{ width: '100%', height: '100%' }}
+        />
+        <div
+          id={`yt-player-${videoId}-b`}
+          tabIndex={-1}
+          className={`absolute inset-0 transition-opacity duration-300 ${activeSide === 'b' ? 'opacity-100' : 'opacity-0'}`}
           style={{ width: '100%', height: '100%' }}
         />
       </div>
