@@ -45,10 +45,17 @@ export function truncate(str: string, length: number) {
   return str.slice(0, length) + '...'
 }
 
+// YouTube-only id extractor. Use this whenever the decision is "render the
+// YouTube player or not" — getVideoId also returns Vimeo ids, which would
+// mount a broken YouTube player on a Vimeo video.
+export function getYouTubeId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)
+  return m ? m[1] : null
+}
+
 export function getVideoId(url: string): string | null {
-  // YouTube
-  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)
-  if (ytMatch) return ytMatch[1]
+  const yt = getYouTubeId(url)
+  if (yt) return yt
 
   // Vimeo
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
@@ -58,13 +65,13 @@ export function getVideoId(url: string): string | null {
 }
 
 export function getVideoThumbnail(url: string): string | null {
-  const ytId = getVideoId(url)
+  const ytId = getYouTubeId(url)
   if (ytId) return `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
   return null
 }
 
 export function getVideoEmbedUrl(url: string): string | null {
-  const ytId = getVideoId(url)
+  const ytId = getYouTubeId(url)
   if (ytId) return `https://www.youtube.com/embed/${ytId}`
 
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)

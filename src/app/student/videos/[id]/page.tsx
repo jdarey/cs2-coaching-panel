@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { notFound, redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getVideoId, getVideoEmbedUrl } from '@/lib/utils'
+import { getYouTubeId, getVideoEmbedUrl } from '@/lib/utils'
 import { StudentVideoPlayerClient } from './student-video-player-client'
 
 export default async function StudentVideoPlayerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,7 +52,7 @@ export default async function StudentVideoPlayerPage({ params }: { params: Promi
   // Embed the source in-app instead of sending the student out to the host
   // site. YouTube is embedded via youtube-nocookie (no tracking cookies);
   // Vimeo via player.vimeo.com. Anything else simply has no player here.
-  const ytId = getVideoId(video.url)
+  const ytId = getYouTubeId(video.url)
   const embedUrl = ytId
     ? `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1`
     : getVideoEmbedUrl(video.url)

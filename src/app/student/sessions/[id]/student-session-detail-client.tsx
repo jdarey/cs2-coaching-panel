@@ -10,11 +10,12 @@ import {
   VIDEO_STATUS_LABELS,
   VIDEO_STATUS_COLORS,
   cn,
-  getVideoId,
+  getYouTubeId,
   getVideoEmbedUrl,
 } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
 import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import { ProtectedEmbed } from '@/components/protected-embed'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -197,11 +198,14 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
   const completionPct = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0
 
   const activeVideo = session.videos.find((sv) => sv.video.id === activeVideoId)?.video ?? null
-  const activeVideoYtId = activeVideo ? getVideoId(activeVideo.url) : null
+  // getYouTubeId — NOT getVideoId — decides the YouTube player: getVideoId
+  // also returns Vimeo ids, which would mount a broken YouTube player on a
+  // Vimeo video.
+  const activeVideoYtId = activeVideo ? getYouTubeId(activeVideo.url) : null
   // In-app embed: YouTube via youtube-nocookie (no tracking cookies, no
   // direct link in the address bar), Vimeo via player.vimeo.com.
   const buildEmbedUrl = (url: string) => {
-    const ytId = getVideoId(url)
+    const ytId = getYouTubeId(url)
     if (ytId) return `https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1`
     return getVideoEmbedUrl(url)
   }
@@ -290,12 +294,11 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                 />
               ) : activeEmbedUrl ? (
                 <>
-                  <iframe
+                  <ProtectedEmbed
                     src={activeEmbedUrl}
                     title={activeVideo?.title || 'Wideo'}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
+                    studentName={session.student.name || 'Uczeń'}
+                    studentEmail={session.student.email}
                   />
                   {/* Branding bar: an opaque strip across the top of the embedded
                       player hides the host's logo, title and share controls. It is

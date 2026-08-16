@@ -10,11 +10,12 @@ import {
   VIDEO_STATUS_LABELS,
   VIDEO_STATUS_COLORS,
   cn,
-  getVideoId,
+  getYouTubeId,
   getVideoEmbedUrl,
 } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import { ProtectedEmbed } from '@/components/protected-embed'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import {
@@ -397,19 +398,18 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
               </div>
               <div className="p-5 sm:p-6">
                 <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-black/40 shadow-2xl shadow-black/40 select-none" onContextMenu={(e) => e.preventDefault()}>
-                  {currentVideo && getVideoId(currentVideo.url) ? (
+                  {currentVideo && getYouTubeId(currentVideo.url) ? (
                     <YoutubeCustomPlayer
-                      videoId={getVideoId(currentVideo.url) as string}
+                      videoId={getYouTubeId(currentVideo.url) as string}
                       title={currentVideo.title}
                       studentName={session.student.name || 'Uczeń'}
                     />
                   ) : currentVideo && getVideoEmbedUrl(currentVideo.url) ? (
-                    <iframe
+                    <ProtectedEmbed
                       src={getVideoEmbedUrl(currentVideo.url) as string}
-                      className="h-full w-full"
                       title={currentVideo.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
+                      studentName={session.student.name || 'Uczeń'}
+                      studentEmail={session.student.email}
                     />
                   ) : (
                     <div className="relative h-full w-full grid place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(45,229,202,0.12),transparent_60%),radial-gradient(circle_at_70%_80%,rgba(124,58,237,0.12),transparent_55%)]">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getVideoId, getVideoThumbnail } from '@/lib/utils'
+import { getYouTubeId, getVideoThumbnail } from '@/lib/utils'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -14,7 +14,7 @@ const schema = z.object({
 
 // Best-effort title fetch from YouTube oEmbed (keyless, no CORS server-side).
 async function fetchTitleFromUrl(url: string): Promise<string | null> {
-  const ytId = getVideoId(url)
+  const ytId = getYouTubeId(url)
   if (!ytId) return null
   try {
     const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${ytId}`)}&format=json`, {
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   }
 
   const thumbnail = getVideoThumbnail(url) || undefined
-  const source = getVideoId(url) ? 'youtube' : url.includes('vimeo.com') ? 'vimeo' : 'other'
+  const source = getYouTubeId(url) ? 'youtube' : url.includes('vimeo.com') ? 'vimeo' : 'other'
 
   const video = await prisma.video.create({
     data: { title, url, thumbnail, source, coachId: user.id, isActive: true },

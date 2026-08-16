@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, BookOpen, Film } from 'lucide-react'
 import { StudentLayout } from '@/components/student-layout'
 import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import { ProtectedEmbed } from '@/components/protected-embed'
 import { VideoComments } from '@/components/community/video-comments'
-import { getVideoId } from '@/lib/utils'
+import { getYouTubeId } from '@/lib/utils'
 
 interface PlayerVideo {
   id: string
@@ -34,7 +35,7 @@ export function StudentVideoPlayerClient({
   initialStartSeconds = 0,
   sessionId = null,
 }: StudentVideoPlayerClientProps) {
-  const ytId = getVideoId(video.url)
+  const ytId = getYouTubeId(video.url)
 
   // Persist playback position (throttled inside the player): status flips to
   // WATCHING as soon as the student actually watches, and to WATCHED at the
@@ -92,12 +93,11 @@ export function StudentVideoPlayerClient({
               />
             ) : video.embedUrl ? (
               <>
-                <iframe
+                <ProtectedEmbed
                   src={video.embedUrl}
                   title={video.title}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
+                  studentName={studentName}
+                  studentEmail={studentEmail}
                 />
                 {/* Branding bar: an opaque strip across the top of the embedded
                     player hides the host's logo, title and share controls. It is

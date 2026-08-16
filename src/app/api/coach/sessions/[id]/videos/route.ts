@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getVideoId, getVideoThumbnail } from '@/lib/utils'
+import { getYouTubeId, getVideoThumbnail } from '@/lib/utils'
 import { z } from 'zod'
 
 // Same include shape the coach session detail page passes to the client,
@@ -29,7 +29,7 @@ function detectSource(url: string): string {
 }
 
 async function fetchYoutubeTitle(url: string): Promise<string | null> {
-  const id = getVideoId(url)
+  const id = getYouTubeId(url)
   if (!id) return null
   try {
     const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, {
