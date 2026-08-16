@@ -884,23 +884,24 @@ export function YoutubeCustomPlayer({
                       {(!userPickedRef.current || currentQuality === 'auto') && <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa] flex-shrink-0" />}
                     </button>
                     {(() => {
-              // Show all available qualities from YouTube, ordered by QUALITY_ORDER
-              // but also include any qualities YouTube returns that aren't in our list
-              const ytQualities = availableQualities.filter(q => q !== 'auto')
-              const ordered = QUALITY_ORDER.filter(q => ytQualities.includes(q))
-              const remaining = ytQualities.filter(q => !QUALITY_ORDER.includes(q))
-              return [...ordered, ...remaining].map((q) => (
-                      <button
-                        key={q}
-                        onClick={() => setQuality(q)}
-                        className={`w-full text-left px-3 py-2 text-xs font-medium transition-all duration-150 flex items-center justify-between gap-3 ${
-                          userPickedRef.current && currentQuality === q ? 'text-[#a78bfa] bg-[#a78bfa]/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        <span>{qualityLabel(q)}</span>
-                        {userPickedRef.current && currentQuality === q && <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa] flex-shrink-0" />}
-                      </button>
-                    ))}
+                      // Show all available qualities from YouTube, ordered by QUALITY_ORDER
+                      // but also include any qualities YouTube returns that aren't in our list
+                      const ytQualities = availableQualities.filter(q => q !== 'auto')
+                      const ordered = QUALITY_ORDER.filter(q => ytQualities.includes(q))
+                      const remaining = ytQualities.filter(q => !QUALITY_ORDER.includes(q))
+                      return [...ordered, ...remaining].map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => setQuality(q)}
+                          className={`w-full text-left px-3 py-2 text-xs font-medium transition-all duration-150 flex items-center justify-between gap-3 ${
+                            userPickedRef.current && currentQuality === q ? 'text-[#a78bfa] bg-[#a78bfa]/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{qualityLabel(q)}</span>
+                          {userPickedRef.current && currentQuality === q && <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa] flex-shrink-0" />}
+                        </button>
+                      ))
+                    })()}
                   </div>
                 )}
                 <button
@@ -912,7 +913,9 @@ export function YoutubeCustomPlayer({
                   <Settings className={`w-4 h-4 transition-transform duration-300 ${showQualityMenu ? 'rotate-45 text-[#a78bfa]' : ''}`} />
                   <span className="text-[11px]">
                     {(() => {
-const isAuto = vqRef.current === DEFAULT_VQ || vqRef.current === 'auto' || vqRef.current === 'highres'
+                      // Manual pick (incl. 4K/4K+): show exactly what was chosen.
+                      // Only in Auto/default mode surface the ACTUAL settled quality.
+                      const isAuto = !userPickedRef.current
                       if (isAuto) return autoQuality ? qualityLabel(autoQuality) : 'Auto'
                       return qualityLabel(currentQuality)
                     })()}
