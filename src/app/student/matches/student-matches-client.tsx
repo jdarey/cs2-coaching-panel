@@ -99,7 +99,7 @@ export function StudentMatchesClient() {
         source: data.source || null,
         text:
           data.created.length > 0
-            ? `Zaimportowano ${data.created.length} meczów z analizą AI (${data.skipped} już było)`
+            ? `Zaimportowano ${data.created.length} nowych meczów (${data.skipped} już było)`
             : `Brak nowych meczów — ${data.skipped} już zsynchronizowanych. Kliknij ponownie później.`,
       })
     } catch {
@@ -129,7 +129,7 @@ export function StudentMatchesClient() {
           icon={Swords}
           label="Codzienny tracking"
           title="Log meczów"
-          subtitle={'Twoje zsynchronizowane mecze z pełnymi statystykami i analizą AI. Kliknij „Synchronizuj”, a ostatnie mecze pojawią się automatycznie.'}
+          subtitle={'Twoje zsynchronizowane mecze z pełnymi statystykami. Kliknij „Synchronizuj”, a ostatnie mecze pojawią się automatycznie.'}
         >
           <button
             onClick={syncFaceit}
@@ -254,7 +254,7 @@ export function StudentMatchesClient() {
               <div className="glass-liquid rounded-3xl py-16 px-6 text-center">
                 <Swords className="w-12 h-12 mx-auto mb-4 text-white/25" />
                 <p className="text-white/55">Nie masz jeszcze zsynchronizowanych meczów.</p>
-                <p className="text-sm text-white/35 mt-1">Kliknij „Synchronizuj z Faceitem" — ostatnie 5 meczów z pełnymi statystykami i analizą AI pojawi się automatycznie.</p>
+                <p className="text-sm text-white/35 mt-1">Kliknij „Synchronizuj z Faceitem" — ostatnie mecze z pełnymi statystykami pojawią się automatycznie.</p>
                 <Link href="/student/settings" className="inline-flex items-center gap-1.5 mt-3 text-xs text-[#c4b5fd] hover:text-white transition-colors">
                   <Calendar className="w-3.5 h-3.5" /> Ustaw Steam ID w ustawieniach
                 </Link>
