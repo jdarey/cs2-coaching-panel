@@ -43,6 +43,10 @@ export async function GET(request: NextRequest) {
         session: { select: { id: true, title: true, status: true } },
       },
       orderBy: { updatedAt: 'desc' },
+      // The coach view aggregates every student's progress — unbounded it grows
+      // with the whole class. Cap the response; the UI never needs more than
+      // the most recent activity.
+      take: 500,
     })
 
     return NextResponse.json(progress)

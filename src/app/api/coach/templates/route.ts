@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         tags: { include: { tag: true }, orderBy: { order: 'asc' } },
         videos: { include: { video: { select: { id: true, title: true, thumbnail: true } }, tag: true }, orderBy: { order: 'asc' } },
       },
+      take: 100,
     })
 
     return NextResponse.json(templates)

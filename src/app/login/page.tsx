@@ -22,11 +22,17 @@ function LoginForm() {
   // `new URL(data.url)`, which throws on a relative path ('/') and makes the
   // whole login fail with a generic error. Build an absolute URL from the
   // browser's own origin so the client-side parse always succeeds and the
-  // redirect after login stays on the same origin.
-  const rawCallback = searchParams.get('callbackUrl')
-  const callbackUrl = rawCallback
-    ? (rawCallback.startsWith('http') ? rawCallback : new URL(rawCallback, window.location.origin).toString())
-    : window.location.origin + '/'
+  // redirect after login stays on the same origin. SSR-guarded: this client
+  // component can be executed on the server (Suspense fallback path), where
+  // `window` does not exist — accessing it there crashed the whole /login
+  // request (and the dev server) with ReferenceError.
+  const callbackUrl = (() => {
+    if (typeof window === 'undefined') return '/'
+    const raw = searchParams.get('callbackUrl')
+    return raw
+      ? (raw.startsWith('http') ? raw : new URL(raw, window.location.origin).toString())
+      : window.location.origin + '/'
+  })()
   const urlError = searchParams.get('error')
   const registered = searchParams.get('registered')
 

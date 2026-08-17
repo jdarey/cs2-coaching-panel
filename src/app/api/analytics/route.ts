@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
       const progress = await prisma.videoProgress.findMany({
         where: { userId },
         include: { video: { include: { tags: { include: { tag: true } } } }, session: true },
+        take: 500,
       })
 
       const progressByStatus = progress.reduce((acc, p) => {

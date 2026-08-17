@@ -55,13 +55,22 @@ export function ProtectedEmbed({
     <div
       className="relative w-full h-full bg-black overflow-hidden"
       onContextMenu={(e) => e.preventDefault()}
+      // Never let the iframe be dragged out to a new tab, nor opened via
+      // middle-click; block copying from the embed surface too.
+      draggable={false}
+      onDragStart={(e) => e.preventDefault()}
+      onAuxClick={(e) => {
+        if (e.button === 1) e.preventDefault()
+      }}
+      onCopy={(e) => e.preventDefault()}
     >
       <iframe
         ref={iframeRef}
         src={src}
         title={title}
-        className="h-full w-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        className="h-full w-full select-none"
+        draggable={false}
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
       />
       <ContentProtectionOverlay devtoolsOpen={devtoolsOpen} captureWarn={captureWarn} />

@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
         video: { select: { id: true, title: true, url: true, thumbnail: true } },
       },
       orderBy: [{ status: 'asc' }, { dueDate: 'asc' }],
+      take: 500,
     })
 
     return NextResponse.json(assignments)

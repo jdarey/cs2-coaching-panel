@@ -36,8 +36,13 @@ export async function GET() {
       email: true,
       avatarUrl: true,
       practiceSessions: {
+        // Cap the per-student load: a streak cannot exceed the number of
+        // practice sessions, so 200 rows cover any realistic streak (7+ days
+        // require 7+ sessions) while the query stays bounded no matter how
+        // long a student has trained. Weekly minutes are filtered in JS below.
         select: { minutes: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
+        take: 200,
       },
     },
   })

@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       where,
       include: { user: { select: { id: true, name: true, role: true, avatarUrl: true } } },
       orderBy: { createdAt: 'desc' },
+      take: 200,
     })
 
     return NextResponse.json(notes)

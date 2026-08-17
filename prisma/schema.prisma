@@ -124,6 +124,8 @@ model Announcement {
 
   @@index([coachId])
   @@index([createdAt])
+  // Composite: the feed lists one coach's announcements newest-first (pinned).
+  @@index([coachId, createdAt])
 }
 
 // Training path = Skool-style course: ordered modules, each with ordered videos.
@@ -290,6 +292,11 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
   @@index([createdAt])
+  // Composite: conversations are read as (me ↔ other) pairs ordered by time,
+  // and unread counts filter receiverId + readAt — single-column indexes can't
+  // serve either efficiently once conversations get long.
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, readAt])
 }
 
 // Feedback students send to their coach (session review, suggestion, issue...).
@@ -360,6 +367,8 @@ model Video {
 
   @@index([coachId])
   @@index([isActive])
+  // Composite: library counts/listing filter coachId + isActive together.
+  @@index([coachId, isActive])
 }
 
 model VideoTag {
@@ -463,6 +472,8 @@ model VideoProgress {
   @@index([userId])
   @@index([videoId])
   @@index([sessionId])
+  // Composite: dashboards list a student's progress ordered by last activity.
+  @@index([userId, updatedAt])
 }
 
 // Training assignment (homework/drill) a coach gives a student.
@@ -618,10 +629,12 @@ model MatchLog {
 
   @@index([studentId])
   @@index([createdAt])
+  // Composite: the match log lists one student's matches newest-first.
+  @@index([studentId, createdAt])
 }
 
 // A snapshot of the student's Leetify skill ratings at a point in time.
-// Sampled on every Faceit sync / AI analysis so the coach can watch whether
+// Sampled on every Faceit sync so the coach can watch whether
 // aim/positioning/utility improve over the weeks of routines.
 model SkillSnapshot {
   id          String   @id @default(cuid())
@@ -676,6 +689,9 @@ model PracticeSession {
 
   @@index([studentId])
   @@index([createdAt])
+  // Composite: the practice chart and weekly leaderboard aggregate minutes per
+  // student within a time window.
+  @@index([studentId, createdAt])
 }
 
 // Coach-specific settings (fully customizable)

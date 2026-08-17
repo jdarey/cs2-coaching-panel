@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
           session: { select: { id: true, title: true } },
         },
         orderBy: { createdAt: 'desc' },
+        take: 100,
       })
       return NextResponse.json({ feedback })
     }
@@ -37,6 +38,7 @@ export async function GET(request: NextRequest) {
         coach: { select: { id: true, name: true, avatarUrl: true } },
       },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     })
 
     return NextResponse.json({ feedback, coachId: me?.coachId ?? null })
