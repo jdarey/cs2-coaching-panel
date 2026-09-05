@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn, matchesSearch } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useLiveRefresh } from '@/hooks/use-live-refresh'
@@ -44,16 +44,11 @@ export function CoachPracticeClient({ rows, stats }: CoachPracticeClientProps) {
   const maxBar = Math.max(1, ...rows.flatMap((r) => r.bars.map((b) => b.minutes)))
 
   const sorted = useMemo(() => {
-    const q = search.toLowerCase()
-    const filtered = rows.filter(
-      (r) =>
-        r.name?.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q),
-    )
+    const filtered = rows.filter((r) => matchesSearch(search, r.name, r.email))
     return filtered.sort((a, b) => {
       let cmp = 0
       if (sortKey === 'name') {
-        cmp = (a.name || a.email).localeCompare(b.name || b.email)
+        cmp = (a.name || a.email).localeCompare(b.name || b.email, 'pl')
       } else {
         cmp = a[sortKey] - b[sortKey]
       }

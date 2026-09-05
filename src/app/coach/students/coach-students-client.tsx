@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDate, getInitials, cn } from '@/lib/utils'
+import { formatDate, getInitials, cn, matchesSearch } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { Input } from '@/components/ui/input'
@@ -100,11 +100,9 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
     }
   }
 
-  const filteredStudents = students.filter(
-    (s) =>
-      s.name?.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredStudents = students
+    .filter((s) => matchesSearch(search, s.name, s.email))
+    .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, 'pl'))
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault()

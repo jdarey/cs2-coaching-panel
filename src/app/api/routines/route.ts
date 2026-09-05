@@ -10,6 +10,7 @@ const taskSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional().nullable(),
   videoId: z.string().optional().nullable(),
+  steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   day: z.number().int().min(1).default(1),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
 })
@@ -17,6 +18,7 @@ const taskSchema = z.object({
 const routineSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional().nullable(),
+  recurring: z.boolean().default(true),
   tasks: z.array(taskSchema).min(1).max(60),
 })
 
@@ -98,11 +100,13 @@ export async function POST(request: NextRequest) {
         coachId: userId,
         title: validated.title,
         description: validated.description ?? null,
+        recurring: validated.recurring,
         tasks: {
           create: validated.tasks.map((t, i) => ({
             title: t.title,
             description: t.description ?? null,
             videoId: t.videoId ?? null,
+            steamMapUrl: t.steamMapUrl || null,
             day: t.day,
             minutes: t.minutes ?? null,
             order: i,

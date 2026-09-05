@@ -348,13 +348,13 @@ export function StudentDashboardClient({
           {/* Progress card */}
           <div className="animate-rise-in lg:col-span-3 relative rounded-3xl p-6 md:p-7 glass-liquid border-glow overflow-hidden" style={{ animationDelay: '120ms' }}>
             <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8 relative z-10">
-              <div className="flex items-center gap-5 shrink-0">
+              <div className="flex items-center gap-5 shrink-0 min-w-0">
                 <RankEmblem rank={rank} size={76} />
-                <div>
+                <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-1">Twoja ranga</p>
-                  <h2 className="font-display text-2xl font-bold text-white">{rank.name}</h2>
+                  <h2 className="font-display text-2xl font-bold text-white break-words leading-tight">{rank.name}</h2>
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="w-28 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="w-28 shrink-0 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-1000"
                         style={{
@@ -363,8 +363,8 @@ export function StudentDashboardClient({
                         }}
                       />
                     </div>
-                    <span className="text-xs text-white/45 whitespace-nowrap">
-                      {next ? `${next.min - completionRate}% do ${next.name}` : 'Maks! 👑'}
+                    <span className="text-xs text-white/45 break-words min-w-0">
+                      {next ? `${next.min - completionRate}% do ${next.name}` : 'Maks!'}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-xs text-white/45">

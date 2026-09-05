@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { StudentPicker } from '@/components/student-picker'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
@@ -757,24 +758,14 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   <label htmlFor="studentId" className="text-xs font-medium text-white/55">
                     Uczeń *
                   </label>
-                  <div className="relative">
-                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                    <select
-                      id="studentId"
-                      value={assignFormData.studentId}
-                      onChange={(e) => setAssignFormData((prev) => ({ ...prev, studentId: e.target.value, sessionId: '' }))}
-                      required
-                      disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                    >
-                      <option value="">Wybierz ucznia...</option>
-                      {students.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name || s.email}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <StudentPicker
+                    id="studentId"
+                    students={students}
+                    value={assignFormData.studentId}
+                    onChange={(id) => setAssignFormData((prev) => ({ ...prev, studentId: id, sessionId: '' }))}
+                    disabled={isLoading}
+                    placeholder="Wybierz lub wyszukaj ucznia..."
+                  />
                 </div>
 
                 {/* Session select */}

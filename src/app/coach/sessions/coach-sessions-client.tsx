@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, cn, spotlightHandler } from '@/lib/utils'
+import { formatDate, formatDateTime, getInitials, STATUS_LABELS, STATUS_COLORS, cn, spotlightHandler, matchesSearch } from '@/lib/utils'
+import { StudentPicker } from '@/components/student-picker'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
@@ -106,13 +107,10 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
     videoIds: [] as string[],
   })
 
-  const filteredSessions = sessions.filter((s) => {
-    const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase()) ||
-      s.student.name?.toLowerCase().includes(search.toLowerCase()) ||
-      s.student.email.toLowerCase().includes(search.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || s.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const filteredSessions = sessions.filter((s) =>
+    matchesSearch(search, s.title, s.student.name, s.student.email) &&
+    (statusFilter === 'all' || s.status === statusFilter)
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -567,25 +565,14 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
 
                     <div>
                       <label htmlFor="student" className="block mb-2 text-sm font-medium text-white/80">Uczeń <span className="text-[#a78bfa]">*</span></label>
-                      <div className="relative">
-                        <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a78bfa]/60 z-10" />
-                        <select
-                          id="student"
-                          value={formData.studentId}
-                          onChange={(e) => setFormData((prev) => ({ ...prev, studentId: e.target.value }))}
-                          disabled={isLoading || !!editingSession}
-                          required
-                          className="h-12 w-full appearance-none rounded-xl bg-[#181818] ring-1 ring-inset ring-white/[0.06] pl-11 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 focus:border-[#8b5cf6]/40 transition-all duration-300 disabled:opacity-50"
-                        >
-                          <option value="" className="bg-[#0b0c16]">Wybierz ucznia</option>
-                          {students.map((s) => (
-                            <option key={s.id} value={s.id} className="bg-[#0b0c16]">
-                              {s.name || s.email}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/40">▾</span>
-                      </div>
+                      <StudentPicker
+                        id="student"
+                        students={students}
+                        value={formData.studentId}
+                        onChange={(id) => setFormData((prev) => ({ ...prev, studentId: id }))}
+                        disabled={isLoading || !!editingSession}
+                        placeholder="Wybierz lub wyszukaj ucznia..."
+                      />
                     </div>
 
                     <div>

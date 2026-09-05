@@ -45,6 +45,20 @@ export function truncate(str: string, length: number) {
   return str.slice(0, length) + '...'
 }
 
+/** Lowercase + strip diacritics so "lukasz" matches "Łukasz". */
+export function normalizeSearch(str: string) {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')}
+
+/** Diacritics-insensitive search across any of the given fields. */
+export function matchesSearch(query: string, ...fields: (string | null | undefined)[]) {
+  const q = normalizeSearch(query.trim())
+  if (!q) return true
+  return fields.some((f) => f != null && normalizeSearch(f).includes(q))
+}
+
 // YouTube-only id extractor. Use this whenever the decision is "render the
 // YouTube player or not" — getVideoId also returns Vimeo ids, which would
 // mount a broken YouTube player on a Vimeo video.

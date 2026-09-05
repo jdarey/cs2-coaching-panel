@@ -11,6 +11,7 @@ const taskSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional().nullable(),
   videoId: z.string().optional().nullable(),
+  steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   day: z.number().int().min(1).default(1),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
 })
@@ -18,6 +19,7 @@ const taskSchema = z.object({
 const patchSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).optional().nullable(),
+  recurring: z.boolean().optional(),
   tasks: z.array(taskSchema).min(1).max(60).optional(),
 })
 
@@ -111,6 +113,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
             title: t.title,
             description: t.description ?? null,
             videoId: t.videoId ?? null,
+            steamMapUrl: t.steamMapUrl || null,
             day: t.day,
             minutes: t.minutes ?? null,
             order: i,
@@ -130,6 +133,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         data: {
           title: validated.title,
           description: validated.description === undefined ? undefined : validated.description,
+          recurring: validated.recurring,
         },
         include: { tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
       })

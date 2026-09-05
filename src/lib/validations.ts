@@ -35,11 +35,18 @@ export const videoSchema = z.object({
 export const videoUpdateSchema = videoSchema.partial()
 
 // Sessions
+// scheduledAt comes from <input type="datetime-local"> which yields
+// "YYYY-MM-DDTHH:mm" (no seconds, no zone) — z.string().datetime() rejects
+// that, so we accept any parseable date string. Empty string → undefined.
 export const sessionSchema = z.object({
   title: z.string().min(1, 'Tytuł jest wymagany').max(200),
   description: z.string().max(2000).optional(),
   studentId: z.string().min(1, 'Uczeń jest wymagany'),
-  scheduledAt: z.string().datetime().optional(),
+  scheduledAt: z
+    .string()
+    .refine((v) => !Number.isNaN(Date.parse(v)), 'Nieprawidłowa data')
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   tagIds: z.array(z.string()).default([]),
   videoIds: z.array(z.string()).default([]),
 })

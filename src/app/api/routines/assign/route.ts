@@ -9,6 +9,9 @@ export const dynamic = 'force-dynamic'
 const assignSchema = z.object({
   routineId: z.string(),
   studentId: z.string(),
+  // Optional end date set by the coach; without it the routine repeats
+  // every day (for recurring routines).
+  endsAt: z.string().optional().nullable(),
 })
 
 export async function POST(request: NextRequest) {
@@ -39,6 +42,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Uczeń nie należy do Ciebie' }, { status: 403 })
     }
 
+    const endsAt = validated.endsAt ? new Date(validated.endsAt) : null
+    if (endsAt && isNaN(endsAt.getTime())) {
+      return NextResponse.json({ error: 'Nieprawidłowa data zakończenia' }, { status: 400 })
+    }
+
     // Re-assigning an active routine: reuse the same assignment (fresh progress)
     const existing = await prisma.routineAssignment.findFirst({
       where: { routineId: validated.routineId, studentId: validated.studentId },
@@ -47,7 +55,7 @@ export async function POST(request: NextRequest) {
       await prisma.routineTaskProgress.deleteMany({ where: { assignmentId: existing.id } })
       await prisma.routineAssignment.update({
         where: { id: existing.id },
-        data: { status: 'ACTIVE', completedAt: null },
+        data: { status: 'ACTIVE', completedAt: null, endsAt },
       })
       return NextResponse.json(existing, { status: 200 })
     }
@@ -57,6 +65,7 @@ export async function POST(request: NextRequest) {
         routineId: validated.routineId,
         coachId: userId,
         studentId: validated.studentId,
+        endsAt,
         progress: {
           create: routine.tasks.map((t) => ({ taskId: t.id, status: 'PENDING' })),
         },

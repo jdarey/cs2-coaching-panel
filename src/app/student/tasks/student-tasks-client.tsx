@@ -22,6 +22,8 @@ import {
   Clock,
   Trophy,
   Timer,
+  MapPin,
+  Repeat,
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
 
@@ -40,11 +42,13 @@ interface RoutineAssignment {
   id: string
   status: string
   completedAt: string | null
+  endsAt: string | null
   routine: {
     id: string
     title: string
     description: string | null
-    tasks: { id: string; title: string; description: string | null; videoId: string | null; day: number; minutes: number | null }[]
+    recurring: boolean
+    tasks: { id: string; title: string; description: string | null; videoId: string | null; steamMapUrl: string | null; day: number; minutes: number | null }[]
   }
   progress: { id: string; taskId: string; status: string; completedAt: string | null }[]
 }
@@ -115,9 +119,15 @@ export function StudentTasksClient() {
         body: JSON.stringify({ assignmentId: ra.id, taskId, status: next }),
       })
       if (res.ok) {
+        const data = await res.json().catch(() => null)
         setRoutines((prev) =>
           prev.map((r) => {
             if (r.id !== ra.id) return r
+            // Recurring routine with all tasks done: the server resets the
+            // cycle and keeps the assignment ACTIVE.
+            if (data?.repeated) {
+              return { ...r, status: 'ACTIVE', progress: r.progress.map((p) => ({ ...p, status: 'PENDING', completedAt: null })) }
+            }
             const progress = r.progress.some((p) => p.taskId === taskId)
               ? r.progress.map((p) =>
                   p.taskId === taskId
@@ -268,6 +278,16 @@ export function StudentTasksClient() {
                             <Trophy className="w-3 h-3" /> Ukończona
                           </span>
                         )}
+                        {ra.routine.recurring && !completed && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/25 rounded-full px-2 py-0.5">
+                            <Repeat className="w-3 h-3" /> Codziennie
+                          </span>
+                        )}
+                        {ra.endsAt && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/50 bg-white/[0.04] border border-white/[0.08] rounded-full px-2 py-0.5">
+                            <Calendar className="w-3 h-3" /> do {formatDate(ra.endsAt)}
+                          </span>
+                        )}
                       </div>
                       {ra.routine.description && (
                         <p className="mt-0.5 text-sm text-white/45 line-clamp-1">{ra.routine.description}</p>
@@ -362,6 +382,17 @@ export function StudentTasksClient() {
                                             <Clock className="w-3 h-3" />
                                             ~{t.minutes} min
                                           </span>
+                                        )}
+                                        {t.steamMapUrl && (
+                                          <a
+                                            href={t.steamMapUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25 hover:bg-[#f43f5e]/[0.16] hover:border-[#f43f5e]/40 transition-all"
+                                          >
+                                            <MapPin className="w-3.5 h-3.5" />
+                                            Mapa treningowa
+                                          </a>
                                         )}
                                         {t.minutes && !done && (
                                           <button

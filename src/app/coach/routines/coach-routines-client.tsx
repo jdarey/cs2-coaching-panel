@@ -7,14 +7,16 @@ import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Search, Trash2, Pencil, Loader2, X, Sparkles, UserPlus, ListChecks,
-  CalendarRange, Clock, Film, Check, ChevronDown, PlayCircle, Users,
+  CalendarRange, Clock, Film, Check, ChevronDown, PlayCircle, Users, MapPin, Repeat,
 } from 'lucide-react'
+import { StudentPicker } from '@/components/student-picker'
 
 interface RoutineTask {
   id?: string
   title: string
   description: string | null
   videoId: string | null
+  steamMapUrl: string | null
   day: number
   minutes: number | null
 }
@@ -23,6 +25,7 @@ interface Routine {
   id: string
   title: string
   description: string | null
+  recurring: boolean
   tasks: RoutineTask[]
   assignments: { id: string; status: string; student: { id: string; name: string | null; email: string } }[]
 }
@@ -51,6 +54,7 @@ const emptyTask = (day = 1): RoutineTask => ({
   title: '',
   description: null,
   videoId: null,
+  steamMapUrl: null,
   day,
   minutes: null,
 })
@@ -65,9 +69,10 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const [editing, setEditing] = useState<Routine | null>(null)
   const [assigning, setAssigning] = useState<Routine | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({ title: '', description: '' })
+  const [formData, setFormData] = useState({ title: '', description: '', recurring: true })
   const [tasks, setTasks] = useState<RoutineTask[]>([emptyTask(1)])
   const [assignStudentId, setAssignStudentId] = useState('')
+  const [assignEndsAt, setAssignEndsAt] = useState('')
   const { toast } = useToast()
 
   const filtered = useMemo(() => {
@@ -99,11 +104,13 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
         body: JSON.stringify({
           title: formData.title,
           description: formData.description || null,
+          recurring: formData.recurring,
           tasks: cleanTasks.map((t) => ({
             id: t.id || undefined,
             title: t.title,
             description: t.description || null,
             videoId: t.videoId || null,
+            steamMapUrl: t.steamMapUrl || null,
             day: Math.max(1, t.day),
             minutes: t.minutes || null,
           })),
@@ -153,7 +160,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
       const res = await fetch('/api/routines/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ routineId: assigning.id, studentId: assignStudentId }),
+        body: JSON.stringify({ routineId: assigning.id, studentId: assignStudentId, endsAt: assignEndsAt || null }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -180,14 +187,14 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
 
   const openAddDialog = () => {
     setEditing(null)
-    setFormData({ title: '', description: '' })
+    setFormData({ title: '', description: '', recurring: true })
     setTasks([emptyTask(1)])
     setDialogOpen(true)
   }
 
   const openEditDialog = (r: Routine) => {
     setEditing(r)
-    setFormData({ title: r.title, description: r.description || '' })
+    setFormData({ title: r.title, description: r.description || '', recurring: r.recurring })
     setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t })) : [emptyTask(1)])
     setDialogOpen(true)
   }
@@ -305,7 +312,14 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                     <h3 className="font-display text-lg font-bold leading-snug text-white/90 group-hover:text-gradient-violet transition-colors">
                       {r.title}
                     </h3>
-                    {r.description && <p className="mt-1.5 text-sm text-white/45 line-clamp-2">{r.description}</p>}
+                      {r.description && <p className="mt-1.5 text-sm text-white/45 line-clamp-2">{r.description}</p>}
+
+                      {r.recurring && (
+                        <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-lg px-2 h-6 text-[11px] font-semibold glass-liquid text-[#c4b5fd]">
+                          <Repeat className="h-3 w-3" />
+                          Powtarzana codziennie
+                        </span>
+                      )}
 
                     {/* Stats */}
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-white/50">
@@ -345,7 +359,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                     {/* Footer */}
                     <div className="mt-5 flex items-center justify-between gap-2 border-t border-white/[0.06] pt-4">
                       <button
-                        onClick={() => { setAssigning(r); setAssignStudentId(''); setAssignDialogOpen(true) }}
+                        onClick={() => { setAssigning(r); setAssignStudentId(''); setAssignEndsAt(''); setAssignDialogOpen(true) }}
                         className="inline-flex items-center gap-1.5 rounded-xl px-3 h-9 text-xs font-semibold text-white btn-darey transition-all"
                       >
                         <UserPlus className="h-3.5 w-3.5" />
@@ -434,6 +448,31 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   />
                 </div>
 
+                {/* Recurring toggle */}
+                <label
+                  htmlFor="r-recurring"
+                  className="flex items-start gap-3 rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 cursor-pointer hover:border-[#a78bfa]/25 transition"
+                >
+                  <input
+                    id="r-recurring"
+                    type="checkbox"
+                    checked={formData.recurring}
+                    onChange={(e) => setFormData((p) => ({ ...p, recurring: e.target.checked }))}
+                    disabled={isLoading}
+                    className="mt-0.5 h-4 w-4 accent-[#8b5cf6]"
+                  />
+                  <span>
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-white/85">
+                      <Repeat className="h-3.5 w-3.5 text-[#a78bfa]" />
+                      Rutyna codzienna (domyślnie)
+                    </span>
+                    <span className="block mt-0.5 text-xs text-white/45">
+                      Po odhaczeniu wszystkich zadań rutyna zaczyna się od nowa każdego dnia — trwa, dopóki przy
+                      przypisaniu nie ustawisz daty zakończenia. Odznacz, jeśli to jednorazowy program.
+                    </span>
+                  </span>
+                </label>
+
                 {/* Tasks builder */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -501,6 +540,20 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                               className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                             />
                           </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-white/45">Mapa ze Steam (opcjonalnie)</label>
+                        <div className="relative mt-1">
+                          <MapPin className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                          <input
+                            type="url"
+                            value={t.steamMapUrl ?? ''}
+                            onChange={(e) => updateTask(i, { steamMapUrl: e.target.value || null })}
+                            disabled={isLoading}
+                            placeholder="Link do mapy z warsztatu Steam..."
+                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                          />
                         </div>
                       </div>
                       <div>
@@ -581,26 +634,34 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   <label htmlFor="r-student" className="text-xs font-medium text-white/55">
                     Uczeń *
                   </label>
-                  <div className="relative">
-                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                    <select
-                      id="r-student"
-                      value={assignStudentId}
-                      onChange={(e) => setAssignStudentId(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-4 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                    >
-                      <option value="">Wybierz ucznia...</option>
-                      {students.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name || s.email}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <StudentPicker
+                    id="r-student"
+                    students={students}
+                    value={assignStudentId}
+                    onChange={setAssignStudentId}
+                    disabled={isLoading}
+                    placeholder="Wybierz lub wyszukaj ucznia..."
+                  />
                   <p className="text-xs text-white/40">
                     Uczeń zobaczy rutynę w swoich zadaniach i będzie odhaczał kolejne dni.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="r-endsAt" className="text-xs font-medium text-white/55">
+                    Data zakończenia (opcjonalnie)
+                  </label>
+                  <input
+                    id="r-endsAt"
+                    type="date"
+                    value={assignEndsAt}
+                    onChange={(e) => setAssignEndsAt(e.target.value)}
+                    disabled={isLoading}
+                    className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 text-sm text-white outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition [color-scheme:dark]"
+                  />
+                  <p className="text-xs text-white/40">
+                    Bez daty rutyna powtarzana jest codziennie bez końca. Ustaw datę, by zakończyć rutynę po
+                    ostatnim cyklu przed tym dniem.
                   </p>
                 </div>
 

@@ -57,19 +57,40 @@ export async function PATCH(request: NextRequest) {
     const doneCount = await prisma.routineTaskProgress.count({
       where: { assignmentId: validated.assignmentId, status: 'DONE' },
     })
+    const routine = await prisma.routine.findUnique({ where: { id: assignment.routineId } })
+    // Recurring routines keep running every day: instead of completing, the
+    // progress rolls over to a fresh cycle — unless the coach set an end date
+    // that has already passed.
+    const repeat =
+      (routine?.recurring ?? false) && (!assignment.endsAt || assignment.endsAt > new Date())
+    let assignmentStatus = assignment.status
     if (doneCount >= taskCount && taskCount > 0) {
+      if (repeat) {
+        await prisma.routineTaskProgress.updateMany({
+          where: { assignmentId: validated.assignmentId },
+          data: { status: 'PENDING', completedAt: null },
+        })
+        await prisma.routineAssignment.update({
+          where: { id: validated.assignmentId },
+          data: { status: 'ACTIVE', completedAt: null },
+        })
+        assignmentStatus = 'ACTIVE'
+        return NextResponse.json({ ...progress, status: 'PENDING', assignmentStatus, repeated: true })
+      }
       await prisma.routineAssignment.update({
         where: { id: validated.assignmentId },
         data: { status: 'COMPLETED', completedAt: new Date() },
       })
+      assignmentStatus = 'COMPLETED'
     } else if (assignment.status === 'COMPLETED') {
       await prisma.routineAssignment.update({
         where: { id: validated.assignmentId },
         data: { status: 'ACTIVE', completedAt: null },
       })
+      assignmentStatus = 'ACTIVE'
     }
 
-    return NextResponse.json(progress)
+    return NextResponse.json({ ...progress, assignmentStatus })
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json({ error: 'Nieprawidłowe dane', details: error }, { status: 400 })
