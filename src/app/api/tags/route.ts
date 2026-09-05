@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: [{ isGlobal: 'desc' }, { name: 'asc' }],
       include: {
-        _count: { select: { videos: true } },
+        _count: { select: { videos: true, sessions: true } },
       },
     })
 
@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
         ...validated,
         coachId: userId,
       },
+      // The tags UI renders _count.* immediately after creation
+      include: { _count: { select: { videos: true, sessions: true } } },
     })
 
     return NextResponse.json(tag, { status: 201 })

@@ -29,6 +29,8 @@ export async function PUT(
     const tag = await prisma.tag.update({
       where: { id },
       data: validated,
+      // The tags UI renders _count.* immediately after a save
+      include: { _count: { select: { videos: true, sessions: true } } },
     })
 
     return NextResponse.json(tag)

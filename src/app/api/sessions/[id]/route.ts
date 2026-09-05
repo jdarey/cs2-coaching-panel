@@ -111,6 +111,7 @@ export async function PUT(
       where: { id },
       data: updateData,
       include: {
+        student: { select: { id: true, name: true, email: true, avatarUrl: true } },
         tags: { include: { tag: true }, orderBy: { order: 'asc' } },
         videos: { include: { video: true, tag: true }, orderBy: { order: 'asc' } },
       },

@@ -135,7 +135,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           description: validated.description === undefined ? undefined : validated.description,
           recurring: validated.recurring,
         },
-        include: { tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+        include: {
+          tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] },
+          // The coach routines UI renders assignments.* right after a save —
+          // keep the response shape identical to GET /api/routines.
+          assignments: {
+            include: { student: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+          },
+        },
       })
     })
 

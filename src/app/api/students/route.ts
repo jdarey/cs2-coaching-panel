@@ -84,7 +84,14 @@ export async function POST(request: NextRequest) {
       student = await prisma.user.update({
         where: { id: student.id },
         data: { coachId: userId, role: 'STUDENT' },
-        select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          avatarUrl: true,
+          createdAt: true,
+          _count: { select: { sessionsAsStudent: true, videoProgress: true } },
+        },
       }) as any
     } else {
       // Create new student
@@ -97,11 +104,23 @@ export async function POST(request: NextRequest) {
           role: 'STUDENT',
           coachId: userId,
         },
-        select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          avatarUrl: true,
+          createdAt: true,
+          _count: { select: { sessionsAsStudent: true, videoProgress: true } },
+        },
       }) as any
     }
 
-    return NextResponse.json(student, { status: 201 })
+    // Shape must match GET /api/students — the coach UI renders
+    // progressStats.* and _count.* for every row right after creation.
+    return NextResponse.json(
+      { ...student, progressStats: { total: 0, pending: 0, watching: 0, watched: 0, implemented: 0 } },
+      { status: 201 },
+    )
   } catch (error) {
     console.error('Students POST error:', error)
     return NextResponse.json({ error: 'Błąd dodawania ucznia' }, { status: 500 })
