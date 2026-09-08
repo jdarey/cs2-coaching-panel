@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Search, Trash2, Pencil, Loader2, X, Sparkles, UserPlus, ListChecks,
   CalendarRange, Clock, Film, Check, ChevronDown, PlayCircle, Users, MapPin, Repeat,
-  Image, Zap,
+  Image, Zap, GripVertical, BookmarkPlus, FileText,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
 
@@ -91,11 +91,35 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const [assignEndsAt, setAssignEndsAt] = useState('')
   const [presetPickerOpen, setPresetPickerOpen] = useState(false)
   const [presetSearch, setPresetSearch] = useState('')
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const { toast } = useToast()
 
   const addPresetToTasks = (p: ExercisePreset) => {
     setTasks(prev=> [...prev, { title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, day: 1, minutes: p.minutes }])
     toast({ title: 'Dodano', description: `"${p.title}" dodane do rutyny` })
+  }
+
+  const handleDragStart = (idx: number) => setDraggedIdx(idx)
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault()
+  const handleDrop = (idx: number) => {
+    if (draggedIdx === null || draggedIdx === idx) return
+    setTasks(prev => {
+      const copy = [...prev]
+      const [moved] = copy.splice(draggedIdx, 1)
+      copy.splice(idx, 0, moved)
+      return copy
+    })
+    setDraggedIdx(null)
+  }
+
+  const saveTaskAsPreset = async (t: RoutineTask) => {
+    if (!t.title.trim()) { toast({ title: 'Błąd', description: 'Najpierw wpisz nazwę ćwiczenia', variant: 'destructive' }); return }
+    try {
+      const res = await fetch('/api/exercise-presets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t.title, description: t.description, videoId: t.videoId, gifUrl: t.gifUrl, steamMapUrl: t.steamMapUrl, minutes: t.minutes }) })
+      const data = await res.json()
+      if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
+      toast({ title: 'Zapisano', description: `"${t.title}" zapisane jako preset` })
+    } catch { toast({ title: 'Błąd', variant: 'destructive' }) }
   }
 
   const filtered = useMemo(() => {
@@ -500,19 +524,10 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                 {/* Tasks builder */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-white/55">Zadania (dzień po dniu) — presety to pojedyncze ćwiczenia</label>
+                    <label className="text-xs font-medium text-white/55">Ćwiczenia — przeciągnij by zmienić kolejność</label>
                     <div className="flex items-center gap-2">
                       {exercisePresets.length > 0 && (
-                        <>
-                          <button type="button" onClick={()=>setPresetPickerOpen(true)} disabled={isLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3 h-9 text-xs font-bold bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 text-[#c4b5fd] hover:from-[#a78bfa]/30 hover:to-[#8b5cf6]/30 transition"><Zap className="w-3.5 h-3.5"/>Biblioteka presetów ({exercisePresets.length})</button>
-                          <div className="relative hidden sm:block">
-                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                            <select defaultValue="" onChange={(e)=>{const id=e.target.value;if(!id) return; const p=exercisePresets.find(x=>x.id===id); if(p) addPresetToTasks(p); e.target.value=''}} disabled={isLoading} className="h-9 w-36 rounded-xl bg-white/[0.03] border border-white/[0.08] pl-3 pr-8 text-xs text-white appearance-none outline-none focus:border-[#a78bfa]/40">
-                              <option value="">⚡ Szybko dodaj</option>
-                              {exercisePresets.map(p=> <option key={p.id} value={p.id}>{p.title}</option>)}
-                            </select>
-                          </div>
-                        </>
+                        <button type="button" onClick={()=>setPresetPickerOpen(true)} disabled={isLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3 h-9 text-xs font-bold bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 text-[#c4b5fd] hover:from-[#a78bfa]/30 hover:to-[#8b5cf6]/30 transition"><Zap className="w-3.5 h-3.5"/>Biblioteka presetów ({exercisePresets.length})</button>
                       )}
                       <button
                         type="button"
@@ -521,14 +536,15 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                         className="inline-flex items-center gap-1 rounded-lg px-2.5 h-8 text-xs font-semibold text-[#c4b5fd] hover:bg-white/[0.05] transition"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        Dodaj zadanie
+                        Dodaj ćwiczenie
                       </button>
                     </div>
                   </div>
 
                   {tasks.map((t, i) => (
-                    <div key={i} className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4 space-y-3">
+                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={handleDragOver} onDrop={()=>handleDrop(i)} className={cn("rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4 space-y-3 transition", draggedIdx===i && "opacity-50 ring-2 ring-[#a78bfa]/30")}>
                       <div className="flex items-center gap-2">
+                        <button type="button" onDragStart={(e)=>{e.stopPropagation(); handleDragStart(i)}} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white/25 hover:text-white hover:bg-white/[0.06] cursor-grab active:cursor-grabbing" aria-label="Przeciągnij by zmienić kolejność"><GripVertical className="w-4 h-4" /></button>
                         <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#a78bfa]/15 text-[#c4b5fd] text-xs font-bold">
                           {i + 1}
                         </span>
@@ -539,6 +555,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           disabled={isLoading}
                           className="h-10 flex-1 min-w-0 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                         />
+                        <button type="button" onClick={()=>saveTaskAsPreset(t)} disabled={isLoading} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#c4b5fd] hover:text-white hover:bg-[#a78bfa]/15 border border-transparent hover:border-[#a78bfa]/20 transition" title="Zapisz jako preset" aria-label="Zapisz jako preset"><BookmarkPlus className="w-4 h-4" /></button>
                         <button
                           type="button"
                           onClick={() => setTasks((prev) => prev.filter((_, idx) => idx !== i))}
@@ -549,35 +566,23 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[11px] font-medium text-white/45">Dzień</label>
-                          <div className="relative mt-1">
-                            <input
-                              type="number"
-                              min={1}
-                              max={60}
-                              value={t.day}
-                              onChange={(e) => updateTask(i, { day: Math.max(1, parseInt(e.target.value) || 1) })}
-                              disabled={isLoading}
-                              className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-medium text-white/45">Minuty (opcjonalnie)</label>
-                          <div className="relative mt-1">
-                            <input
-                              type="number"
-                              min={1}
-                              max={600}
-                              value={t.minutes ?? ''}
-                              onChange={(e) => updateTask(i, { minutes: e.target.value ? Math.max(1, parseInt(e.target.value)) : null })}
-                              disabled={isLoading}
-                              placeholder="—"
-                              className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                            />
-                          </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-white/45 flex items-center gap-1"><FileText className="w-3 h-3"/>Opis ćwiczenia</label>
+                        <textarea value={t.description ?? ''} onChange={(e)=> updateTask(i, { description: e.target.value || null })} placeholder="Opisz na czym skupić się w tym ćwiczeniu..." rows={2} disabled={isLoading} className="mt-1 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition resize-none" />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-white/45">Minuty (opcjonalnie)</label>
+                        <div className="relative mt-1">
+                          <input
+                            type="number"
+                            min={1}
+                            max={600}
+                            value={t.minutes ?? ''}
+                            onChange={(e) => updateTask(i, { minutes: e.target.value ? Math.max(1, parseInt(e.target.value)) : null })}
+                            disabled={isLoading}
+                            placeholder="—"
+                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                          />
                         </div>
                       </div>
                       <div>
