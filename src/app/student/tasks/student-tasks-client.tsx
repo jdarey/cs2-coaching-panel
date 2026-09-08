@@ -257,10 +257,10 @@ export function StudentTasksClient() {
             <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-[#a78bfa] mr-2"/>Ładowanie…</div>
           ) : (
             <div>
-              <div className="grid grid-cols-7 gap-1.5 text-[11px] text-white/35 text-center mb-2 font-medium">
-                {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d} className="py-1">{d}</span>)}
+              <div className="grid grid-cols-7 gap-2 text-xs text-white/45 text-center mb-2 font-semibold">
+                {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d} className="py-1.5">{d}</span>)}
               </div>
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-2.5">
                 {(() => {
                   const map = new Map((overallHistory?.calendar || []).map((d:any)=> [d.date, d]))
                   const today = new Date(); today.setHours(12,0,0,0)
@@ -273,9 +273,9 @@ export function StudentTasksClient() {
                     const isFull = entry?.full
                     const count = entry?.count || 0
                     return (
-                      <button key={iso} disabled={!entry || isFuture} onClick={()=> entry && setSelectedDay({date:iso, entry})} className={cn('relative aspect-[4/3] sm:aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 border text-xs font-semibold transition-all', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa]/50' : 'border-transparent', isFull ? 'bg-emerald-500/15 ring-1 ring-emerald-500/30 text-emerald-200 hover:bg-emerald-500/20' : count>0 ? 'bg-[#a78bfa]/15 ring-1 ring-[#a78bfa]/25 text-white hover:bg-[#a78bfa]/20' : !isFuture ? 'bg-white/[0.03] text-white/35 border-white/[0.04]' : '', entry && 'cursor-pointer hover:scale-[1.03]')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny trening': count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij'}`}>
-                        <span className={cn('text-sm', isToday && 'font-black text-[#c4b5fd]')}>{d.getDate()}</span>
-                        <span className="text-[10px] opacity-60">{isFull ? '✓ Pełny' : count>0 ? `${count} • mało` : isFuture ? '' : '·'}</span>
+                      <button key={iso} disabled={!entry || isFuture} onClick={()=> entry && setSelectedDay({date:iso, entry})} className={cn('relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100 shadow-[0_2px_12px_-4px_rgba(16,185,129,0.3)] hover:bg-emerald-500/25' : count>0 ? 'bg-[#a78bfa]/20 border-[#a78bfa]/30 text-white shadow-[0_2px_12px_-4px_rgba(139,92,246,0.25)] hover:bg-[#a78bfa]/25' : !isFuture ? 'bg-white/[0.06] text-white/50 border-white/[0.08] hover:bg-white/[0.08]' : '', entry && 'cursor-pointer hover:scale-[1.04] hover:shadow-lg')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny trening': count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij'}`}>
+                        <span className={cn('text-[15px] leading-none', isToday ? 'font-black text-[#c4b5fd] text-base' : 'font-bold')}>{d.getDate()}</span>
+                        <span className={cn('text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30')}>{isFull ? 'PEŁNY' : count>0 ? `${count}` : '—'}</span>
                       </button>
                     )
                   })
@@ -351,7 +351,7 @@ export function StudentTasksClient() {
                                     </button>
                                     <div className="flex-1 min-w-0">
                                       <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2 relative', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>{t.title}{t.gifUrl && <span className="inline-flex items-center gap-1 text-[10px] text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-full px-2 py-0.5 group-hover:bg-[#a78bfa]/20 transition-colors"><ImageIcon className="w-3 h-3"/>GIF</span>}{t.gifUrl && (
-                                        <span className="pointer-events-none absolute right-full mr-8 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
+                                        <span className="pointer-events-none absolute right-full mr-4 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
                                           <span className="flex items-center rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)] w-44">
                                             <span className="relative h-24 w-44 bg-black block overflow-hidden rounded-xl">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
