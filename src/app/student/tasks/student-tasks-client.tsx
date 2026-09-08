@@ -351,14 +351,14 @@ export function StudentTasksClient() {
                                     </button>
                                     <div className="flex-1 min-w-0">
                                       <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2 relative', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>{t.title}{t.gifUrl && <span className="inline-flex items-center gap-1 text-[10px] text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-full px-2 py-0.5 group-hover:bg-[#a78bfa]/20 transition-colors"><ImageIcon className="w-3 h-3"/>GIF</span>}{t.gifUrl && (
-                                        <span className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
+                                        <span className="pointer-events-none absolute right-full mr-8 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
                                           <span className="flex items-center rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)] w-44">
                                             <span className="relative h-24 w-44 bg-black block overflow-hidden rounded-xl">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                               <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                             </span>
                                           </span>
-                                          <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#0a0c0e] border-l border-b border-white/15" />
+                                          <span className="absolute -right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#0a0c0e] border-r border-t border-white/15" />
                                         </span>
                                       )}</p>
                                       {t.description && <p className={cn('mt-0.5 text-xs leading-relaxed', done ? 'text-white/30' : 'text-white/45')}>{t.description}</p>}

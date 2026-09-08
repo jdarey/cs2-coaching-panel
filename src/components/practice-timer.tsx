@@ -197,9 +197,9 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <button onClick={() => setCustomMinutes(Math.max(1, customMinutes - 1))} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition">−</button>
-                <div className="flex-1 flex items-center justify-center gap-1 h-9 rounded-xl bg-[#07060c] border border-white/[0.08]">
-                  <input type="number" min={1} max={600} value={customMinutes} onChange={e => setCustomMinutes(Math.max(1, parseInt(e.target.value)||1))} className="w-12 bg-transparent text-center text-sm font-bold text-white outline-none" />
-                  <span className="text-xs text-white/40">min</span>
+                <div className="flex-1 flex items-center justify-center h-9 rounded-xl bg-[#07060c] border border-white/[0.08] px-2">
+                  <input type="number" min={1} max={600} value={customMinutes} onChange={e => setCustomMinutes(Math.max(1, parseInt(e.target.value)||1))} className="w-10 bg-transparent text-center text-sm font-bold text-white outline-none" />
+                  <span className="text-xs text-white/40 ml-1 mr-1">min</span>
                 </div>
                 <button onClick={() => setCustomMinutes(Math.min(600, customMinutes + 1))} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition">+</button>
                 <div className="flex gap-1 ml-1">
