@@ -366,9 +366,9 @@ export function StudentTasksClient() {
                     const isFull = entry?.full
                     const count = entry?.count || 0
                     return (
-                      <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso}})} className={cn('relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100 shadow-[0_2px_12px_-4px_rgba(16,185,129,0.3)] hover:bg-emerald-500/25' : count>0 ? 'bg-[#a78bfa]/20 border-[#a78bfa]/30 text-white shadow-[0_2px_12px_-4px_rgba(139,92,246,0.25)] hover:bg-[#a78bfa]/25' : !isFuture ? 'bg-white/[0.06] text-white/50 border-white/[0.08] hover:bg-white/[0.08] cursor-pointer' : '', !isFuture && 'cursor-pointer hover:scale-[1.04] hover:shadow-lg')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny trening': count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij by dodać notatkę'}`}>
+                      <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso}})} className={cn('relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100 shadow-[0_2px_12px_-4px_rgba(16,185,129,0.3)] hover:bg-emerald-500/25' : count>0 ? 'bg-[#a78bfa]/20 border-[#a78bfa]/30 text-white shadow-[0_2px_12px_-4px_rgba(139,92,246,0.25)] hover:bg-[#a78bfa]/25' : !isFuture ? 'bg-white/[0.06] text-white/50 border-white/[0.08] hover:bg-white/[0.08] cursor-pointer' : '', !isFuture && 'cursor-pointer hover:scale-[1.04] hover:shadow-lg')} title={`${iso}: ${entry?.routines?.join(', ') ? entry.routines.join(', ') + ' ' : ''}${count ? count+' zadań'+(isFull?` ✓ Pełny${entry?.times>1 ? ` ${entry.times}×`:''} trening`: count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij by dodać notatkę'}`}>
                         <span className={cn('text-[15px] leading-none', isToday ? 'font-black text-[#c4b5fd] text-base' : 'font-bold')}>{d.getDate()}</span>
-                        <span className={cn('text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30')}>{isFull ? 'PEŁNY' : count>0 ? `${count}` : '—'}</span>
+                        <span className={cn('text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30')}>{entry?.times>1 ? `${entry.times}×` : isFull ? 'PEŁNY' : count>0 ? `${count}` : '—'}</span>
                         {dayNotes[iso]?.sleep ? <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#a78bfa] text-white text-[9px] font-bold grid place-items-center ring-1 ring-black/20" title={`Sen ${dayNotes[iso].sleep}/10`}>{dayNotes[iso].sleep}</span> : dayNotes[iso] && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" title="Notatka" />}
                       </button>
                     )
@@ -411,7 +411,6 @@ export function StudentTasksClient() {
                         {ra.routine.recurring && !completed && <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/25 rounded-full px-2 py-0.5"><Repeat className="w-3 h-3" /> Codziennie</span>}
                         {ra.endsAt && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/50 bg-white/[0.04] border border-white/[0.08] rounded-full px-2 py-0.5"><Calendar className="w-3 h-3" /> do {formatDate(ra.endsAt)}</span>}
                       </div>
-                      {ra.routine.description && <p className="mt-0.5 text-sm text-white/45 line-clamp-1">{ra.routine.description}</p>}
                       <div className="mt-2 flex items-center gap-3">
                         <div className="flex-1 max-w-[220px] h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
                           <div className={cn('h-full rounded-full transition-all duration-700', completed ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${pct}%` }} />
@@ -437,6 +436,9 @@ export function StudentTasksClient() {
 
                   {expanded && (
                     <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
+                      {ra.routine.description && (
+                        <div className="my-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-sm text-white/60 leading-relaxed" dangerouslySetInnerHTML={{__html: mdToHtml(ra.routine.description)}} />
+                      )}
                       {days.map((d) => {
                         const dayTasks = ra.routine.tasks.filter((t) => t.day === d)
                         const dayDone = dayTasks.filter((t) => ra.progress.find((p) => p.taskId === t.id)?.status === 'DONE').length
@@ -604,7 +606,7 @@ export function StudentTasksClient() {
               </div>
               {selectedDay.entry.tasks?.length > 0 && (
                 <div className="mt-4 space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                  {selectedDay.entry.tasks.map((t:any)=> <div key={t.taskId} className="flex items-center gap-2 text-sm bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"><Check className="w-3.5 h-3.5 text-emerald-400 shrink-0"/><span className="truncate text-white/80">{t.title}</span><span className="ml-auto text-[11px] text-white/40">D{t.day}</span></div>)}
+                  {selectedDay.entry.tasks.map((t:any)=> <div key={t.taskId} className="flex items-center gap-2 text-sm bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"><Check className="w-3.5 h-3.5 text-emerald-400 shrink-0"/><span className="truncate text-white/80">{t.routineTitle ? `${t.routineTitle} — ${t.tasksDone}/${t.tasksTotal}` : t.title}</span><span className="ml-auto text-[11px] text-white/40">{t.routineTitle ? `${t.tasksDone}×` : `D${t.day}`}</span></div>)}
                 </div>
               )}
               <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
