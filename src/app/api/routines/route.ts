@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       where: { studentId: userId },
       include: {
         routine: {
-          include: { tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+          include: { tasks: { include: { video: { select: { id: true, title: true, url: true, thumbnail: true } } }, orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
         },
         progress: true,
       },
