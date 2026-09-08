@@ -609,11 +609,19 @@ export function StudentTasksClient() {
               )}
               <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-2 flex items-center gap-1.5"><Calendar className="w-3 h-3"/>Notatka do dnia</p>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs text-white/50 flex items-center gap-1"><Moon className="w-3 h-3"/> Sen 1-10</span>
-                  <div className="flex gap-1 ml-auto flex-wrap justify-end">
-                    {Array.from({length:10},(_,i)=>i+1).map(v=> <button key={v} onClick={()=>setSleepDraft(v)} className={cn("w-7 h-7 rounded-full text-xs font-bold border", sleepDraft===v ? "bg-[#a78bfa] text-white border-[#a78bfa]" : "bg-white/[0.04] text-white/40 border-white/[0.08] hover:text-white hover:border-white/15")}>{v}</button>)}
-                    {sleepDraft !== null && <button onClick={()=>setSleepDraft(null)} className="ml-1 text-[11px] text-white/40 hover:text-white">wyczyść</button>}
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-[#a78bfa]/[0.07] to-[#6d28d9]/[0.04] border border-white/[0.06] mb-3">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="text-xs font-bold text-white/70 flex items-center gap-1.5"><span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] border border-white/[0.08]"><Moon className="w-3.5 h-3.5 text-[#a78bfa]"/></span> Sen</span>
+                    <span className={cn("px-3 py-1 rounded-full text-xs font-black border", sleepDraft ? "bg-[#a78bfa] text-white border-[#a78bfa] shadow" : "bg-white/[0.04] text-white/30 border-white/[0.06]")}>{sleepDraft ? `${sleepDraft}/10` : "— /10"}</span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {Array.from({length:10},(_,i)=>i+1).map(v=> (
+                      <button key={v} onClick={()=>setSleepDraft(v===sleepDraft ? null : v)} className={cn("h-9 rounded-xl text-sm font-bold border transition-all", sleepDraft===v ? "bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white border-[#a78bfa] shadow-[0_4px_12px_-4px_rgba(139,92,246,0.4)] scale-[1.02]" : "bg-white/[0.04] text-white/60 border-white/[0.06] hover:bg-white/[0.08] hover:text-white hover:border-white/[0.12]")}>{v}</button>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[10px] text-white/25 mt-2 px-1 font-medium">
+                    <span>😴 słabo</span>
+                    <span>świetnie 😊</span>
                   </div>
                 </div>
                 <textarea value={noteDraft} onChange={e=>setNoteDraft(e.target.value)} placeholder="Dodaj notatkę do tego dnia (np. co poszło dobrze, co poprawić)..." rows={3} className="w-full rounded-xl bg-[#07060c] border border-white/[0.08] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#a78bfa]/30 resize-none" />
