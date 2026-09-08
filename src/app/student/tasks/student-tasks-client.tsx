@@ -304,8 +304,8 @@ export function StudentTasksClient() {
                             {(() => {
                               const map = new Map((routineHistory[ra.id]?.calendar || []).map((d:any)=> [d.date, d]))
                               const today = new Date(); today.setHours(12,0,0,0)
-                              return Array.from({length:84}, (_,idx)=>{
-                                const d = new Date(today); d.setDate(today.getDate() - (83-idx))
+                              return Array.from({length:28}, (_,idx)=>{
+                                const d = new Date(today); d.setDate(today.getDate() - (27-idx))
                                 const iso = d.toISOString().split('T')[0]
                                 const entry = map.get(iso) as any
                                 const isFuture = d > today
@@ -345,7 +345,7 @@ export function StudentTasksClient() {
                                 return (
                                   <div key={t.id} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
                                     {t.gifUrl && (
-                                      <div className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 w-36 sm:w-44 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-20 hidden sm:block">
+                                      <div className="pointer-events-none absolute right-10 sm:right-14 top-1/2 -translate-y-1/2 w-36 sm:w-44 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-20 hidden sm:block">
                                         <div className="rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)]">
                                           <div className="relative h-24 bg-black">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
