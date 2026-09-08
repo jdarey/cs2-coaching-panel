@@ -34,10 +34,9 @@ const saveVolume = (volume: number, muted: boolean) => {
   try { localStorage.setItem(VOLUME_KEY, JSON.stringify({ volume, muted })) } catch (_) {}
 }
 
-// Playback quality is locked to 1080p — no selector, no YouTube UI. `vq`
-// requests it at the URL level (honored at player load) and we re-assert it
-// through the IFrame API after every quality change so ABR never drifts away.
-const FORCED_QUALITY = 'hd1080'
+// Playback quality locked to highest available — no selector, no YouTube UI. `vq`
+// requests it at URL level (honored at load) — 'highres' = max (4K if exists, else 1080p)
+const FORCED_QUALITY = 'highres'
 const formatTime = (s: number) => {
   if (!isFinite(s) || s < 0) return '0:00'
   const m = Math.floor(s / 60)
