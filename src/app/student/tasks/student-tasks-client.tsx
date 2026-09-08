@@ -331,20 +331,19 @@ export function StudentTasksClient() {
                                 return (
                                   <div key={t.id} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
                                     {t.gifUrl && (
-                                      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-3 w-[280px] sm:w-[340px] opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 z-20 hidden sm:block">
-                                        <div className="rounded-2xl overflow-hidden bg-[#0a0c0e] border border-white/[0.12] shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)]">
-                                          <div className="relative h-48 bg-black">
+                                      <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-40 sm:w-48 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-20 hidden sm:block">
+                                        <div className="rounded-2xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.9)]">
+                                          <div className="relative h-28 bg-black">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-                                            <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white bg-black/60 backdrop-blur px-2 py-1 rounded-full border border-white/20"><ImageIcon className="w-3 h-3"/> Hover GIF</span>
+                                            <div className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
                                           </div>
-                                          <div className="px-3 py-2 bg-[#101316] border-t border-white/[0.06]">
-                                            <p className="text-xs font-semibold text-white truncate">{t.title}</p>
-                                            {t.description && <p className="text-[11px] text-white/45 line-clamp-1 mt-0.5">{t.description}</p>}
+                                          <div className="px-2.5 py-1.5 bg-[#101316] border-t border-white/[0.06] flex items-center gap-1.5">
+                                            <ImageIcon className="w-3 h-3 text-[#c4b5fd] shrink-0"/>
+                                            <p className="text-[11px] font-semibold text-white truncate">{t.title}</p>
                                           </div>
                                         </div>
-                                        <div className="mx-auto -mt-[1px] w-3 h-3 rotate-45 bg-[#101316] border-r border-b border-white/[0.12]" />
+                                        <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#101316] border-l border-b border-white/15" />
                                       </div>
                                     )}
                                     <button onClick={() => toggleRoutineTask(ra, t.id)} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
