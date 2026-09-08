@@ -289,10 +289,23 @@ export function StudentTasksClient() {
             const cal = Array.from(map.values()).sort((a:any,b:any)=>a.date.localeCompare(b.date))
             return {...base2, calendar: cal, summary: {...base2.summary, totalDays: cal.length, totalSessions: cal.reduce((acc:any,d:any)=>acc+d.count,0), totalMinutes: cal.reduce((acc:any,d:any)=>acc+d.minutes,0)}}
           })
+        } else if (next === 'PENDING') {
+          const todayIso = toLocalDate(new Date())
+          setOverallHistory(prev=>{
+            if (!prev) return prev
+            const map = new Map(prev.calendar.map((d:any)=>[d.date, {...d, tasks:[...(d.tasks||[])], routines:[...(d.routines||[])]}]))
+            const ex = map.get(todayIso) as any
+            if (!ex) return prev
+            ex.count = Math.max(0, (ex.count||1)-1)
+            ex.tasks = (ex.tasks||[]).filter((t:any)=> t.taskId !== taskId)
+            if (ex.count<=0) map.delete(todayIso)
+            else { ex.full = false; ex.times = 0 }
+            const cal = Array.from(map.values()).sort((a:any,b:any)=>a.date.localeCompare(b.date))
+            return {...prev, calendar: cal, summary: {...prev.summary, totalDays: cal.length, totalSessions: cal.reduce((acc:any,d:any)=>acc+d.count,0), totalMinutes: cal.reduce((acc:any,d:any)=>acc+d.minutes,0)}}
+          })
         }
-        // refresh history after toggle - od razu zalicza dzień w kalendarzu (potwierdzenie z serwera)
-        loadHistory(ra.id)
-        loadOverallHistory()
+        // refresh with delay to avoid overwriting optimistic (DB commit)
+        setTimeout(()=>{ loadHistory(ra.id); loadOverallHistory(); }, 400)
       }
     } catch {
       /* ignore */
