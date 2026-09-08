@@ -34,12 +34,14 @@ export async function GET(request: NextRequest) {
     else if (routineId) completionWhere.routineId = routineId
     const completions = await prisma.routineCompletion.findMany({ where: completionWhere, include: { assignment: { include: { routine: { select: { title: true } } } } }, orderBy: { completedAt: 'asc' } })
 
-    // 2) current pending progress (for today partial)
-    const progressWhere: any = { studentId, status: 'DONE', completedAt: { gte: from, not: null } }
+    // 2) current pending progress (for today partial) - filter via assignmentId (progress has no studentId)
+    const allStudentAssignments = await prisma.routineAssignment.findMany({ where: { studentId }, select: { id: true } })
+    const allIds = allStudentAssignments.map(a=>a.id)
+    const progressWhere: any = { assignmentId: { in: allIds.length ? allIds : ['__none__'] }, status: 'DONE', completedAt: { gte: from, not: null } }
     if (assignmentId) progressWhere.assignmentId = assignmentId
     else if (routineId) {
       const assigns = await prisma.routineAssignment.findMany({ where: { routineId, studentId }, select: { id: true } })
-      progressWhere.assignmentId = { in: assigns.map(a=>a.id) }
+      progressWhere.assignmentId = { in: assigns.length ? assigns.map(a=>a.id) : ['__none__'] }
     }
     const progress = await prisma.routineTaskProgress.findMany({
       where: progressWhere,

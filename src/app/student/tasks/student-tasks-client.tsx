@@ -270,6 +270,25 @@ export function StudentTasksClient() {
             const cal = Array.from(map.values()).sort((a:any,b:any)=>a.date.localeCompare(b.date))
             return {...prev, calendar: cal, summary: {...prev.summary, totalDays: cal.length, totalSessions: cal.reduce((acc:any,d:any)=>acc+d.count,0), totalMinutes: cal.reduce((acc:any,d:any)=>acc+d.minutes,0)}}
           })
+        } else if (next === 'DONE') {
+          const todayIso = toLocalDate(new Date())
+          setOverallHistory(prev=>{
+            if (!prev) return prev
+            const map = new Map(prev.calendar.map((d:any)=>[d.date, {...d, tasks:[...(d.tasks||[])], routines:[...(d.routines||[])]}]))
+            const ex = map.get(todayIso) as any
+            const info = { taskId, title: ra.routine.tasks.find((t:any)=>t.id===taskId)?.title || 'Zadanie', day: 1, minutes: ra.routine.tasks.find((t:any)=>t.id===taskId)?.minutes || null, routineTitle: ra.routine.title }
+            if (ex) {
+              if (ex.full) return prev
+              ex.count = (ex.count||0)+1
+              ex.tasks = [...(ex.tasks||[]), info]
+              ex.minutes = (ex.minutes||0) + (info.minutes||0)
+              if (!ex.routines.includes(ra.routine.title)) ex.routines.push(ra.routine.title)
+            } else {
+              map.set(todayIso, { date: todayIso, count: 1, full: false, tasks: [info], minutes: info.minutes||0, times: 0, routines: [ra.routine.title] })
+            }
+            const cal = Array.from(map.values()).sort((a:any,b:any)=>a.date.localeCompare(b.date))
+            return {...prev, calendar: cal, summary: {...prev.summary, totalDays: cal.length, totalSessions: cal.reduce((acc:any,d:any)=>acc+d.count,0), totalMinutes: cal.reduce((acc:any,d:any)=>acc+d.minutes,0)}}
+          })
         }
         // refresh history after toggle - od razu zalicza dzień w kalendarzu (potwierdzenie z serwera)
         loadHistory(ra.id)
