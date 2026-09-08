@@ -487,26 +487,26 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
           <div className="fixed inset-0 z-50 grid place-items-center p-4 animate-fade-up">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={closeDialog} aria-hidden="true" />
             <div
-              className="glass-liquid relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-7 animate-rise-in"
+              className="glass-liquid relative w-full max-w-3xl max-h-[88vh] overflow-y-auto rounded-3xl p-8 animate-rise-in"
               role="dialog"
               aria-modal="true"
               aria-labelledby="routine-dialog-title"
             >
-              <div className="mb-6 flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl glass-tinted">
+              <div className="mb-8 flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa]/20 to-[#6d28d9]/20 border border-white/[0.08]">
                   <Sparkles className="h-5 w-5 text-[#c4b5fd]" />
                 </span>
                 <div>
-                  <h2 id="routine-dialog-title" className="font-display text-xl font-bold text-gradient-violet">
+                  <h2 id="routine-dialog-title" className="font-display text-2xl font-bold text-gradient-violet">
                     {editing ? 'Edytuj rutynę' : 'Nowa rutyna treningowa'}
                   </h2>
-                  <p className="text-xs text-white/45">
-                    Program rozłożony na dni — każde zadanie może mieć przypisany film z biblioteki
+                  <p className="text-sm text-white/50 mt-1">
+                    Stwórz przyjemny program — dodawaj ćwiczenia, przeciągaj by zmienić kolejność, dodaj GIF i film
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-1.5">
                   <label htmlFor="r-title" className="text-xs font-medium text-white/55">
                     Nazwa rutyny *
@@ -575,27 +575,28 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                 </label>
 
                 {/* Tasks builder */}
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-white/55">Ćwiczenia — przeciągnij by zmienić kolejność</label>
+                    <label className="text-sm font-semibold text-white/70">Ćwiczenia — przeciągnij <GripVertical className="w-3 h-3 inline text-white/30"/> by zmienić kolejność</label>
                     <div className="flex items-center gap-2">
                       {exercisePresets.length > 0 && (
-                        <button type="button" onClick={()=>setPresetPickerOpen(true)} disabled={isLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3 h-9 text-xs font-bold bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 text-[#c4b5fd] hover:from-[#a78bfa]/30 hover:to-[#8b5cf6]/30 transition"><Zap className="w-3.5 h-3.5"/>Biblioteka presetów ({exercisePresets.length})</button>
+                        <button type="button" onClick={()=>setPresetPickerOpen(true)} disabled={isLoading} className="inline-flex items-center gap-1.5 rounded-xl px-4 h-10 text-xs font-bold bg-gradient-to-br from-[#a78bfa]/15 to-[#8b5cf6]/15 border border-[#a78bfa]/20 text-[#c4b5fd] hover:from-[#a78bfa]/25 hover:to-[#8b5cf6]/25 transition"><Zap className="w-3.5 h-3.5"/>Biblioteka ({exercisePresets.length})</button>
                       )}
                       <button
                         type="button"
                         onClick={() => setTasks((prev) => [...prev, emptyTask(1)])}
                         disabled={isLoading}
-                        className="inline-flex items-center gap-1 rounded-lg px-2.5 h-8 text-xs font-semibold text-[#c4b5fd] hover:bg-white/[0.05] transition"
+                        className="inline-flex items-center gap-1.5 rounded-xl px-4 h-10 text-xs font-bold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] hover:opacity-90 transition shadow"
                       >
-                        <Plus className="h-3.5 w-3.5" />
+                        <Plus className="h-4 w-4" />
                         Dodaj ćwiczenie
                       </button>
                     </div>
                   </div>
 
+                  <div className="space-y-4 max-h-[45vh] overflow-y-auto pr-2 -mr-2">
                   {tasks.map((t, i) => (
-                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("rounded-2xl bg-white/[0.03] border p-4 space-y-3 transition", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.07] hover:border-white/[0.12]")}>
+                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("rounded-2xl bg-white/[0.02] border p-5 space-y-4 transition shadow-sm", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30 scale-[0.98]" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.06] hover:border-white/[0.10] hover:bg-white/[0.03]")}>
                       <div className="flex items-center gap-1.5">
                         <div className="flex flex-col gap-1 shrink-0">
                           <button type="button" onClick={()=>moveTask(i,-1)} disabled={i===0 || isLoading} className="grid h-6 w-7 place-items-center rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-white disabled:opacity-20 transition"><ChevronUp className="w-3 h-3"/></button>
@@ -698,6 +699,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                       </div>
                     </div>
                   ))}
+                  </div>
                 </div>
 
                 {/* Footer */}
