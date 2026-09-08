@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
-import { Plus, Trash2, Pencil, Loader2, X, Zap, Clock, Film, MapPin, Image as ImageIcon, Tag } from 'lucide-react'
+import { Plus, Trash2, Pencil, Loader2, X, Zap, Clock, Film, MapPin, Image as ImageIcon, Tag, Globe } from 'lucide-react'
 
 interface Preset {
   id: string
@@ -12,6 +12,7 @@ interface Preset {
   videoId: string | null
   gifUrl: string | null
   steamMapUrl: string | null
+  linkUrl: string | null
   minutes: number | null
   tags: string[]
 }
@@ -21,18 +22,18 @@ export function CoachPresetsClient({ initialPresets, initialVideos }: { initialP
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Preset | null>(null)
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', gifUrl: '', steamMapUrl: '', videoId: '', minutes: '', tags: '' })
+  const [form, setForm] = useState({ title: '', description: '', gifUrl: '', steamMapUrl: '', linkUrl: '', videoId: '', minutes: '', tags: '' })
   const { toast } = useToast()
 
-  const openAdd = () => { setEditing(null); setForm({ title: '', description: '', gifUrl: '', steamMapUrl: '', videoId: '', minutes: '', tags: '' }); setOpen(true) }
-  const openEdit = (p: Preset) => { setEditing(p); setForm({ title: p.title, description: p.description||'', gifUrl: p.gifUrl||'', steamMapUrl: p.steamMapUrl||'', videoId: p.videoId||'', minutes: p.minutes?.toString()||'', tags: p.tags.join(', ') }); setOpen(true) }
+  const openAdd = () => { setEditing(null); setForm({ title: '', description: '', gifUrl: '', steamMapUrl: '', linkUrl: '', videoId: '', minutes: '', tags: '' }); setOpen(true) }
+  const openEdit = (p: Preset) => { setEditing(p); setForm({ title: p.title, description: p.description||'', gifUrl: p.gifUrl||'', steamMapUrl: p.steamMapUrl||'', linkUrl: p.linkUrl||'', videoId: p.videoId||'', minutes: p.minutes?.toString()||'', tags: p.tags.join(', ') }); setOpen(true) }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title.trim()) return
     setLoading(true)
     try {
-      const payload = { title: form.title, description: form.description||null, gifUrl: form.gifUrl||null, steamMapUrl: form.steamMapUrl||null, videoId: form.videoId||null, minutes: form.minutes ? parseInt(form.minutes) : null, tags: form.tags.split(',').map(s=>s.trim()).filter(Boolean) }
+      const payload = { title: form.title, description: form.description||null, gifUrl: form.gifUrl||null, steamMapUrl: form.steamMapUrl||null, linkUrl: form.linkUrl||null, videoId: form.videoId||null, minutes: form.minutes ? parseInt(form.minutes) : null, tags: form.tags.split(',').map(s=>s.trim()).filter(Boolean) }
       const url = editing ? `/api/exercise-presets/${editing.id}` : '/api/exercise-presets'
       const method = editing ? 'PATCH' : 'POST'
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -89,6 +90,10 @@ export function CoachPresetsClient({ initialPresets, initialVideos }: { initialP
               <textarea placeholder="Opis" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} rows={2} className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3 text-sm text-white outline-none focus:border-[#a78bfa]/40 resize-none" />
               <input placeholder="GIF URL (giphy/imgur/tenor...)" value={form.gifUrl} onChange={e=>setForm({...form, gifUrl:e.target.value})} className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 text-sm text-white outline-none focus:border-[#a78bfa]/40" />
               <input placeholder="Steam Workshop map URL" value={form.steamMapUrl} onChange={e=>setForm({...form, steamMapUrl:e.target.value})} className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 text-sm text-white outline-none focus:border-[#a78bfa]/40" />
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input placeholder="Link do strony (https://...)" value={form.linkUrl} onChange={e=>setForm({...form, linkUrl:e.target.value})} className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-4 text-sm text-white outline-none focus:border-[#a78bfa]/40" />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <input type="number" placeholder="Minuty" value={form.minutes} onChange={e=>setForm({...form, minutes:e.target.value})} className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 text-sm text-white outline-none" />
                 <select value={form.videoId} onChange={e=>setForm({...form, videoId:e.target.value})} className="h-11 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 text-sm text-white outline-none"><option value="">Bez filmu</option>{initialVideos.map(v=> <option key={v.id} value={v.id}>{v.title}</option>)}</select>

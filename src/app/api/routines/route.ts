@@ -12,6 +12,7 @@ const taskSchema = z.object({
   videoId: z.string().optional().nullable(),
   steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   gifUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
+  linkUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   day: z.number().int().min(1).default(1),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
 })
@@ -118,6 +119,7 @@ export async function POST(request: NextRequest) {
             videoId: t.videoId ?? null,
             steamMapUrl: t.steamMapUrl || null,
             gifUrl: t.gifUrl || null,
+            linkUrl: t.linkUrl || null,
             day: t.day,
             minutes: t.minutes ?? null,
             order: i,

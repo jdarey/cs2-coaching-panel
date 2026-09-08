@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Search, Trash2, Pencil, Loader2, X, Sparkles, UserPlus, ListChecks,
   CalendarRange, Clock, Film, Check, ChevronDown, ChevronUp, PlayCircle, Users, MapPin, Repeat,
-  Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown,
+  Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
 
@@ -19,6 +19,7 @@ interface RoutineTask {
   videoId: string | null
   steamMapUrl: string | null
   gifUrl: string | null
+  linkUrl: string | null
   day: number
   minutes: number | null
 }
@@ -53,6 +54,7 @@ interface ExercisePreset {
   videoId: string | null
   gifUrl: string | null
   steamMapUrl: string | null
+  linkUrl: string | null
   minutes: number | null
   tags: string[]
 }
@@ -70,6 +72,7 @@ const emptyTask = (day = 1): RoutineTask => ({
   videoId: null,
   steamMapUrl: null,
   gifUrl: null,
+  linkUrl: null,
   day,
   minutes: null,
 })
@@ -118,7 +121,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const { toast } = useToast()
 
   const addPresetToTasks = (p: ExercisePreset) => {
-    setTasks(prev=> [...prev, { title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, day: 1, minutes: p.minutes }])
+    setTasks(prev=> [...prev, { title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, linkUrl: p.linkUrl, day: 1, minutes: p.minutes }])
     toast({ title: 'Dodano', description: `"${p.title}" dodane do rutyny` })
   }
 
@@ -150,7 +153,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const saveTaskAsPreset = async (t: RoutineTask) => {
     if (!t.title.trim()) { toast({ title: 'Błąd', description: 'Najpierw wpisz nazwę ćwiczenia', variant: 'destructive' }); return }
     try {
-      const res = await fetch('/api/exercise-presets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t.title, description: t.description, videoId: t.videoId, gifUrl: t.gifUrl, steamMapUrl: t.steamMapUrl, minutes: t.minutes }) })
+      const res = await fetch('/api/exercise-presets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t.title, description: t.description, videoId: t.videoId, gifUrl: t.gifUrl, steamMapUrl: t.steamMapUrl, linkUrl: t.linkUrl, minutes: t.minutes }) })
       const data = await res.json()
       if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
       toast({ title: 'Zapisano', description: `"${t.title}" zapisane jako preset` })
@@ -674,6 +677,20 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                             onChange={(e) => updateTask(i, { steamMapUrl: e.target.value || null })}
                             disabled={isLoading}
                             placeholder="Link do mapy z warsztatu Steam..."
+                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-white/45">Link do strony (opcjonalnie)</label>
+                        <div className="relative mt-1">
+                          <Globe className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                          <input
+                            type="url"
+                            value={t.linkUrl ?? ''}
+                            onChange={(e) => updateTask(i, { linkUrl: e.target.value || null })}
+                            disabled={isLoading}
+                            placeholder="https://..."
                             className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                           />
                         </div>

@@ -12,6 +12,7 @@ const exercisePresetSchema = z.object({
   videoId: z.string().optional().nullable(),
   gifUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
+  linkUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
   tags: z.array(z.string()).optional(),
 })
@@ -58,6 +59,7 @@ export async function PATCH(
         videoId: validated.videoId ?? undefined,
         gifUrl: validated.gifUrl ?? undefined,
         steamMapUrl: validated.steamMapUrl ?? undefined,
+        linkUrl: validated.linkUrl ?? undefined,
         minutes: validated.minutes ?? undefined,
         tags: validated.tags ?? undefined,
       },

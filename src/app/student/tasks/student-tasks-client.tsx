@@ -13,6 +13,7 @@ import {
   Calendar,
   Film,
   Moon,
+  Globe,
   RotateCcw,
   Loader2,
   Sparkles,
@@ -67,6 +68,7 @@ function mdToHtml(md: string): string {
   if (inList) out += '</ul>'
   return out
 }
+function toLocalDate(d: Date): string { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
 
 interface RoutineAssignment {
   id: string
@@ -78,7 +80,7 @@ interface RoutineAssignment {
     title: string
     description: string | null
     recurring: boolean
-    tasks: { id: string; title: string; description: string | null; videoId: string | null; video?: { id: string; title: string; url: string; thumbnail: string | null } | null; steamMapUrl: string | null; gifUrl: string | null; day: number; minutes: number | null }[]
+    tasks: { id: string; title: string; description: string | null; videoId: string | null; video?: { id: string; title: string; url: string; thumbnail: string | null } | null; steamMapUrl: string | null; gifUrl: string | null; linkUrl: string | null; day: number; minutes: number | null }[]
   }
   progress: { id: string; taskId: string; status: string; completedAt: string | null }[]
 }
@@ -229,6 +231,8 @@ export function StudentTasksClient() {
       })
       if (res.ok) {
         const data = await res.json().catch(() => null)
+        const doneBefore = ra.progress.filter((p:any)=>p.status==='DONE').length
+        const willBeDone = next==='DONE' && (doneBefore + (current?.status==='DONE'?0:1) >= ra.routine.tasks.length)
         setRoutines((prev) =>
           prev.map((r) => {
             if (r.id !== ra.id) return r
@@ -247,7 +251,27 @@ export function StudentTasksClient() {
             return { ...r, progress, status: allDone ? 'COMPLETED' : 'ACTIVE' }
           }),
         )
-        // refresh history after toggle - od razu zalicza dzień w kalendarzu
+        // optimistic calendar update - od razu pokazuje że rutyna zrobiona dziś
+        if (willBeDone) {
+          const todayIso = toLocalDate(new Date())
+          setOverallHistory(prev=>{
+            if (!prev) return prev
+            const map = new Map(prev.calendar.map((d:any)=>[d.date, {...d}]))
+            const ex = map.get(todayIso) as any
+            if (ex) {
+              ex.times = (ex.times||0)+1
+              ex.full = true
+              ex.count = (ex.count||0) + ra.routine.tasks.length
+              if (!ex.routines.includes(ra.routine.title)) ex.routines.push(ra.routine.title)
+              ex.tasks = [...(ex.tasks||[]), { routineTitle: ra.routine.title, tasksDone: ra.routine.tasks.length, tasksTotal: ra.routine.tasks.length }]
+            } else {
+              map.set(todayIso, { date: todayIso, count: ra.routine.tasks.length, full: true, tasks: [{ routineTitle: ra.routine.title, tasksDone: ra.routine.tasks.length, tasksTotal: ra.routine.tasks.length }], minutes: ra.routine.tasks.reduce((a:any,t:any)=>a+(t.minutes||0),0), times:1, routines:[ra.routine.title] })
+            }
+            const cal = Array.from(map.values()).sort((a:any,b:any)=>a.date.localeCompare(b.date))
+            return {...prev, calendar: cal, summary: {...prev.summary, totalDays: cal.length, totalSessions: cal.reduce((acc:any,d:any)=>acc+d.count,0), totalMinutes: cal.reduce((acc:any,d:any)=>acc+d.minutes,0)}}
+          })
+        }
+        // refresh history after toggle - od razu zalicza dzień w kalendarzu (potwierdzenie z serwera)
         loadHistory(ra.id)
         loadOverallHistory()
       }
@@ -463,17 +487,13 @@ export function StudentTasksClient() {
                                           {t.title}
                                           {t.gifUrl && (
                                         <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-2xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/90 to-[#1a1628]/90 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.06)] w-56">
-                                            <span className="relative h-32 w-56 bg-black block overflow-hidden">
+                                          <span className="flex flex-col rounded-2xl overflow-hidden bg-black border border-white/10 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.75)] w-56">
+                                            <span className="relative h-32 w-56 bg-black block overflow-hidden rounded-2xl">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                               <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                               <span className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
-                                              <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-wider text-white/90">GIF <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"/></span>
                                             </span>
-                                            <span className="px-3 py-2.5 bg-white/[0.03] border-t border-white/[0.06] flex items-center gap-2">
-                                              <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#a78bfa]/15 border border-[#a78bfa]/20 shrink-0"><ImageIcon className="w-3 h-3 text-[#c4b5fd]"/></span>
-                                              <span className="text-xs font-semibold text-white truncate">{t.title}</span>
-                                            </span>
+
                                           </span>
                                           <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#1a1628] border-l border-b border-white/10 shadow-[-2px_2px_8px_rgba(0,0,0,0.3)]" />
                                         </span>

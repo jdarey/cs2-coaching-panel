@@ -533,6 +533,7 @@ model RoutineTask {
   videoId     String? // optional linked video to watch/practice
   steamMapUrl String? // optional Steam Workshop map link for the task
   gifUrl      String? // optional GIF demonstration for the exercise
+  linkUrl     String? // optional generic website link for the exercise
   day         Int      @default(1) // day offset within the routine (1, 2, 3…)
   minutes     Int?     // estimated practice minutes
   order       Int      @default(0)
@@ -554,6 +555,7 @@ model ExercisePreset {
   videoId     String? // optional linked video
   gifUrl      String? // GIF demonstration
   steamMapUrl String? // optional Steam Workshop map link
+  linkUrl     String? // optional generic website link
   minutes     Int?     // estimated practice minutes
   tags        String[] // searchable tags
   createdAt   DateTime @default(now())

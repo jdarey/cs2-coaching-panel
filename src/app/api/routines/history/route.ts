@@ -50,8 +50,9 @@ export async function GET(request: NextRequest) {
     // build calendar: merge completions (full) + progress (partial today)
     const byDate = new Map<string, { date: string; count: number; full: boolean; tasks: any[]; minutes: number; times: number; routines: string[] }>()
 
+    const toLocalDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     for (const c of completions) {
-      const d = c.completedAt.toISOString().split('T')[0]
+      const d = toLocalDate(new Date(c.completedAt))
       const routineTitle = (c as any).assignment?.routine?.title || 'Rutyna'
       const e = byDate.get(d)
       if (e) { e.count += c.tasksDone; e.times = (e.times||0)+1; e.full = e.full || c.tasksDone >= c.tasksTotal; e.minutes += c.minutesDone||0; if (!e.routines.includes(routineTitle)) e.routines.push(routineTitle); e.tasks.push({ routineTitle, tasksDone: c.tasksDone, tasksTotal: c.tasksTotal }) }
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
     }
     for (const p of progress) {
       if (!p.completedAt) continue
-      const d = p.completedAt.toISOString().split('T')[0]
+      const d = toLocalDate(new Date(p.completedAt))
       if (byDate.has(d)) continue // already counted as full completion that day
       const e = byDate.get(d)
       const info = { taskId: p.taskId, title: p.task.title, day: p.task.day, minutes: p.task.minutes, routineTitle: p.assignment.routine.title }

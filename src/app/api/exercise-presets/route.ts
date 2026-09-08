@@ -12,6 +12,7 @@ const exercisePresetSchema = z.object({
   videoId: z.string().optional().nullable(),
   gifUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
+  linkUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
   tags: z.array(z.string()).optional().default([]),
 })
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
         videoId: validated.videoId ?? null,
         gifUrl: validated.gifUrl || null,
         steamMapUrl: validated.steamMapUrl || null,
+        linkUrl: validated.linkUrl || null,
         minutes: validated.minutes ?? null,
         tags: validated.tags,
       },
