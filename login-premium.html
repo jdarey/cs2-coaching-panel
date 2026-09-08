@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Coaching Panel - Logowanie</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060606;
+            --bg2: #0a0a0a;
+            --bg3: #0f0f0f;
+            --bg4: #141414;
+            --border: rgba(255, 255, 255, 0.06);
+            --border2: rgba(255, 255, 255, 0.1);
+            --text: #e8e8e8;
+            --muted: #8a8a8a;
+            --accent: #7e7e7e;
+            --accent2: #525252;
+            --gradient: linear-gradient(135deg, #252525 0%, #7c6fff 50%, #5a4fff 100%);
+            --glow: rgba(255, 255, 255, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+            --font: "Space Grotesk", system-ui, -apple-system, sans-serif;
+            --font-mono: "Inter", system-ui, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background: #060606;
+            color: #e8e8e8;
+            font-family: "Inter", system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        body {
+            background: #060606;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: "Inter", system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scrollbar-width: none;
+        }
+
+        /* Grain overlay */
+        .grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 200px;
+        }
+
+        /* Vignette */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 50% -10%, rgba(255,255,255,0.10), transparent 35%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.04), transparent 25%);
+            filter: blur(90px);
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.68) 100%);
+            animation: vignettePulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes vignettePulse {
+            from { opacity: 0.9; }
+            to { opacity: 1; }
+        }
+
+        /* Mouse light */
+        .mouse-light {
+            position: fixed;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.045), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(30px);
+            transform: translate(-50%, -50%);
+        }
+
+        /* Floating blobs */
+        .blob {
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.065), transparent 60%);
+            filter: blur(70px);
+            opacity: 0.35;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatBlob 14s ease-in-out infinite;
+        }
+
+        .blob.one { top: 10%; left: 14%; }
+        .blob.two { right: 18%; bottom: 8%; animation-delay: -7s; }
+
+        @keyframes floatBlob {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(55px,-35px) scale(1.08); }
+        }
+
+        /* Grid pattern */
+        .grid-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.05;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Mouse following light */
+        .mouse-light {
+            position: fixed;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.045), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(30px);
+            transform: translate(-50%, -50%);
+        }
+
+        /* Content wrapper */
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transform-style: preserve-3d;
+        }
+
+        .card-border {
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.16), transparent 42%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .login-card:hover .card-border { opacity: 1; }
+
+        .card-inner {
+            position: relative;
+            z-index: 2;
+            padding: 48px 40px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.022), transparent);
+        }
+
+        /* Typography */
+        .font-space { font-family: "Space Grotesk", sans-serif; }
+        .font-inter { font-family: "Inter", sans-serif; }
+
+        /* Gradient text */
+        .text-gradient {
+            background: linear-gradient(135deg, #fff 0%, #7c6fff 50%, #5a4fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Buttons */
+        .btn {
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: "Space Grotesk", sans-serif;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-primary::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(110deg, transparent, rgba(255,255,255,0.75), transparent);
+            transform: skewX(-18deg);
+            transition: 0.7s ease;
+        }
+
+        .btn-primary:hover::before { left: 130%; }
+        .btn-primary:hover { transform: translateY(-2px); }
+
+        .btn-outline {
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #fff;
+            background: rgba(255,255,255,0.025);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.055);
+            border-color: rgba(196, 222, 255, 0.18);
+        }
+
+        .btn-primary::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(110deg, transparent, rgba(255,255,255,0.75), transparent);
+            transform: skewX(-18deg);
+            transition: 0.7s ease;
+        }
+
+        .btn-primary:hover::before { left: 130%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255,255,255,0.08); }
+
+        /* Inputs */
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            font-family: "Inter", sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: rgba(255,255,255,0.28);
+            box-shadow: 0 0 24px rgba(255,255,255,0.045);
+        }
+
+        .form-input::placeholder { color: rgba(255,255,255,0.22); }
+
+        /* Shine effect */
+        .shine::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(110deg, transparent, rgba(255,255,255,0.75), transparent);
+            transform: skewX(-18deg);
+            transition: 0.7s ease;
+        }
+
+        .shine:hover::before { left: 130%; }
+
+        /* Animations */
+        @keyframes floatBlob {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(55px,-35px) scale(1.08); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .delay-4 { animation-delay: 0.4s; opacity: 0; }
+    </style>
+</head>
+<body>
+    <!-- Grain overlay -->
+    <div class="grain"></div>
+
+    <!-- Blobs -->
+    <div class="blob one"></div>
+    <div class="blob two"></div>
+
+    <!-- Grid pattern -->
+    <div class="grid-pattern"></div>
+
+    <!-- Mouse light -->
+    <div class="mouse-light" id="mouseLight"></div>
+
+    <!-- Vignette -->
+    <div style="
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.68) 100%);
+        animation: vignettePulse 8s ease-in-out infinite alternate;
+    "></div>
+
+    <style>
+        @keyframes vignettePulse {
+            from { opacity: 0.9; }
+            to { opacity: 1; }
+        }
+    </style>
+
+    <!-- Login Form -->
+    <div class="login-wrapper">
+        <div class="login-card" id="loginCard">
+            <div class="card-border" style="--mouse-x: 50%; --mouse-y: 50%;"></div>
+            <div class="card-inner">
+                <!-- Header -->
+                <div style="text-align: center; margin-bottom: 40px;" class="animate-in">
+                    <div style="
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 64px;
+                        height: 64px;
+                        border-radius: 18px;
+                        background: linear-gradient(135deg, #252525 0%, #7c6fff 50%, #5a4fff 100%);
+                        margin: 0 auto 24px;
+                        box-shadow: 0 20px 50px -12px rgba(124,111,255,0.4);
+                    ">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; color: white;">
+                            <polygon points="20 1 20 1 7.05 7.05 7.05 7.05 3.27 15 12 12 12 12 20.73 8.7 20.73 1.95 20.73 1 1"></polygon>
+                        </svg>
+                    </div>
+                    <h1 style="
+                        font-family: 'Space Grotesk', sans-serif;
+                        font-size: clamp(2rem, 5vw, 2.5rem);
+                        font-weight: 600;
+                        letter-spacing: -1px;
+                        background: linear-gradient(135deg, #fff 0%, #7c6fff 50%, #5a4fff 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        margin-bottom: 8px;
+                    ">CS2 Coaching</h1>
+                    <p style="color: #8a8a8a; font-size: 1rem; margin-top: 12px; font-weight: 400;">
+                        Zaloguj się do panelu coachingowego
+                    </p>
+                </div>
+
+                <!-- Form -->
+                <form id="loginForm" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="
+                            display: block;
+                            color: #8a8a8a;
+                            font-family: 'Space Grotesk', sans-serif;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            letter-spacing: 0.5px;
+                            text-transform: uppercase;
+                            margin-bottom: 8px;
+                        ">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="twój@email.com"
+                            autocomplete="email"
+                            required
+                            style="
+                                width: 100%;
+                                padding: 14px 16px;
+                                border-radius: 12px;
+                                border: 1px solid rgba(255,255,255,0.06);
+                                background: rgba(255,255,255,0.04);
+                                color: #fff;
+                                font-family: 'Inter', sans-serif;
+                                font-size: 0.95rem;
+                                outline: none;
+                                transition: border-color 0.3s ease, box-shadow 0.3s ease;
+                            "
+                            onfocus="this.style.borderColor='rgba(255,255,255,0.28)'; this.style.boxShadow='0 0 24px rgba(255,255,255,0.045)'"
+                            onblur="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.boxShadow='none'"
+                            placeholder="twój@email.com"
+                        >
+                    </div>
+
+                    <div style="margin-top: 8px;">
+                        <label style="
+                            display: block;
+                            color: #8a8a8a;
+                            font-family: 'Space Grotesk', sans-serif;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            letter-spacing: 0.5px;
+                            text-transform: uppercase;
+                            margin-bottom: 8px;
+                        ">Hasło</label>
+                        <div style="position: relative;">
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="••••••••"
+                                autocomplete="current-password"
+                                required
+                                style="
+                                    width: 100%;
+                                    padding: 14px 52px 14px 16px;
+                                    border-radius: 12px;
+                                    border: 1px solid rgba(255,255,255,0.06);
+                                    background: rgba(255,255,255,0.04);
+                                    color: #fff;
+                                    font-family: 'Inter', sans-serif;
+                                    font-size: 0.95rem;
+                                    outline: none;
+                                    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+                                "
+                                onfocus="this.style.borderColor='rgba(255,255,255,0.28)'; this.style.boxShadow='0 0 24px rgba(255,255,255,0.045)'"
+                                onblur="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.boxShadow='none'"
+                                placeholder="••••••••"
+                            >
+                            <button type="button" onclick="togglePassword()" style="
+                                position: absolute;
+                                right: 16px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                background: none;
+                                border: none;
+                                color: #8a8a8a;
+                                cursor: pointer;
+                                padding: 4px;
+                                transition: color 0.2s ease;
+                            " onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#8a8a8a'">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeIcon">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary shine" style="width: 100%; margin-top: 8px; padding: 16px 28px;">
+                        Zaloguj się
+                    </button>
+                </form>
+
+                <div style="margin-top: 32px;">
+                    <div style="
+                        position: relative;
+                        margin-bottom: 24px;
+                    ">
+                        <div style="position: absolute; inset: 0; display: flex; align-items: center;">
+                            <span style="width: 100%; height: 1px; background: rgba(255,255,255,0.06);" />
+                        </div>
+                        <div style="display: flex; justify-content: center; position: relative;">
+                            <span style="
+                                background: #060606;
+                                padding: 0 16px;
+                                color: #8a8a8a;
+                                font-size: 0.75rem;
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-family: 'Space Grotesk', sans-serif;
+                                font-weight: 600;
+                            ">lub</span>
+                        </div>
+                    </div>
+
+                    <a href="/register" style="
+                        display: block;
+                        width: 100%;
+                        text-align: center;
+                        padding: 14px 24px;
+                        border-radius: 12px;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        background: rgba(255,255,255,0.025);
+                        color: #fff;
+                        font-family: 'Space Grotesk', sans-serif;
+                        font-size: 0.95rem;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                        text-decoration: none;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.055)'; this.style.borderColor='rgba(196, 222, 255, 0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.025)'; this.style.borderColor='rgba(255,255,255,0.06)'">
+                        Załóż konto
+                    </a>
+
+                    <a href="/demo" style="
+                        display: block;
+                        width: 100%;
+                        text-align: center;
+                        margin-top: 12px;
+                        padding: 14px 24px;
+                        border-radius: 12px;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        background: rgba(255,255,255,0.015);
+                        color: #8a8a8a;
+                        font-family: 'Space Grotesk', sans-serif;
+                        font-size: 0.95rem;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                        text-decoration: none;
+                    " onmouseover="this.style.color='#fff'; this.style.borderColor='rgba(196, 222, 255, 0.18)'; this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.color='#8a8a8a'; this.style.borderColor='rgba(255,255,255,0.06)'; this.style.background='rgba(255,255,255,0.015)'">
+                        Wersja demonstracyjna
+                    </a>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center;">
+                    <p style="color: #8a8a8a; font-size: 0.75rem; font-family: 'Space Grotesk', sans-serif; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;">
+                        CS2 Coaching Panel v2.0 — Premium SaaS Platform
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mouse light following
+        const mouseLight = document.getElementById('mouseLight');
+        document.addEventListener('mousemove', (e) => {
+            mouseLight.style.left = e.clientX + 'px';
+            mouseLight.style.top = e.clientY + 'px';
+        });
+
+        // Blob animations
+        const blobs = document.querySelectorAll('.blob');
+        blobs.forEach((blob, i) => {
+            blob.style.animationDelay = (i * -7) + 's';
+        });
+
+        // Card mouse tracking for border glow
+        const loginCard = document.getElementById('loginCard');
+        const cardBorder = loginCard.querySelector('.card-border');
+
+        loginCard.addEventListener('mousemove', (e) => {
+            const rect = loginCard.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            loginCard.style.setProperty('--mouse-x', x + '%');
+            loginCard.style.setProperty('--mouse-y', y + '%');
+        });
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"></path>';
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
+
+        // Form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Logowanie...';
+
+            try {
+                const res = await fetch('/api/auth/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    window.location.href = '/coach/dashboard';
+                } else {
+                    alert(data.error || 'Błąd logowania');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Zaloguj się';
+                }
+            } catch (err) {
+                alert('Błąd połączenia');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Zaloguj się';
+            }
+        });
+
+        // Floating blob animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes floatBlob {
+                0%, 100% { transform: translate(0,0) scale(1); }
+                50% { transform: translate(55px,-35px) scale(1.08); }
+            }
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(30px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-in { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            .delay-1 { animation-delay: 0.1s; opacity: 0; }
+            .delay-2 { animation-delay: 0.2s; opacity: 0; }
+            .delay-3 { animation-delay: 0.3s; opacity: 0; }
+            .delay-4 { animation-delay: 0.4s; opacity: 0; }
+        `;
+        document.head.appendChild(style);
+
+        // Trigger animations
+        document.querySelectorAll('.animate-in').forEach((el, i) => {
+            el.style.animationDelay = (i * 0.1) + 's';
+        });
+    </script>
+</body>
+</html>

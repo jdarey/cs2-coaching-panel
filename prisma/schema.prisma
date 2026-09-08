@@ -83,6 +83,7 @@ model User {
   routinesAsCoach     Routine[]            @relation("RoutineCoach")
   routinesAssigned    RoutineAssignment[]  @relation("RoutineAssignCoach")
   routinesReceived    RoutineAssignment[]  @relation("RoutineAssignStudent")
+  exercisePresets     ExercisePreset[]
 
   // Completed practice timer sessions (logged training time)
   practiceSessions PracticeSession[]
@@ -530,6 +531,7 @@ model RoutineTask {
   description String?
   videoId     String? // optional linked video to watch/practice
   steamMapUrl String? // optional Steam Workshop map link for the task
+  gifUrl      String? // optional GIF demonstration for the exercise
   day         Int      @default(1) // day offset within the routine (1, 2, 3…)
   minutes     Int?     // estimated practice minutes
   order       Int      @default(0)
@@ -540,6 +542,25 @@ model RoutineTask {
   practice PracticeSession[]
 
   @@index([routineId])
+}
+
+// Exercise presets created by coach - reusable exercise templates with GIF demos
+model ExercisePreset {
+  id          String   @id @default(cuid())
+  coachId     String
+  title       String
+  description String?
+  videoId     String? // optional linked video
+  gifUrl      String? // GIF demonstration
+  steamMapUrl String? // optional Steam Workshop map link
+  minutes     Int?     // estimated practice minutes
+  tags        String[] // searchable tags
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
 }
 
 // A routine assigned to one specific student (their personal copy).

@@ -11,11 +11,10 @@ interface PracticeTimerProps {
   onClose: () => void
 }
 
-const RING = 2 * Math.PI * 84 // circumference of r=84 circle
+const RING = 2 * Math.PI * 84
 
 export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, onClose }: PracticeTimerProps) {
   const [customMinutes, setCustomMinutes] = useState(defaultMinutes)
-  const [showCustomTime, setShowCustomTime] = useState(false)
   const totalSeconds = Math.max(1, Math.round(customMinutes * 60))
   const [secondsLeft, setSecondsLeft] = useState(totalSeconds)
   const [running, setRunning] = useState(false)
@@ -31,8 +30,6 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
     if (intervalRef.current) clearInterval(intervalRef.current)
   }, [customMinutes])
 
-  // Create + unlock the AudioContext inside a user gesture (Start click),
-  // otherwise browsers block autoplay and the finish alarm never plays.
   const ensureAudio = useCallback(() => {
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext
@@ -51,7 +48,7 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
     try {
       const ctx = ensureAudio()
       if (!ctx) return
-      const notes = [523.25, 659.25, 783.99, 1046.5] // C5 E5 G5 C6 — victory arpeggio
+      const notes = [523.25, 659.25, 783.99, 1046.5]
       notes.forEach((freq, i) => {
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
@@ -81,7 +78,7 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
           }
           return s - 1
         })
-      }, 1000)
+      }, 60000)
       return () => {
         if (intervalRef.current) clearInterval(intervalRef.current)
       }
@@ -98,7 +95,7 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
   }, [secondsLeft, finished, beep, onComplete, customMinutes])
 
   useEffect(() => {
-    setWarn(secondsLeft > 0 && secondsLeft <= 30)
+    setWarn(secondsLeft > 0 && secondsLeft <= 60)
   }, [secondsLeft])
 
   useEffect(() => {
@@ -110,8 +107,6 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
 
   const toggle = () => {
     if (finished) return
-    // Create + resume AudioContext inside this click — the user gesture that
-    // unlocks audio for the finish alarm (browsers block autoplay otherwise)
     ensureAudio()
     setRunning((r) => !r)
   }
@@ -124,7 +119,6 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
   }
 
   const mm = Math.floor(secondsLeft / 60)
-  const ss = secondsLeft % 60
   const elapsed = totalSeconds - secondsLeft
   const pct = totalSeconds > 0 ? (elapsed / totalSeconds) * 100 : 0
   const dashOffset = RING * (1 - pct / 100)
@@ -141,7 +135,6 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
         aria-modal="true"
         aria-label={`Timer treningowy: ${taskTitle}`}
       >
-        {/* Ambient glow */}
         <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-44 w-44 rounded-full blur-3xl transition-all duration-700"
           style={{ background: finished ? 'rgba(52,211,153,0.35)' : running ? 'rgba(139,92,246,0.3)' : 'rgba(139,92,246,0.12)' }}
         />
@@ -158,7 +151,6 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
           <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-semibold mb-1">Timer treningowy</p>
           <h3 className="font-display text-lg font-bold leading-snug text-white/90 line-clamp-2 mb-6">{taskTitle}</h3>
 
-          {/* Ring */}
           <div className="relative mx-auto w-52 h-52">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
               <circle cx="100" cy="100" r="84" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
@@ -184,7 +176,7 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
               ) : (
                 <>
                   <p className={cn('font-display text-5xl font-bold tabular-nums tracking-tight transition-colors', warn && 'text-amber-300')}>
-                    {mm}:{ss.toString().padStart(2, '0')}
+                    {mm} min
                   </p>
                   <p className="text-[11px] uppercase tracking-widest text-white/40 font-medium mt-2">
                     {running ? 'trening w toku' : pct === 0 ? `cel: ${customMinutes} min` : 'wstrzymano'}
@@ -195,45 +187,44 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
           </div>
 
           {!finished && !running && (
-              <div className="mt-6 mb-4 p-4 rounded-2xl glass-liquid border border-white/[0.08]">
-                <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-semibold mb-3">Czas treningu</p>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-sm text-white/50">Sugerowane przez trenera:</span>
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 text-[#c4b5fd] font-semibold text-lg">
-                    {defaultMinutes} min
-                  </span>
-                </div>
-                <p className="text-[11px] text-white/40 mt-3 text-center">Możesz zmienić czas przed startem:</p>
-                <div className="mt-3 flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => setCustomMinutes(Math.max(1, customMinutes - 5))}
-                    className="grid h-10 w-10 place-items-center rounded-xl glass-liquid text-white/60 hover:text-white hover:bg-white/5 transition"
-                    aria-label="Zmniejsz czas o 5 min"
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max="600"
-                    value={customMinutes}
-                    onChange={(e) => setCustomMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-24 h-10 text-center text-lg font-bold text-white bg-white/[0.04] border border-white/[0.1] rounded-xl focus:border-[#a78bfa]/50 focus:outline-none focus:ring-1 focus:ring-[#a78bfa]/30"
-                    aria-label="Czas treningu w minutach"
-                  />
-                  <button
-                    onClick={() => setCustomMinutes(Math.min(600, customMinutes + 5))}
-                    className="grid h-10 w-10 place-items-center rounded-xl glass-liquid text-white/60 hover:text-white hover:bg-white/5 transition"
-                    aria-label="Zwiększ czas o 5 min"
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </button>
-                  <span className="text-white/50 self-center">min</span>
-                </div>
+            <div className="mt-6 mb-4 p-4 rounded-2xl glass-liquid border border-white/[0.08]">
+              <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-semibold mb-3">Czas treningu</p>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-sm text-white/50">Sugerowane przez trenera:</span>
+                <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 text-[#c4b5fd] font-semibold text-lg">
+                  {defaultMinutes} min
+                </span>
               </div>
-            )}
+              <p className="text-[11px] text-white/40 mt-3 text-center">Możesz zmienić czas przed startem:</p>
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setCustomMinutes(Math.max(1, customMinutes - 5))}
+                  className="grid h-10 w-10 place-items-center rounded-xl glass-liquid text-white/60 hover:text-white hover:bg-white/5 transition"
+                  aria-label="Zmniejsz czas o 5 min"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="600"
+                  value={customMinutes}
+                  onChange={(e) => setCustomMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-24 h-10 text-center text-lg font-bold text-white bg-white/[0.04] border border-white/[0.1] rounded-xl focus:border-[#a78bfa]/50 focus:outline-none focus:ring-1 focus:ring-[#a78bfa]/30"
+                  aria-label="Czas treningu w minutach"
+                />
+                <button
+                  onClick={() => setCustomMinutes(Math.min(600, customMinutes + 5))}
+                  className="grid h-10 w-10 place-items-center rounded-xl glass-liquid text-white/60 hover:text-white hover:bg-white/5 transition"
+                  aria-label="Zwiększ czas o 5 min"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <span className="text-white/50 self-center">min</span>
+              </div>
+            </div>
+          )}
 
-            {/* Controls */}
           {!finished ? (
             <div className="mt-7 flex items-center justify-center gap-3">
               <button

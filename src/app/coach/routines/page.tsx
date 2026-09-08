@@ -13,7 +13,7 @@ export default async function CoachRoutinesPage() {
 
   const userId = (session.user as any).id
 
-  const [routines, students, videos] = await Promise.all([
+  const [routines, students, videos, exercisePresets] = await Promise.all([
     prisma.routine.findMany({
       where: { coachId: userId },
       include: {
@@ -34,7 +34,11 @@ export default async function CoachRoutinesPage() {
       select: { id: true, title: true, url: true, thumbnail: true },
       orderBy: { createdAt: 'desc' },
     }),
+    prisma.exercisePreset.findMany({
+      where: { coachId: userId },
+      orderBy: { updatedAt: 'desc' },
+    }),
   ])
 
-  return <CoachRoutinesClient initialRoutines={routines} initialStudents={students} initialVideos={videos} />
+  return <CoachRoutinesClient initialRoutines={routines} initialStudents={students} initialVideos={videos} initialExercisePresets={exercisePresets} />
 }

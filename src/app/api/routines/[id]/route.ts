@@ -12,6 +12,7 @@ const taskSchema = z.object({
   description: z.string().max(1000).optional().nullable(),
   videoId: z.string().optional().nullable(),
   steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
+  gifUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   day: z.number().int().min(1).default(1),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
 })
@@ -114,6 +115,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
             description: t.description ?? null,
             videoId: t.videoId ?? null,
             steamMapUrl: t.steamMapUrl || null,
+            gifUrl: t.gifUrl || null,
             day: t.day,
             minutes: t.minutes ?? null,
             order: i,

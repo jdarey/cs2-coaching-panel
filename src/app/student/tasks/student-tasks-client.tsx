@@ -26,6 +26,7 @@ import {
   Repeat,
   CalendarDays,
   History,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
 
@@ -50,7 +51,7 @@ interface RoutineAssignment {
     title: string
     description: string | null
     recurring: boolean
-    tasks: { id: string; title: string; description: string | null; videoId: string | null; steamMapUrl: string | null; day: number; minutes: number | null }[]
+    tasks: { id: string; title: string; description: string | null; videoId: string | null; steamMapUrl: string | null; gifUrl: string | null; day: number; minutes: number | null }[]
   }
   progress: { id: string; taskId: string; status: string; completedAt: string | null }[]
 }
@@ -66,6 +67,7 @@ export function StudentTasksClient() {
   const [activeTimer, setActiveTimer] = useState<{ assignment: RoutineAssignment; task: RoutineAssignment['routine']['tasks'][number] } | null>(null)
   const [routineHistory, setRoutineHistory] = useState<Record<string, { calendar: any[]; summary: any }>>({})
   const [loadingHistory, setLoadingHistory] = useState<Set<string>>(new Set())
+  const [hoveredGif, setHoveredGif] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -74,7 +76,10 @@ export function StudentTasksClient() {
         setAssignments(await aRes.json())
       }
       if (rRes.ok) {
-        setRoutines(await rRes.json())
+        const data = await rRes.json()
+        setRoutines(data)
+        // auto-load history for each routine (calendar visible by default)
+        data.forEach((ra: RoutineAssignment) => loadHistory(ra.id))
       }
     } catch {
       /* ignore */
@@ -84,7 +89,6 @@ export function StudentTasksClient() {
   }, [])
 
   const loadHistory = useCallback(async (assignmentId: string) => {
-    if (routineHistory[assignmentId]) return
     setLoadingHistory((prev) => new Set(prev).add(assignmentId))
     try {
       const res = await fetch(`/api/routines/history?assignmentId=${assignmentId}&months=12`)
@@ -101,7 +105,7 @@ export function StudentTasksClient() {
         return next
       })
     }
-  }, [routineHistory])
+  }, [])
 
   useEffect(() => {
     load()
@@ -147,8 +151,6 @@ export function StudentTasksClient() {
         setRoutines((prev) =>
           prev.map((r) => {
             if (r.id !== ra.id) return r
-            // Recurring routine with all tasks done: the server resets the
-            // cycle and keeps the assignment ACTIVE.
             if (data?.repeated) {
               return { ...r, status: 'ACTIVE', progress: r.progress.map((p) => ({ ...p, status: 'PENDING', completedAt: null })) }
             }
@@ -164,6 +166,8 @@ export function StudentTasksClient() {
             return { ...r, progress, status: allDone ? 'COMPLETED' : 'ACTIVE' }
           }),
         )
+        // refresh history after toggle
+        loadHistory(ra.id)
       }
     } catch {
       /* ignore */
@@ -186,7 +190,6 @@ export function StudentTasksClient() {
     a.status === 'PENDING' && a.dueDate && new Date(a.dueDate).getTime() < now.getTime()
 
   const sorted = [...filtered].sort((a, b) => {
-    // pending first, then by due date
     if (a.status !== b.status) return a.status === 'PENDING' ? -1 : 1
     const ad = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
     const bd = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
@@ -203,13 +206,8 @@ export function StudentTasksClient() {
           subtitle="Zadania od Twojego trenera — wykonuj je, odhaczaj i buduj serię. To Twoja droga do mistrzostwa."
         />
 
-        {/* Hero stats */}
         <section className="grid gap-4 sm:grid-cols-3">
-          <div
-            className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden"
-            style={{ animationDelay: '0ms' }}
-            onMouseMove={spotlightHandler}
-          >
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '0ms' }} onMouseMove={spotlightHandler}>
             <div className="flex items-center gap-3">
               <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/20">
                 <ClipboardList className="w-5 h-5 text-white" />
@@ -220,11 +218,7 @@ export function StudentTasksClient() {
               </div>
             </div>
           </div>
-          <div
-            className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden"
-            style={{ animationDelay: '80ms' }}
-            onMouseMove={spotlightHandler}
-          >
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '80ms' }} onMouseMove={spotlightHandler}>
             <div className="flex items-center gap-3">
               <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/20">
                 <Target className="w-5 h-5 text-white" />
@@ -235,11 +229,7 @@ export function StudentTasksClient() {
               </div>
             </div>
           </div>
-          <div
-            className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden"
-            style={{ animationDelay: '160ms' }}
-            onMouseMove={spotlightHandler}
-          >
+          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '160ms' }} onMouseMove={spotlightHandler}>
             <div className="flex items-center gap-3">
               <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#34d399] to-[#10b981] ring-1 ring-white/20">
                 <CheckCircle2 className="w-5 h-5 text-white" />
@@ -265,242 +255,99 @@ export function StudentTasksClient() {
 
             {routines.map((ra, i) => {
               const expanded = expandedRoutine === ra.id
-              const doneCount = ra.progress.filter((p) => p.status === 'DONE').length
+              const doneCountR = ra.progress.filter((p) => p.status === 'DONE').length
               const totalCount = ra.routine.tasks.length
-              const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+              const pct = totalCount > 0 ? Math.round((doneCountR / totalCount) * 100) : 0
               const completed = ra.status === 'COMPLETED'
               const days = Array.from(new Set(ra.routine.tasks.map((t) => t.day))).sort((a, b) => a - b)
 
               return (
-                <div
-                  key={ra.id}
-                  className="glass-liquid rise-in spotlight-card rounded-3xl overflow-hidden transition-all duration-300"
-                  style={{ animationDelay: `${i * 70}ms` }}
-                  onMouseMove={spotlightHandler}
-                >
-                  <button
-                    onClick={() => {
-                      const nextExpanded = expanded ? null : ra.id
-                      setExpandedRoutine(nextExpanded)
-                      if (nextExpanded) loadHistory(ra.id)
-                    }}
-                    className="w-full flex items-center gap-4 p-5 text-left group"
-                  >
-                    <div
-                      className={cn(
-                        'relative shrink-0 grid place-items-center w-11 h-11 rounded-2xl ring-1 transition-all duration-300',
-                        completed
-                          ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] ring-white/25 shadow-[0_6px_20px_-6px_rgba(52,211,153,0.5)]'
-                          : 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-white/25 shadow-[0_6px_20px_-6px_rgba(139,92,246,0.5)]',
-                      )}
-                    >
+                <div key={ra.id} className="glass-liquid rise-in spotlight-card rounded-3xl overflow-hidden transition-all duration-300" style={{ animationDelay: `${i * 70}ms` }} onMouseMove={spotlightHandler}>
+                  <button onClick={() => setExpandedRoutine(expanded ? null : ra.id)} className="w-full flex items-center gap-4 p-5 text-left group">
+                    <div className={cn('relative shrink-0 grid place-items-center w-11 h-11 rounded-2xl ring-1 transition-all duration-300', completed ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] ring-white/25 shadow-[0_6px_20px_-6px_rgba(52,211,153,0.5)]' : 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-white/25 shadow-[0_6px_20px_-6px_rgba(139,92,246,0.5)]')}>
                       {completed ? <Trophy className="w-5 h-5 text-white" /> : <ListChecks className="w-5 h-5 text-white" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={cn('font-display text-lg font-bold leading-snug', completed ? 'text-emerald-200' : 'text-white')}>
-                          {ra.routine.title}
-                        </h3>
-                        {completed && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-2 py-0.5">
-                            <Trophy className="w-3 h-3" /> Ukończona
-                          </span>
-                        )}
-                        {ra.routine.recurring && !completed && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/25 rounded-full px-2 py-0.5">
-                            <Repeat className="w-3 h-3" /> Codziennie
-                          </span>
-                        )}
-                        {ra.endsAt && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/50 bg-white/[0.04] border border-white/[0.08] rounded-full px-2 py-0.5">
-                            <Calendar className="w-3 h-3" /> do {formatDate(ra.endsAt)}
-                          </span>
-                        )}
+                        <h3 className={cn('font-display text-lg font-bold leading-snug', completed ? 'text-emerald-200' : 'text-white')}>{ra.routine.title}</h3>
+                        {completed && <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-2 py-0.5"><Trophy className="w-3 h-3" /> Ukończona</span>}
+                        {ra.routine.recurring && !completed && <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/25 rounded-full px-2 py-0.5"><Repeat className="w-3 h-3" /> Codziennie</span>}
+                        {ra.endsAt && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/50 bg-white/[0.04] border border-white/[0.08] rounded-full px-2 py-0.5"><Calendar className="w-3 h-3" /> do {formatDate(ra.endsAt)}</span>}
                       </div>
-                      {ra.routine.description && (
-                        <p className="mt-0.5 text-sm text-white/45 line-clamp-1">{ra.routine.description}</p>
-                      )}
+                      {ra.routine.description && <p className="mt-0.5 text-sm text-white/45 line-clamp-1">{ra.routine.description}</p>}
                       <div className="mt-2 flex items-center gap-3">
                         <div className="flex-1 max-w-[220px] h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
-                          <div
-                            className={cn(
-                              'h-full rounded-full transition-all duration-700',
-                              completed
-                                ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]'
-                                : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]',
-                            )}
-                            style={{ width: `${pct}%` }}
-                          />
+                          <div className={cn('h-full rounded-full transition-all duration-700', completed ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${pct}%` }} />
                         </div>
-                        <span className="text-xs font-semibold text-white/60">
-                          {doneCount}/{totalCount} zadań
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[11px] text-white/40">
-                          <Calendar className="w-3 h-3" />
-                          {days.length} {days.length === 1 ? 'dzień' : 'dni'}
-                        </span>
+                        <span className="text-xs font-semibold text-white/60">{doneCountR}/{totalCount} zadań</span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Calendar className="w-3 h-3" />{days.length} {days.length === 1 ? 'dzień' : 'dni'}</span>
                       </div>
                     </div>
-                    <ChevronDown
-                      className={cn('w-5 h-5 shrink-0 text-white/35 transition-transform duration-300', expanded && 'rotate-180')}
-                    />
+                    <ChevronDown className={cn('w-5 h-5 shrink-0 text-white/35 transition-transform duration-300', expanded && 'rotate-180')} />
                   </button>
 
-                  {/* Expanded day-by-day view */}
+                  {/* Calendar - always visible */}
+                  <div className="px-5 pb-4">
+                    <div className="p-4 rounded-2xl glass-liquid border border-white/[0.06]">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd] flex items-center gap-2"><History className="w-3.5 h-3.5" />Kalendarz treningów</p>
+                        {loadingHistory.has(ra.id) ? <Loader2 className="w-4 h-4 animate-spin text-[#c4b5fd]" /> : routineHistory[ra.id] ? <div className="flex items-center gap-3 text-[11px] text-white/50"><span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" />{routineHistory[ra.id].summary.totalDays} dni</span><span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-400" />{routineHistory[ra.id].summary.totalSessions} zadań</span>{routineHistory[ra.id].summary.totalMinutes > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-amber-400" />{routineHistory[ra.id].summary.totalMinutes} min</span>}</div> : <span className="text-[11px] text-white/40">Brak danych</span>}
+                      </div>
+                      {routineHistory[ra.id]?.calendar.length > 0 ? (
+                        <div className="grid grid-cols-7 gap-1.5">
+                          {routineHistory[ra.id].calendar.slice(-84).map((day: any) => {
+                            const isFull = day.count >= day.tasks.length && day.tasks.length > 0
+                            return (
+                              <div key={day.date} className={cn('relative aspect-square rounded-xl flex flex-col items-center justify-center text-[10px] font-semibold transition-all', isFull ? 'bg-emerald-500/20 ring-1 ring-emerald-500/40 text-emerald-200' : day.count > 0 ? 'bg-[#a78bfa]/20 ring-1 ring-[#a78bfa]/30 text-white' : 'bg-white/[0.04] text-white/40')} title={`${day.date}: ${day.count}/${day.tasks.length} zadań${isFull ? ' ✓ Pełny trening' : day.count>0?' • Niepełny':''}`}>
+                                <span className="text-[11px]">{day.date.split('-')[2]}</span>
+                                <span className="text-[8px] opacity-70">{isFull ? '✓' : day.count>0 ? `${day.count}/${day.tasks.length}` : '—'}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-white/40 text-center py-3">{!routineHistory[ra.id] ? 'Ładowanie...' : 'Jeszcze nie wykonano żadnych zadań z tej rutyny.'}</p>
+                      )}
+                      <p className="text-[10px] text-white/30 mt-2 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500/60 ring-1 ring-emerald-500/40"/>pełny trening <span className="w-2 h-2 rounded-full bg-[#a78bfa]/60 ring-1 ring-[#a78bfa]/40"/>częściowy <span className="w-2 h-2 rounded-full bg-white/[0.08]"/>brak</p>
+                    </div>
+                  </div>
+
                   {expanded && (
                     <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
-                      {/* Calendar/History View */}
-                      <div className="mb-4 p-4 rounded-2xl glass-liquid border border-white/[0.06]">
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd] flex items-center gap-2">
-                            <History className="w-3.5 h-3.5" />
-                            Historia wykonania
-                          </p>
-                          {loadingHistory.has(ra.id) ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-[#c4b5fd]" />
-                          ) : routineHistory[ra.id] ? (
-                            <div className="flex items-center gap-3 text-[11px] text-white/50">
-                              <span className="flex items-center gap-1">
-                                <CalendarDays className="w-3 h-3" />
-                                {routineHistory[ra.id].summary.totalDays} dni
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                {routineHistory[ra.id].summary.totalSessions} zadań
-                              </span>
-                              {routineHistory[ra.id].summary.totalMinutes > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3 text-amber-400" />
-                                  {routineHistory[ra.id].summary.totalMinutes} min
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-white/40">Brak danych</span>
-                          )}
-                        </div>
-                        {routineHistory[ra.id]?.calendar.length > 0 && (
-                          <div className="grid grid-cols-7 gap-1 max-h-60 overflow-y-auto pr-1">
-                            {routineHistory[ra.id].calendar
-                              .slice(-84)
-                              .map((day: any) => (
-                                <div
-                                  key={day.date}
-                                  className="relative aspect-square rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03] transition-all group"
-                                  title={`${day.date}: ${day.count} zadań${day.tasks.length ? ' - ' + day.tasks.map((t: any) => t.title).join(', ') : ''}`}
-                                >
-                                  <div className="absolute bottom-1 left-1 right-1 h-1.5 bg-emerald-500/20 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-gradient-to-r from-[#34d399] to-[#10b981] transition-all duration-300"
-                                      style={{ width: `${Math.min(100, (day.count / 5) * 100)}%` }}
-                                    />
-                                  </div>
-                                  <span className="absolute bottom-1 left-0 right-0 text-center text-[9px] font-semibold text-emerald-300/80">
-                                    {day.count > 0 ? day.count : ''}
-                                  </span>
-                                  <div className="absolute top-1 left-1 right-1 text-[8px] text-white/30 text-center">
-                                    {day.date.split('-')[2]}
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                        {routineHistory[ra.id] && routineHistory[ra.id].calendar.length === 0 && !loadingHistory.has(ra.id) && (
-                          <p className="text-sm text-white/40 text-center py-4">Jeszcze nie wykonano żadnych zadań z tej rutyny.</p>
-                        )}
-                      </div>
-
-                      {/* Expanded day-by-day view */}
                       {days.map((d) => {
                         const dayTasks = ra.routine.tasks.filter((t) => t.day === d)
-                        const dayDone = dayTasks.filter((t) =>
-                          ra.progress.find((p) => p.taskId === t.id)?.status === 'DONE',
-                        ).length
+                        const dayDone = dayTasks.filter((t) => ra.progress.find((p) => p.taskId === t.id)?.status === 'DONE').length
                         return (
                           <div key={d} className="py-3">
                             <div className="flex items-center justify-between mb-2">
                               <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd]">Dzień {d}</p>
-                              <span className="text-[11px] text-white/40">
-                                {dayDone}/{dayTasks.length} zrobione
-                              </span>
+                              <span className="text-[11px] text-white/40">{dayDone}/{dayTasks.length} zrobione</span>
                             </div>
                             <div className="space-y-2">
                               {dayTasks.map((t) => {
                                 const tp = ra.progress.find((p) => p.taskId === t.id)
                                 const done = tp?.status === 'DONE'
                                 return (
-                                  <div
-                                    key={t.id}
-                                    className={cn(
-                                      'flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300',
-                                      done
-                                        ? 'bg-emerald-500/[0.06] border-emerald-500/20'
-                                        : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/25',
-                                    )}
-                                  >
-                                    <button
-                                      onClick={() => toggleRoutineTask(ra, t.id)}
-                                      disabled={togglingTask === t.id}
-                                      aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'}
-                                      className={cn(
-                                        'relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300',
-                                        done
-                                          ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25'
-                                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]',
-                                      )}
-                                    >
-                                      {togglingTask === t.id ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                      ) : done ? (
-                                        <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                                      ) : (
-                                        <Circle className="w-3.5 h-3.5" />
-                                      )}
+                                  <div key={t.id} onMouseEnter={() => t.gifUrl && setHoveredGif(t.gifUrl)} onMouseLeave={() => setHoveredGif(null)} className={cn('flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative overflow-hidden', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/25')}>
+                                    <button onClick={() => toggleRoutineTask(ra, t.id)} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
+                                      {togglingTask === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Circle className="w-3.5 h-3.5" />}
                                     </button>
                                     <div className="flex-1 min-w-0">
-                                      <p className={cn('text-sm font-semibold leading-snug', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>
-                                        {t.title}
-                                      </p>
-                                      {t.description && (
-                                        <p className={cn('mt-0.5 text-xs leading-relaxed', done ? 'text-white/30' : 'text-white/45')}>
-                                          {t.description}
-                                        </p>
-                                      )}
+                                      <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>{t.title}{t.gifUrl && <span className="inline-flex items-center gap-1 text-[10px] text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-full px-2 py-0.5"><ImageIcon className="w-3 h-3"/>GIF</span>}</p>
+                                      {t.description && <p className={cn('mt-0.5 text-xs leading-relaxed', done ? 'text-white/30' : 'text-white/45')}>{t.description}</p>}
                                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        {t.minutes && (
-                                          <span className="inline-flex items-center gap-1 text-[11px] text-white/40">
-                                            <Clock className="w-3 h-3" />
-                                            ~{t.minutes} min
-                                          </span>
-                                        )}
-                                        {t.steamMapUrl && (
-                                          <a
-                                            href={t.steamMapUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25 hover:bg-[#f43f5e]/[0.16] hover:border-[#f43f5e]/40 transition-all"
-                                          >
-                                            <MapPin className="w-3.5 h-3.5" />
-                                            Mapa treningowa
-                                          </a>
-                                        )}
-                                        {t.minutes && !done && (
-                                          <button
-                                            onClick={() => setActiveTimer({ assignment: ra, task: t })}
-                                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 hover:bg-[#a78bfa]/[0.18] hover:border-[#a78bfa]/40 transition-all group/timer"
-                                          >
-                                            <Timer className="w-3.5 h-3.5 transition-transform group-hover/timer:rotate-12" />
-                                            Start treningu
-                                          </button>
-                                        )}
-                                        {t.minutes && done && (
-                                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/70">
-                                            <Check className="w-3 h-3" />
-                                            Odhaczone
-                                          </span>
-                                        )}
+                                        {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Clock className="w-3 h-3" />~{t.minutes} min</span>}
+                                        {t.steamMapUrl && <a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25 hover:bg-[#f43f5e]/[0.16] hover:border-[#f43f5e]/40 transition-all"><MapPin className="w-3.5 h-3.5" />Mapa treningowa</a>}
+                                        {t.minutes && !done && <button onClick={() => setActiveTimer({ assignment: ra, task: t })} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 hover:bg-[#a78bfa]/[0.18] hover:border-[#a78bfa]/40 transition-all group/timer"><Timer className="w-3.5 h-3.5 transition-transform group-hover/timer:rotate-12" />Start treningu</button>}
+                                        {t.minutes && done && <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/70"><Check className="w-3 h-3" />Odhaczone</span>}
                                       </div>
                                     </div>
+                                    {hoveredGif === t.gifUrl && t.gifUrl && (
+                                      <div className="absolute right-3 top-3 w-48 h-28 rounded-xl overflow-hidden ring-2 ring-[#a78bfa]/40 shadow-xl bg-black z-10 hidden sm:block">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={t.gifUrl} alt={t.title} className="w-full h-full object-cover" />
+                                      </div>
+                                    )}
                                   </div>
                                 )
                               })}
@@ -516,52 +363,24 @@ export function StudentTasksClient() {
           </section>
         )}
 
-        {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           {(['ALL', 'PENDING', 'DONE'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border',
-                filter === f
-                  ? 'text-white border-[#a78bfa]/40 bg-[#a78bfa]/[0.08]'
-                  : 'text-white/50 border-white/[0.08] bg-white/[0.02] hover:text-white/80 hover:border-white/15',
-              )}
-            >
+            <button key={f} onClick={() => setFilter(f)} className={cn('px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border', filter === f ? 'text-white border-[#a78bfa]/40 bg-[#a78bfa]/[0.08]' : 'text-white/50 border-white/[0.08] bg-white/[0.02] hover:text-white/80 hover:border-white/15')}>
               {f === 'ALL' && 'Wszystkie'}
               {f === 'PENDING' && 'Do zrobienia'}
               {f === 'DONE' && 'Zrobione'}
             </button>
           ))}
-          {pendingCount > 0 && (
-            <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-white/40">
-              <Flame className="w-3.5 h-3.5 text-[#a78bfa]" />
-              {pendingCount} zadań czeka na Ciebie
-            </span>
-          )}
+          {pendingCount > 0 && <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-white/40"><Flame className="w-3.5 h-3.5 text-[#a78bfa]" />{pendingCount} zadań czeka na Ciebie</span>}
         </div>
 
-        {/* List */}
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-white/40">
-            <Loader2 className="w-5 h-5 animate-spin mr-3" /> Ładowanie zadań…
-          </div>
+          <div className="flex items-center justify-center py-24 text-white/40"><Loader2 className="w-5 h-5 animate-spin mr-3" /> Ładowanie zadań…</div>
         ) : sorted.length === 0 ? (
           <div className="glass-liquid rounded-3xl py-16 px-6 text-center flex flex-col items-center">
-            <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa]/25 to-[#8b5cf6]/10 ring-1 ring-white/15 mb-4">
-              <Inbox className="w-7 h-7 text-[#c4b5fd]" />
-            </div>
-            <p className="font-display text-base font-semibold text-white">
-              {filter === 'ALL' ? 'Brak zadań od trenera' : filter === 'DONE' ? 'Brak ukończonych zadań' : 'Wszystko zrobione! 🎉'}
-            </p>
-            <p className="text-sm text-white/45 mt-1 max-w-md">
-              {filter === 'ALL'
-                ? 'Gdy trener przypisze Ci zadanie treningowe, pojawi się tutaj.'
-                : filter === 'DONE'
-                  ? 'Ukończ pierwsze zadanie, aby zobaczyć je tutaj.'
-                  : 'Świetna robota — nie masz nic zaległego. Czekaj na nowe zadania od trenera!'}
-            </p>
+            <div className="relative w-16 h-16 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa]/25 to-[#8b5cf6]/10 ring-1 ring-white/15 mb-4"><Inbox className="w-7 h-7 text-[#c4b5fd]" /></div>
+            <p className="font-display text-base font-semibold text-white">{filter === 'ALL' ? 'Brak zadań od trenera' : filter === 'DONE' ? 'Brak ukończonych zadań' : 'Wszystko zrobione! 🎉'}</p>
+            <p className="text-sm text-white/45 mt-1 max-w-md">{filter === 'ALL' ? 'Gdy trener przypisze Ci zadanie treningowe, pojawi się tutaj.' : filter === 'DONE' ? 'Ukończ pierwsze zadanie, aby zobaczyć je tutaj.' : 'Świetna robota — nie masz nic zaległego. Czekaj na nowe zadania od trenera!'}</p>
           </div>
         ) : (
           <ul className="space-y-3">
@@ -569,93 +388,22 @@ export function StudentTasksClient() {
               const overdue = isOverdue(a)
               const done = a.status === 'DONE'
               return (
-                <li
-                  key={a.id}
-                  className={cn(
-                    'glass-liquid rise-in spotlight-card group relative rounded-3xl p-5 overflow-hidden transition-all duration-300',
-                    done && 'opacity-75',
-                  )}
-                  style={{ animationDelay: `${i * 60}ms` }}
-                  onMouseMove={spotlightHandler}
-                >
+                <li key={a.id} className={cn('glass-liquid rise-in spotlight-card group relative rounded-3xl p-5 overflow-hidden transition-all duration-300', done && 'opacity-75')} style={{ animationDelay: `${i * 60}ms` }} onMouseMove={spotlightHandler}>
                   <div className="flex items-start gap-4">
-                    <button
-                      onClick={() => toggle(a)}
-                      disabled={togglingId === a.id}
-                      aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'}
-                      className={cn(
-                        'relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300',
-                        done
-                          ? 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white ring-1 ring-white/25 shadow-[0_6px_20px_-6px_rgba(45,229,202,0.6)]'
-                          : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]',
-                      )}
-                    >
-                      {togglingId === a.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : done ? (
-                        <Check className="w-4 h-4" strokeWidth={3} />
-                      ) : (
-                        <Circle className="w-4 h-4" />
-                      )}
+                    <button onClick={() => toggle(a)} disabled={togglingId === a.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300', done ? 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white ring-1 ring-white/25 shadow-[0_6px_20px_-6px_rgba(45,229,202,0.6)]' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
+                      {togglingId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : done ? <Check className="w-4 h-4" strokeWidth={3} /> : <Circle className="w-4 h-4" />}
                     </button>
-
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3
-                          className={cn(
-                            'font-display text-lg font-bold leading-snug transition-colors',
-                            done ? 'text-white/50 line-through decoration-white/30' : 'text-white',
-                          )}
-                        >
-                          {a.title}
-                        </h3>
-                        {overdue && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-300 bg-red-500/10 border border-red-500/25 rounded-full px-2 py-0.5">
-                            Po terminie
-                          </span>
-                        )}
-                        {done && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-2 py-0.5">
-                            <Check className="w-3 h-3" /> Zrobione
-                          </span>
-                        )}
+                        <h3 className={cn('font-display text-lg font-bold leading-snug transition-colors', done ? 'text-white/50 line-through decoration-white/30' : 'text-white')}>{a.title}</h3>
+                        {overdue && <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-300 bg-red-500/10 border border-red-500/25 rounded-full px-2 py-0.5">Po terminie</span>}
+                        {done && <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-2 py-0.5"><Check className="w-3 h-3" /> Zrobione</span>}
                       </div>
-
-                      {a.description && (
-                        <p className={cn('mt-1.5 text-sm leading-relaxed', done ? 'text-white/35' : 'text-white/55')}>
-                          {a.description}
-                        </p>
-                      )}
-
+                      {a.description && <p className={cn('mt-1.5 text-sm leading-relaxed', done ? 'text-white/35' : 'text-white/55')}>{a.description}</p>}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        {a.video && (
-                          <Link
-                            href={`/student/videos/${a.video.id}`}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#c4b5fd] hover:text-white transition-colors bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 rounded-full px-3 py-1.5"
-                          >
-                            <Film className="w-3.5 h-3.5" />
-                            {a.video.title}
-                          </Link>
-                        )}
-                        {a.dueDate && (
-                          <span
-                            className={cn(
-                              'inline-flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 border',
-                              overdue
-                                ? 'text-red-300 bg-red-500/8 border-red-500/20'
-                                : 'text-white/50 bg-white/[0.03] border-white/[0.08]',
-                            )}
-                          >
-                            <Calendar className="w-3.5 h-3.5" />
-                            Termin: {formatDate(a.dueDate)}
-                          </span>
-                        )}
-                        {a.completedAt && (
-                          <span className="inline-flex items-center gap-1.5 text-xs text-emerald-300/80 rounded-full px-3 py-1.5 bg-emerald-500/8 border border-emerald-500/20">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Ukończone {formatDate(a.completedAt)}
-                          </span>
-                        )}
+                        {a.video && <Link href={`/student/videos/${a.video.id}`} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#c4b5fd] hover:text-white transition-colors bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 rounded-full px-3 py-1.5"><Film className="w-3.5 h-3.5" />{a.video.title}</Link>}
+                        {a.dueDate && <span className={cn('inline-flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 border', overdue ? 'text-red-300 bg-red-500/8 border-red-500/20' : 'text-white/50 bg-white/[0.03] border-white/[0.08]')}><Calendar className="w-3.5 h-3.5" />Termin: {formatDate(a.dueDate)}</span>}
+                        {a.completedAt && <span className="inline-flex items-center gap-1.5 text-xs text-emerald-300/80 rounded-full px-3 py-1.5 bg-emerald-500/8 border border-emerald-500/20"><CheckCircle2 className="w-3.5 h-3.5" />Ukończone {formatDate(a.completedAt)}</span>}
                       </div>
                     </div>
                   </div>
@@ -665,29 +413,13 @@ export function StudentTasksClient() {
           </ul>
         )}
 
-        {/* Practice timer modal */}
         {activeTimer && (
-          <PracticeTimer
-            minutes={activeTimer.task.minutes ?? 10}
-            taskTitle={activeTimer.task.title}
-            onClose={() => setActiveTimer(null)}
-            onComplete={(actualMinutes) => {
-              // Log the completed practice session to the DB (weekly chart)
-              fetch('/api/practice', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  minutes: actualMinutes,
-                  taskId: activeTimer.task.id,
-                  assignmentId: activeTimer.assignment.id,
-                }),
-              }).catch(() => undefined)
+          <PracticeTimer minutes={activeTimer.task.minutes ?? 10} taskTitle={activeTimer.task.title} onClose={() => setActiveTimer(null)} onComplete={(actualMinutes) => {
+              fetch('/api/practice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ minutes: actualMinutes, taskId: activeTimer.task.id, assignmentId: activeTimer.assignment.id }) }).catch(() => undefined)
               toggleRoutineTask(activeTimer.assignment, activeTimer.task.id)
-            }}
-          />
+            }} />
         )}
 
-        {/* Footer flourish */}
         <div className="pt-4 flex items-center justify-center gap-2 text-[11px] text-white/25 font-medium tracking-wide">
           <span className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
           <Sparkles className="w-3 h-3 text-[#a78bfa]/50" />

@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Search, Trash2, Pencil, Loader2, X, Sparkles, UserPlus, ListChecks,
   CalendarRange, Clock, Film, Check, ChevronDown, PlayCircle, Users, MapPin, Repeat,
+  Image, Zap,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
 
@@ -17,6 +18,7 @@ interface RoutineTask {
   description: string | null
   videoId: string | null
   steamMapUrl: string | null
+  gifUrl: string | null
   day: number
   minutes: number | null
 }
@@ -37,17 +39,22 @@ interface Student {
   avatarUrl: string | null
 }
 
-interface Video {
+interface ExercisePreset {
   id: string
   title: string
-  url: string
-  thumbnail: string | null
+  description: string | null
+  videoId: string | null
+  gifUrl: string | null
+  steamMapUrl: string | null
+  minutes: number | null
+  tags: string[]
 }
 
 interface CoachRoutinesClientProps {
   initialRoutines: Routine[]
   initialStudents: Student[]
   initialVideos: Video[]
+  initialExercisePresets: ExercisePreset[]
 }
 
 const emptyTask = (day = 1): RoutineTask => ({
@@ -55,14 +62,16 @@ const emptyTask = (day = 1): RoutineTask => ({
   description: null,
   videoId: null,
   steamMapUrl: null,
+  gifUrl: null,
   day,
   minutes: null,
 })
 
-export function CoachRoutinesClient({ initialRoutines, initialStudents, initialVideos }: CoachRoutinesClientProps) {
+export function CoachRoutinesClient({ initialRoutines, initialStudents, initialVideos, initialExercisePresets }: CoachRoutinesClientProps) {
   const [routines, setRoutines] = useState<Routine[]>(initialRoutines)
   const [students] = useState<Student[]>(initialStudents)
   const [videos] = useState<Video[]>(initialVideos)
+  const [exercisePresets] = useState<ExercisePreset[]>(initialExercisePresets)
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
@@ -111,6 +120,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
             description: t.description || null,
             videoId: t.videoId || null,
             steamMapUrl: t.steamMapUrl || null,
+            gifUrl: t.gifUrl || null,
             day: Math.max(1, t.day),
             minutes: t.minutes || null,
           })),
@@ -195,7 +205,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const openEditDialog = (r: Routine) => {
     setEditing(r)
     setFormData({ title: r.title, description: r.description || '', recurring: r.recurring })
-    setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t })) : [emptyTask(1)])
+    setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t, gifUrl: t.gifUrl || null })) : [emptyTask(1)])
     setDialogOpen(true)
   }
 
@@ -477,15 +487,54 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-white/55">Zadania (dzień po dniu)</label>
-                    <button
-                      type="button"
-                      onClick={() => setTasks((prev) => [...prev, emptyTask(1)])}
-                      disabled={isLoading}
-                      className="inline-flex items-center gap-1 rounded-lg px-2.5 h-8 text-xs font-semibold text-[#c4b5fd] hover:bg-white/[0.05] transition"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Dodaj zadanie
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {exercisePresets.length > 0 && (
+                        <div className="relative">
+                          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                          <select
+                            defaultValue=""
+                            onChange={(e) => {
+                              const presetId = e.target.value
+                              if (!presetId) return
+                              const preset = exercisePresets.find((p) => p.id === presetId)
+                              if (preset) {
+                                setTasks((prev) => [
+                                  ...prev,
+                                  {
+                                    title: preset.title,
+                                    description: preset.description,
+                                    videoId: preset.videoId,
+                                    gifUrl: preset.gifUrl,
+                                    steamMapUrl: preset.steamMapUrl,
+                                    day: 1,
+                                    minutes: preset.minutes,
+                                  },
+                                ])
+                              }
+                              e.target.value = ''
+                            }}
+                            disabled={isLoading}
+                            className="h-9 w-48 rounded-xl bg-white/[0.03] border border-white/[0.08] pl-3.5 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition text-white"
+                          >
+                            <option value="">⚡ Z presetów...</option>
+                            {exercisePresets.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.title} {p.minutes ? `~${p.minutes}min` : ''} {p.gifUrl ? '🎬' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setTasks((prev) => [...prev, emptyTask(1)])}
+                        disabled={isLoading}
+                        className="inline-flex items-center gap-1 rounded-lg px-2.5 h-8 text-xs font-semibold text-[#c4b5fd] hover:bg-white/[0.05] transition"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Dodaj zadanie
+                      </button>
+                    </div>
                   </div>
 
                   {tasks.map((t, i) => (
@@ -540,6 +589,20 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                               className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                             />
                           </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-white/45">GIF demonstracja (opcjonalnie)</label>
+                        <div className="relative mt-1">
+                          <Image className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                          <input
+                            type="url"
+                            value={t.gifUrl ?? ''}
+                            onChange={(e) => updateTask(i, { gifUrl: e.target.value || null })}
+                            disabled={isLoading}
+                            placeholder="Link do GIF-a (np. giphy, imgur, tenor)..."
+                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                          />
                         </div>
                       </div>
                       <div>
