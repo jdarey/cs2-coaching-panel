@@ -48,13 +48,13 @@ export async function GET(request: NextRequest) {
     })
 
     // build calendar: merge completions (full) + progress (partial today)
-    const byDate = new Map<string, { date: string; count: number; full: boolean; tasks: any[]; minutes: number }>()
+    const byDate = new Map<string, { date: string; count: number; full: boolean; tasks: any[]; minutes: number; times: number }>()
 
     for (const c of completions) {
       const d = c.completedAt.toISOString().split('T')[0]
       const e = byDate.get(d)
-      if (e) { e.count = Math.max(e.count, c.tasksDone); e.full = e.full || c.tasksDone >= c.tasksTotal; e.minutes += c.minutesDone||0 }
-      else byDate.set(d, { date: d, count: c.tasksDone, full: c.tasksDone >= c.tasksTotal, tasks: [], minutes: c.minutesDone||0 })
+      if (e) { e.count += c.tasksDone; e.times = (e.times||0)+1; e.full = e.full || c.tasksDone >= c.tasksTotal; e.minutes += c.minutesDone||0 }
+      else byDate.set(d, { date: d, count: c.tasksDone, full: c.tasksDone >= c.tasksTotal, tasks: [], minutes: c.minutesDone||0, times: 1 })
     }
     for (const p of progress) {
       if (!p.completedAt) continue
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       const e = byDate.get(d)
       const info = { taskId: p.taskId, title: p.task.title, day: p.task.day, minutes: p.task.minutes, routineTitle: p.assignment.routine.title }
       if (e) { e.count++; e.tasks.push(info); e.minutes += p.task.minutes||0 }
-      else byDate.set(d, { date: d, count: 1, full: false, tasks: [info], minutes: p.task.minutes||0 })
+      else byDate.set(d, { date: d, count: 1, full: false, tasks: [info], minutes: p.task.minutes||0, times: 0 })
     }
 
     const calendar = Array.from(byDate.values()).sort((a,b)=>a.date.localeCompare(b.date))

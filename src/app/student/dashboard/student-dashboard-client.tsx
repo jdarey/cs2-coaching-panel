@@ -347,42 +347,28 @@ export function StudentDashboardClient({
         <div className="grid gap-6 lg:grid-cols-5 mb-8">
           {/* Progress card */}
           <div className="animate-rise-in lg:col-span-3 relative rounded-3xl p-6 md:p-7 glass-liquid border-glow overflow-hidden" style={{ animationDelay: '120ms' }}>
-            <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8 relative z-10">
-              <div className="flex items-center gap-4 sm:gap-5 min-w-0 flex-1">
-                <RankEmblem rank={rank} size={68} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-1">Twoja ranga</p>
-                  <h2 className="font-display text-xl sm:text-2xl font-bold text-white leading-tight truncate max-w-full" title={rank.name}>{rank.name}</h2>
-                  <div className="mt-2 flex items-center gap-2 min-w-0">
-                    <div className="w-20 sm:w-28 shrink-0 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-1000"
-                        style={{
-                          width: `${next ? Math.min(100, ((completionRate - rank.min) / ((next.min - rank.min) || 1)) * 100) : 100}%`,
-                          background: `linear-gradient(90deg, ${rank.color}, ${next?.color || rank.color})`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs text-white/45 truncate min-w-0 flex-1" title={next ? `${next.min - completionRate}% do ${next.name}` : 'Maks!'}>
-                      {next ? `${next.min - completionRate}% do ${next.name}` : 'Maks!'}
-                    </span>
+            <div className="flex items-center gap-6 relative z-10">
+              <RankEmblem rank={rank} size={76} />
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-1">Twoja ranga</p>
+                <h2 className="font-display text-2xl font-bold text-white leading-tight truncate" title={rank.name}>{rank.name}</h2>
+                <div className="mt-2 flex items-center gap-2 min-w-0 max-w-sm">
+                  <div className="w-28 shrink-0 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-1000"
+                      style={{
+                        width: `${next ? Math.min(100, ((completionRate - rank.min) / ((next.min - rank.min) || 1)) * 100) : 100}%`,
+                        background: `linear-gradient(90deg, ${rank.color}, ${next?.color || rank.color})`,
+                      }}
+                    />
                   </div>
-                  <div className="mt-2 flex items-center gap-2 text-xs text-white/45 truncate">
-                    <Zap className="w-3.5 h-3.5 text-[#a78bfa] shrink-0" />
-                    <span className="truncate">Poziom {levelInfo.level} · {levelInfo.xp}/{levelInfo.xpToNext} XP</span>
-                  </div>
+                  <span className="text-xs text-white/45 truncate min-w-0 flex-1" title={next ? `${next.min - completionRate}% do ${next.name}` : 'Maks!'}>
+                    {next ? `${next.min - completionRate}% do ${next.name}` : 'Maks!'}
+                  </span>
                 </div>
-              </div>
-
-              <div className="flex-1 min-w-0 w-full">
-                <h3 className="font-display text-sm font-semibold text-white/85 mb-3">Postęp oglądania</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                  {progressBreakdown.map((b) => (
-                    <div key={b.key} className="rounded-2xl p-3 sm:p-3.5 glass hover:border-white/[0.12] transition-all duration-300 overflow-hidden">
-                      <p className="font-display text-xl sm:text-2xl font-bold tabular-nums truncate" style={{ color: b.color }}><CountUp value={b.v} /></p>
-                      <p className="text-[10px] sm:text-[11px] text-white/45 mt-1 leading-tight truncate">{b.label}</p>
-                    </div>
-                  ))}
+                <div className="mt-2 flex items-center gap-2 text-xs text-white/45">
+                  <Zap className="w-3.5 h-3.5 text-[#a78bfa] shrink-0" />
+                  Poziom {levelInfo.level} · {levelInfo.xp}/{levelInfo.xpToNext} XP
                 </div>
               </div>
             </div>

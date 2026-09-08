@@ -749,6 +749,7 @@ model DayNote {
   studentId String
   date      String   // YYYY-MM-DD
   content   String
+  sleep     Int?     // 1-10 rating
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

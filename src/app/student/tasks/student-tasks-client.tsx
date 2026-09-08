@@ -12,6 +12,8 @@ import {
   Circle,
   Calendar,
   Film,
+  Moon,
+  RotateCcw,
   Loader2,
   Sparkles,
   Target,
@@ -73,9 +75,11 @@ export function StudentTasksClient() {
   const [loadingOverall, setLoadingOverall] = useState(true)
   const [selectedDay, setSelectedDay] = useState<{ date: string; entry: any } | null>(null)
   const [selectedTask, setSelectedTask] = useState<RoutineAssignment['routine']['tasks'][number] | null>(null)
-  const [dayNotes, setDayNotes] = useState<Record<string,string>>({})
+  const [dayNotes, setDayNotes] = useState<Record<string,{content:string, sleep?:number|null}>>({})
   const [noteDraft, setNoteDraft] = useState("")
+  const [sleepDraft, setSleepDraft] = useState<number | null>(null)
   const [savingNote, setSavingNote] = useState(false)
+  const [repeatingId, setRepeatingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -88,8 +92,8 @@ export function StudentTasksClient() {
       if (hRes.ok) setOverallHistory(await hRes.json())
       if (nRes.ok) {
         const notes: any[] = await nRes.json()
-        const map: Record<string,string> = {}
-        notes.forEach((n:any)=> map[n.date]=n.content)
+        const map: Record<string,{content:string, sleep?:number|null}> = {}
+        notes.forEach((n:any)=> map[n.date]={content:n.content, sleep:n.sleep})
         setDayNotes(map)
       }
     } catch {
@@ -133,7 +137,7 @@ export function StudentTasksClient() {
   // live tick for reset countdown
   const [tick, setTick] = useState(Date.now())
   useEffect(()=>{ const id=setInterval(()=>setTick(Date.now()),1000); return ()=>clearInterval(id)},[])
-  useEffect(()=>{ if(selectedDay) setNoteDraft(dayNotes[selectedDay.date] || "") }, [selectedDay, dayNotes])
+  useEffect(()=>{ if(selectedDay) { const n = dayNotes[selectedDay.date] as any; setNoteDraft(n?.content || ""); setSleepDraft(n?.sleep ?? null) } }, [selectedDay, dayNotes])
 
   // auto-refresh routines at midnight so recurring daily reset appears without manual reload
   useEffect(()=>{
@@ -145,12 +149,15 @@ export function StudentTasksClient() {
 
   const saveDayNote = async () => {
     if (!selectedDay) return
+    if (!noteDraft.trim() && sleepDraft===null) return
     setSavingNote(true)
     try {
-      const res = await fetch('/api/calendar-notes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({date:selectedDay.date, content: noteDraft})})
+      const payload: any = { date: selectedDay.date, content: noteDraft.trim() || "—" }
+      if (sleepDraft !== null) payload.sleep = sleepDraft
+      const res = await fetch('/api/calendar-notes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)})
       if (res.ok) {
         const n = await res.json()
-        setDayNotes(prev=> ({...prev, [selectedDay.date]: n.content}))
+        setDayNotes(prev=> ({...prev, [selectedDay.date]: {content: n.content, sleep: n.sleep}}))
         setSelectedDay({...selectedDay, entry: {...selectedDay.entry, note: n.content}})
       }
     } finally { setSavingNote(false) }
@@ -159,7 +166,7 @@ export function StudentTasksClient() {
     if (!selectedDay) return
     await fetch(`/api/calendar-notes?date=${selectedDay.date}`, {method:'DELETE'})
     setDayNotes(prev=> { const c={...prev}; delete c[selectedDay.date]; return c })
-    setNoteDraft("")
+    setNoteDraft(""); setSleepDraft(null)
   }
 
   const toggle = async (a: Assignment) => {
@@ -226,6 +233,18 @@ export function StudentTasksClient() {
     } finally {
       setTogglingTask(null)
     }
+  }
+
+  const handleRepeat = async (assignmentId: string) => {
+    setRepeatingId(assignmentId)
+    try {
+      const res = await fetch('/api/routines/repeat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ assignmentId })})
+      if (res.ok) {
+        const updated = await res.json()
+        setRoutines(prev=> prev.map(r=> r.id===assignmentId ? updated : r))
+        loadOverallHistory()
+      }
+    } finally { setRepeatingId(null) }
   }
 
   const now = new Date()
@@ -327,7 +346,7 @@ export function StudentTasksClient() {
                       <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso}})} className={cn('relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100 shadow-[0_2px_12px_-4px_rgba(16,185,129,0.3)] hover:bg-emerald-500/25' : count>0 ? 'bg-[#a78bfa]/20 border-[#a78bfa]/30 text-white shadow-[0_2px_12px_-4px_rgba(139,92,246,0.25)] hover:bg-[#a78bfa]/25' : !isFuture ? 'bg-white/[0.06] text-white/50 border-white/[0.08] hover:bg-white/[0.08] cursor-pointer' : '', !isFuture && 'cursor-pointer hover:scale-[1.04] hover:shadow-lg')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny trening': count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij by dodać notatkę'}`}>
                         <span className={cn('text-[15px] leading-none', isToday ? 'font-black text-[#c4b5fd] text-base' : 'font-bold')}>{d.getDate()}</span>
                         <span className={cn('text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30')}>{isFull ? 'PEŁNY' : count>0 ? `${count}` : '—'}</span>
-                        {dayNotes[iso] && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" title="Notatka" />}
+                        {dayNotes[iso]?.sleep ? <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#a78bfa] text-white text-[9px] font-bold grid place-items-center ring-1 ring-black/20" title={`Sen ${dayNotes[iso].sleep}/10`}>{dayNotes[iso].sleep}</span> : dayNotes[iso] && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" title="Notatka" />}
                       </button>
                     )
                   })
@@ -385,6 +404,13 @@ export function StudentTasksClient() {
                     </div>
                     <ChevronDown className={cn('w-5 h-5 shrink-0 text-white/35 transition-transform duration-300', expanded && 'rotate-180')} />
                   </button>
+                  {completed && (
+                    <div className="px-5 pb-3 flex justify-center">
+                      <button onClick={(e)=>{e.stopPropagation(); handleRepeat(ra.id)}} disabled={repeatingId===ra.id} className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/70 hover:text-white hover:border-[#a78bfa]/30 hover:bg-white/[0.08] transition">
+                        {repeatingId===ra.id ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <RotateCcw className="w-3.5 h-3.5"/>} Powtórz rutynę
+                      </button>
+                    </div>
+                  )}
 
                   {expanded && (
                     <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
@@ -422,9 +448,7 @@ export function StudentTasksClient() {
                                             </span>
                                           )}
                                         </span>
-                                        <span className="hidden sm:inline-flex text-[10px] text-white/30 group-hover:text-white/50">— kliknij po szczegóły</span>
                                       </p>
-                                      {t.description && <p className={cn('mt-0.5 text-xs leading-relaxed line-clamp-2', done ? 'text-white/30' : 'text-white/45')}>{t.description}</p>}
                                       <div className="mt-2 flex flex-wrap items-center gap-2">
                                         {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Clock className="w-3 h-3" />~{t.minutes} min</span>}
                                         {t.video?.url && <span className="inline-flex items-center gap-1 text-[11px] text-[#c4b5fd]"><Film className="w-3 h-3"/>Film</span>}
@@ -562,9 +586,16 @@ export function StudentTasksClient() {
               )}
               <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-2 flex items-center gap-1.5"><Calendar className="w-3 h-3"/>Notatka do dnia</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs text-white/50 flex items-center gap-1"><Moon className="w-3 h-3"/> Sen 1-10</span>
+                  <div className="flex gap-1 ml-auto flex-wrap justify-end">
+                    {Array.from({length:10},(_,i)=>i+1).map(v=> <button key={v} onClick={()=>setSleepDraft(v)} className={cn("w-7 h-7 rounded-full text-xs font-bold border", sleepDraft===v ? "bg-[#a78bfa] text-white border-[#a78bfa]" : "bg-white/[0.04] text-white/40 border-white/[0.08] hover:text-white hover:border-white/15")}>{v}</button>)}
+                    {sleepDraft !== null && <button onClick={()=>setSleepDraft(null)} className="ml-1 text-[11px] text-white/40 hover:text-white">wyczyść</button>}
+                  </div>
+                </div>
                 <textarea value={noteDraft} onChange={e=>setNoteDraft(e.target.value)} placeholder="Dodaj notatkę do tego dnia (np. co poszło dobrze, co poprawić)..." rows={3} className="w-full rounded-xl bg-[#07060c] border border-white/[0.08] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#a78bfa]/30 resize-none" />
                 <div className="flex gap-2 mt-3">
-                  <button onClick={saveDayNote} disabled={savingNote || !noteDraft.trim()} className="flex-1 h-9 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white text-xs font-bold disabled:opacity-40 flex items-center justify-center gap-1.5">{savingNote ? <Loader2 className="w-4 h-4 animate-spin"/> : null} Zapisz notatkę</button>
+                  <button onClick={saveDayNote} disabled={savingNote || (!noteDraft.trim() && sleepDraft===null)} className="flex-1 h-9 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white text-xs font-bold disabled:opacity-40 flex items-center justify-center gap-1.5">{savingNote ? <Loader2 className="w-4 h-4 animate-spin"/> : null} Zapisz</button>
                   {dayNotes[selectedDay.date] && <button onClick={deleteDayNote} className="px-4 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-white/60 hover:text-red-300 hover:border-red-500/20">Usuń</button>}
                 </div>
               </div>

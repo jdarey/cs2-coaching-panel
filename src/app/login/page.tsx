@@ -38,6 +38,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -52,6 +53,7 @@ function LoginForm() {
       const res = await signIn('credentials', {
         email,
         password,
+        remember: String(remember),
         redirect: false,
         callbackUrl,
       })
@@ -172,6 +174,17 @@ function LoginForm() {
                 </button>
               </div>
             </div>
+
+            <label htmlFor="remember" className="flex items-center gap-2.5 cursor-pointer group select-none">
+              <input
+                id="remember"
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="h-4 w-4 rounded border-white/20 bg-white/[0.06] text-[#a78bfa] focus:ring-0 focus:ring-offset-0 focus:border-[#a78bfa]/40 accent-[#a78bfa]"
+              />
+              <span className="text-sm text-white/60 group-hover:text-white/80 transition-colors">Zapamiętaj mnie</span>
+            </label>
 
             <Button
               type="submit"

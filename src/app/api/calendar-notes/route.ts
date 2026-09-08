@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 export const dynamic = 'force-dynamic'
-const schema = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), content: z.string().min(1).max(2000) })
+const schema = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), content: z.string().min(1).max(2000), sleep: z.number().int().min(1).max(10).optional().nullable() })
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -33,11 +33,11 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({error:'Unauthorized'},{status:401})
   const userId = (session.user as any).id
   const body = await req.json()
-  const { date, content } = schema.parse(body)
+  const { date, content, sleep } = schema.parse(body)
   const note = await prisma.dayNote.upsert({
     where: { studentId_date: { studentId: userId, date } },
-    update: { content },
-    create: { studentId: userId, date, content },
+    update: { content, sleep: sleep ?? undefined },
+    create: { studentId: userId, date, content, sleep: sleep ?? null },
   })
   return NextResponse.json(note)
 }

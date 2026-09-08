@@ -37,6 +37,7 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        remember: { label: 'Remember', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -63,7 +64,8 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           avatarUrl: user.avatarUrl,
-        }
+          remember: (credentials as any).remember !== 'false',
+        } as any
       },
     }),
   ],
@@ -90,6 +92,18 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
+        token.remember = (user as any).remember ?? true
+        // dynamic expiry: 30d if remember, 1d if not
+        const maxAge = token.remember === false ? 24 * 60 * 60 : 30 * 24 * 60 * 60
+        token.exp = Math.floor(Date.now() / 1000) + maxAge
+      }
+      // refresh exp on each request to keep sliding session
+      if (token.remember !== false && typeof token.exp === 'number') {
+        const maxAge = 30 * 24 * 60 * 60
+        const now = Math.floor(Date.now() / 1000)
+        if ((token.exp as number) - now < 24 * 60 * 60) {
+          token.exp = now + maxAge
+        }
       }
       return token
     },
