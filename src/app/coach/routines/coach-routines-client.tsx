@@ -39,6 +39,13 @@ interface Student {
   avatarUrl: string | null
 }
 
+interface Video {
+  id: string
+  title: string
+  url: string
+  thumbnail: string | null
+}
+
 interface ExercisePreset {
   id: string
   title: string
