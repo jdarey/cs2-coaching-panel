@@ -45,6 +45,29 @@ interface Assignment {
   video?: { id: string; title: string; url: string; thumbnail: string | null } | null
 }
 
+function mdToHtml(md: string): string {
+  if (!md) return ''
+  let html = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#c4b5fd] underline hover:text-white">$1</a>')
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
+  html = html.replace(/\*([^*]+)\*/g, '<em class="italic text-white/90">$1</em>')
+  html = html.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-xs">$1</code>')
+  const lines = html.split('\n')
+  let out='', inList=false
+  for (const line of lines) {
+    if (/^\s*[-•]\s+/.test(line)) {
+      if (!inList) { out += '<ul class="list-disc list-inside space-y-1 my-2 marker:text-[#a78bfa]">'; inList=true }
+      out += `<li>${line.replace(/^\s*[-•]\s+/, '')}</li>`
+    } else {
+      if (inList) { out += '</ul>'; inList=false }
+      if (line.trim()==='') out+=''
+      else out += `<p class="my-1 leading-relaxed">${line}</p>`
+    }
+  }
+  if (inList) out += '</ul>'
+  return out
+}
+
 interface RoutineAssignment {
   id: string
   status: string
@@ -612,7 +635,7 @@ export function StudentTasksClient() {
               <div className="p-6">
                 <button onClick={()=>setSelectedTask(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
                 <h3 className="font-display text-xl font-bold text-white pr-8">{selectedTask.title}</h3>
-                {selectedTask.description && <p className="text-sm text-white/60 mt-2 leading-relaxed">{selectedTask.description}</p>}
+                {selectedTask.description && <div className="text-sm text-white/70 mt-2 leading-relaxed prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(selectedTask.description)}} />}
                 {selectedTask.video?.url && (
                   <div className="mt-4 rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
                     {getYouTubeId(selectedTask.video.url) ? (
