@@ -360,45 +360,52 @@ export function StudentTasksClient() {
           </div>
         </section>
 
-        {/* Top calendar - separate, readable */}
-        <section className="glass-liquid rounded-3xl p-5 sm:p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20"><CalendarDays className="w-5 h-5 text-white"/></span>
+        {/* Top calendar - fresh, 14 dni */}
+        <section className="glass-liquid rounded-3xl p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/10"><CalendarDays className="w-5 h-5 text-white"/></span>
             <div>
-              <h2 className="font-display text-lg font-bold text-white">Kalendarz treningów</h2>
-              <p className="text-xs text-white/40">Ostatnie 14 dni • zielony = pełny, fioletowy = częściowy • kliknij dzień</p>
+              <h2 className="font-display text-xl font-bold text-white">Kalendarz</h2>
+              <p className="text-xs text-white/40">Ostatnie 14 dni • zielony pełny • fioletowy częściowy • kliknij dzień</p>
             </div>
-            {overallHistory && <div className="ml-auto hidden sm:flex items-center gap-3 text-xs text-white/50"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"/>Pełny</span><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#a78bfa]"/>Częściowy</span><span className="text-white/60 font-semibold">{overallHistory.summary.totalDays} dni • {overallHistory.summary.totalSessions} zadań</span></div>}
+            {overallHistory && <span className="ml-auto hidden sm:inline-flex items-center gap-2 text-xs text-white/50"><span className="w-2 h-2 rounded-full bg-emerald-500"/>Pełny<span className="w-2 h-2 rounded-full bg-[#a78bfa] ml-2"/>Częściowy<span className="ml-2 font-semibold text-white/70">{overallHistory.summary.totalDays} dni</span></span>}
           </div>
           {loadingOverall ? (
             <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-[#a78bfa] mr-2"/>Ładowanie…</div>
           ) : (
             <div>
-              <div className="grid grid-cols-7 gap-2 text-xs text-white/45 text-center mb-2 font-semibold">
-                {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d} className="py-1.5">{d}</span>)}
+              <div className="grid grid-cols-7 gap-2 text-[11px] text-white/30 text-center mb-2 font-medium">
+                {['Pn','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d} className="py-1">{d}</span>)}
               </div>
-              <div className="grid grid-cols-7 gap-2.5">
+              <div className="grid grid-cols-7 gap-2">
                 {(() => {
-                  const map = new Map((overallHistory?.calendar || []).map((d:any)=> [d.date, d]))
+                  const map = new Map((overallHistory?.calendar || []).map((d:any)=>[d.date, d]))
                   const today = new Date(); today.setHours(12,0,0,0)
+                  /* align */
+                  const start = new Date(today); start.setDate(today.getDate() - 13)
+                  /* adjust */
                   return Array.from({length:14}, (_,idx)=>{
-                    const d = new Date(today); d.setDate(today.getDate() - (13-idx))
-                    const iso = d.toISOString().split('T')[0]
+                    const d = new Date(start); d.setDate(start.getDate()+idx)
+                    const iso = toLocalDate(d)
                     const entry = map.get(iso) as any
                     const isFuture = d > today
-                    const isToday = iso === new Date().toISOString().split('T')[0]
-                    const isFull = entry?.full
+                    const isToday = iso === toLocalDate(new Date())
+                    const isFull = !!entry?.full
                     const count = entry?.count || 0
+                    const times = entry?.times || 0
+                    const hasNote = !!dayNotes[iso]
                     return (
-                      <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso}})} className={cn('relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100 shadow-[0_2px_12px_-4px_rgba(16,185,129,0.3)] hover:bg-emerald-500/25' : count>0 ? 'bg-[#a78bfa]/20 border-[#a78bfa]/30 text-white shadow-[0_2px_12px_-4px_rgba(139,92,246,0.25)] hover:bg-[#a78bfa]/25' : !isFuture ? 'bg-white/[0.06] text-white/50 border-white/[0.08] hover:bg-white/[0.08] cursor-pointer' : '', !isFuture && 'cursor-pointer hover:scale-[1.04] hover:shadow-lg')} title={`${iso}: ${entry?.routines?.join(', ') ? entry.routines.join(', ') + ' ' : ''}${count ? count+' zadań'+(isFull?` ✓ Pełny${entry?.times>1 ? ` ${entry.times}×`:''} trening`: count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij by dodać notatkę'}`}>
-                        <span className={cn('text-[15px] leading-none', isToday ? 'font-black text-[#c4b5fd] text-base' : 'font-bold')}>{d.getDate()}</span>
-                        <span className={cn('text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30')}>{entry?.times>1 ? `${entry.times}×` : isFull ? 'PEŁNY' : count>0 ? `${count}` : '—'}</span>
-                        {dayNotes[iso]?.sleep ? <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#a78bfa] text-white text-[9px] font-bold grid place-items-center ring-1 ring-black/20" title={`Sen ${dayNotes[iso].sleep}/10`}>{dayNotes[iso].sleep}</span> : dayNotes[iso] && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" title="Notatka" />}
+                      <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso, times:0, routines:[]}})} className={['relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-100 hover:bg-emerald-500/20' : count>0 ? 'bg-[#a78bfa]/15 border-[#a78bfa]/30 text-white hover:bg-[#a78bfa]/20' : !isFuture ? 'bg-white/[0.04] text-white/40 border-white/[0.06] hover:bg-white/[0.07]' : '', !isFuture ? 'cursor-pointer hover:scale-[1.03]' : ''].join(' ')} title={`${iso}: ${entry?.routines?.join(', ') || ''} ${count ? count+' zadań' : 'brak'}${isFull && times>1 ? ` ${times}×`:''}`}>
+                        <span className={['text-[15px] leading-none', isToday ? 'font-black text-[#c4b5fd]' : 'font-bold'].join(' ')}>{d.getDate()}</span>
+                        <span className={['text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30'].join(' ')}>{times>1 ? `${times}×` : isFull ? 'PEŁNY' : count>0 ? `${count}` : '·'}</span>
+                        {hasNote && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" />}
+                        {dayNotes[iso]?.sleep && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#a78bfa] text-white text-[9px] font-bold grid place-items-center ring-1 ring-black/20">{dayNotes[iso].sleep}</span>}
                       </button>
                     )
                   })
                 })()}
               </div>
+              <p className="text-[10px] text-white/25 mt-3 text-center">Kliknij dzień aby zobaczyć rutynę, zadania i dodać notatkę / sen 1-10</p>
             </div>
           )}
         </section>
