@@ -131,8 +131,19 @@ export function StudentTasksClient() {
 
   const loadOverallHistory = useCallback(async () => {
     try {
-      const res = await fetch('/api/routines/history?months=3')
-      if (res.ok) setOverallHistory(await res.json())
+      const res = await fetch(`/api/routines/history?months=3&_=${Date.now()}`, { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setOverallHistory(prev=>{
+          if (!prev) return data
+          const todayIso = toLocalDate(new Date())
+          const f = (data.calendar as any[]).find((d:any)=>d.date===todayIso) as any
+          const p = (prev.calendar as any[]).find((d:any)=>d.date===todayIso) as any
+          if (p && f && f.count < p.count) return prev
+          if (p && !f && p.count>0) return prev
+          return data
+        })
+      }
     } catch { /* ignore */ }
   }, [])
 
