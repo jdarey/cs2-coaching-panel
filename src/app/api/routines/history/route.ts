@@ -68,6 +68,19 @@ export async function GET(request: NextRequest) {
       else byDate.set(d, { date: d, count: 1, full: false, tasks: [info], minutes: p.task.minutes||0, times: 0, routines: [info.routineTitle] })
     }
 
+    // 3) normal assignments - traktuj jak zadania z rutyny
+    if (!assignmentId && !routineId) {
+      const assignmentsDone = await prisma.assignment.findMany({ where: { studentId, status: 'DONE', completedAt: { gte: from } }, select: { id: true, title: true, completedAt: true } })
+      for (const a of assignmentsDone) {
+        if (!a.completedAt) continue
+        const d = toLocalDate(new Date(a.completedAt))
+        const e = byDate.get(d)
+        const info = { taskId: a.id, title: a.title, day: 1, minutes: null, routineTitle: a.title }
+        if (e) { e.count++; e.tasks.push(info); if (!e.routines.includes(a.title)) e.routines.push(a.title); e.full = e.full || false }
+        else byDate.set(d, { date: d, count: 1, full: false, tasks: [info], minutes: 0, times: 0, routines: [a.title] })
+      }
+    }
+
     const calendar = Array.from(byDate.values()).sort((a,b)=>a.date.localeCompare(b.date))
     const totalSessions = completions.reduce((acc,c)=>acc+c.tasksDone,0) + progress.filter(p=> !byDate.has(p.completedAt!.toISOString().split('T')[0]) || false).length
     // simpler: sum calendar counts
