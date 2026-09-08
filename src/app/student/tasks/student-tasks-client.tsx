@@ -67,24 +67,23 @@ export function StudentTasksClient() {
   const [activeTimer, setActiveTimer] = useState<{ assignment: RoutineAssignment; task: RoutineAssignment['routine']['tasks'][number] } | null>(null)
   const [routineHistory, setRoutineHistory] = useState<Record<string, { calendar: any[]; summary: any }>>({})
   const [loadingHistory, setLoadingHistory] = useState<Set<string>>(new Set())
-  const [hoveredGif, setHoveredGif] = useState<string | null>(null)
+  const [overallHistory, setOverallHistory] = useState<{ calendar: any[]; summary: any } | null>(null)
+  const [loadingOverall, setLoadingOverall] = useState(true)
 
   const load = useCallback(async () => {
     try {
-      const [aRes, rRes] = await Promise.all([fetch('/api/assignments'), fetch('/api/routines')])
-      if (aRes.ok) {
-        setAssignments(await aRes.json())
-      }
+      const [aRes, rRes, hRes] = await Promise.all([fetch('/api/assignments'), fetch('/api/routines'), fetch('/api/routines/history?months=3')])
+      if (aRes.ok) setAssignments(await aRes.json())
       if (rRes.ok) {
         const data = await rRes.json()
         setRoutines(data)
-        // auto-load history for each routine (calendar visible by default)
-        data.forEach((ra: RoutineAssignment) => loadHistory(ra.id))
       }
+      if (hRes.ok) setOverallHistory(await hRes.json())
     } catch {
       /* ignore */
     } finally {
       setLoading(false)
+      setLoadingOverall(false)
     }
   }, [])
 
@@ -242,7 +241,49 @@ export function StudentTasksClient() {
           </div>
         </section>
 
-        {/* My routines */}
+        {/* Top calendar - separate, readable */}
+        <section className="glass-liquid rounded-3xl p-5 sm:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20"><CalendarDays className="w-5 h-5 text-white"/></span>
+            <div>
+              <h2 className="font-display text-lg font-bold text-white">Kalendarz treningów</h2>
+              <p className="text-xs text-white/40">Ostatnie 28 dni • zielony = pełny trening, fioletowy = częściowy</p>
+            </div>
+            {overallHistory && <div className="ml-auto hidden sm:flex items-center gap-3 text-xs text-white/50"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"/>Pełny</span><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#a78bfa]"/>Częściowy</span><span className="text-white/60 font-semibold">{overallHistory.summary.totalDays} dni • {overallHistory.summary.totalSessions} zadań</span></div>}
+          </div>
+          {loadingOverall ? (
+            <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-[#a78bfa] mr-2"/>Ładowanie…</div>
+          ) : (
+            <div>
+              <div className="grid grid-cols-7 gap-1.5 text-[11px] text-white/35 text-center mb-2 font-medium">
+                {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d} className="py-1">{d}</span>)}
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {(() => {
+                  const map = new Map((overallHistory?.calendar || []).map((d:any)=> [d.date, d]))
+                  const today = new Date(); today.setHours(12,0,0,0)
+                  return Array.from({length:28}, (_,idx)=>{
+                    const d = new Date(today); d.setDate(today.getDate() - (27-idx))
+                    const iso = d.toISOString().split('T')[0]
+                    const entry = map.get(iso) as any
+                    const isFuture = d > today
+                    const isToday = iso === new Date().toISOString().split('T')[0]
+                    const isFull = entry?.full
+                    const count = entry?.count || 0
+                    return (
+                      <div key={iso} className={cn('relative aspect-[4/3] sm:aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 border text-xs font-semibold transition-all', isFuture ? 'bg-transparent border-transparent' : isToday ? 'ring-2 ring-[#a78bfa]/50' : 'border-transparent', isFull ? 'bg-emerald-500/15 ring-1 ring-emerald-500/30 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/15 ring-1 ring-[#a78bfa]/25 text-white' : !isFuture ? 'bg-white/[0.03] text-white/35 border-white/[0.04]' : '')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny':' • Niepełny') : 'brak'}`}>
+                        <span className={cn('text-sm', isToday && 'font-black text-[#c4b5fd]')}>{d.getDate()}</span>
+                        <span className="text-[10px] opacity-60">{isFull ? '✓' : count>0 ? `${count}` : '·'}</span>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* My routines - separate */}
         {!loading && routines.length > 0 && (
           <section className="space-y-4">
             <div className="flex items-center gap-2.5">
@@ -285,47 +326,6 @@ export function StudentTasksClient() {
                     </div>
                     <ChevronDown className={cn('w-5 h-5 shrink-0 text-white/35 transition-transform duration-300', expanded && 'rotate-180')} />
                   </button>
-
-                  {/* Calendar - always visible */}
-                  <div className="px-5 pb-4">
-                    <div className="p-4 rounded-2xl glass-liquid border border-white/[0.06]">
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd] flex items-center gap-2"><History className="w-3.5 h-3.5" />Kalendarz treningów</p>
-                        {loadingHistory.has(ra.id) ? <Loader2 className="w-4 h-4 animate-spin text-[#c4b5fd]" /> : routineHistory[ra.id] ? <div className="flex items-center gap-3 text-[11px] text-white/50"><span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" />{routineHistory[ra.id].summary.totalDays} dni</span><span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-400" />{routineHistory[ra.id].summary.totalSessions} zadań</span>{routineHistory[ra.id].summary.totalMinutes > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-amber-400" />{routineHistory[ra.id].summary.totalMinutes} min</span>}</div> : <span className="text-[11px] text-white/40">Brak danych</span>}
-                      </div>
-                      {loadingHistory.has(ra.id) ? (
-                        <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-[#a78bfa] mr-2"/>Ładowanie kalendarza…</div>
-                      ) : (
-                        <div>
-                          <div className="grid grid-cols-7 gap-1 text-[10px] text-white/30 text-center mb-1">
-                            {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d}>{d}</span>)}
-                          </div>
-                          <div className="grid grid-cols-7 gap-1.5">
-                            {(() => {
-                              const map = new Map((routineHistory[ra.id]?.calendar || []).map((d:any)=> [d.date, d]))
-                              const today = new Date(); today.setHours(12,0,0,0)
-                              return Array.from({length:28}, (_,idx)=>{
-                                const d = new Date(today); d.setDate(today.getDate() - (27-idx))
-                                const iso = d.toISOString().split('T')[0]
-                                const entry = map.get(iso) as any
-                                const isFuture = d > today
-                                const isToday = iso === new Date().toISOString().split('T')[0]
-                                const isFull = entry?.full ?? (entry && entry.count>0 && entry.count >= (entry.tasks?.length || entry.count))
-                                const count = entry?.count || 0
-                                return (
-                                  <div key={iso} className={cn('relative aspect-square rounded-xl flex flex-col items-center justify-center text-[10px] font-semibold transition-all border', isFuture ? 'bg-transparent border-transparent' : isToday ? 'ring-1 ring-[#a78bfa]/50' : 'border-transparent', isFull ? 'bg-emerald-500/20 ring-1 ring-emerald-500/40 text-emerald-200 border-emerald-500/20' : count>0 ? 'bg-[#a78bfa]/20 ring-1 ring-[#a78bfa]/30 text-white border-[#a78bfa]/20' : !isFuture ? 'bg-white/[0.04] text-white/30 border-white/[0.04]' : '')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny':' • Niepełny') : isFuture?'—':`brak${isToday?' • dziś':''}`} `}>
-                                    <span className={cn('text-[11px]', isToday && !isFull && count===0 && 'text-[#c4b5fd] font-bold')}>{d.getDate()}</span>
-                                    <span className="text-[8px] opacity-70">{isFull ? '✓' : count>0 ? `${count}` : isFuture ? '' : '·'}</span>
-                                  </div>
-                                )
-                              })
-                            })()}
-                          </div>
-                        </div>
-                      )}
-                      <p className="text-[10px] text-white/30 mt-2 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500/60 ring-1 ring-emerald-500/40"/>pełny trening <span className="w-2 h-2 rounded-full bg-[#a78bfa]/60 ring-1 ring-[#a78bfa]/40"/>częściowy <span className="w-2 h-2 rounded-full bg-white/[0.08]"/>brak</p>
-                    </div>
-                  </div>
 
                   {expanded && (
                     <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
