@@ -462,15 +462,21 @@ export function StudentTasksClient() {
                                         <span className="relative inline-flex items-center gap-1">
                                           {t.title}
                                           {t.gifUrl && (
-                                            <span className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
-                                              <span className="flex items-center rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)] w-44">
-                                                <span className="relative h-24 w-44 bg-black block overflow-hidden rounded-xl">
-                                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                  <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                                </span>
-                                              </span>
-                                              <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#0a0c0e] border-l border-b border-white/15" />
+                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
+                                          <span className="flex flex-col rounded-2xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/90 to-[#1a1628]/90 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.06)] w-56">
+                                            <span className="relative h-32 w-56 bg-black block overflow-hidden">
+                                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                                              <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
+                                              <span className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
+                                              <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-wider text-white/90">GIF <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"/></span>
                                             </span>
+                                            <span className="px-3 py-2.5 bg-white/[0.03] border-t border-white/[0.06] flex items-center gap-2">
+                                              <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#a78bfa]/15 border border-[#a78bfa]/20 shrink-0"><ImageIcon className="w-3 h-3 text-[#c4b5fd]"/></span>
+                                              <span className="text-xs font-semibold text-white truncate">{t.title}</span>
+                                            </span>
+                                          </span>
+                                          <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#1a1628] border-l border-b border-white/10 shadow-[-2px_2px_8px_rgba(0,0,0,0.3)]" />
+                                        </span>
                                           )}
                                         </span>
                                       </p>
