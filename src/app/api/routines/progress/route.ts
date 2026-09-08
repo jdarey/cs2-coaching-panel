@@ -59,18 +59,20 @@ export async function PATCH(request: NextRequest) {
     })
     let assignmentStatus = assignment.status
     if (doneCount >= taskCount && taskCount > 0) {
-      // log completion for calendar
-      const minutesDone = await prisma.routineTask.aggregate({ where: { routineId: assignment.routineId }, _sum: { minutes: true } })
-      await prisma.routineCompletion.create({
-        data: {
-          assignmentId: validated.assignmentId,
-          routineId: assignment.routineId,
-          studentId: assignment.studentId,
-          tasksDone: doneCount,
-          tasksTotal: taskCount,
-          minutesDone: minutesDone._sum.minutes ?? null,
-        },
-      })
+      // log completion for calendar — ignoruj jeśli tabela jeszcze nie istnieje (przed db push)
+      try {
+        const minutesDone = await prisma.routineTask.aggregate({ where: { routineId: assignment.routineId }, _sum: { minutes: true } })
+        await prisma.routineCompletion.create({
+          data: {
+            assignmentId: validated.assignmentId,
+            routineId: assignment.routineId,
+            studentId: assignment.studentId,
+            tasksDone: doneCount,
+            tasksTotal: taskCount,
+            minutesDone: minutesDone._sum.minutes ?? null,
+          },
+        })
+      } catch (e) { console.warn('RoutineCompletion log skip (table missing?)', e) }
       // Zamiast resetować codziennie — zakończ rutynę (nawet recurring). Coach może przypisać ponownie lub student zresetuje ręcznie odhaczając.
       await prisma.routineAssignment.update({
         where: { id: validated.assignmentId },
