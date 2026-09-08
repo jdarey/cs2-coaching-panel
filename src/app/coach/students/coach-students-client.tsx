@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { formatDate, getInitials, cn, matchesSearch } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
@@ -69,7 +69,38 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
   const [inviteLoading, setInviteLoading] = useState(false)
   const [formData, setFormData] = useState({ email: '', name: '', password: '' })
   const [inviteEmail, setInviteEmail] = useState('')
+  const [attachOpen, setAttachOpen] = useState(false)
+  const [attachQuery, setAttachQuery] = useState('')
+  const [attachResults, setAttachResults] = useState<Student[]>([])
+  const [attachLoading, setAttachLoading] = useState(false)
+  const [attachingId, setAttachingId] = useState<string | null>(null)
   const { toast } = useToast()
+
+  const searchAttach = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setAttachResults([]); return }
+    setAttachLoading(true)
+    try {
+      const res = await fetch(`/api/coach/students/search?q=${encodeURIComponent(q)}`)
+      if (res.ok) setAttachResults(await res.json())
+    } catch { /* ignore */ } finally { setAttachLoading(false) }
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => searchAttach(attachQuery), 300)
+    return () => clearTimeout(t)
+  }, [attachQuery, searchAttach])
+
+  const handleAttach = async (studentId: string) => {
+    setAttachingId(studentId)
+    try {
+      const res = await fetch('/api/coach/students/attach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId }) })
+      const data = await res.json()
+      if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
+      setStudents(prev => [data, ...prev])
+      setAttachOpen(false); setAttachQuery(''); setAttachResults([])
+      toast({ title: 'Sukces', description: `Dodano ${data.name || data.email} do Twoich uczniów` })
+    } catch { toast({ title: 'Błąd', variant: 'destructive' }) } finally { setAttachingId(null) }
+  }
 
   const handleInviteStudent = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -219,7 +250,15 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
           title="Uczniowie"
           subtitle="Zarządzaj swoimi uczniami i śledź ich postępy"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setAttachOpen(true)}
+              className="group relative inline-flex items-center gap-2 rounded-full px-5 h-12 text-sm font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden lg:inline">Dodaj z bazy</span>
+              <span className="lg:hidden">Z bazy</span>
+            </button>
             <button
               onClick={() => setInviteDialogOpen(true)}
               className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300"
@@ -653,6 +692,49 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 </button>
               </DialogFooter>
             </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== Attach existing student from DB ===== */}
+      <Dialog open={attachOpen} onOpenChange={setAttachOpen}>
+        <DialogContent className="max-w-md p-0 border-transparent bg-transparent shadow-none sm:rounded-3xl">
+          <div className="glass-liquid rounded-3xl p-7 sm:p-8 relative overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#a78bfa]/10 blur-3xl pointer-events-none" />
+            <DialogHeader className="relative">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#34d399] to-[#10b981]">
+                  <Search className="w-5 h-5 text-white" />
+                </div>
+                <DialogTitle className="font-display text-xl font-bold text-white">Dodaj z bazy</DialogTitle>
+              </div>
+              <p className="text-xs text-white/45">Uczeń zakłada konto sam (Rejestracja), Ty wyszukujesz go po emailu i dodajesz do swoich uczniów.</p>
+            </DialogHeader>
+            <div className="relative mt-5 space-y-4">
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#c4b5fd] transition-colors pointer-events-none" />
+                <Input placeholder="Wpisz email lub imię (min. 2 znaki)..." value={attachQuery} onChange={e=>setAttachQuery(e.target.value)} className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:ring-2 focus-visible:ring-[#8b5cf6]/25" />
+              </div>
+              {attachLoading && <div className="flex items-center gap-2 text-xs text-white/40"><Loader2 className="w-4 h-4 animate-spin"/>Szukam…</div>}
+              {!attachLoading && attachResults.length===0 && attachQuery.trim().length>=2 && <p className="text-xs text-white/40 text-center py-4">Brak wolnych uczniów pasujących do “{attachQuery}”. Musi mieć konto i nie mieć trenera.</p>}
+              {!attachLoading && attachResults.length>0 && (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {attachResults.map(s=> (
+                    <div key={s.id} className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:border-[#a78bfa]/20">
+                      <Avatar className="h-9 w-9 rounded-xl"><AvatarImage src={s.avatarUrl||''}/><AvatarFallback className="rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white text-xs">{getInitials(s.name||s.email)}</AvatarFallback></Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{s.name || 'Bez nazwy'}</p>
+                        <p className="text-xs text-white/45 truncate">{s.email}</p>
+                      </div>
+                      <button onClick={()=>handleAttach(s.id)} disabled={!!attachingId} className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl text-xs font-semibold text-white bg-gradient-to-br from-[#34d399] to-[#10b981] hover:opacity-90 disabled:opacity-50">
+                        {attachingId===s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <Plus className="w-3.5 h-3.5"/>} Dodaj
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {attachQuery.trim().length<2 && <p className="text-[11px] text-white/30 text-center">Wpisz min. 2 znaki aby wyszukać. Tylko uczniowie bez trenera.</p>}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
