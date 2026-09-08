@@ -351,14 +351,14 @@ export function StudentTasksClient() {
                                     </button>
                                     <div className="flex-1 min-w-0">
                                       <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2 relative', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>{t.title}{t.gifUrl && <span className="inline-flex items-center gap-1 text-[10px] text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-full px-2 py-0.5 group-hover:bg-[#a78bfa]/20 transition-colors"><ImageIcon className="w-3 h-3"/>GIF</span>}{t.gifUrl && (
-                                        <span className="pointer-events-none absolute right-full mr-2 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
+                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
                                           <span className="flex items-center rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)] w-44">
                                             <span className="relative h-24 w-44 bg-black block overflow-hidden rounded-xl">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                               <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                             </span>
                                           </span>
-                                          <span className="absolute -right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#0a0c0e] border-r border-t border-white/15" />
+                                          <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#0a0c0e] border-l border-b border-white/15" />
                                         </span>
                                       )}</p>
                                       {t.description && <p className={cn('mt-0.5 text-xs leading-relaxed', done ? 'text-white/30' : 'text-white/45')}>{t.description}</p>}
@@ -383,6 +383,44 @@ export function StudentTasksClient() {
             })}
           </section>
         )}
+
+        {/* Dobra robota - wszystkie zadania zrobione */}
+        {(() => {
+          const todayIso = new Date().toISOString().split('T')[0]
+          const todayFull = overallHistory?.calendar?.find((d:any)=> d.date===todayIso)?.full
+          const allRoutinesDone = routines.length>0 && routines.every(ra=> ra.progress.filter((p:any)=>p.status==='DONE').length >= ra.routine.tasks.length && ra.routine.tasks.length>0)
+          const showDone = !loading && !loadingOverall && (todayFull || allRoutinesDone)
+          if (!showDone) return null
+          return (
+            <div className="glass-liquid rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden border border-emerald-500/20">
+              <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+              <div className="relative">
+                <div className="mx-auto w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#34d399] to-[#10b981] ring-1 ring-white/20 shadow-[0_8px_24px_-8px_rgba(52,211,153,0.5)] mb-4">
+                  <Trophy className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="font-display text-xl sm:text-2xl font-bold text-white">Dobra robota na dziś! 🎉</h3>
+                <p className="text-sm text-white/60 mt-2 max-w-xl mx-auto">Nie masz już nic więcej przewidziane. Wszystkie zadania z rutyn na dziś odhaczone — zasłużyłeś na przerwę.</p>
+                <div className="mt-6">
+                  <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold mb-3">Chcesz więcej? Proponowane ćwiczenia dodatkowe</p>
+                  <div className="grid gap-3 sm:grid-cols-3 text-left">
+                    {[
+                      { title: 'Aim Botz — 15 min', desc: 'Skupienie na precyzji', icon: Target },
+                      { title: 'Recoil Master — 10 min', desc: 'Kontrola sprayu', icon: Flame },
+                      { title: 'Movement — 10 min', desc: 'Peeking & counter-strafe', icon: Timer },
+                    ].map(c=> (
+                      <div key={c.title} className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-4 hover:border-[#a78bfa]/20 hover:bg-white/[0.06] transition">
+                        <c.icon className="w-5 h-5 text-[#a78bfa] mb-2"/>
+                        <p className="text-sm font-semibold text-white">{c.title}</p>
+                        <p className="text-xs text-white/45 mt-1">{c.desc}</p>
+                        <button onClick={() => { const r=routines[0]; if(r){ const t=r.routine.tasks[0]; if(t) setActiveTimer({assignment:r, task: { ...t, title: c.title, minutes: parseInt(c.title.match(/\d+/)?.[0]||'10') } as any}) } }} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#c4b5fd] hover:text-white">Start <Timer className="w-3.5 h-3.5"/></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         <div className="flex flex-wrap items-center gap-2">
           {(['ALL', 'PENDING', 'DONE'] as const).map((f) => (
