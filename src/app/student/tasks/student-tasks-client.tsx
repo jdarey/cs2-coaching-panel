@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
-import { cn, formatDate, spotlightHandler } from '@/lib/utils'
+import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
+import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
 import {
   ClipboardList,
   CheckCircle2,
@@ -512,15 +513,30 @@ export function StudentTasksClient() {
         {selectedTask && (
           <div className="fixed inset-0 z-50 grid place-items-center p-4">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>setSelectedTask(null)} />
-            <div className="glass-liquid relative w-full max-w-md rounded-3xl overflow-hidden animate-rise-in">
-              {selectedTask.gifUrl && <div className="h-48 bg-black"><img src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-full object-cover" /></div>}
+            <div className="glass-liquid relative w-full max-w-lg rounded-3xl overflow-hidden animate-rise-in max-h-[90vh] overflow-y-auto">
+              {selectedTask.gifUrl && <div className="h-48 bg-black shrink-0"><img src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-full object-cover" /></div>}
               <div className="p-6">
                 <button onClick={()=>setSelectedTask(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
                 <h3 className="font-display text-xl font-bold text-white pr-8">{selectedTask.title}</h3>
                 {selectedTask.description && <p className="text-sm text-white/60 mt-2 leading-relaxed">{selectedTask.description}</p>}
+                {selectedTask.video?.url && (
+                  <div className="mt-4 rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
+                    {getYouTubeId(selectedTask.video.url) ? (
+                      <div className="aspect-video">
+                        <YoutubeCustomPlayer videoId={getYouTubeId(selectedTask.video.url)!} title={selectedTask.video.title} />
+                      </div>
+                    ) : (
+                      <div className="aspect-video grid place-items-center bg-white/[0.03] p-6 text-center">
+                        <Film className="w-8 h-8 text-white/30 mb-2"/>
+                        <p className="text-sm text-white/60">{selectedTask.video.title}</p>
+                        <a href={selectedTask.video.url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-[#a78bfa]/20 text-[#c4b5fd]">Otwórz film</a>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="mt-4 flex flex-wrap gap-2">
                   {selectedTask.minutes && <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/60"><Clock className="w-3.5 h-3.5"/>~{selectedTask.minutes} min</span>}
-                  {selectedTask.video?.url && <a href={selectedTask.video.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#c4b5fd] hover:text-white"><Film className="w-3.5 h-3.5"/>{selectedTask.video.title} — Otwórz film</a>}
+                  {selectedTask.video?.url && !getYouTubeId(selectedTask.video.url) && <a href={selectedTask.video.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#c4b5fd] hover:text-white"><Film className="w-3.5 h-3.5"/>{selectedTask.video.title}</a>}
                   {selectedTask.steamMapUrl && <a href={selectedTask.steamMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fda4af]"><MapPin className="w-3.5 h-3.5"/>Mapa Steam</a>}
                 </div>
                 <button onClick={()=>setSelectedTask(null)} className="mt-6 w-full h-11 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-white font-semibold hover:bg-white/[0.1]">Zamknij</button>
