@@ -293,21 +293,35 @@ export function StudentTasksClient() {
                         <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd] flex items-center gap-2"><History className="w-3.5 h-3.5" />Kalendarz treningów</p>
                         {loadingHistory.has(ra.id) ? <Loader2 className="w-4 h-4 animate-spin text-[#c4b5fd]" /> : routineHistory[ra.id] ? <div className="flex items-center gap-3 text-[11px] text-white/50"><span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" />{routineHistory[ra.id].summary.totalDays} dni</span><span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-400" />{routineHistory[ra.id].summary.totalSessions} zadań</span>{routineHistory[ra.id].summary.totalMinutes > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-amber-400" />{routineHistory[ra.id].summary.totalMinutes} min</span>}</div> : <span className="text-[11px] text-white/40">Brak danych</span>}
                       </div>
-                      {routineHistory[ra.id]?.calendar.length > 0 ? (
-                        <div className="grid grid-cols-7 gap-1.5">
-                          {routineHistory[ra.id].calendar.slice(-84).map((day: any) => {
-                            const isFull = day.full ?? (day.count >= (day.tasks?.length || 0) && (day.tasks?.length || 0) > 0)
-                            const total = day.tasks?.length || day.count
-                            return (
-                              <div key={day.date} className={cn('relative aspect-square rounded-xl flex flex-col items-center justify-center text-[10px] font-semibold transition-all', isFull ? 'bg-emerald-500/20 ring-1 ring-emerald-500/40 text-emerald-200' : day.count > 0 ? 'bg-[#a78bfa]/20 ring-1 ring-[#a78bfa]/30 text-white' : 'bg-white/[0.04] text-white/40')} title={`${day.date}: ${day.count} zadań${isFull ? ' ✓ Pełny trening' : day.count>0?' • Niepełny':''}`}>
-                                <span className="text-[11px]">{day.date.split('-')[2]}</span>
-                                <span className="text-[8px] opacity-70">{isFull ? '✓ Pełny' : day.count>0 ? `${day.count}` : '—'}</span>
-                              </div>
-                            )
-                          })}
-                        </div>
+                      {loadingHistory.has(ra.id) ? (
+                        <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-[#a78bfa] mr-2"/>Ładowanie kalendarza…</div>
                       ) : (
-                        <p className="text-sm text-white/40 text-center py-3">{!routineHistory[ra.id] ? 'Ładowanie...' : 'Jeszcze nie wykonano żadnych zadań z tej rutyny.'}</p>
+                        <div>
+                          <div className="grid grid-cols-7 gap-1 text-[10px] text-white/30 text-center mb-1">
+                            {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d}>{d}</span>)}
+                          </div>
+                          <div className="grid grid-cols-7 gap-1.5">
+                            {(() => {
+                              const map = new Map((routineHistory[ra.id]?.calendar || []).map((d:any)=> [d.date, d]))
+                              const today = new Date(); today.setHours(12,0,0,0)
+                              return Array.from({length:84}, (_,idx)=>{
+                                const d = new Date(today); d.setDate(today.getDate() - (83-idx))
+                                const iso = d.toISOString().split('T')[0]
+                                const entry = map.get(iso) as any
+                                const isFuture = d > today
+                                const isToday = iso === new Date().toISOString().split('T')[0]
+                                const isFull = entry?.full ?? (entry && entry.count>0 && entry.count >= (entry.tasks?.length || entry.count))
+                                const count = entry?.count || 0
+                                return (
+                                  <div key={iso} className={cn('relative aspect-square rounded-xl flex flex-col items-center justify-center text-[10px] font-semibold transition-all border', isFuture ? 'bg-transparent border-transparent' : isToday ? 'ring-1 ring-[#a78bfa]/50' : 'border-transparent', isFull ? 'bg-emerald-500/20 ring-1 ring-emerald-500/40 text-emerald-200 border-emerald-500/20' : count>0 ? 'bg-[#a78bfa]/20 ring-1 ring-[#a78bfa]/30 text-white border-[#a78bfa]/20' : !isFuture ? 'bg-white/[0.04] text-white/30 border-white/[0.04]' : '')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny':' • Niepełny') : isFuture?'—':`brak${isToday?' • dziś':''}`} `}>
+                                    <span className={cn('text-[11px]', isToday && !isFull && count===0 && 'text-[#c4b5fd] font-bold')}>{d.getDate()}</span>
+                                    <span className="text-[8px] opacity-70">{isFull ? '✓' : count>0 ? `${count}` : isFuture ? '' : '·'}</span>
+                                  </div>
+                                )
+                              })
+                            })()}
+                          </div>
+                        </div>
                       )}
                       <p className="text-[10px] text-white/30 mt-2 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500/60 ring-1 ring-emerald-500/40"/>pełny trening <span className="w-2 h-2 rounded-full bg-[#a78bfa]/60 ring-1 ring-[#a78bfa]/40"/>częściowy <span className="w-2 h-2 rounded-full bg-white/[0.08]"/>brak</p>
                     </div>
@@ -331,19 +345,18 @@ export function StudentTasksClient() {
                                 return (
                                   <div key={t.id} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
                                     {t.gifUrl && (
-                                      <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-40 sm:w-48 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-20 hidden sm:block">
-                                        <div className="rounded-2xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.9)]">
-                                          <div className="relative h-28 bg-black">
+                                      <div className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 w-36 sm:w-44 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-20 hidden sm:block">
+                                        <div className="rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)]">
+                                          <div className="relative h-24 bg-black">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                            <div className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
                                           </div>
-                                          <div className="px-2.5 py-1.5 bg-[#101316] border-t border-white/[0.06] flex items-center gap-1.5">
+                                          <div className="px-2 py-1 bg-[#101316] border-t border-white/[0.06] flex items-center gap-1">
                                             <ImageIcon className="w-3 h-3 text-[#c4b5fd] shrink-0"/>
-                                            <p className="text-[11px] font-semibold text-white truncate">{t.title}</p>
+                                            <p className="text-[10px] font-semibold text-white truncate">{t.title}</p>
                                           </div>
                                         </div>
-                                        <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#101316] border-l border-b border-white/15" />
+                                        <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#101316] border-l border-b border-white/15" />
                                       </div>
                                     )}
                                     <button onClick={() => toggleRoutineTask(ra, t.id)} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>

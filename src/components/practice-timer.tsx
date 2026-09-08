@@ -150,7 +150,7 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
 
         <div className="relative z-10">
           <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-semibold mb-1">Timer treningowy</p>
-          <h3 className="font-display text-lg font-bold leading-snug text-white/90 line-clamp-2 mb-6">{taskTitle}</h3>
+          <h3 className="font-display text-lg font-bold leading-snug text-white/90 line-clamp-2 mb-6 break-words max-w-full px-2">{taskTitle}</h3>
 
           {/* Ring */}
           <div className="relative mx-auto w-52 h-52">
@@ -195,15 +195,15 @@ export function PracticeTimer({ minutes: defaultMinutes, taskTitle, onComplete, 
                 <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Czas trenera</span>
                 <span className="text-xs font-bold text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-full px-2.5 py-1">{defaultMinutes} min</span>
               </div>
-              <div className="mt-3 flex items-center gap-2">
-                <button onClick={() => setCustomMinutes(Math.max(1, customMinutes - 1))} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition">−</button>
-                <div className="flex-1 flex items-center justify-center gap-1 h-9 rounded-xl bg-[#07060c] border border-white/[0.08]">
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <button onClick={() => setCustomMinutes(Math.max(1, customMinutes - 1))} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition">−</button>
+                <div className="flex-1 min-w-[80px] flex items-center justify-center gap-1 h-9 rounded-xl bg-[#07060c] border border-white/[0.08]">
                   <input type="number" min={1} max={600} value={customMinutes} onChange={e => setCustomMinutes(Math.max(1, parseInt(e.target.value)||1))} className="w-12 bg-transparent text-center text-sm font-bold text-white outline-none" />
                   <span className="text-xs text-white/40">min</span>
                 </div>
-                <button onClick={() => setCustomMinutes(Math.min(600, customMinutes + 1))} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition">+</button>
-                <div className="flex gap-1 ml-1">
-                  {[5,10,15,30].map(v=> <button key={v} onClick={()=>setCustomMinutes(v)} className={cn('px-2 h-9 rounded-xl text-xs font-semibold border', customMinutes===v ? 'bg-[#a78bfa] text-white border-[#a78bfa]' : 'bg-white/[0.03] text-white/50 border-white/[0.06] hover:text-white')}>{v}</button>)}
+                <button onClick={() => setCustomMinutes(Math.min(600, customMinutes + 1))} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition">+</button>
+                <div className="flex gap-1 flex-wrap">
+                  {[5,10,15,30].map(v=> <button key={v} onClick={()=>setCustomMinutes(v)} className={cn('px-2.5 h-8 rounded-xl text-xs font-semibold border shrink-0', customMinutes===v ? 'bg-[#a78bfa] text-white border-[#a78bfa]' : 'bg-white/[0.03] text-white/50 border-white/[0.06] hover:text-white')}>{v}</button>)}
                 </div>
               </div>
             </div>
