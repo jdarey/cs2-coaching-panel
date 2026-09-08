@@ -91,6 +91,13 @@ export function StudentTasksClient() {
     }
   }, [])
 
+  const loadOverallHistory = useCallback(async () => {
+    try {
+      const res = await fetch('/api/routines/history?months=3')
+      if (res.ok) setOverallHistory(await res.json())
+    } catch { /* ignore */ }
+  }, [])
+
   const loadHistory = useCallback(async (assignmentId: string) => {
     setLoadingHistory((prev) => new Set(prev).add(assignmentId))
     try {
@@ -169,8 +176,9 @@ export function StudentTasksClient() {
             return { ...r, progress, status: allDone ? 'COMPLETED' : 'ACTIVE' }
           }),
         )
-        // refresh history after toggle
+        // refresh history after toggle - od razu zalicza dzień w kalendarzu
         loadHistory(ra.id)
+        loadOverallHistory()
       }
     } catch {
       /* ignore */
@@ -251,7 +259,7 @@ export function StudentTasksClient() {
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20"><CalendarDays className="w-5 h-5 text-white"/></span>
             <div>
               <h2 className="font-display text-lg font-bold text-white">Kalendarz treningów</h2>
-              <p className="text-xs text-white/40">Ostatnie 28 dni • zielony = pełny trening, fioletowy = częściowy</p>
+              <p className="text-xs text-white/40">Ostatnie 14 dni • zielony = pełny, fioletowy = częściowy • kliknij dzień</p>
             </div>
             {overallHistory && <div className="ml-auto hidden sm:flex items-center gap-3 text-xs text-white/50"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"/>Pełny</span><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#a78bfa]"/>Częściowy</span><span className="text-white/60 font-semibold">{overallHistory.summary.totalDays} dni • {overallHistory.summary.totalSessions} zadań</span></div>}
           </div>
@@ -266,8 +274,8 @@ export function StudentTasksClient() {
                 {(() => {
                   const map = new Map((overallHistory?.calendar || []).map((d:any)=> [d.date, d]))
                   const today = new Date(); today.setHours(12,0,0,0)
-                  return Array.from({length:28}, (_,idx)=>{
-                    const d = new Date(today); d.setDate(today.getDate() - (27-idx))
+                  return Array.from({length:14}, (_,idx)=>{
+                    const d = new Date(today); d.setDate(today.getDate() - (13-idx))
                     const iso = d.toISOString().split('T')[0]
                     const entry = map.get(iso) as any
                     const isFuture = d > today
