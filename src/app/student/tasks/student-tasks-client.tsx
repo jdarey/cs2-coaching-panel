@@ -27,6 +27,7 @@ import {
   CalendarDays,
   History,
   Image as ImageIcon,
+  X,
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
 
@@ -69,6 +70,7 @@ export function StudentTasksClient() {
   const [loadingHistory, setLoadingHistory] = useState<Set<string>>(new Set())
   const [overallHistory, setOverallHistory] = useState<{ calendar: any[]; summary: any } | null>(null)
   const [loadingOverall, setLoadingOverall] = useState(true)
+  const [selectedDay, setSelectedDay] = useState<{ date: string; entry: any } | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -271,10 +273,10 @@ export function StudentTasksClient() {
                     const isFull = entry?.full
                     const count = entry?.count || 0
                     return (
-                      <div key={iso} className={cn('relative aspect-[4/3] sm:aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 border text-xs font-semibold transition-all', isFuture ? 'bg-transparent border-transparent' : isToday ? 'ring-2 ring-[#a78bfa]/50' : 'border-transparent', isFull ? 'bg-emerald-500/15 ring-1 ring-emerald-500/30 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/15 ring-1 ring-[#a78bfa]/25 text-white' : !isFuture ? 'bg-white/[0.03] text-white/35 border-white/[0.04]' : '')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny':' • Niepełny') : 'brak'}`}>
+                      <button key={iso} disabled={!entry || isFuture} onClick={()=> entry && setSelectedDay({date:iso, entry})} className={cn('relative aspect-[4/3] sm:aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 border text-xs font-semibold transition-all', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa]/50' : 'border-transparent', isFull ? 'bg-emerald-500/15 ring-1 ring-emerald-500/30 text-emerald-200 hover:bg-emerald-500/20' : count>0 ? 'bg-[#a78bfa]/15 ring-1 ring-[#a78bfa]/25 text-white hover:bg-[#a78bfa]/20' : !isFuture ? 'bg-white/[0.03] text-white/35 border-white/[0.04]' : '', entry && 'cursor-pointer hover:scale-[1.03]')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny trening': count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij'}`}>
                         <span className={cn('text-sm', isToday && 'font-black text-[#c4b5fd]')}>{d.getDate()}</span>
-                        <span className="text-[10px] opacity-60">{isFull ? '✓' : count>0 ? `${count}` : '·'}</span>
-                      </div>
+                        <span className="text-[10px] opacity-60">{isFull ? '✓ Pełny' : count>0 ? `${count} • mało` : isFuture ? '' : '·'}</span>
+                      </button>
                     )
                   })
                 })()}
@@ -344,26 +346,21 @@ export function StudentTasksClient() {
                                 const done = tp?.status === 'DONE'
                                 return (
                                   <div key={t.id} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
-                                    {t.gifUrl && (
-                                      <div className="pointer-events-none absolute right-10 sm:right-14 top-1/2 -translate-y-1/2 w-36 sm:w-44 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-20 hidden sm:block">
-                                        <div className="rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)]">
-                                          <div className="relative h-24 bg-black">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                          </div>
-                                          <div className="px-2 py-1 bg-[#101316] border-t border-white/[0.06] flex items-center gap-1">
-                                            <ImageIcon className="w-3 h-3 text-[#c4b5fd] shrink-0"/>
-                                            <p className="text-[10px] font-semibold text-white truncate">{t.title}</p>
-                                          </div>
-                                        </div>
-                                        <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#101316] border-l border-b border-white/15" />
-                                      </div>
-                                    )}
                                     <button onClick={() => toggleRoutineTask(ra, t.id)} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
                                       {togglingTask === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Circle className="w-3.5 h-3.5" />}
                                     </button>
                                     <div className="flex-1 min-w-0">
-                                      <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>{t.title}{t.gifUrl && <span className="inline-flex items-center gap-1 text-[10px] text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-full px-2 py-0.5 group-hover:bg-[#a78bfa]/20 transition-colors"><ImageIcon className="w-3 h-3"/>GIF • najedź</span>}</p>
+                                      <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2 relative', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>{t.title}{t.gifUrl && <span className="inline-flex items-center gap-1 text-[10px] text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-full px-2 py-0.5 group-hover:bg-[#a78bfa]/20 transition-colors"><ImageIcon className="w-3 h-3"/>GIF</span>}{t.gifUrl && (
+                                        <span className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-30">
+                                          <span className="flex items-center rounded-xl overflow-hidden bg-[#0a0c0e] border border-white/15 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.9)] w-44">
+                                            <span className="relative h-24 w-44 bg-black block overflow-hidden rounded-xl">
+                                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                                              <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
+                                            </span>
+                                          </span>
+                                          <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#0a0c0e] border-l border-b border-white/15" />
+                                        </span>
+                                      )}</p>
                                       {t.description && <p className={cn('mt-0.5 text-xs leading-relaxed', done ? 'text-white/30' : 'text-white/45')}>{t.description}</p>}
                                       <div className="mt-2 flex flex-wrap items-center gap-2">
                                         {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Clock className="w-3 h-3" />~{t.minutes} min</span>}
@@ -442,6 +439,28 @@ export function StudentTasksClient() {
               fetch('/api/practice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ minutes: actualMinutes, taskId: activeTimer.task.id, assignmentId: activeTimer.assignment.id }) }).catch(() => undefined)
               toggleRoutineTask(activeTimer.assignment, activeTimer.task.id)
             }} />
+        )}
+
+        {selectedDay && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>setSelectedDay(null)} />
+            <div className="glass-liquid relative w-full max-w-sm rounded-3xl p-6 animate-rise-in">
+              <button onClick={()=>setSelectedDay(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5"><X className="w-4 h-4"/></button>
+              <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-bold">{selectedDay.date}</p>
+              <h3 className="font-display text-lg font-bold text-white mt-1">{selectedDay.entry.full ? '✓ Pełny trening' : selectedDay.entry.count>0 ? '• Za mało — niepełny' : 'Brak treningu'}</h3>
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <span className={cn('px-3 py-1.5 rounded-full border font-semibold', selectedDay.entry.full ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : selectedDay.entry.count>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.03] border-white/[0.06] text-white/40')}>{selectedDay.entry.count} zadań</span>
+                {selectedDay.entry.minutes ? <span className="px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/60 text-xs">{selectedDay.entry.minutes} min</span> : null}
+                {selectedDay.entry.tasks?.length ? <span className="text-white/40 text-xs">{selectedDay.entry.tasks.length} szczegółów</span> : null}
+              </div>
+              {selectedDay.entry.tasks?.length > 0 && (
+                <div className="mt-4 space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {selectedDay.entry.tasks.map((t:any)=> <div key={t.taskId} className="flex items-center gap-2 text-sm bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"><Check className="w-3.5 h-3.5 text-emerald-400 shrink-0"/><span className="truncate text-white/80">{t.title}</span><span className="ml-auto text-[11px] text-white/40">D{t.day}</span></div>)}
+                </div>
+              )}
+              <button onClick={()=>setSelectedDay(null)} className="mt-5 w-full h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/80 hover:text-white text-sm font-semibold">Zamknij</button>
+            </div>
+          </div>
         )}
 
         <div className="pt-4 flex items-center justify-center gap-2 text-[11px] text-white/25 font-medium tracking-wide">
