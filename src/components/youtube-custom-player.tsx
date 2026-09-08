@@ -508,19 +508,18 @@ export function YoutubeCustomPlayer({
           YouTube UI shows. */}
       {!isPlaying && hasPlayed && !isEnded && (
         <div className="absolute inset-0 z-35 pointer-events-none select-none" aria-hidden>
-          {/* Top strip — covers YT's title bar. */}
-          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/90 via-black/45 to-transparent" />
-          {/* Bottom strip — taller and more opaque, covers YT's
-              "Obejrzyj w YouTube" watermark in the bottom-right corner. */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/90 via-black/55 to-transparent" />
-          {/* Center cover — hides YT's big center play button. */}
+          {/* Minimal top strip — only title bar (12px), mostly transparent */}
+          <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-black/40 to-transparent" />
+          {/* Minimal bottom strip — only watermark corner */}
+          <div className="absolute bottom-0 right-0 h-8 w-32 bg-gradient-to-t from-black/40 to-transparent" />
+          {/* Tiny center dot — hides YT play button without covering film */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-black/45 ring-1 ring-white/10" />
+            <div className="w-10 h-10 rounded-full bg-black/20 ring-1 ring-white/5 backdrop-blur-[1px]" />
           </div>
-          <div className="absolute top-4 left-4">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/85 bg-black/60 ring-1 ring-white/15 backdrop-blur-md">
+          <div className="absolute top-2 left-2">
+            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white/70 bg-black/40 ring-1 ring-white/10 backdrop-blur">
               <Pause className="w-3 h-3 text-[#a78bfa]" />
-              Wstrzymano
+              Pauza
             </span>
           </div>
         </div>
