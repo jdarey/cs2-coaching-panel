@@ -277,10 +277,13 @@ export function YoutubeCustomPlayer({
           } catch (_) {}
           setVolume(storedVol.volume)
           setIsMuted(storedVol.muted)
-          // Force disable captions
+          // Force disable captions + hide YT layout (no CC, no endscreen)
           try {
+            event.target.unloadModule('captions')
             event.target.loadModule('captions')
+            event.target.setOption('captions', 'track', {})
             event.target.setOption('captions', 'track', { lang: 'off' })
+            event.target.setOption('cc', 'track', {})
           } catch (_) {}
           // 1080p is already requested via vq at load (see playerVars). We
           // deliberately do NOT call setPlaybackQuality afterwards — it makes
