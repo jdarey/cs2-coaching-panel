@@ -1,0 +1,720 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  COACH
+  STUDENT
+}
+
+enum SessionStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum VideoStatus {
+  PENDING
+  WATCHING
+  WATCHED
+  IMPLEMENTED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  role          Role      @default(STUDENT)
+  avatarUrl     String?
+  // Gaming identities for auto-fetching rank/ELO
+  steamId       String?   // steam64 ID
+  steamVanity   String?   // steam vanity URL name
+  faceitNickname String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Coach relations
+  coachedStudents User[]   @relation("CoachStudent")
+  coach           User?    @relation("CoachStudent", fields: [coachId], references: [id])
+  coachId         String?
+
+  // Sessions
+  sessionsAsCoach   Session[] @relation("SessionCoach")
+  sessionsAsStudent Session[] @relation("SessionStudent")
+
+  // Progress
+  videoProgress VideoProgress[]
+  sessionNotes  SessionNote[]
+  coachSettings CoachSettings?
+
+  // Messages (direct coach <-> student chat)
+  messagesSent     Message[] @relation("MessageSent")
+  messagesReceived Message[] @relation("MessageReceived")
+
+  // Feedback (students -> coach)
+  feedbackGiven    Feedback[] @relation("FeedbackStudent")
+  feedbackReceived Feedback[] @relation("FeedbackCoach")
+
+  // Training assignments (homework) given by coach / received by student
+  assignmentsGiven    Assignment[] @relation("AssignmentCoach")
+  assignmentsReceived Assignment[] @relation("AssignmentStudent")
+
+  // Rank / ELO tracking over time
+  rankEntries RankEntry[]
+
+  // Logged matches (W/L, map, ELO change, reflection)
+  matches MatchLog[]
+
+  // Personal training goals
+  goals Goal[]
+
+  // Leetify skill snapshots over time (aim/positioning/utility/…) — feeds the
+  // weakness-progress chart
+  skillSnapshots SkillSnapshot[]
+
+  // Training routines (structured multi-day programs)
+  routinesAsCoach     Routine[]            @relation("RoutineCoach")
+  routinesAssigned    RoutineAssignment[]  @relation("RoutineAssignCoach")
+  routinesReceived    RoutineAssignment[]  @relation("RoutineAssignStudent")
+
+  // Completed practice timer sessions (logged training time)
+  practiceSessions PracticeSession[]
+
+  // Goals set for coached students
+  goalsCoached Goal[] @relation("GoalCoach")
+
+  // Password reset tokens
+  passwordResetTokens PasswordResetToken[]
+
+  // Coach private notes on students
+  coachNotes    CoachStudentNote[] @relation("CoachNotesAsCoach")
+  studentCoachNotes CoachStudentNote[] @relation("CoachNotesAsStudent")
+  studentInvites    StudentInvite[]
+  sessionTemplates  SessionTemplate[]
+
+  // Skool-style community: announcements the coach publishes + comments on videos
+  announcements Announcement[]
+  videoComments VideoComment[]
+
+  // Training paths (Skool-style courses: ordered modules of videos)
+  trainingPaths TrainingPath[]
+
+  @@index([coachId])
+  @@index([email])
+}
+
+// Coach announcements broadcast to all of their students (Skool-style feed).
+model Announcement {
+  id        String   @id @default(cuid())
+  coachId   String
+  title     String
+  content   String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
+  @@index([createdAt])
+  // Composite: the feed lists one coach's announcements newest-first (pinned).
+  @@index([coachId, createdAt])
+}
+
+// Training path = Skool-style course: ordered modules, each with ordered videos.
+model TrainingPath {
+  id          String            @id @default(cuid())
+  coachId     String
+  title       String
+  description String?
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  coach   User             @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  modules TrainingModule[]
+
+  @@index([coachId])
+}
+
+model TrainingModule {
+  id          String  @id @default(cuid())
+  pathId      String
+  title       String
+  description String? // coach's intro for the whole module
+  order       Int     @default(0)
+
+  path   TrainingPath          @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  videos TrainingModuleVideo[]
+
+  @@index([pathId])
+}
+
+model TrainingModuleVideo {
+  id          String  @id @default(cuid())
+  moduleId    String
+  videoId     String
+  order       Int     @default(0)
+  description String? // coach's per-lesson note (what to focus on, homework, etc.)
+
+  module TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  video  Video          @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, videoId])
+  @@index([moduleId])
+  @@index([videoId])
+}
+
+// Community discussion under a video (students ask, coach answers).
+model VideoComment {
+  id        String   @id @default(cuid())
+  videoId   String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  video  Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+}
+
+model CoachStudentNote {
+  id        String   @id @default(cuid())
+  coachId   String
+  studentId String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coach   User @relation("CoachNotesAsCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student User @relation("CoachNotesAsStudent", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([coachId, studentId])
+}
+
+// Student invitation tokens (magic link)
+model StudentInvite {
+  id        String   @id @default(cuid())
+  coachId   String
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
+}
+
+// Session templates for reusable session structures
+model SessionTemplate {
+  id          String   @id @default(cuid())
+  coachId     String
+  title       String
+  description String?
+  tags        SessionTemplateTag[]
+  videos      SessionTemplateVideo[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
+}
+
+model SessionTemplateTag {
+  id           String   @id @default(cuid())
+  templateId   String
+  tagId        String
+  note         String?
+  order        Int      @default(0)
+
+  template SessionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tag      Tag            @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, tagId])
+  @@index([templateId])
+  @@index([tagId])
+}
+
+model SessionTemplateVideo {
+  id         String   @id @default(cuid())
+  templateId String
+  videoId    String
+  tagId      String?     // which tag this video addresses (optional)
+  order      Int        @default(0)
+
+  template SessionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  video    Video            @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag      Tag?             @relation(fields: [tagId], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
+  @@index([videoId])
+}
+
+// One-time password reset tokens (hashed at rest).
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Direct messages between a coach and one of their students.
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("MessageSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("MessageReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  // Composite: conversations are read as (me ↔ other) pairs ordered by time,
+  // and unread counts filter receiverId + readAt — single-column indexes can't
+  // serve either efficiently once conversations get long.
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, readAt])
+}
+
+// Feedback students send to their coach (session review, suggestion, issue...).
+model Feedback {
+  id          String    @id @default(cuid())
+  studentId   String
+  coachId     String
+  sessionId   String?
+  type        String    @default("GENERAL") // GENERAL | SESSION | SUGGESTION | ISSUE
+  content     String
+  status      String    @default("NEW") // NEW | READ | RESPONDED
+  response    String?
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  student User    @relation("FeedbackStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  coach   User    @relation("FeedbackCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([coachId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String   @default("#3B82F6") // hex color for UI
+  icon        String?  // lucide icon name
+  isGlobal    Boolean  @default(false)     // global tags visible to all coaches
+  coachId     String?  // null = global, set = coach-specific
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  videos      VideoTag[]
+  sessions    SessionTag[]
+  sessionVideos SessionVideo[]
+  templateTags      SessionTemplateTag[]
+  templateVideos    SessionTemplateVideo[]
+
+  @@unique([name, coachId]) // unique per coach
+  @@index([coachId])
+  @@index([isGlobal])
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  url         String   // YouTube, Vimeo, Google Drive, direct link
+  thumbnail   String?  // auto-fetched or manual
+  description String?
+  duration    Int?     // seconds
+  source      String   @default("youtube") // youtube, vimeo, drive, other
+  isActive    Boolean  @default(true)
+  coachId     String   // videos belong to coach
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tags        VideoTag[]
+  progress    VideoProgress[]
+  sessionVideos SessionVideo[]
+  assignments Assignment[]
+  routineTasks RoutineTask[]
+  templateVideos SessionTemplateVideo[]
+  comments    VideoComment[]
+  pathVideos  TrainingModuleVideo[]
+
+  @@index([coachId])
+  @@index([isActive])
+  // Composite: library counts/listing filter coachId + isActive together.
+  @@index([coachId, isActive])
+}
+
+model VideoTag {
+  videoId String
+  tagId   String
+  video   Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag     Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, tagId])
+}
+
+model Session {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  status      SessionStatus @default(DRAFT)
+  scheduledAt DateTime?
+  completedAt DateTime?
+  coachId     String
+  studentId   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  coach       User   @relation("SessionCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student     User   @relation("SessionStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  tags        SessionTag[]
+  videos      SessionVideo[]
+  notes       SessionNote[]
+  videoProgress VideoProgress[]
+  feedback    Feedback[]
+
+  @@index([coachId])
+  @@index([studentId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model SessionTag {
+  id        String   @id @default(cuid())
+  sessionId String
+  tagId     String
+  note      String?  // coach's note for this specific tag in this session
+  order     Int      @default(0)
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, tagId])
+  @@index([sessionId])
+  @@index([tagId])
+}
+
+model SessionVideo {
+  id        String      @id @default(cuid())
+  sessionId String
+  videoId   String
+  tagId     String?     // which tag this video addresses (optional)
+  order     Int         @default(0)
+  session   Session     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  video     Video       @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag       Tag?        @relation(fields: [tagId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([videoId])
+}
+
+model SessionNote {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String   // who wrote it
+  content   String
+  isPrivate Boolean  @default(false) // coach-only notes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model VideoProgress {
+  id        String      @id @default(cuid())
+  userId    String
+  videoId   String
+  sessionId String?
+  status    VideoStatus @default(PENDING)
+  watchedAt DateTime?
+  progress  Float       @default(0) // 0-100%
+  // Seconds where the student last stopped — the in-app player resumes from
+  // this position instead of the beginning.
+  positionSeconds Float?
+  note      String?     // student's personal note
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, videoId, sessionId])
+  @@index([userId])
+  @@index([videoId])
+  @@index([sessionId])
+  // Composite: dashboards list a student's progress ordered by last activity.
+  @@index([userId, updatedAt])
+}
+
+// Training assignment (homework/drill) a coach gives a student.
+// This is the accountability engine competitors lack: structured tasks
+// with due dates, linked to a video, that the student checks off.
+model Assignment {
+  id          String    @id @default(cuid())
+  coachId     String
+  studentId   String
+  title       String
+  description String?
+  videoId     String? // optional linked video to watch/practice
+  dueDate     DateTime?
+  status      String    @default("PENDING") // PENDING | DONE
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  coach   User   @relation("AssignmentCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student User   @relation("AssignmentStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  video   Video? @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@index([coachId])
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// A training routine: a structured multi-day program with per-day tasks.
+// The coach builds it once (title + tasks with day offsets and optional
+// videos) and assigns it to a student, who then works through the days.
+model Routine {
+  id          String   @id @default(cuid())
+  coachId     String
+  title       String
+  description String?
+  // Routines run every day on repeat by default; the coach can turn this off
+  // (one-shot program) or set an end date on the assignment.
+  recurring   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  coach       User                @relation("RoutineCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  tasks       RoutineTask[]
+  assignments RoutineAssignment[]
+
+  @@index([coachId])
+}
+
+model RoutineTask {
+  id          String   @id @default(cuid())
+  routineId   String
+  title       String
+  description String?
+  videoId     String? // optional linked video to watch/practice
+  steamMapUrl String? // optional Steam Workshop map link for the task
+  day         Int      @default(1) // day offset within the routine (1, 2, 3…)
+  minutes     Int?     // estimated practice minutes
+  order       Int      @default(0)
+
+  routine  Routine              @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  video    Video?               @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  progress RoutineTaskProgress[]
+  practice PracticeSession[]
+
+  @@index([routineId])
+}
+
+// A routine assigned to one specific student (their personal copy).
+model RoutineAssignment {
+  id          String   @id @default(cuid())
+  routineId   String
+  coachId     String
+  studentId   String
+  status      String   @default("ACTIVE") // ACTIVE | COMPLETED
+  // Only meaningful for recurring routines: when set, the routine stops
+  // repeating after this date; null = it keeps running every day.
+  endsAt      DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  routine Routine               @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  coach   User                  @relation("RoutineAssignCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  student User                  @relation("RoutineAssignStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  progress RoutineTaskProgress[]
+  practice PracticeSession[]
+
+  @@index([studentId])
+  @@index([coachId])
+}
+
+// Per-task completion inside an assigned routine.
+model RoutineTaskProgress {
+  id           String   @id @default(cuid())
+  assignmentId String
+  taskId       String
+  status       String   @default("PENDING") // PENDING | DONE
+  completedAt  DateTime?
+
+  assignment RoutineAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  task       RoutineTask       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, taskId])
+  @@index([taskId])
+}
+
+// A student's in-game rank / ELO logged over time (Premier, Faceit...).
+// Lets the coach and student watch real progression, not just video completion.
+model RankEntry {
+  id         String   @id @default(cuid())
+  studentId  String
+  mode       String   @default("PREMIER") // PREMIER | FACEIT
+  rank       String   // e.g. 15000 ELO, Level 7, Global Elite...
+  elo        Int?
+  source     String   @default("MANUAL") // FACEIT_LIVE | LEETIFY | MANUAL
+  note       String?
+  recordedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([recordedAt])
+}
+
+// A logged match — the student records result, map and ELO change after
+// each competitive game. Feeds the rank story and gives the coach the
+// accountability view (wins, losses, streaks).
+model MatchLog {
+  id         String   @id @default(cuid())
+  studentId  String
+  map        String   @default("Mirage")
+  result     String   // WIN | LOSS | DRAW
+  eloChange  Int      @default(0)
+  kills      Int?
+  deaths     Int?
+  reflection String? // what went well / what to improve (AI analysis for Faceit matches)
+  source     String   @default("MANUAL") // MANUAL | FACEIT | PREMIER
+  externalId String?  @unique // Leetify game id (dedupe)
+  platformMatchId String? // Faceit match id / Premier share code — used to link to the original match on Faceit
+  syncedSteamId String? // steam64 the match was synced from — used to purge matches when the student switches accounts
+  syncSource    String? // FACEIT_API (na żywo z Faceit) | LEETIFY (fallback — tylko ręcznie dodane) | MANUAL
+  createdAt  DateTime @default(now())
+
+  // Per-match stats from Leetify (Faceit matches) — accurate match numbers
+  leetifyRating      Float?
+  preaim             Float?
+  reactionMs         Float?
+  accuracyEnemySpotted Float?
+  accuracyHead       Float?
+  sprayAccuracy      Float?
+
+  // Coach demo review — notes with timestamps + verdict (the "demo review"
+  // product every top CS2 coach sells: full review + detailed notes + plan)
+  coachNotes     Json?    // [{ time: 214, note: "..." }]
+  coachVerdict   String?  // summary + what cost the match + improvement plan
+  coachReviewedAt DateTime?
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([createdAt])
+  // Composite: the match log lists one student's matches newest-first.
+  @@index([studentId, createdAt])
+}
+
+// A snapshot of the student's Leetify skill ratings at a point in time.
+// Sampled on every Faceit sync so the coach can watch whether
+// aim/positioning/utility improve over the weeks of routines.
+model SkillSnapshot {
+  id          String   @id @default(cuid())
+  studentId   String
+  aim         Float?
+  positioning Float?
+  utility     Float?
+  clutch      Float?
+  opening     Float?
+  reactionMs  Float?
+  createdAt   DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([createdAt])
+}
+
+// A personal training goal set by the student (or coach) — "less is more":
+// a few concrete targets with a deadline, tracked to completion.
+model Goal {
+  id          String   @id @default(cuid())
+  studentId   String
+  coachId     String?
+  title       String
+  target      String? // e.g. "15 000 ELO", "Faceit level 7"
+  deadline    DateTime?
+  status      String   @default("ACTIVE") // ACTIVE | DONE | DROPPED
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  coach   User? @relation("GoalCoach", fields: [coachId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+}
+
+// A completed practice session logged from the training timer (or manually).
+// Lets the student (and coach) see real invested training time over weeks.
+model PracticeSession {
+  id           String   @id @default(cuid())
+  studentId    String
+  taskId       String? // routine task this session practiced (if any)
+  assignmentId String? // routine assignment (if any)
+  minutes      Int      @default(1) // completed practice minutes
+  source       String   @default("TIMER") // TIMER | MANUAL
+  createdAt    DateTime @default(now())
+
+  student    User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  task       RoutineTask?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  assignment RoutineAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([createdAt])
+  // Composite: the practice chart and weekly leaderboard aggregate minutes per
+  // student within a time window.
+  @@index([studentId, createdAt])
+}
+
+// Coach-specific settings (fully customizable)
+model CoachSettings {
+  id                String   @id @default(cuid())
+  coachId           String   @unique
+  defaultTagColors  Json     @default("{}") // tagId -> color override
+  defaultVideoOrder String[] @default([]) // videoId order preference
+  notificationEmail Boolean  @default(false)
+  notificationDiscord Boolean  @default(false)
+  discordWebhook    String?
+  // API keys for automatic rank/ELO fetching (Faceit Open API + Steam Web API)
+  steamApiKey       String?
+  faceitApiKey      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+}
