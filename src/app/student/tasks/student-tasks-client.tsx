@@ -487,8 +487,8 @@ export function StudentTasksClient() {
                                           {t.title}
                                           {t.gifUrl && (
                                         <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-2xl overflow-hidden bg-black border border-white/10 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.75)] w-56">
-                                            <span className="relative h-32 w-56 bg-black block overflow-hidden rounded-2xl">
+                                          <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35),0_8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] w-64">
+                                            <span className="relative h-36 w-64 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                               <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                               <span className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
