@@ -29,10 +29,13 @@ export async function GET(request: NextRequest) {
     const from = new Date(); from.setMonth(from.getMonth()-months); from.setHours(0,0,0,0)
 
     // 1) immutable completions (full days) — survives recurring reset
-    const completionWhere: any = { studentId, completedAt: { gte: from } }
-    if (assignmentId) completionWhere.assignmentId = assignmentId
-    else if (routineId) completionWhere.routineId = routineId
-    const completions = await prisma.routineCompletion.findMany({ where: completionWhere, include: { assignment: { include: { routine: { select: { title: true } } } } }, orderBy: { completedAt: 'asc' } })
+    let completions: any[] = []
+    try {
+      const completionWhere: any = { studentId, completedAt: { gte: from } }
+      if (assignmentId) completionWhere.assignmentId = assignmentId
+      else if (routineId) completionWhere.routineId = routineId
+      completions = await prisma.routineCompletion.findMany({ where: completionWhere, include: { assignment: { include: { routine: { select: { title: true } } } } }, orderBy: { completedAt: 'asc' } })
+    } catch (e) { console.warn('RoutineCompletion table missing, skip', e) }
 
     // 2) current pending progress (for today partial) - filter via assignmentId (progress has no studentId)
     const allStudentAssignments = await prisma.routineAssignment.findMany({ where: { studentId }, select: { id: true } })

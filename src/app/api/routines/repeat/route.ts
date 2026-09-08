@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     if (!assignment) return NextResponse.json({error:'Nie znaleziono'},{status:404})
     await prisma.routineTaskProgress.updateMany({ where: { assignmentId }, data: { status:'PENDING', completedAt:null } })
     await prisma.routineAssignment.update({ where:{id:assignmentId}, data:{status:'ACTIVE', completedAt:null}})
-    const updated = await prisma.routineAssignment.findUnique({ where:{id:assignmentId}, include:{ routine:{include:{tasks:{include:{video:{select:{id:true,title:true,url:true,thumbnail:true}}}, orderBy:[{day:'asc'},{order:'asc'}]}}}, progress:true } })
+    const updated = await prisma.routineAssignment.findUnique({ where:{id:assignmentId}, include:{ routine:{include:{tasks:{select:{id:true,title:true,description:true,videoId:true,steamMapUrl:true,gifUrl:true,day:true,minutes:true,order:true,video:{select:{id:true,title:true,url:true,thumbnail:true}}}, orderBy:[{day:'asc'},{order:'asc'}]}}}, progress:true } })
     return NextResponse.json(updated)
   } catch(e){ console.error(e); return NextResponse.json({error:'Błąd powtarzania'},{status:500})}
 }

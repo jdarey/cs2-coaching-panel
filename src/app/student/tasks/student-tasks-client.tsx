@@ -466,11 +466,11 @@ export function StudentTasksClient() {
 
             {routines.map((ra, i) => {
               const expanded = expandedRoutine === ra.id
-              const doneCountR = ra.progress.filter((p) => p.status === 'DONE').length
-              const totalCount = ra.routine.tasks.length
+              const doneCountR = (ra.progress || []).filter((p: any) => p.status === 'DONE').length
+              const totalCount = (ra.routine.tasks || []).length
               const pct = totalCount > 0 ? Math.round((doneCountR / totalCount) * 100) : 0
               const completed = ra.status === 'COMPLETED'
-              const days = Array.from(new Set(ra.routine.tasks.map((t) => t.day))).sort((a, b) => a - b)
+              const days = Array.from(new Set((ra.routine.tasks || []).map((t: any) => t.day))).sort((a: number, b: number) => a - b)
 
               return (
                 <div key={ra.id} className="glass-liquid rise-in spotlight-card rounded-3xl overflow-hidden transition-all duration-300" style={{ animationDelay: `${i * 70}ms` }} onMouseMove={spotlightHandler}>
@@ -682,7 +682,7 @@ export function StudentTasksClient() {
               </div>
               {selectedDay.entry.tasks?.length > 0 && (
                 <div className="mt-4 space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                  {selectedDay.entry.tasks.map((t:any)=> <div key={t.taskId} className="flex items-center gap-2 text-sm bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"><Check className="w-3.5 h-3.5 text-emerald-400 shrink-0"/><span className="truncate text-white/80">{t.routineTitle ? `${t.routineTitle} — ${t.tasksDone}/${t.tasksTotal}` : t.title}</span><span className="ml-auto text-[11px] text-white/40">{t.routineTitle ? `${t.tasksDone}×` : `D${t.day}`}</span></div>)}
+                  {selectedDay.entry.tasks.map((t:any)=> <div key={t.taskId || t.title} className="flex items-center gap-2 text-sm bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"><Check className="w-3.5 h-3.5 text-emerald-400 shrink-0"/><span className="truncate text-white/80">{t.tasksDone !== undefined ? `${t.routineTitle || 'Rutyna'} — ${t.tasksDone ?? 0}/${t.tasksTotal ?? 0}` : t.title || 'Zadanie'}</span><span className="ml-auto text-[11px] text-white/40">{t.tasksDone !== undefined ? `${t.tasksDone ?? 0}×` : `D${t.day ?? 1}`}</span></div>)}
                 </div>
               )}
               <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">

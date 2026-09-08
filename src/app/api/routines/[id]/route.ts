@@ -28,7 +28,7 @@ const patchSchema = z.object({
 async function getRoutine(id: string, coachId: string) {
   return prisma.routine.findFirst({
     where: { id, coachId },
-    include: { tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+    include: { tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
   })
 }
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     const routine = await prisma.routine.findFirst({
       where: { id },
-      include: { tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+      include: { tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
     })
     if (!routine) {
       return NextResponse.json({ error: 'Rutyna nie znaleziona' }, { status: 404 })
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           recurring: validated.recurring,
         },
         include: {
-          tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] },
+          tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
           // The coach routines UI renders assignments.* right after a save —
           // keep the response shape identical to GET /api/routines.
           assignments: {

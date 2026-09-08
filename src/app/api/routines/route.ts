@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       const routines = await prisma.routine.findMany({
         where: { coachId: userId },
         include: {
-          tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] },
+          tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
           assignments: {
             include: { student: { select: { id: true, name: true, email: true, avatarUrl: true } } },
           },
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       where: { studentId: userId },
       include: {
         routine: {
-          include: { tasks: { include: { video: { select: { id: true, title: true, url: true, thumbnail: true } } }, orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+          include: { tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, day: true, minutes: true, order: true, video: { select: { id: true, title: true, url: true, thumbnail: true } } }, orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
         },
         progress: true,
       },
