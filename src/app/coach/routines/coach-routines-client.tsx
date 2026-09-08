@@ -7,8 +7,8 @@ import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Search, Trash2, Pencil, Loader2, X, Sparkles, UserPlus, ListChecks,
-  CalendarRange, Clock, Film, Check, ChevronDown, PlayCircle, Users, MapPin, Repeat,
-  Image, Zap, GripVertical, BookmarkPlus, FileText,
+  CalendarRange, Clock, Film, Check, ChevronDown, ChevronUp, PlayCircle, Users, MapPin, Repeat,
+  Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
 
@@ -99,17 +99,29 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
     toast({ title: 'Dodano', description: `"${p.title}" dodane do rutyny` })
   }
 
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   const handleDragStart = (idx: number) => setDraggedIdx(idx)
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault()
+  const handleDragOver = (e: React.DragEvent, idx: number) => { e.preventDefault(); setDragOverIdx(idx) }
+  const handleDragLeave = () => setDragOverIdx(null)
   const handleDrop = (idx: number) => {
-    if (draggedIdx === null || draggedIdx === idx) return
+    if (draggedIdx === null || draggedIdx === idx) { setDraggedIdx(null); setDragOverIdx(null); return }
     setTasks(prev => {
       const copy = [...prev]
       const [moved] = copy.splice(draggedIdx, 1)
       copy.splice(idx, 0, moved)
       return copy
     })
-    setDraggedIdx(null)
+    setDraggedIdx(null); setDragOverIdx(null)
+  }
+  const moveTask = (idx: number, dir: -1 | 1) => {
+    const to = idx + dir
+    if (to < 0 || to >= tasks.length) return
+    setTasks(prev => {
+      const copy = [...prev]
+      const [m] = copy.splice(idx, 1)
+      copy.splice(to, 0, m)
+      return copy
+    })
   }
 
   const saveTaskAsPreset = async (t: RoutineTask) => {
@@ -542,9 +554,13 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   </div>
 
                   {tasks.map((t, i) => (
-                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={handleDragOver} onDrop={()=>handleDrop(i)} className={cn("rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4 space-y-3 transition", draggedIdx===i && "opacity-50 ring-2 ring-[#a78bfa]/30")}>
-                      <div className="flex items-center gap-2">
-                        <button type="button" onDragStart={(e)=>{e.stopPropagation(); handleDragStart(i)}} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white/25 hover:text-white hover:bg-white/[0.06] cursor-grab active:cursor-grabbing" aria-label="Przeciągnij by zmienić kolejność"><GripVertical className="w-4 h-4" /></button>
+                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("rounded-2xl bg-white/[0.03] border p-4 space-y-3 transition", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.07] hover:border-white/[0.12]")}>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex flex-col gap-1 shrink-0">
+                          <button type="button" onClick={()=>moveTask(i,-1)} disabled={i===0 || isLoading} className="grid h-6 w-7 place-items-center rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-white disabled:opacity-20 transition"><ChevronUp className="w-3 h-3"/></button>
+                          <button type="button" onClick={()=>moveTask(i,1)} disabled={i===tasks.length-1 || isLoading} className="grid h-6 w-7 place-items-center rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-white disabled:opacity-20 transition"><ChevronDown className="w-3 h-3"/></button>
+                        </div>
+                        <button type="button" draggable onDragStart={(e)=>{e.stopPropagation(); handleDragStart(i)}} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/30 hover:text-white hover:bg-[#a78bfa]/15 hover:border-[#a78bfa]/30 cursor-grab active:cursor-grabbing touch-manipulation transition" title="Przytrzymaj i przeciągnij" aria-label="Przeciągnij by zmienić kolejność"><GripVertical className="w-5 h-5" /></button>
                         <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#a78bfa]/15 text-[#c4b5fd] text-xs font-bold">
                           {i + 1}
                         </span>
@@ -555,7 +571,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           disabled={isLoading}
                           className="h-10 flex-1 min-w-0 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                         />
-                        <button type="button" onClick={()=>saveTaskAsPreset(t)} disabled={isLoading} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#c4b5fd] hover:text-white hover:bg-[#a78bfa]/15 border border-transparent hover:border-[#a78bfa]/20 transition" title="Zapisz jako preset" aria-label="Zapisz jako preset"><BookmarkPlus className="w-4 h-4" /></button>
+                        <button type="button" onClick={()=>saveTaskAsPreset(t)} disabled={isLoading} className="hidden sm:grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#c4b5fd] hover:text-white hover:bg-[#a78bfa]/15 border border-transparent hover:border-[#a78bfa]/20 transition" title="Zapisz jako preset" aria-label="Zapisz jako preset"><BookmarkPlus className="w-4 h-4" /></button>
                         <button
                           type="button"
                           onClick={() => setTasks((prev) => prev.filter((_, idx) => idx !== i))}
