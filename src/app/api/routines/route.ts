@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     if (studentId && studentId !== userId) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
-    const assignments = await prisma.routineAssignment.findMany({
+    let assignments = await prisma.routineAssignment.findMany({
       where: { studentId: userId },
       include: {
         routine: {
@@ -63,6 +63,15 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
     })
+    // Daily reset for recurring routines: if completed yesterday (or earlier), start fresh for today
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0)
+    for (const a of assignments) {
+      if (a.status === 'COMPLETED' && a.routine.recurring && a.completedAt && new Date(a.completedAt) < todayStart && (!a.endsAt || new Date(a.endsAt) > new Date())) {
+        await prisma.routineTaskProgress.updateMany({ where: { assignmentId: a.id }, data: { status: 'PENDING', completedAt: null } })
+        await prisma.routineAssignment.update({ where: { id: a.id }, data: { status: 'ACTIVE', completedAt: null } })
+        a.status = 'ACTIVE'; (a as any).completedAt = null; (a as any).progress = (a as any).progress.map((p:any)=> ({...p, status:'PENDING', completedAt:null}))
+      }
+    }
     return NextResponse.json(assignments)
   } catch (error) {
     console.error('Routines GET error:', error)
