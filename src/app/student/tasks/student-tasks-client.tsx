@@ -73,16 +73,25 @@ export function StudentTasksClient() {
   const [loadingOverall, setLoadingOverall] = useState(true)
   const [selectedDay, setSelectedDay] = useState<{ date: string; entry: any } | null>(null)
   const [selectedTask, setSelectedTask] = useState<RoutineAssignment['routine']['tasks'][number] | null>(null)
+  const [dayNotes, setDayNotes] = useState<Record<string,string>>({})
+  const [noteDraft, setNoteDraft] = useState("")
+  const [savingNote, setSavingNote] = useState(false)
 
   const load = useCallback(async () => {
     try {
-      const [aRes, rRes, hRes] = await Promise.all([fetch('/api/assignments'), fetch('/api/routines'), fetch('/api/routines/history?months=3')])
+      const [aRes, rRes, hRes, nRes] = await Promise.all([fetch('/api/assignments'), fetch('/api/routines'), fetch('/api/routines/history?months=3'), fetch('/api/calendar-notes')])
       if (aRes.ok) setAssignments(await aRes.json())
       if (rRes.ok) {
         const data = await rRes.json()
         setRoutines(data)
       }
       if (hRes.ok) setOverallHistory(await hRes.json())
+      if (nRes.ok) {
+        const notes: any[] = await nRes.json()
+        const map: Record<string,string> = {}
+        notes.forEach((n:any)=> map[n.date]=n.content)
+        setDayNotes(map)
+      }
     } catch {
       /* ignore */
     } finally {
@@ -120,6 +129,38 @@ export function StudentTasksClient() {
   useEffect(() => {
     load()
   }, [load])
+
+  // live tick for reset countdown
+  const [tick, setTick] = useState(Date.now())
+  useEffect(()=>{ const id=setInterval(()=>setTick(Date.now()),1000); return ()=>clearInterval(id)},[])
+  useEffect(()=>{ if(selectedDay) setNoteDraft(dayNotes[selectedDay.date] || "") }, [selectedDay, dayNotes])
+
+  // auto-refresh routines at midnight so recurring daily reset appears without manual reload
+  useEffect(()=>{
+    const d=new Date(tick)
+    if(d.getHours()===0 && d.getMinutes()===0 && d.getSeconds()===0){
+      load(); loadOverallHistory()
+    }
+  }, [tick])
+
+  const saveDayNote = async () => {
+    if (!selectedDay) return
+    setSavingNote(true)
+    try {
+      const res = await fetch('/api/calendar-notes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({date:selectedDay.date, content: noteDraft})})
+      if (res.ok) {
+        const n = await res.json()
+        setDayNotes(prev=> ({...prev, [selectedDay.date]: n.content}))
+        setSelectedDay({...selectedDay, entry: {...selectedDay.entry, note: n.content}})
+      }
+    } finally { setSavingNote(false) }
+  }
+  const deleteDayNote = async () => {
+    if (!selectedDay) return
+    await fetch(`/api/calendar-notes?date=${selectedDay.date}`, {method:'DELETE'})
+    setDayNotes(prev=> { const c={...prev}; delete c[selectedDay.date]; return c })
+    setNoteDraft("")
+  }
 
   const toggle = async (a: Assignment) => {
     setTogglingId(a.id)
@@ -283,9 +324,10 @@ export function StudentTasksClient() {
                     const isFull = entry?.full
                     const count = entry?.count || 0
                     return (
-                      <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso}})} className={cn('relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100 shadow-[0_2px_12px_-4px_rgba(16,185,129,0.3)] hover:bg-emerald-500/25' : count>0 ? 'bg-[#a78bfa]/20 border-[#a78bfa]/30 text-white shadow-[0_2px_12px_-4px_rgba(139,92,246,0.25)] hover:bg-[#a78bfa]/25' : !isFuture ? 'bg-white/[0.06] text-white/50 border-white/[0.08] hover:bg-white/[0.08] cursor-pointer' : '', !isFuture && 'cursor-pointer hover:scale-[1.04] hover:shadow-lg')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny trening': count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij by zobaczyć'}`}>
+                      <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso}})} className={cn('relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-100 shadow-[0_2px_12px_-4px_rgba(16,185,129,0.3)] hover:bg-emerald-500/25' : count>0 ? 'bg-[#a78bfa]/20 border-[#a78bfa]/30 text-white shadow-[0_2px_12px_-4px_rgba(139,92,246,0.25)] hover:bg-[#a78bfa]/25' : !isFuture ? 'bg-white/[0.06] text-white/50 border-white/[0.08] hover:bg-white/[0.08] cursor-pointer' : '', !isFuture && 'cursor-pointer hover:scale-[1.04] hover:shadow-lg')} title={`${iso}: ${count ? count+' zadań'+(isFull?' ✓ Pełny trening': count>0?' • Za mało':'' ) : isFuture?'—':'brak • kliknij by dodać notatkę'}`}>
                         <span className={cn('text-[15px] leading-none', isToday ? 'font-black text-[#c4b5fd] text-base' : 'font-bold')}>{d.getDate()}</span>
                         <span className={cn('text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30')}>{isFull ? 'PEŁNY' : count>0 ? `${count}` : '—'}</span>
+                        {dayNotes[iso] && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" title="Notatka" />}
                       </button>
                     )
                   })
@@ -335,6 +377,11 @@ export function StudentTasksClient() {
                         <span className="text-xs font-semibold text-white/60">{doneCountR}/{totalCount} zadań</span>
                         <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Calendar className="w-3 h-3" />{days.length} {days.length === 1 ? 'dzień' : 'dni'}</span>
                       </div>
+                      {completed && ra.routine.recurring && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full px-2.5 py-1">
+                          <Clock className="w-3 h-3"/> Reset za {(() => { const ms = new Date(new Date(tick).setHours(24,0,0,0)).getTime() - tick; const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); const s=Math.floor((ms%60000)/1000); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`})()} • jutro
+                        </div>
+                      )}
                     </div>
                     <ChevronDown className={cn('w-5 h-5 shrink-0 text-white/35 transition-transform duration-300', expanded && 'rotate-180')} />
                   </button>
@@ -509,11 +556,19 @@ export function StudentTasksClient() {
                 {selectedDay.entry.tasks?.length ? <span className="text-white/40 text-xs">{selectedDay.entry.tasks.length} szczegółów</span> : null}
               </div>
               {selectedDay.entry.tasks?.length > 0 && (
-                <div className="mt-4 space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                <div className="mt-4 space-y-1.5 max-h-32 overflow-y-auto pr-1">
                   {selectedDay.entry.tasks.map((t:any)=> <div key={t.taskId} className="flex items-center gap-2 text-sm bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"><Check className="w-3.5 h-3.5 text-emerald-400 shrink-0"/><span className="truncate text-white/80">{t.title}</span><span className="ml-auto text-[11px] text-white/40">D{t.day}</span></div>)}
                 </div>
               )}
-              <button onClick={()=>setSelectedDay(null)} className="mt-5 w-full h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/80 hover:text-white text-sm font-semibold">Zamknij</button>
+              <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-2 flex items-center gap-1.5"><Calendar className="w-3 h-3"/>Notatka do dnia</p>
+                <textarea value={noteDraft} onChange={e=>setNoteDraft(e.target.value)} placeholder="Dodaj notatkę do tego dnia (np. co poszło dobrze, co poprawić)..." rows={3} className="w-full rounded-xl bg-[#07060c] border border-white/[0.08] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#a78bfa]/30 resize-none" />
+                <div className="flex gap-2 mt-3">
+                  <button onClick={saveDayNote} disabled={savingNote || !noteDraft.trim()} className="flex-1 h-9 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white text-xs font-bold disabled:opacity-40 flex items-center justify-center gap-1.5">{savingNote ? <Loader2 className="w-4 h-4 animate-spin"/> : null} Zapisz notatkę</button>
+                  {dayNotes[selectedDay.date] && <button onClick={deleteDayNote} className="px-4 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-white/60 hover:text-red-300 hover:border-red-500/20">Usuń</button>}
+                </div>
+              </div>
+              <button onClick={()=>setSelectedDay(null)} className="mt-3 w-full h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/80 hover:text-white text-sm font-semibold">Zamknij</button>
             </div>
           </div>
         )}
