@@ -65,6 +65,18 @@ export async function PATCH(request: NextRequest) {
       (routine?.recurring ?? false) && (!assignment.endsAt || assignment.endsAt > new Date())
     let assignmentStatus = assignment.status
     if (doneCount >= taskCount && taskCount > 0) {
+      // log completion for calendar (survives reset)
+      const minutesDone = await prisma.routineTask.aggregate({ where: { routineId: assignment.routineId }, _sum: { minutes: true } })
+      await prisma.routineCompletion.create({
+        data: {
+          assignmentId: validated.assignmentId,
+          routineId: assignment.routineId,
+          studentId: assignment.studentId,
+          tasksDone: doneCount,
+          tasksTotal: taskCount,
+          minutesDone: minutesDone._sum.minutes ?? null,
+        },
+      })
       if (repeat) {
         await prisma.routineTaskProgress.updateMany({
           where: { assignmentId: validated.assignmentId },

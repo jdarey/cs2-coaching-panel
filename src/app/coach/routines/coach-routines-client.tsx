@@ -89,7 +89,14 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const [tasks, setTasks] = useState<RoutineTask[]>([emptyTask(1)])
   const [assignStudentId, setAssignStudentId] = useState('')
   const [assignEndsAt, setAssignEndsAt] = useState('')
+  const [presetPickerOpen, setPresetPickerOpen] = useState(false)
+  const [presetSearch, setPresetSearch] = useState('')
   const { toast } = useToast()
+
+  const addPresetToTasks = (p: ExercisePreset) => {
+    setTasks(prev=> [...prev, { title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, day: 1, minutes: p.minutes }])
+    toast({ title: 'Dodano', description: `"${p.title}" dodane do rutyny` })
+  }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -493,44 +500,19 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                 {/* Tasks builder */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-white/55">Zadania (dzień po dniu)</label>
+                    <label className="text-xs font-medium text-white/55">Zadania (dzień po dniu) — presety to pojedyncze ćwiczenia</label>
                     <div className="flex items-center gap-2">
                       {exercisePresets.length > 0 && (
-                        <div className="relative">
-                          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                          <select
-                            defaultValue=""
-                            onChange={(e) => {
-                              const presetId = e.target.value
-                              if (!presetId) return
-                              const preset = exercisePresets.find((p) => p.id === presetId)
-                              if (preset) {
-                                setTasks((prev) => [
-                                  ...prev,
-                                  {
-                                    title: preset.title,
-                                    description: preset.description,
-                                    videoId: preset.videoId,
-                                    gifUrl: preset.gifUrl,
-                                    steamMapUrl: preset.steamMapUrl,
-                                    day: 1,
-                                    minutes: preset.minutes,
-                                  },
-                                ])
-                              }
-                              e.target.value = ''
-                            }}
-                            disabled={isLoading}
-                            className="h-9 w-48 rounded-xl bg-white/[0.03] border border-white/[0.08] pl-3.5 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition text-white"
-                          >
-                            <option value="">⚡ Z presetów...</option>
-                            {exercisePresets.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.title} {p.minutes ? `~${p.minutes}min` : ''} {p.gifUrl ? '🎬' : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        <>
+                          <button type="button" onClick={()=>setPresetPickerOpen(true)} disabled={isLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3 h-9 text-xs font-bold bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 text-[#c4b5fd] hover:from-[#a78bfa]/30 hover:to-[#8b5cf6]/30 transition"><Zap className="w-3.5 h-3.5"/>Biblioteka presetów ({exercisePresets.length})</button>
+                          <div className="relative hidden sm:block">
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                            <select defaultValue="" onChange={(e)=>{const id=e.target.value;if(!id) return; const p=exercisePresets.find(x=>x.id===id); if(p) addPresetToTasks(p); e.target.value=''}} disabled={isLoading} className="h-9 w-36 rounded-xl bg-white/[0.03] border border-white/[0.08] pl-3 pr-8 text-xs text-white appearance-none outline-none focus:border-[#a78bfa]/40">
+                              <option value="">⚡ Szybko dodaj</option>
+                              {exercisePresets.map(p=> <option key={p.id} value={p.id}>{p.title}</option>)}
+                            </select>
+                          </div>
+                        </>
                       )}
                       <button
                         type="button"
@@ -754,6 +736,39 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {presetPickerOpen && (
+          <div className="fixed inset-0 z-[60] grid place-items-center p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>setPresetPickerOpen(false)} />
+            <div className="glass-liquid relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl flex flex-col">
+              <div className="p-6 border-b border-white/[0.06]">
+                <h3 className="font-display text-xl font-bold text-gradient-violet flex items-center gap-2"><Zap className="w-5 h-5 text-[#a78bfa]"/>Wybierz preset — 1 klik = 1 ćwiczenie w rutynie</h3>
+                <p className="text-xs text-white/45 mt-1">Presety to pojedyncze ćwiczenia z GIF-em. Kliknij Dodaj by wstawić do listy zadań.</p>
+                <div className="relative mt-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40"/>
+                  <input value={presetSearch} onChange={e=>setPresetSearch(e.target.value)} placeholder="Szukaj presetu..." className="w-full h-11 rounded-xl bg-white/[0.04] border border-white/[0.08] pl-10 pr-4 text-sm text-white outline-none focus:border-[#a78bfa]/40" />
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 grid gap-3 sm:grid-cols-2">
+                {exercisePresets.filter(p=> !presetSearch || p.title.toLowerCase().includes(presetSearch.toLowerCase()) || p.tags.some(t=>t.toLowerCase().includes(presetSearch.toLowerCase()))).map(p=> (
+                  <div key={p.id} className="rounded-2xl bg-white/[0.04] border border-white/[0.07] overflow-hidden flex flex-col">
+                    {p.gifUrl && <div className="h-32 bg-black overflow-hidden"><img src={p.gifUrl} alt={p.title} className="w-full h-full object-cover" /></div>}
+                    <div className="p-3 flex-1">
+                      <p className="font-semibold text-white text-sm">{p.title}</p>
+                      {p.description && <p className="text-xs text-white/40 line-clamp-2 mt-1">{p.description}</p>}
+                      <div className="flex gap-1.5 mt-2 flex-wrap">{p.minutes && <span className="text-[11px] px-2 py-1 rounded-full bg-white/[0.06] text-white/60">{p.minutes} min</span>}{p.tags.map(t=> <span key={t} className="text-[10px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd]">{t}</span>)}</div>
+                    </div>
+                    <button onClick={()=> addPresetToTasks(p)} className="m-3 mt-0 inline-flex items-center justify-center gap-1.5 h-9 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white text-xs font-bold hover:opacity-90 transition"><Plus className="w-3.5 h-3.5"/>Dodaj do rutyny</button>
+                  </div>
+                ))}
+                {exercisePresets.filter(p=> !presetSearch || p.title.toLowerCase().includes(presetSearch.toLowerCase())).length===0 && <p className="col-span-2 text-center text-white/40 py-8">Brak wyników — stwórz preset w zakładce Presety</p>}
+              </div>
+              <div className="p-4 border-t border-white/[0.06] flex justify-end">
+                <button onClick={()=>setPresetPickerOpen(false)} className="px-5 h-10 rounded-xl glass-liquid text-white/70">Zamknij</button>
+              </div>
             </div>
           </div>
         )}

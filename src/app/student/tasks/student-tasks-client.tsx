@@ -296,11 +296,12 @@ export function StudentTasksClient() {
                       {routineHistory[ra.id]?.calendar.length > 0 ? (
                         <div className="grid grid-cols-7 gap-1.5">
                           {routineHistory[ra.id].calendar.slice(-84).map((day: any) => {
-                            const isFull = day.count >= day.tasks.length && day.tasks.length > 0
+                            const isFull = day.full ?? (day.count >= (day.tasks?.length || 0) && (day.tasks?.length || 0) > 0)
+                            const total = day.tasks?.length || day.count
                             return (
-                              <div key={day.date} className={cn('relative aspect-square rounded-xl flex flex-col items-center justify-center text-[10px] font-semibold transition-all', isFull ? 'bg-emerald-500/20 ring-1 ring-emerald-500/40 text-emerald-200' : day.count > 0 ? 'bg-[#a78bfa]/20 ring-1 ring-[#a78bfa]/30 text-white' : 'bg-white/[0.04] text-white/40')} title={`${day.date}: ${day.count}/${day.tasks.length} zadań${isFull ? ' ✓ Pełny trening' : day.count>0?' • Niepełny':''}`}>
+                              <div key={day.date} className={cn('relative aspect-square rounded-xl flex flex-col items-center justify-center text-[10px] font-semibold transition-all', isFull ? 'bg-emerald-500/20 ring-1 ring-emerald-500/40 text-emerald-200' : day.count > 0 ? 'bg-[#a78bfa]/20 ring-1 ring-[#a78bfa]/30 text-white' : 'bg-white/[0.04] text-white/40')} title={`${day.date}: ${day.count} zadań${isFull ? ' ✓ Pełny trening' : day.count>0?' • Niepełny':''}`}>
                                 <span className="text-[11px]">{day.date.split('-')[2]}</span>
-                                <span className="text-[8px] opacity-70">{isFull ? '✓' : day.count>0 ? `${day.count}/${day.tasks.length}` : '—'}</span>
+                                <span className="text-[8px] opacity-70">{isFull ? '✓ Pełny' : day.count>0 ? `${day.count}` : '—'}</span>
                               </div>
                             )
                           })}

@@ -581,6 +581,7 @@ model RoutineAssignment {
   student User                  @relation("RoutineAssignStudent", fields: [studentId], references: [id], onDelete: Cascade)
   progress RoutineTaskProgress[]
   practice PracticeSession[]
+  completions RoutineCompletion[]
 
   @@index([studentId])
   @@index([coachId])
@@ -599,6 +600,25 @@ model RoutineTaskProgress {
 
   @@unique([assignmentId, taskId])
   @@index([taskId])
+}
+
+// Immutable log of a completed routine day — survives the recurring reset
+model RoutineCompletion {
+  id           String   @id @default(cuid())
+  assignmentId String
+  routineId    String
+  studentId    String
+  completedAt  DateTime @default(now())
+  tasksDone    Int
+  tasksTotal   Int
+  minutesDone  Int?
+
+  assignment RoutineAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([completedAt])
+  @@index([studentId, completedAt])
 }
 
 // A student's in-game rank / ELO logged over time (Premier, Faceit...).
