@@ -452,7 +452,10 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               return (
                 <article
                   key={video.id}
-                  onMouseEnter={() => setPreviewId(video.id)}
+                  onMouseEnter={() => {
+                    const hasPrev = !!(getYouTubeId(video.url) || /vimeo\.com\/\d+/.test(video.url))
+                    if (hasPrev) setPreviewId(video.id)
+                  }}
                   onMouseLeave={() => setPreviewId(null)}
                   className="glass-liquid rise-in spotlight-card sheen group relative flex flex-col rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_60px_-20px_rgba(139,92,246,0.35)]"
                   style={{ animationDelay: `${i * 70}ms` }}
@@ -462,30 +465,57 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
                   }}
                 >
-                  {/* Thumbnail - hover preview like YT */}
-                  <Link href={`/coach/videos/${video.id}`} className="relative aspect-video overflow-hidden rounded-3xl ring-1 ring-white/10 block">
-                    <div className="absolute inset-0">
-                      {previewId === video.id && getYouTubeId(video.url) ? (
-                        <iframe
-                          src={`https://www.youtube-nocookie.com/embed/${getYouTubeId(video.url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(video.url)}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`}
-                          className="h-full w-full pointer-events-none"
-                          allow="autoplay; encrypted-media"
-                          title={video.title}
-                        />
-                      ) : video.thumbnail ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={video.thumbnail}
-                          alt={video.title}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
-                      ) : (
-                        <div className="grid h-full w-full place-items-center bg-gradient-to-br from-white/[0.04] to-white/[0.01]">
-                          <Play className="h-10 w-10 text-white/25" />
-                        </div>
+                  {/* Thumbnail — hover odtwarza sam film bez UI YT (chromeless) */}
+                  <Link href={`/coach/videos/${video.id}`} className="relative aspect-video overflow-hidden rounded-3xl ring-1 ring-white/10 block bg-black">
+                    <div className="absolute inset-0 overflow-hidden bg-black">
+                      {(() => {
+                        const yt = getYouTubeId(video.url)
+                        const vimeo = video.url.match(/vimeo\.com\/(\d+)/)?.[1]
+                        const isHover = previewId === video.id
+                        if (isHover && yt) {
+                          return (
+                            <iframe
+                              src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&controls=0&loop=1&playlist=${yt}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
+                              className="absolute inset-0 w-full h-full pointer-events-none scale-[1.35] origin-center"
+                              allow="autoplay; encrypted-media"
+                              title=""
+                              tabIndex={-1}
+                              loading="eager"
+                            />
+                          )
+                        }
+                        if (isHover && vimeo) {
+                          return (
+                            <iframe
+                              src={`https://player.vimeo.com/video/${vimeo}?background=1&autoplay=1&muted=1&loop=1&autopause=0&byline=0&title=0&portrait=0`}
+                              className="absolute inset-0 w-full h-full pointer-events-none"
+                              allow="autoplay; encrypted-media"
+                              title=""
+                              tabIndex={-1}
+                            />
+                          )
+                        }
+                        return null
+                      })()}
+                      {previewId !== video.id ? (
+                        video.thumbnail ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center bg-gradient-to-br from-white/[0.04] to-white/[0.01]">
+                            <Play className="h-10 w-10 text-white/25" />
+                          </div>
+                        )
+                      ) : null}
+                      {/* gradient tylko gdy nie ma preview — nie przyciemnia filmu */}
+                      {previewId !== video.id && (
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#a78bfa]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       )}
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#a78bfa]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       {previewId !== video.id && (
                         <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full bg-black/60 backdrop-blur border border-white/10 text-white text-xs font-semibold"><Play className="w-4 h-4"/> Odtwórz</span>

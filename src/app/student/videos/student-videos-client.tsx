@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { formatDate, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl } from '@/lib/utils'
+import { formatDate, VIDEO_STATUS_LABELS, VIDEO_STATUS_COLORS, cn, getVideoEmbedUrl, getYouTubeId } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
@@ -77,6 +77,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'watching' | 'watched' | 'implemented'>('all')
   const [search, setSearch] = useState('')
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
   const [videoProgressDialog, setVideoProgressDialog] = useState<{ video: typeof allVideos[0]; sessionTitle: string; progress: Progress | undefined } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
@@ -376,16 +377,48 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
 
               const ringOffset = circumference * (1 - prog / 100)
 
+              const cardKey = `${item.sessionId}-${video.id}`
+              const ytId = getYouTubeId(video.url)
+              const vimeoId = (() => { const m = video.url.match(/vimeo\.com\/(\d+)/); return m ? m[1] : null })()
+              const isHovered = hoveredKey === cardKey
+              const hasPreview = !!(ytId || vimeoId)
+
               return (
                 <div
-                  key={`${item.sessionId}-${video.id}`}
+                  key={cardKey}
+                  onMouseEnter={() => { if (hasPreview) setHoveredKey(cardKey) }}
+                  onMouseLeave={() => setHoveredKey(null)}
                   className="glass-liquid rise-in sheen rounded-3xl relative overflow-hidden group hover:border-[#a78bfa]/30 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_56px_-20px_rgba(139,92,246,0.35)]" style={{
                     animationDelay: `${Math.min(idx * 60, 600)}ms`,
                   }}
                 >
-                  {/* ===== Thumbnail (16:9) ===== */}
-                  <div className="relative aspect-video rounded-3xl overflow-hidden ring-1 ring-white/10">
-                    {video.thumbnail ? (
+                  {/* ===== Thumbnail (16:9) — hover = czysty film bez UI YT ===== */}
+                  <div className="relative aspect-video rounded-3xl overflow-hidden ring-1 ring-white/10 bg-black">
+                    {/* Hover preview — muted autoplay, chromeless (controls=0, bez tytułu/share/logo) */}
+                    {isHovered && hasPreview ? (
+                      <div className="absolute inset-0 overflow-hidden bg-black">
+                        {ytId ? (
+                          <iframe
+                            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
+                            className="absolute inset-0 w-full h-full pointer-events-none scale-[1.35] origin-center"
+                            allow="autoplay; encrypted-media"
+                            title=""
+                            tabIndex={-1}
+                            loading="eager"
+                          />
+                        ) : vimeoId ? (
+                          <iframe
+                            src={`https://player.vimeo.com/video/${vimeoId}?background=1&autoplay=1&muted=1&loop=1&autopause=0&byline=0&title=0&portrait=0`}
+                            className="absolute inset-0 w-full h-full pointer-events-none scale-[1.02]"
+                            allow="autoplay; encrypted-media"
+                            title=""
+                            tabIndex={-1}
+                          />
+                        ) : null}
+                        {/* klik przechodzi przez preview do szczegółów */}
+                        <Link href={`/student/videos/${video.id}`} className="absolute inset-0 z-10" aria-label={`Odtwórz: ${video.title}`} />
+                      </div>
+                    ) : video.thumbnail ? (
                       <img
                         src={video.thumbnail}
                         alt={video.title}
@@ -398,14 +431,16 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       </div>
                     )}
 
-                    {/* gradient overlay on hover */}
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{ background: 'linear-gradient(180deg, rgba(45,229,202,0.40) 0%, rgba(6,7,13,0) 60%)' }}
-                    />
+                    {/* gradient overlay on hover — ukryty podczas preview żeby nie przyciemniać filmu */}
+                    {!isHovered && (
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                        style={{ background: 'linear-gradient(180deg, rgba(45,229,202,0.40) 0%, rgba(6,7,13,0) 60%)' }}
+                      />
+                    )}
 
                     {/* Status badge pill — top-left */}
-                    <div className="absolute top-2.5 left-2.5">
+                    <div className="absolute top-2.5 left-2.5 z-20 pointer-events-none">
                       <span
                         className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ring-1 backdrop-blur-md"
                         style={{
@@ -421,18 +456,18 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                     </div>
 
                     {/* Duration — bottom-right */}
-                    <div className="absolute bottom-2.5 right-2.5">
+                    <div className="absolute bottom-2.5 right-2.5 z-20 pointer-events-none">
                       <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold text-white/85 bg-black/55 backdrop-blur-md ring-1 ring-white/10 tabular-nums">
                         <Clock className="h-2.5 w-2.5" />
                         {formatDuration(video.duration)}
                       </span>
                     </div>
 
-                    {/* Play overlay (center) — only when playable embed URL */}
-                    {embedUrl && (
+                    {/* Play overlay (center) — ukryty podczas preview (już gra) */}
+                    {embedUrl && !isHovered && (
                       <Link
                         href={`/student/videos/${video.id}`}
-                        className="absolute inset-0 grid place-items-center"
+                        className="absolute inset-0 grid place-items-center z-10"
                         aria-label={`Odtwórz: ${video.title}`}
                       >
                         <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
