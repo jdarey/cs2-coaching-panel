@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn, getYouTubeId } from '@/lib/utils'
 import { StudentPicker } from '@/components/student-picker'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
@@ -80,6 +80,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   const [assigningVideo, setAssigningVideo] = useState<Video | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'youtube' | 'vimeo' | 'drive' | 'other'>('all')
+  const [previewId, setPreviewId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     url: '',
@@ -451,6 +452,8 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
               return (
                 <article
                   key={video.id}
+                  onMouseEnter={() => setPreviewId(video.id)}
+                  onMouseLeave={() => setPreviewId(null)}
                   className="glass-liquid rise-in spotlight-card sheen group relative flex flex-col rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_60px_-20px_rgba(139,92,246,0.35)]"
                   style={{ animationDelay: `${i * 70}ms` }}
                   onMouseMove={(e) => {
@@ -459,10 +462,17 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
                   }}
                 >
-                  {/* Thumbnail - clickable to watch */}
+                  {/* Thumbnail - hover preview like YT */}
                   <Link href={`/coach/videos/${video.id}`} className="relative aspect-video overflow-hidden rounded-3xl ring-1 ring-white/10 block">
                     <div className="absolute inset-0">
-                      {video.thumbnail ? (
+                      {previewId === video.id && getYouTubeId(video.url) ? (
+                        <iframe
+                          src={`https://www.youtube-nocookie.com/embed/${getYouTubeId(video.url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(video.url)}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&vq=hd1080`}
+                          className="h-full w-full pointer-events-none"
+                          allow="autoplay; encrypted-media"
+                          title={video.title}
+                        />
+                      ) : video.thumbnail ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={video.thumbnail}
@@ -476,9 +486,11 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         </div>
                       )}
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#a78bfa]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full bg-black/60 backdrop-blur border border-white/10 text-white text-xs font-semibold"><Play className="w-4 h-4"/> Odtwórz</span>
-                      </div>
+                      {previewId !== video.id && (
+                        <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full bg-black/60 backdrop-blur border border-white/10 text-white text-xs font-semibold"><Play className="w-4 h-4"/> Odtwórz</span>
+                        </div>
+                      )}
                     </div>
                     <div className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/50 ring-1 ring-white/15 text-white">
                       <Clock className="h-3 w-3" />
@@ -496,10 +508,10 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     </button>
                   </div>
 
-                  {/* Body */}
+                  {/* Body - title hidden on hover when preview plays */}
                   <div className="flex flex-1 flex-col p-5 pt-3">
                     <Link href={`/coach/videos/${video.id}`} className="block">
-                      <h3 className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet transition-colors rounded">
+                      <h3 className={`font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 transition-all duration-300 rounded ${previewId === video.id ? 'opacity-0' : 'group-hover:text-gradient-violet'}`}>
                         {video.title}
                       </h3>
                     </Link>

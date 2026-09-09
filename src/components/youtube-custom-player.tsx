@@ -35,9 +35,8 @@ const saveVolume = (volume: number, muted: boolean) => {
   try { localStorage.setItem(VOLUME_KEY, JSON.stringify({ volume, muted })) } catch (_) {}
 }
 
-// Playback quality locked to highest available — no selector, no YouTube UI. `vq`
-// requests it at URL level (honored at load) — 'highres' = max (4K if exists, else 1080p)
-const FORCED_QUALITY = 'highres'
+// Playback quality locked to 1080p — crisp but stable, no rebuffer
+const FORCED_QUALITY = 'hd1080'
 const formatTime = (s: number) => {
   if (!isFinite(s) || s < 0) return '0:00'
   const m = Math.floor(s / 60)
@@ -287,12 +286,12 @@ export function YoutubeCustomPlayer({
             event.target.setOption('captions', 'track', { lang: 'off' })
             event.target.setOption('cc', 'track', {})
           } catch (_) {}
-          // Zawsze najwyższa jakość — wymuś highres i pilnuj by ABR nie zszedł niżej
-          try { event.target.setPlaybackQuality('highres'); event.target.setPlaybackQualityRange('highres','highres') } catch (_) {}
+          // Zawsze 1080p — stabilna, nie rebufferuje
+          try { event.target.setPlaybackQuality('hd1080'); event.target.setPlaybackQualityRange('hd1080','hd1080') } catch (_) {}
         },
         onStateChange: (event: any) => applyPlayerState(event.data, event.target),
         onPlaybackQualityChange: (e: any) => {
-          try { if (e.data !== 'highres') e.target.setPlaybackQuality('highres') } catch {}
+          try { if (e.data !== 'hd1080') e.target.setPlaybackQuality('hd1080') } catch {}
         },
       },
     })
