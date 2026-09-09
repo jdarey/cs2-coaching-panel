@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, RotateCcw, Loader2 } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, RotateCcw, Loader2, Captions, CaptionsOff } from 'lucide-react'
 import { useContentProtection } from './use-content-protection'
 import { ContentProtectionOverlay } from './content-protection-overlay'
 
@@ -66,6 +66,7 @@ export function YoutubeCustomPlayer({
   const [volume,       setVolume]       = useState(() => loadVolume().volume)
   const [isMuted,      setIsMuted]      = useState(() => loadVolume().muted)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [captionsOn, setCaptionsOn] = useState(false)
   const [showControls, setShowControls]  = useState(true)
   // Opaque pre-play poster (the video's own thumbnail) so nothing YouTube
   // draws behind it — thumbnail, watermark, play button — is ever visible
@@ -441,6 +442,22 @@ export function YoutubeCustomPlayer({
     }
     resetControlsTimer()
   }
+  const toggleCaptions = () => {
+    const p = playerRef.current
+    if (!p) return
+    const next = !captionsOn
+    setCaptionsOn(next)
+    try {
+      if (next) {
+        p.loadModule('captions')
+        p.setOption('captions', 'track', { languageCode: 'pl' })
+      } else {
+        p.unloadModule('captions')
+        p.setOption('captions', 'track', {})
+      }
+    } catch {}
+    resetControlsTimer()
+  }
 
   const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0
 
@@ -554,16 +571,16 @@ export function YoutubeCustomPlayer({
       {/* CONTENT PROTECTION — DevTools blocker and capture-warning toast */}
       <ContentProtectionOverlay devtoolsOpen={devtoolsOpen} captureWarn={captureWarn} />
 
-      {/* Premium subtle watermark — ultra low opacity, not distracting, deters sharing */}
+      {/* Premium subtle watermark — slightly higher to cover YT logo, not distracting */}
       {watermark && (
         <>
-          <div className="absolute bottom-3 right-3 z-30 pointer-events-none select-none">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/25 backdrop-blur-md border border-white/10 text-[10px] font-medium tracking-wider text-white/25">
-              <span className="w-1 h-1 rounded-full bg-white/20" />
+          <div className="absolute bottom-5 right-3 z-30 pointer-events-none select-none">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/35 backdrop-blur-md border border-white/10 text-[10px] font-medium tracking-wider text-white/35">
+              <span className="w-1 h-1 rounded-full bg-white/25" />
               {watermark}
             </span>
           </div>
-          <div className="absolute inset-0 z-10 pointer-events-none select-none overflow-hidden opacity-[0.025]">
+          <div className="absolute inset-0 z-10 pointer-events-none select-none overflow-hidden opacity-[0.03]">
             <div className="absolute inset-0 flex items-center justify-center -rotate-12">
               <span className="text-6xl font-black tracking-[0.2em] text-white whitespace-nowrap select-none" style={{ fontFamily: 'monospace' }}>
                 {watermark} • {watermark} • {watermark}
@@ -613,6 +630,9 @@ export function YoutubeCustomPlayer({
             <span className="text-[11px] font-medium text-white/70 select-none">
               {formatTime(currentTime)} <span className="text-white/30">/</span> {formatTime(duration)}
             </span>
+            <button onClick={toggleCaptions} className={`text-white hover:text-[#a78bfa] transition-colors outline-none cursor-pointer ${captionsOn ? 'text-[#a78bfa]' : ''}`} title={captionsOn ? 'Wyłącz napisy' : 'Włącz napisy'} aria-label={captionsOn ? 'Wyłącz napisy' : 'Włącz napisy'}>
+              {captionsOn ? <Captions className="w-5 h-5" /> : <CaptionsOff className="w-5 h-5 opacity-60" />}
+            </button>
           </div>
 
           <div className="flex items-center gap-3">
