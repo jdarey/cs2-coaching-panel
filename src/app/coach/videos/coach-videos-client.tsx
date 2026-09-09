@@ -476,7 +476,8 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                           return (
                             <iframe
                               src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&controls=0&loop=1&playlist=${yt}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
-                              className="absolute left-1/2 top-1/2 w-[156%] h-[156%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                              className="absolute pointer-events-none"
+                              style={{ left: '50%', top: '50%', width: '178%', height: '178%', transform: 'translate(-50%,-50%)' }}
                               allow="autoplay; encrypted-media"
                               title=""
                               tabIndex={-1}
