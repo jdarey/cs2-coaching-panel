@@ -8,6 +8,7 @@ import { ContentProtectionOverlay } from './content-protection-overlay'
 interface YoutubeCustomPlayerProps {
   videoId: string
   title?: string
+  watermark?: string
   // Resume point (seconds) — the player starts here instead of 0.
   initialStartSeconds?: number
   // Called while watching (throttled to ~5s), on pause, on video end and on
@@ -47,6 +48,7 @@ const formatTime = (s: number) => {
 export function YoutubeCustomPlayer({
   videoId,
   title = 'Wideo',
+  watermark,
   initialStartSeconds = 0,
   onProgressChange,
 }: YoutubeCustomPlayerProps) {
@@ -549,9 +551,27 @@ export function YoutubeCustomPlayer({
         </div>
       )}
 
-      {/* CONTENT PROTECTION — DevTools blocker and capture-warning toast
-          (shared layer, same as the raw-embed wrapper). No watermark. */}
+      {/* CONTENT PROTECTION — DevTools blocker and capture-warning toast */}
       <ContentProtectionOverlay devtoolsOpen={devtoolsOpen} captureWarn={captureWarn} />
+
+      {/* Premium subtle watermark — ultra low opacity, not distracting, deters sharing */}
+      {watermark && (
+        <>
+          <div className="absolute bottom-3 right-3 z-30 pointer-events-none select-none">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/25 backdrop-blur-md border border-white/10 text-[10px] font-medium tracking-wider text-white/25">
+              <span className="w-1 h-1 rounded-full bg-white/20" />
+              {watermark}
+            </span>
+          </div>
+          <div className="absolute inset-0 z-10 pointer-events-none select-none overflow-hidden opacity-[0.025]">
+            <div className="absolute inset-0 flex items-center justify-center -rotate-12">
+              <span className="text-6xl font-black tracking-[0.2em] text-white whitespace-nowrap select-none" style={{ fontFamily: 'monospace' }}>
+                {watermark} • {watermark} • {watermark}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Our controls bar — slim, subtle; no big black slab, no quality menu. */}
       <div
