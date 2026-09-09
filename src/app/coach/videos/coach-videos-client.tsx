@@ -81,6 +81,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'youtube' | 'vimeo' | 'drive' | 'other'>('all')
   const [previewId, setPreviewId] = useState<string | null>(null)
+  const [loadedPreview, setLoadedPreview] = useState<Set<string>>(new Set())
   const [formData, setFormData] = useState({
     title: '',
     url: '',
@@ -474,26 +475,40 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         const isHover = previewId === video.id
                         if (isHover && yt) {
                           return (
-                            <iframe
-                              src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0&vq=hd720`}
-                              className="absolute pointer-events-none"
-                              style={{ left: 0, top: '-16%', width: '100%', height: '122%' }}
-                              allow="autoplay; encrypted-media"
-                              title=""
-                              tabIndex={-1}
-                              loading="eager"
-                            />
+                            <>
+                              <iframe
+                                src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0&vq=hd720`}
+                                className="absolute pointer-events-none"
+                                style={{ left: 0, top: '-18%', width: '100%', height: '122%' }}
+                                allow="autoplay; encrypted-media"
+                                title=""
+                                tabIndex={-1}
+                                loading="eager"
+                                onLoad={() => setLoadedPreview((s) => new Set(s).add(video.id))}
+                              />
+                              {!loadedPreview.has(video.id) && video.thumbnail && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                              )}
+                            </>
                           )
                         }
                         if (isHover && vimeo) {
                           return (
-                            <iframe
-                              src={`https://player.vimeo.com/video/${vimeo}?background=1&autoplay=1&muted=1&loop=1&autopause=0&byline=0&title=0&portrait=0`}
-                              className="absolute inset-0 w-full h-full pointer-events-none"
-                              allow="autoplay; encrypted-media"
-                              title=""
-                              tabIndex={-1}
-                            />
+                            <>
+                              <iframe
+                                src={`https://player.vimeo.com/video/${vimeo}?background=1&autoplay=1&muted=1&loop=1&autopause=0&byline=0&title=0&portrait=0`}
+                                className="absolute inset-0 w-full h-full pointer-events-none"
+                                allow="autoplay; encrypted-media"
+                                title=""
+                                tabIndex={-1}
+                                onLoad={() => setLoadedPreview((s) => new Set(s).add(video.id))}
+                              />
+                              {!loadedPreview.has(video.id) && video.thumbnail && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                              )}
+                            </>
                           )
                         }
                         return null

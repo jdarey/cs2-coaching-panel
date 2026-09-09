@@ -78,6 +78,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
   const [search, setSearch] = useState('')
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const [loadedPreview, setLoadedPreview] = useState<Set<string>>(new Set())
   const [videoProgressDialog, setVideoProgressDialog] = useState<{ video: typeof allVideos[0]; sessionTitle: string; progress: Progress | undefined } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
@@ -394,18 +395,19 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                 >
                   {/* ===== Thumbnail (16:9) — hover = czysty film bez UI YT ===== */}
                   <div className="relative aspect-video rounded-3xl overflow-hidden ring-1 ring-white/10 bg-black">
-                    {/* Hover preview — muted autoplay, chromeless (controls=0, bez tytułu/share/logo) */}
+                    {/* Hover preview — muted autoplay, bez UI */}
                     {isHovered && hasPreview ? (
                       <div className="absolute inset-0 overflow-hidden bg-black">
                         {ytId ? (
                           <iframe
                             src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0&vq=hd720`}
                             className="absolute pointer-events-none"
-                            style={{ left: 0, top: '-16%', width: '100%', height: '122%' }}
+                            style={{ left: 0, top: '-18%', width: '100%', height: '122%' }}
                             allow="autoplay; encrypted-media"
                             title=""
                             tabIndex={-1}
                             loading="eager"
+                            onLoad={() => setLoadedPreview((s) => new Set(s).add(cardKey))}
                           />
                         ) : vimeoId ? (
                           <iframe
@@ -414,9 +416,13 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                             allow="autoplay; encrypted-media"
                             title=""
                             tabIndex={-1}
+                            onLoad={() => setLoadedPreview((s) => new Set(s).add(cardKey))}
                           />
                         ) : null}
-                        {/* klik przechodzi przez preview do szczegółów */}
+                        {/* przykryj YT thumbnail/play button do czasu autoplay - potem znika */}
+                        {!loadedPreview.has(cardKey) && video.thumbnail && (
+                          <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                        )}
                         <Link href={`/student/videos/${video.id}`} className="absolute inset-0 z-10" aria-label={`Odtwórz: ${video.title}`} />
                       </div>
                     ) : video.thumbnail ? (
