@@ -571,23 +571,14 @@ export function YoutubeCustomPlayer({
       {/* CONTENT PROTECTION — DevTools blocker and capture-warning toast */}
       <ContentProtectionOverlay devtoolsOpen={devtoolsOpen} captureWarn={captureWarn} />
 
-      {/* Premium subtle watermark — slightly higher to cover YT logo, not distracting */}
+      {/* Premium corner watermark only — no large diagonal */}
       {watermark && (
-        <>
-          <div className="absolute bottom-5 right-3 z-30 pointer-events-none select-none">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/35 backdrop-blur-md border border-white/10 text-[10px] font-medium tracking-wider text-white/35">
-              <span className="w-1 h-1 rounded-full bg-white/25" />
-              {watermark}
-            </span>
-          </div>
-          <div className="absolute inset-0 z-10 pointer-events-none select-none overflow-hidden opacity-[0.03]">
-            <div className="absolute inset-0 flex items-center justify-center -rotate-12">
-              <span className="text-6xl font-black tracking-[0.2em] text-white whitespace-nowrap select-none" style={{ fontFamily: 'monospace' }}>
-                {watermark} • {watermark} • {watermark}
-              </span>
-            </div>
-          </div>
-        </>
+        <div className="absolute bottom-5 right-3 z-30 pointer-events-none select-none">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/35 backdrop-blur-md border border-white/10 text-[10px] font-medium tracking-wider text-white/35">
+            <span className="w-1 h-1 rounded-full bg-white/25" />
+            {watermark}
+          </span>
+        </div>
       )}
 
       {/* Our controls bar — slim, subtle; no big black slab, no quality menu. */}
