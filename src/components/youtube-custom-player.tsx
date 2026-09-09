@@ -287,13 +287,13 @@ export function YoutubeCustomPlayer({
             event.target.setOption('captions', 'track', { lang: 'off' })
             event.target.setOption('cc', 'track', {})
           } catch (_) {}
-          // 1080p is already requested via vq at load (see playerVars). We
-          // deliberately do NOT call setPlaybackQuality afterwards — it makes
-          // YouTube re-initialise the stream, which drops the resume position
-          // and briefly pauses playback. vq is honored at load and ABR keeps
-          // it at 1080p unless the connection genuinely can't hold it.
+          // Zawsze najwyższa jakość — wymuś highres i pilnuj by ABR nie zszedł niżej
+          try { event.target.setPlaybackQuality('highres'); event.target.setPlaybackQualityRange('highres','highres') } catch (_) {}
         },
         onStateChange: (event: any) => applyPlayerState(event.data, event.target),
+        onPlaybackQualityChange: (e: any) => {
+          try { if (e.data !== 'highres') e.target.setPlaybackQuality('highres') } catch {}
+        },
       },
     })
 
