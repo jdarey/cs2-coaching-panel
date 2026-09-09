@@ -411,7 +411,12 @@ export function StudentTasksClient() {
               <h2 className="font-display text-xl font-bold text-white">Kalendarz</h2>
               <p className="text-xs text-white/40">Ostatnie 14 dni • zielony pełny • fioletowy częściowy • kliknij dzień</p>
             </div>
-            {overallHistory && <span className="ml-auto hidden sm:inline-flex items-center gap-2 text-xs text-white/50"><span className="w-2 h-2 rounded-full bg-emerald-500"/>Pełny<span className="w-2 h-2 rounded-full bg-[#a78bfa] ml-2"/>Częściowy<span className="ml-2 font-semibold text-white/70">{overallHistory.summary.totalDays} dni</span></span>}
+            {overallHistory && <span className="ml-auto hidden sm:inline-flex items-center gap-2 text-xs text-white/50"><span className="w-2 h-2 rounded-full bg-emerald-500"/>Pełny<span className="w-2 h-2 rounded-full bg-[#a78bfa] ml-2"/>Częściowy<span className="w-2 h-2 rounded-full bg-red-500 ml-2"/>Brak<span className="ml-2 font-semibold text-white/70">{overallHistory.summary.totalDays} dni</span></span>}
+          </div>
+          <div className="flex justify-end mb-3">
+            <button onClick={async ()=>{ if(!confirm('Zresetować wszystkie dni i zacząć od nowa? To usunie historię kalendarza.')) return; await fetch('/api/calendar/reset', {method:'POST'}); await fetch('/api/routines/reset-all', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({})}); load(); loadOverallHistory(); }} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/50 hover:text-red-300 hover:border-red-500/20 hover:bg-red-500/10">
+              <RotateCcw className="w-3 h-3"/> Resetuj wszystkie dni
+            </button>
           </div>
           {loadingOverall ? (
             <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-[#a78bfa] mr-2"/>Ładowanie…</div>
@@ -673,7 +678,7 @@ export function StudentTasksClient() {
             <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>setSelectedDay(null)} />
             <div className="glass-liquid relative w-full max-w-sm rounded-3xl p-6 animate-rise-in">
               <button onClick={()=>setSelectedDay(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5"><X className="w-4 h-4"/></button>
-              <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-bold">{selectedDay.date}</p>
+              <div className="flex items-center gap-2"><p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-bold">{selectedDay.date}</p><button onClick={async ()=>{ if(confirm(`Zresetować dzień ${selectedDay.date}?`)){ await fetch('/api/calendar/reset-day',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({date:selectedDay.date})}); load(); loadOverallHistory(); setSelectedDay(null) } }} className="ml-auto inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/40 hover:text-red-300 hover:border-red-500/20 hover:bg-red-500/10 opacity-60 hover:opacity-100 transition"><RotateCcw className="w-3 h-3"/> Resetuj dzień</button></div>
               <h3 className="font-display text-lg font-bold text-white mt-1">{selectedDay.entry.full ? '✓ Pełny trening' : selectedDay.entry.count>0 ? '• Za mało — niepełny' : 'Brak treningu'}</h3>
               <div className="mt-3 flex items-center gap-2 text-xs">
                 <span className={cn('px-3 py-1.5 rounded-full border font-semibold', selectedDay.entry.full ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : selectedDay.entry.count>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.03] border-white/[0.06] text-white/40')}>{selectedDay.entry.count} zadań</span>
