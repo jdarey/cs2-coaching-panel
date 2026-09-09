@@ -35,8 +35,7 @@ const saveVolume = (volume: number, muted: boolean) => {
   try { localStorage.setItem(VOLUME_KEY, JSON.stringify({ volume, muted })) } catch (_) {}
 }
 
-// Playback quality locked to 1080p — crisp but stable, no rebuffer
-const FORCED_QUALITY = 'hd1080'
+// Quality — default auto (ABR) adapts to user's connection
 const formatTime = (s: number) => {
   if (!isFinite(s) || s < 0) return '0:00'
   const m = Math.floor(s / 60)
@@ -240,13 +239,10 @@ export function YoutubeCustomPlayer({
         playsinline:    1,
         wmode:          'opaque',
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
-        // 1080p at load time — the only mechanism embeds reliably obey.
-        vq:             FORCED_QUALITY,
         color:          'white',
         loop:           0,
         enablejsapi:    1,
         origin:         window.location.origin,
-        // No YouTube tracking cookies — the embed loads from youtube-nocookie.
         host:           'https://www.youtube-nocookie.com',
       },
       events: {
@@ -286,13 +282,8 @@ export function YoutubeCustomPlayer({
             event.target.setOption('captions', 'track', { lang: 'off' })
             event.target.setOption('cc', 'track', {})
           } catch (_) {}
-          // Zawsze 1080p — stabilna, nie rebufferuje
-          try { event.target.setPlaybackQuality('hd1080'); event.target.setPlaybackQualityRange('hd1080','hd1080') } catch (_) {}
         },
         onStateChange: (event: any) => applyPlayerState(event.data, event.target),
-        onPlaybackQualityChange: (e: any) => {
-          try { if (e.data !== 'hd1080') e.target.setPlaybackQuality('hd1080') } catch {}
-        },
       },
     })
 

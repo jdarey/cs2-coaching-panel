@@ -467,7 +467,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                     <div className="absolute inset-0">
                       {previewId === video.id && getYouTubeId(video.url) ? (
                         <iframe
-                          src={`https://www.youtube-nocookie.com/embed/${getYouTubeId(video.url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(video.url)}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&vq=hd1080`}
+                          src={`https://www.youtube-nocookie.com/embed/${getYouTubeId(video.url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(video.url)}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`}
                           className="h-full w-full pointer-events-none"
                           allow="autoplay; encrypted-media"
                           title={video.title}
