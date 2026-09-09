@@ -400,7 +400,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         {ytId ? (
                           <iframe
                             src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
-                            className="absolute inset-0 w-full h-full pointer-events-none scale-[1.35] origin-center"
+                            className="absolute left-1/2 top-1/2 w-[156%] h-[156%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                             allow="autoplay; encrypted-media"
                             title=""
                             tabIndex={-1}
