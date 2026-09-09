@@ -81,6 +81,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'youtube' | 'vimeo' | 'drive' | 'other'>('all')
   const [previewId, setPreviewId] = useState<string | null>(null)
+  const [webpFailed, setWebpFailed] = useState<Set<string>>(new Set())
   const [formData, setFormData] = useState({
     title: '',
     url: '',
@@ -473,11 +474,24 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                         const vimeo = video.url.match(/vimeo\.com\/(\d+)/)?.[1]
                         const isHover = previewId === video.id
                         if (isHover && yt) {
+                          if (!webpFailed.has(video.id)) {
+                            return (
+                              // czysty film bez UI — WebP preview jak w DownloadHelper, zero przycisków
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={`https://i.ytimg.com/an_webp/${yt}/mqdefault_6s.webp`}
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                loading="eager"
+                                onError={() => setWebpFailed((prev) => new Set(prev).add(video.id))}
+                              />
+                            )
+                          }
                           return (
                             <iframe
                               src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
                               className="absolute pointer-events-none"
-                              style={{ left: '50%', top: '50%', width: '178%', height: '178%', transform: 'translate(-50%,-50%)' }}
+                              style={{ left: '50%', top: '50%', width: '150%', height: '150%', transform: 'translate(-50%,-50%)' }}
                               allow="autoplay; encrypted-media"
                               title=""
                               tabIndex={-1}

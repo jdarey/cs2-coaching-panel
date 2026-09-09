@@ -78,6 +78,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
   const [search, setSearch] = useState('')
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const [webpFailed, setWebpFailed] = useState<Set<string>>(new Set())
   const [videoProgressDialog, setVideoProgressDialog] = useState<{ video: typeof allVideos[0]; sessionTitle: string; progress: Progress | undefined } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
@@ -398,15 +399,26 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                     {isHovered && hasPreview ? (
                       <div className="absolute inset-0 overflow-hidden bg-black">
                         {ytId ? (
-                          <iframe
-                            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
-                            className="absolute pointer-events-none"
-                            style={{ left: '50%', top: '50%', width: '178%', height: '178%', transform: 'translate(-50%,-50%)' }}
-                            allow="autoplay; encrypted-media"
-                            title=""
-                            tabIndex={-1}
-                            loading="eager"
-                          />
+                          !webpFailed.has(cardKey) ? (
+                            // czysty film bez UI YT — animowany WebP preview jak w Video DownloadHelper (zero przycisków)
+                            <img
+                              src={`https://i.ytimg.com/an_webp/${ytId}/mqdefault_6s.webp`}
+                              alt=""
+                              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                              loading="eager"
+                              onError={() => setWebpFailed((prev) => new Set(prev).add(cardKey))}
+                            />
+                          ) : (
+                            <iframe
+                              src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
+                              className="absolute pointer-events-none"
+                              style={{ left: '50%', top: '50%', width: '150%', height: '150%', transform: 'translate(-50%,-50%)' }}
+                              allow="autoplay; encrypted-media"
+                              title=""
+                              tabIndex={-1}
+                              loading="eager"
+                            />
+                          )
                         ) : vimeoId ? (
                           <iframe
                             src={`https://player.vimeo.com/video/${vimeoId}?background=1&autoplay=1&muted=1&loop=1&autopause=0&byline=0&title=0&portrait=0`}
