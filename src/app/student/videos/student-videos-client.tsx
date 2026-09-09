@@ -400,24 +400,16 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       <div className="absolute inset-0 overflow-hidden bg-black">
                         {ytId ? (
                           !webpFailed.has(cardKey) ? (
-                            // czysty film bez UI YT — animowany WebP preview jak w Video DownloadHelper (zero przycisków), wysoka jakosc
                             <img
-                              src={`https://i.ytimg.com/an_webp/${ytId}/hqdefault_6s.webp`}
+                              src={`https://i.ytimg.com/an_webp/${ytId}/mqdefault_6s.webp`}
                               alt=""
                               className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                               loading="eager"
-                              onError={(e) => {
-                                const img = e.currentTarget as HTMLImageElement
-                                if (img.src.includes('hqdefault_6s')) {
-                                  img.src = `https://i.ytimg.com/an_webp/${ytId}/mqdefault_6s.webp`
-                                } else {
-                                  setWebpFailed((prev) => new Set(prev).add(cardKey))
-                                }
-                              }}
+                              onError={() => setWebpFailed((prev) => new Set(prev).add(cardKey))}
                             />
                           ) : (
                             <iframe
-                              src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0&vq=hd720`}
+                              src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
                               className="absolute pointer-events-none"
                               style={{ left: 0, top: '-12%', width: '100%', height: '124%' }}
                               allow="autoplay; encrypted-media"
