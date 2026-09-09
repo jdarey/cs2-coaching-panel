@@ -477,7 +477,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                             <iframe
                               src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0&vq=hd720`}
                               className="absolute pointer-events-none"
-                              style={{ left: 0, top: '-12%', width: '100%', height: '124%' }}
+                              style={{ left: 0, top: '-18%', width: '100%', height: '136%' }}
                               allow="autoplay; encrypted-media"
                               title=""
                               tabIndex={-1}
