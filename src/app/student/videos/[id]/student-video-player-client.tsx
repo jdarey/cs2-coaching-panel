@@ -8,6 +8,7 @@ import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
 import { ProtectedEmbed } from '@/components/protected-embed'
 import { VideoComments } from '@/components/community/video-comments'
 import { getYouTubeId } from '@/lib/utils'
+import { useSession } from 'next-auth/react'
 
 interface PlayerVideo {
   id: string
@@ -32,6 +33,8 @@ export function StudentVideoPlayerClient({
   sessionId = null,
 }: StudentVideoPlayerClientProps) {
   const ytId = getYouTubeId(video.url)
+  const { data: session } = useSession()
+  const watermark = (session?.user as any)?.email || 'student'
 
   // Persist playback position (throttled inside the player): status flips to
   // WATCHING as soon as the student actually watches, and to WATCHED at the
@@ -82,6 +85,7 @@ export function StudentVideoPlayerClient({
               <YoutubeCustomPlayer
                 videoId={ytId}
                 title={video.title}
+                watermark={watermark}
                 initialStartSeconds={initialStartSeconds}
                 onProgressChange={handleProgress}
               />

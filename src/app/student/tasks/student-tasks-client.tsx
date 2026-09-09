@@ -6,6 +6,7 @@ import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
 import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import { useSession } from 'next-auth/react'
 import {
   ClipboardList,
   CheckCircle2,
@@ -86,6 +87,8 @@ interface RoutineAssignment {
 }
 
 export function StudentTasksClient() {
+  const { data: session } = useSession()
+  const watermark = (session?.user as any)?.email || 'student'
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [routines, setRoutines] = useState<RoutineAssignment[]>([])
   const [loading, setLoading] = useState(true)
@@ -731,7 +734,7 @@ export function StudentTasksClient() {
                   <div className="mt-4 rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
                     {getYouTubeId(selectedTask.video.url) ? (
                       <div className="aspect-video">
-                        <YoutubeCustomPlayer videoId={getYouTubeId(selectedTask.video.url)!} title={selectedTask.video.title} />
+                        <YoutubeCustomPlayer videoId={getYouTubeId(selectedTask.video.url)!} title={selectedTask.video.title} watermark={watermark} />
                       </div>
                     ) : (
                       <div className="aspect-video grid place-items-center bg-white/[0.03] p-6 text-center">
