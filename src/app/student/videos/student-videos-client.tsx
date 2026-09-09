@@ -399,7 +399,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       <div className="absolute inset-0 overflow-hidden bg-black">
                         {ytId ? (
                           <iframe
-                            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
+                            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&showinfo=0&enablejsapi=0`}
                             className="absolute pointer-events-none"
                             style={{ left: '50%', top: '50%', width: '178%', height: '178%', transform: 'translate(-50%,-50%)' }}
                             allow="autoplay; encrypted-media"
