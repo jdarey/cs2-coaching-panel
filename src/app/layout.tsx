@@ -18,6 +18,10 @@ const lexendDisplay = Lexend_Deca({
 export const metadata: Metadata = {
   title: 'CS2 Coaching Panel',
   description: 'Panel do zarządzania treningiem CS2 - tagi, filmy, sesje, postęp',
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
 }
 
 export default function RootLayout({
