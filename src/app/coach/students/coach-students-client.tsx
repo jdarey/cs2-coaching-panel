@@ -41,6 +41,7 @@ interface Student {
   name: string | null
   avatarUrl: string | null
   createdAt: string
+  lastActiveAt?: string | null
   _count: { sessionsAsStudent: number; videoProgress: number }
   progressStats: { total: number; pending: number; watching: number; watched: number; implemented: number }
   note?: { id: string; content: string; updatedAt: string } | null
@@ -75,6 +76,20 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
   const [attachLoading, setAttachLoading] = useState(false)
   const [attachingId, setAttachingId] = useState<string | null>(null)
   const { toast } = useToast()
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id) }, [])
+  const isOnline = (lastActiveAt?: string | null) => !!lastActiveAt && now - new Date(lastActiveAt).getTime() < 5 * 60 * 1000
+  const formatLastSeen = (lastActiveAt?: string | null) => {
+    if (!lastActiveAt) return 'nigdy'
+    const diff = now - new Date(lastActiveAt).getTime()
+    if (diff < 5 * 60 * 1000) return 'teraz'
+    const mins = Math.floor(diff / 60000)
+    if (mins < 60) return `${mins} min temu`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `${hours} godz. temu`
+    const days = Math.floor(hours / 24)
+    return `${days} dni temu`
+  }
 
   const searchAttach = useCallback(async (q: string) => {
     if (q.trim().length < 2) { setAttachResults([]); return }
@@ -217,6 +232,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
 
   const totalStudents = students.length
   const activeStudents = students.filter((s) => s.progressStats.total > 0).length
+  const onlineStudents = students.filter((s) => isOnline(s.lastActiveAt)).length
   const newStudents = students.filter((s) => {
     const created = new Date(s.createdAt)
     const days = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)
@@ -236,9 +252,9 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
 
   const stats = [
     { icon: Users, label: 'Uczniowie', value: totalStudents, color: '#8b5cf6' },
-    { icon: Activity, label: 'Aktywni', value: activeStudents, color: '#a78bfa' },
+    { icon: Activity, label: 'Online', value: onlineStudents, color: '#34d399' },
     { icon: Sparkles, label: 'Nowi', value: newStudents, color: '#fbbf24' },
-    { icon: TrendingUp, label: 'Średnio', value: `${avgCompletion}%`, color: '#34d399' },
+    { icon: TrendingUp, label: 'Średnio', value: `${avgCompletion}%`, color: '#a78bfa' },
   ]
 
   return (
@@ -399,11 +415,29 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                             {getInitials(student.name || 'U')}
                           </AvatarFallback>
                         </Avatar>
+                        <span
+                          className={cn(
+                            'absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-[#0f0f12] border border-white/10',
+                            isOnline(student.lastActiveAt) ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse' : 'bg-white/20'
+                          )}
+                          title={isOnline(student.lastActiveAt) ? 'Online teraz' : `Offline • ${formatLastSeen(student.lastActiveAt)}`}
+                        />
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-display text-lg font-bold text-white transition-colors duration-300 group-hover:text-[#c4b5fd] truncate">
+                        <h3 className="font-display text-lg font-bold text-white transition-colors duration-300 group-hover:text-[#c4b5fd] truncate flex items-center gap-2">
                           {student.name || 'Bez nazwy'}
+                          <span
+                            className={cn(
+                              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border',
+                              isOnline(student.lastActiveAt)
+                                ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30'
+                                : 'bg-white/[0.04] text-white/35 border-white/[0.06]'
+                            )}
+                          >
+                            <span className={cn('h-1.5 w-1.5 rounded-full', isOnline(student.lastActiveAt) ? 'bg-emerald-400 animate-pulse' : 'bg-white/30')} />
+                            {isOnline(student.lastActiveAt) ? 'Online' : formatLastSeen(student.lastActiveAt) === 'nigdy' ? 'Offline' : `Offline • ${formatLastSeen(student.lastActiveAt)}`}
+                          </span>
                         </h3>
                         <p className="mt-0.5 text-sm text-white/45 truncate flex items-center gap-1.5">
                           <Mail className="w-3.5 h-3.5 shrink-0" />

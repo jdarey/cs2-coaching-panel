@@ -1,9 +1,10 @@
 'use client'
 
-import { SessionProvider } from 'next-auth/react'
+import { SessionProvider, useSession } from 'next-auth/react'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ReactNode, useEffect } from 'react'
+import { usePresenceHeartbeat } from '@/hooks/use-presence-heartbeat'
 
 // Applies the saved theme (light/dark/system) from localStorage on mount so the
 // choice survives navigation and reloads.
@@ -20,6 +21,12 @@ export function applyStoredTheme() {
   }
 }
 
+function PresenceManager() {
+  const { data: session, status } = useSession()
+  usePresenceHeartbeat(status === 'authenticated' && !!session?.user)
+  return null
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyStoredTheme()
@@ -28,6 +35,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
       <TooltipProvider>
+        <PresenceManager />
         {children}
         <Toaster />
       </TooltipProvider>

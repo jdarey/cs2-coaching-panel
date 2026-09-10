@@ -34,6 +34,7 @@ interface StudentDetail {
   name: string | null
   avatarUrl: string | null
   createdAt: string
+  lastActiveAt: string | null
   steamId: string | null
   steamVanity: string | null
   faceitNickname: string | null
@@ -121,6 +122,21 @@ export function CoachStudentDetailClient({
   // Email reminder
   const [reminding, setReminding] = useState(false)
   const [reminded, setReminded] = useState(false)
+
+  // Online presence (heartbeat updates lastActiveAt every 60s)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id) }, [])
+  const isOnline = !!student.lastActiveAt && now - new Date(student.lastActiveAt).getTime() < 5 * 60 * 1000
+  const formatLastSeen = () => {
+    if (!student.lastActiveAt) return 'nigdy'
+    const diff = now - new Date(student.lastActiveAt).getTime()
+    if (diff < 5 * 60 * 1000) return 'teraz'
+    const mins = Math.floor(diff / 60000)
+    if (mins < 60) return `${mins} min temu`
+    const h = Math.floor(mins / 60)
+    if (h < 24) return `${h} godz. temu`
+    return `${Math.floor(h / 24)} dni temu`
+  }
 
   const loadNote = useCallback(async () => {
     try {
@@ -301,15 +317,22 @@ export function CoachStudentDetailClient({
           <div className="absolute inset-0 bg-gradient-to-r from-white/[0.04] via-transparent to-transparent" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
             <div className="flex items-center gap-5 min-w-0">
-              <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.6)]">
-                <AvatarImage src={student.avatarUrl || ''} alt={student.name || student.email} />
-                <AvatarFallback className="rounded-2xl bg-white text-[#060606] font-display font-bold text-2xl">
-                  {getInitials(student.name || student.email)}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-20 w-20 rounded-2xl ring-1 ring-white/15 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.6)]">
+                  <AvatarImage src={student.avatarUrl || ''} alt={student.name || student.email} />
+                  <AvatarFallback className="rounded-2xl bg-white text-[#060606] font-display font-bold text-2xl">
+                    {getInitials(student.name || student.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className={cn('absolute -bottom-1 -right-1 h-4 w-4 rounded-full ring-2 ring-[#0f0f12] border border-white/10', isOnline ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse' : 'bg-white/25')} title={isOnline ? 'Online teraz' : `Offline • ${formatLastSeen()}`} />
+              </div>
               <div className="min-w-0">
-                <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight truncate">
+                <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight truncate flex items-center gap-3">
                   {student.name || 'Bez nazwy'}
+                  <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border', isOnline ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30' : 'bg-white/[0.04] text-white/35 border-white/[0.08]')}>
+                    <span className={cn('h-2 w-2 rounded-full', isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-white/30')} />
+                    {isOnline ? 'Online' : `Offline • ${formatLastSeen()}`}
+                  </span>
                 </h1>
                 <p className="mt-1.5 text-white/45 text-sm flex items-center gap-1.5 truncate">
                   <Mail className="w-3.5 h-3.5 shrink-0" />

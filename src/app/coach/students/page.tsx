@@ -22,6 +22,7 @@ export default async function CoachStudentsPage() {
       name: true,
       avatarUrl: true,
       createdAt: true,
+      lastActiveAt: true,
       _count: { select: { sessionsAsStudent: true, videoProgress: true } },
       studentCoachNotes: {
         take: 1,
@@ -62,6 +63,7 @@ export default async function CoachStudentsPage() {
         note: studentCoachNotes[0] ? { ...studentCoachNotes[0], updatedAt: studentCoachNotes[0].updatedAt.toISOString() } : null,
         lastSessionAt: lastSessionAt ? new Date(lastSessionAt).toISOString() : null,
         createdAt: student.createdAt.toISOString(),
+        lastActiveAt: (student as any).lastActiveAt ? new Date((student as any).lastActiveAt).toISOString() : null,
       }
     })
   )

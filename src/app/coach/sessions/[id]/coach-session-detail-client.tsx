@@ -105,6 +105,9 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
   const [isLoading, setIsLoading] = useState(false)
   const [newNote, setNewNote] = useState('')
   const [isPrivateNote, setIsPrivateNote] = useState(false)
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editingContent, setEditingContent] = useState('')
+  const [editingIsPrivate, setEditingIsPrivate] = useState(false)
   const [currentVideoId, setCurrentVideoId] = useState<string>(initialSession.videos[0]?.video.id || '')
   const [sessionStatus, setSessionStatus] = useState<string>(initialSession.status)
   const [videoSearch, setVideoSearch] = useState('')
@@ -174,6 +177,47 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Usunąć tę notatkę?')) return
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/notes/${noteId}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
+      setSession((prev) => ({ ...prev, notes: prev.notes.filter((n) => n.id !== noteId) }))
+      toast({ title: 'Sukces', description: 'Notatka usunięta' })
+    } catch { toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' }) } finally { setIsLoading(false) }
+  }
+
+  const startEditNote = (note: Session['notes'][number]) => {
+    setEditingNoteId(note.id)
+    setEditingContent(note.content)
+    setEditingIsPrivate(note.isPrivate)
+  }
+
+  const cancelEditNote = () => {
+    setEditingNoteId(null)
+    setEditingContent('')
+  }
+
+  const handleUpdateNote = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingNoteId || !editingContent.trim()) return
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/notes/${editingNoteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editingContent, isPrivate: editingIsPrivate }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
+      setSession((prev) => ({ ...prev, notes: prev.notes.map((n) => (n.id === editingNoteId ? data : n)) }))
+      toast({ title: 'Sukces', description: 'Notatka zaktualizowana' })
+      cancelEditNote()
+    } catch { toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' }) } finally { setIsLoading(false) }
   }
 
   const handleDeleteVideo = async (videoId: string) => {
@@ -820,51 +864,82 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     key={note.id}
                     className="relative overflow-hidden rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4 hover:border-white/[0.08] transition-all duration-300"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        {note.user.avatarUrl ? (
-                          <img
-                            src={note.user.avatarUrl}
-                            alt={note.user.name || ''}
-                            className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/15"
-                          />
-                        ) : (
-                          <div className="grid h-9 w-9 place-items-center rounded-xl ring-1 ring-white/15 bg-gradient-to-br from-[#a78bfa]/20 to-[#6d28d9]/20 text-xs font-semibold text-white">
-                            {(note.user.name || 'U').charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                    {editingNoteId === note.id ? (
+                      <form onSubmit={handleUpdateNote} className="space-y-3">
+                        <textarea
+                          value={editingContent}
+                          onChange={(e) => setEditingContent(e.target.value)}
+                          rows={3}
+                          className="w-full rounded-xl bg-[#181818] border border-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:border-[#a78bfa]/40 resize-none"
+                        />
+                        <div className="flex items-center justify-between gap-3">
+                          <label className="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked={editingIsPrivate} onChange={(e) => setEditingIsPrivate(e.target.checked)} className="h-4 w-4 rounded border-white/20 bg-white/5" />
+                            <span className="text-xs text-white/60">Prywatna</span>
+                          </label>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-white/90">
-                              {note.user.name || 'Użytkownik'}
-                            </span>
-                            <span
-                              className={cn(
-                                'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border',
-                                note.user.role === 'COACH'
-                                  ? 'bg-[#a78bfa]/10 text-[#c4b5fd] border-[#a78bfa]/25'
-                                  : 'bg-blue-400/10 text-blue-300 border-blue-400/25'
-                              )}
-                            >
-                              {note.user.role === 'COACH' ? 'Trener' : 'Uczeń'}
-                            </span>
-                            {note.isPrivate && (
-                              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border bg-pink-400/10 text-pink-300 border-pink-400/25">
-                                Prywatna
-                              </span>
-                            )}
+                            <button type="button" onClick={cancelEditNote} className="inline-flex items-center gap-1.5 rounded-xl px-4 h-9 text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.06]">Anuluj</button>
+                            <button type="submit" disabled={isLoading || !editingContent.trim()} className="inline-flex items-center gap-1.5 rounded-xl px-4 h-9 text-xs font-semibold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] disabled:opacity-50">
+                              {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Zapisz
+                            </button>
                           </div>
-                          <span className="text-[10px] text-white/35 font-mono">
-                            {formatDateTime(note.createdAt)}
-                          </span>
                         </div>
-                        <p className="mt-2 text-sm text-white/75 whitespace-pre-wrap leading-relaxed">
-                          {note.content}
-                        </p>
+                      </form>
+                    ) : (
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          {note.user.avatarUrl ? (
+                            <img
+                              src={note.user.avatarUrl}
+                              alt={note.user.name || ''}
+                              className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/15"
+                            />
+                          ) : (
+                            <div className="grid h-9 w-9 place-items-center rounded-xl ring-1 ring-white/15 bg-gradient-to-br from-[#a78bfa]/20 to-[#6d28d9]/20 text-xs font-semibold text-white">
+                              {(note.user.name || 'U').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-white/90">
+                                {note.user.name || 'Użytkownik'}
+                              </span>
+                              <span
+                                className={cn(
+                                  'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border',
+                                  note.user.role === 'COACH'
+                                    ? 'bg-[#a78bfa]/10 text-[#c4b5fd] border-[#a78bfa]/25'
+                                    : 'bg-blue-400/10 text-blue-300 border-blue-400/25'
+                                )}
+                              >
+                                {note.user.role === 'COACH' ? 'Trener' : 'Uczeń'}
+                              </span>
+                              {note.isPrivate && (
+                                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border bg-pink-400/10 text-pink-300 border-pink-400/25">
+                                  Prywatna
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-white/35 font-mono">
+                                {formatDateTime(note.createdAt)}
+                              </span>
+                              <button onClick={() => startEditNote(note)} className="grid h-7 w-7 place-items-center rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-colors" title="Edytuj" aria-label="Edytuj notatkę">
+                                <Edit className="h-3.5 w-3.5" />
+                              </button>
+                              <button onClick={() => handleDeleteNote(note.id)} className="grid h-7 w-7 place-items-center rounded-lg text-white/30 hover:text-red-300 hover:bg-red-500/10 transition-colors" title="Usuń" aria-label="Usuń notatkę">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          <p className="mt-2 text-sm text-white/75 whitespace-pre-wrap leading-relaxed">
+                            {note.content}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ))
               )}
