@@ -576,7 +576,6 @@ export function YoutubeCustomPlayer({
       onAuxClick={(e) => { if (e.button === 1) e.preventDefault() }}
       onCopy={(e) => e.preventDefault()}
       onMouseMove={resetControlsTimer}
-      title={title}
     >
       {/* Chromeless YouTube player — controls:0 hides YT UI. For >1080p (4K) YT ignores setPlaybackQuality since 2019 — ABR picks quality based on player size. We render at 1920x1080 (3840 on retina) and scale down so YT picks high quality; in fullscreen use 100% to fill screen. */}
       <div className="absolute inset-0 overflow-hidden">
