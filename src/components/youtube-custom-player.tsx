@@ -346,6 +346,13 @@ export function YoutubeCustomPlayer({
           try {
             const avail: string[] = event.target.getAvailableQualityLevels?.() || []
             if (avail.length) setAvailableQualities(avail)
+            // Enforce highest (4K) if YT auto-downgraded after ~8s (znany bug ABR - github morphe-patches#667)
+            const desired = (['hd2160', 'hd1440', 'highres', 'hd1080'].find((q) => avail.includes(q)) || 'highres') as string
+            if (event.data !== desired && ['highres', 'hd2160', 'hd1440'].includes(desired)) {
+              setTimeout(() => {
+                try { event.target.setPlaybackQuality(desired); (event.target as any).setPlaybackQualityRange?.(desired, desired) } catch {}
+              }, 500)
+            }
           } catch {}
         },
       },
@@ -382,6 +389,25 @@ export function YoutubeCustomPlayer({
     }
     return () => { if (interval) clearInterval(interval) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying])
+
+  // Enforce highest quality (4K) while playing — YT ABR downgrades after ~8s (morphe-patches#667), setPlaybackQuality is no-op but setPlaybackQualityRange + periodic re-apply helps
+  useEffect(() => {
+    if (!isPlaying) return
+    const id = setInterval(() => {
+      const p: any = playerRef.current
+      if (!p || typeof p.getPlaybackQuality !== 'function') return
+      try {
+        const cur: string = p.getPlaybackQuality()
+        const avail: string[] = p.getAvailableQualityLevels?.() || []
+        const desired = (['hd2160', 'hd1440', 'highres', 'hd1080'].find((q) => avail.includes(q)) || 'highres') as string
+        if (cur !== desired && avail.includes(desired)) {
+          p.setPlaybackQuality(desired)
+          try { p.setPlaybackQualityRange?.(desired, desired) } catch {}
+        }
+      } catch {}
+    }, 3000)
+    return () => clearInterval(id)
   }, [isPlaying])
 
   // Unmount flush — persist the latest position when leaving the page.
