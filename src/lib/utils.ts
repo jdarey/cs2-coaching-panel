@@ -100,6 +100,23 @@ export function getVideoEmbedUrl(url: string): string | null {
 export async function fetchVideoDuration(url: string): Promise<number | null> {
   const ytId = getYouTubeId(url)
   if (ytId) {
+    // 1) Innertube API (najbardziej wiarygodne, nie wymaga scrapowania HTML)
+    try {
+      const res = await fetch('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: '2.20240101' } }, videoId: ytId }),
+        next: { revalidate: 86400 },
+      } as any)
+      if (res.ok) {
+        const data = await res.json()
+        const secs = data?.videoDetails?.lengthSeconds
+        if (secs && /^\d+$/.test(String(secs))) return parseInt(String(secs), 10)
+        const ms = data?.videoDetails?.approxDurationMs
+        if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
+      }
+    } catch {}
+    // 2) Fallback: watch page + ytInitialPlayerResponse
     try {
       const res = await fetch(`https://www.youtube.com/watch?v=${ytId}`, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
@@ -107,6 +124,14 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
       } as any)
       if (res.ok) {
         const html = await res.text()
+        const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*({.+?});/)
+        if (playerMatch) {
+          try {
+            const json = JSON.parse(playerMatch[1])
+            const secs = json?.videoDetails?.lengthSeconds
+            if (secs) return parseInt(String(secs), 10)
+          } catch {}
+        }
         const m1 = html.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
         if (m1) return Math.round(parseInt(m1[1], 10) / 1000)
         const m2 = html.match(/"lengthSeconds"\s*:\s*"(\d+)"/)
