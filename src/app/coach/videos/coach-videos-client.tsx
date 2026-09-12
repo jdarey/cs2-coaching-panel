@@ -272,9 +272,9 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     } catch { toast({ title: 'Błąd', variant: 'destructive' }) } finally { setBackfillLoading(false) }
   }
 
-  // Automatycznie w tle napraw czasy - v4 po fixie parsowania (poprzednio lapal 37h live zamiast 20min filmu)
+  // Automatycznie w tle napraw czasy - v5 po poprawce snippet 15k (poprzednio 30k lapal 37h live)
   useEffect(() => {
-    const key = 'videos-backfill-auto-v4-force'
+    const key = 'videos-backfill-auto-v5-force'
     if (typeof window !== 'undefined' && sessionStorage.getItem(key)) return
     if (typeof window !== 'undefined') sessionStorage.setItem(key, '1')
     fetch('/api/videos/backfill?force=1', { method: 'POST' })

@@ -116,7 +116,7 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
         if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
       }
     } catch {}
-    // 2) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse, nie pierwsze approxDurationMs z calej strony (mylilo 37h live z 20min filmem)
+    // 2) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse (15k snippet), nie pierwsze approxDurationMs z calej strony (mylilo 37h live z 20min filmem)
     try {
       const res = await fetch(`https://www.youtube.com/watch?v=${ytId}`, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
@@ -126,7 +126,8 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
         const html = await res.text()
         const idx = html.indexOf('ytInitialPlayerResponse')
         if (idx !== -1) {
-          const snippet = html.slice(idx, idx + 30000)
+          const snippet = html.slice(idx, idx + 15000)
+          // Najpierw videoDetails.lengthSeconds glownego filmu (w snippet, nie w calej stronie)
           const m = snippet.match(/"lengthSeconds"\s*:\s*"(\d+)"/)
           if (m) return parseInt(m[1], 10)
           const mMs = snippet.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
