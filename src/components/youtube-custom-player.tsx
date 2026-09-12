@@ -131,14 +131,13 @@ export function YoutubeCustomPlayer({
     },
   })
 
-  // Player scale for 4K trick: YouTube ABR picks quality based on player size (no API to force >1080p since 2019).
-  // We render the iframe at 1920x1080 (or 3840 for 4K) and scale down via CSS so YT thinks player is large and picks high quality.
+  // Player scale for 4K trick: YouTube ABR picks quality based on player size (setPlaybackQuality no-op since 2019).
+  // For 4K YT needs >=3840px width. Render at 3840x2160 and scale down so YT picks highres, 99% filmów ma 4K.
   useEffect(() => {
     const updateScale = () => {
       const el = containerRef.current
       if (!el) return
-      // For 4K we need ~3840 width; use 1920 with DPR*2 for 4K on retina, else 3840
-      const targetWidth = 1920 * (window.devicePixelRatio > 1.5 ? 2 : 1)
+      const targetWidth = 3840
       const scale = el.clientWidth / targetWidth
       setPlayerScale(Math.min(1, scale))
       el.style.setProperty('--player-scale', String(scale))
@@ -259,8 +258,8 @@ export function YoutubeCustomPlayer({
 
       playerRef.current = new win.YT.Player(mountId, {
       videoId,
-      width: 1920,
-      height: 1080,
+      width: 3840,
+      height: 2160,
       playerVars: {
         autoplay:       0,
         controls:       0,
@@ -276,7 +275,7 @@ export function YoutubeCustomPlayer({
         playsinline:    1,
         wmode:          'opaque',
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
-        vq:             'hd1080',
+        vq:             'highres',
         color:          'white',
         loop:           0,
         enablejsapi:    1,
@@ -324,20 +323,20 @@ export function YoutubeCustomPlayer({
             event.target.setOption('captions', 'track', { lang: 'off' })
             event.target.setOption('cc', 'track', {})
           } catch (_) {}
-          // Quality: force high by default (hd1080/highres) then respect user choice; YT ABR will still adapt if needed
+          // Quality: force highest available (4K) by default — 99% filmów ma 4K, ABR i tak wybierze max na podstawie rozmiaru 3840
           try {
             const avail: string[] = event.target.getAvailableQualityLevels?.() || []
             if (avail.length) {
               setAvailableQualities(avail)
-              const preferred = ['hd1080', 'highres', 'hd720', 'large'].find((q) => avail.includes(q)) || avail[0]
+              const preferred = ['hd2160', 'hd1440', 'highres', 'hd1080', 'hd720', 'large'].find((q) => avail.includes(q)) || avail[0]
               if (preferred && preferred !== 'auto') {
                 try { event.target.setPlaybackQuality(preferred); event.target.setPlaybackQualityRange?.(preferred, preferred) } catch {}
                 setCurrentQuality(preferred)
               }
             } else {
-              // Fallback: try hd1080 directly, YT will pick closest
-              try { event.target.setPlaybackQuality('hd1080') } catch {}
-              setCurrentQuality('hd1080')
+              // Fallback: try highres (4K) directly, YT will pick closest
+              try { event.target.setPlaybackQuality('highres') } catch {}
+              setCurrentQuality('highres')
             }
           } catch (_) {}
         },
@@ -415,7 +414,7 @@ export function YoutubeCustomPlayer({
     }
   }, [])
 
-  // In fullscreen the 1920x1080 scaled iframe would appear small (letterboxed) — make it fill 100%
+  // In fullscreen the 3840x2160 scaled iframe would appear small — make it fill 100%
   useEffect(() => {
     const el = containerRef.current?.querySelector(`#yt-player-${videoId}`) as HTMLElement | null
     const iframe = el?.querySelector('iframe') as HTMLElement | null
@@ -426,8 +425,8 @@ export function YoutubeCustomPlayer({
       target.style.height = '100%'
       ;(target.style as any).transform = 'none'
     } else {
-      target.style.width = '1920px'
-      target.style.height = '1080px'
+      target.style.width = '3840px'
+      target.style.height = '2160px'
       ;(target.style as any).transform = `scale(${playerScale})`
       ;(target.style as any).transformOrigin = 'top left'
     }
@@ -584,7 +583,7 @@ export function YoutubeCustomPlayer({
           style={
             isFullscreen
               ? { width: '100%', height: '100%' }
-              : { width: '1920px', height: '1080px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }
+              : { width: '3840px', height: '2160px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }
           }
         />
       </div>
