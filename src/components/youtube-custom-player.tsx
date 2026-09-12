@@ -83,6 +83,7 @@ export function YoutubeCustomPlayer({
   const [showQualityMenu, setShowQualityMenu] = useState(false)
   const [availableQualities, setAvailableQualities] = useState<string[]>(['auto'])
   const [currentQuality, setCurrentQuality] = useState<string>('auto')
+  const [playerScale, setPlayerScale] = useState(0.5)
   // Opaque pre-play poster (the video's own thumbnail) so nothing YouTube
   // draws behind it — thumbnail, watermark, play button — is ever visible
   // before the student starts watching.
@@ -129,6 +130,23 @@ export function YoutubeCustomPlayer({
       intendPlayRef.current = false
     },
   })
+
+  // Player scale for 4K trick: YouTube ABR picks quality based on player size (no API to force >1080p since 2019).
+  // We render the iframe at 1920x1080 (or 3840 for 4K) and scale down via CSS so YT thinks player is large and picks high quality.
+  useEffect(() => {
+    const updateScale = () => {
+      const el = containerRef.current
+      if (!el) return
+      // For 4K we need ~3840 width; use 1920 with DPR*2 for 4K on retina, else 3840
+      const targetWidth = 1920 * (window.devicePixelRatio > 1.5 ? 2 : 1)
+      const scale = el.clientWidth / targetWidth
+      setPlayerScale(Math.min(1, scale))
+      el.style.setProperty('--player-scale', String(scale))
+    }
+    updateScale()
+    window.addEventListener('resize', updateScale)
+    return () => window.removeEventListener('resize', updateScale)
+  }, [isReady, videoId])
 
   // Reset on videoId change — resume from the persisted position.
   useEffect(() => {
@@ -241,6 +259,8 @@ export function YoutubeCustomPlayer({
 
       playerRef.current = new win.YT.Player(mountId, {
       videoId,
+      width: 1920,
+      height: 1080,
       playerVars: {
         autoplay:       0,
         controls:       0,
@@ -523,10 +543,12 @@ export function YoutubeCustomPlayer({
       onMouseMove={resetControlsTimer}
       title={title}
     >
-      {/* Chromeless YouTube player — controls:0 means YouTube draws nothing:
-          no title bar, no logo, no gear, no share, no watermark. */}
-      <div className="absolute inset-0">
-        <div id={`yt-player-${videoId}`} className="w-full h-full" />
+      {/* Chromeless YouTube player — controls:0 hides YT UI. For >1080p (4K) YT ignores setPlaybackQuality since 2019 (developers.google.com/youtube/iframe_api_revision_history: Oct 2019) — ABR picks quality based on player size. We render at 1920x1080 (3840 on retina) and scale down so YT picks high quality. */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          id={`yt-player-${videoId}`}
+          style={{ width: '1920px', height: '1080px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }}
+        />
       </div>
 
       {/* Click surface — the whole video toggles play/pause (double-click:
