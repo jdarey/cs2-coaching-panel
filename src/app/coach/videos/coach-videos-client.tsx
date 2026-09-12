@@ -80,7 +80,6 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   const [editingVideo, setEditingVideo] = useState<Video | null>(null)
   const [assigningVideo, setAssigningVideo] = useState<Video | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [backfillLoading, setBackfillLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'youtube' | 'vimeo' | 'drive' | 'other'>('all')
   const [formData, setFormData] = useState({
     title: '',
@@ -255,24 +254,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     }
   }
 
-  const handleBackfill = async () => {
-    setBackfillLoading(true)
-    try {
-      const res = await fetch('/api/videos/backfill', { method: 'POST' })
-      const data = await res.json()
-      if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
-      if (data.updated > 0) {
-        // reload videos
-        const r = await fetch('/api/videos')
-        if (r.ok) setVideos(await r.json())
-        toast({ title: 'Sukces', description: `Uzupełniono czas dla ${data.updated} filmów` })
-      } else {
-        toast({ title: 'Info', description: 'Wszystkie filmy mają już czas' })
-      }
-    } catch { toast({ title: 'Błąd', variant: 'destructive' }) } finally { setBackfillLoading(false) }
-  }
-
-  // Automatycznie w tle napraw czasy - v5 po poprawce snippet 15k (poprzednio 30k lapal 37h live)
+  // Automatycznie w tle napraw czasy po dodaniu filmu i dla starych (v5) - bez przycisku
   useEffect(() => {
     const key = 'videos-backfill-auto-v5-force'
     if (typeof window !== 'undefined' && sessionStorage.getItem(key)) return
@@ -370,26 +352,13 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
           title="Filmy"
           subtitle="Baza filmów treningowych — dodawaj, taguj i przypisuj uczniom"
         >
-          <div className="flex items-center gap-2">
-            {videos.some((v) => !v.duration) && (
-              <button
-                onClick={handleBackfill}
-                disabled={backfillLoading}
-                className="inline-flex items-center gap-2 rounded-full px-5 h-12 text-sm font-medium text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] disabled:opacity-50"
-                title="Pobierz brakujące czasy trwania z YouTube/Vimeo"
-              >
-                {backfillLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                Uzupełnij czasy
-              </button>
-            )}
-            <button
-              onClick={openAddDialog}
-              className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white btn-primary-gradient"
-            >
-              <Plus className="h-4 w-4" />
-              Dodaj film
-            </button>
-          </div>
+          <button
+            onClick={openAddDialog}
+            className="group relative inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-semibold text-white btn-primary-gradient"
+          >
+            <Plus className="h-4 w-4" />
+            Dodaj film
+          </button>
         </PageHeader>
 
         {/* Premium glass search + tabs */}
