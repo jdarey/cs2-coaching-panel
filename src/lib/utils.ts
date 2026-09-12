@@ -100,46 +100,49 @@ export function getVideoEmbedUrl(url: string): string | null {
 export async function fetchVideoDuration(url: string): Promise<number | null> {
   const ytId = getYouTubeId(url)
   if (ytId) {
-    // 1) Innertube API (najbardziej wiarygodne, nie wymaga scrapowania HTML)
+    // 1) Innertube API — probuj kilka klientow (WEB, ANDROID) bo jeden moze byc zablokowany
+    for (const client of [
+      { clientName: 'WEB', clientVersion: '2.20240101' },
+      { clientName: 'ANDROID', clientVersion: '19.09.37' },
+      { clientName: 'MWEB', clientVersion: '2.20240101' },
+    ] as const) {
+      try {
+        const res = await fetch('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ context: { client }, videoId: ytId }),
+          next: { revalidate: 86400 },
+        } as any)
+        if (res.ok) {
+          const data = await res.json()
+          const secs = data?.videoDetails?.lengthSeconds
+          if (secs && /^\d+$/.test(String(secs))) return parseInt(String(secs), 10)
+          const len = data?.videoDetails?.lengthSeconds || data?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
+          if (len && /^\d+$/.test(String(len))) {
+            const n = parseInt(String(len), 10)
+            return n > 10000 ? Math.round(n / 1000) : n
+          }
+        }
+      } catch {}
+    }
+    // 2) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse, wiekszy snippet i CONSENT bypass
     try {
-      const res = await fetch('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: '2.20240101' } }, videoId: ytId }),
-        next: { revalidate: 86400 },
-      } as any)
-      if (res.ok) {
-        const data = await res.json()
-        const secs = data?.videoDetails?.lengthSeconds
-        if (secs && /^\d+$/.test(String(secs))) return parseInt(String(secs), 10)
-        const ms = data?.videoDetails?.approxDurationMs
-        if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
-      }
-    } catch {}
-    // 2) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse (15k snippet), nie pierwsze approxDurationMs z calej strony (mylilo 37h live z 20min filmem)
-    try {
-      const res = await fetch(`https://www.youtube.com/watch?v=${ytId}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      const res = await fetch(`https://www.youtube.com/watch?v=${ytId}&hl=en&has_verified=1`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          Cookie: 'CONSENT=YES+cb.20210328-17-p0.en+FX+667; YSC=',
+        },
         next: { revalidate: 86400 },
       } as any)
       if (res.ok) {
         const html = await res.text()
         const idx = html.indexOf('ytInitialPlayerResponse')
         if (idx !== -1) {
-          const snippet = html.slice(idx, idx + 15000)
-          // Najpierw videoDetails.lengthSeconds glownego filmu (w snippet, nie w calej stronie)
+          const snippet = html.slice(idx, idx + 50000)
           const m = snippet.match(/"lengthSeconds"\s*:\s*"(\d+)"/)
           if (m) return parseInt(m[1], 10)
           const mMs = snippet.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
           if (mMs) return Math.round(parseInt(mMs[1], 10) / 1000)
-          try {
-            const jsonMatch = snippet.match(/ytInitialPlayerResponse\s*=\s*(\{[\s\S]+?\});/)
-            if (jsonMatch) {
-              const json = JSON.parse(jsonMatch[1])
-              const secs = json?.videoDetails?.lengthSeconds
-              if (secs) return parseInt(String(secs), 10)
-            }
-          } catch {}
         }
       }
     } catch {}

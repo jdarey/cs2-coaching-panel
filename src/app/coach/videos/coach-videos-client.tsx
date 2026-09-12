@@ -254,9 +254,9 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     }
   }
 
-  // Automatycznie w tle napraw czasy po dodaniu filmu i dla starych (v5) - bez przycisku
+  // Automatycznie w tle napraw czasy - v6 po fixie braku liczenia w ogole (multi-client Innertube)
   useEffect(() => {
-    const key = 'videos-backfill-auto-v5-force'
+    const key = 'videos-backfill-auto-v6-force'
     if (typeof window !== 'undefined' && sessionStorage.getItem(key)) return
     if (typeof window !== 'undefined') sessionStorage.setItem(key, '1')
     fetch('/api/videos/backfill?force=1', { method: 'POST' })
