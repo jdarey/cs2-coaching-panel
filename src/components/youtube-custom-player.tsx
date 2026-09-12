@@ -131,13 +131,12 @@ export function YoutubeCustomPlayer({
     },
   })
 
-  // Player scale for 4K trick: YouTube ABR picks quality based on player size (setPlaybackQuality no-op since 2019).
-  // For 4K YT needs >=3840px width. Render at 3840x2160 and scale down so YT picks highres, 99% filmów ma 4K.
+  // Player scale: YT ABR picks quality by player size (setPlaybackQuality no-op since Oct 2019). For 800px container 1080p wystarczy, 4K to overkill i YT po ~20s downgrade'uje do 720p zeby oszczedzic transfer (stad psucie po 23s). Renderujemy 1920x1080 w normalnym widoku (1080p) i dopiero w fullscreen 3840.
   useEffect(() => {
     const updateScale = () => {
       const el = containerRef.current
       if (!el) return
-      const targetWidth = 3840
+      const targetWidth = isFullscreen ? 3840 : 1920
       const scale = el.clientWidth / targetWidth
       setPlayerScale(Math.min(1, scale))
       el.style.setProperty('--player-scale', String(scale))
@@ -145,7 +144,7 @@ export function YoutubeCustomPlayer({
     updateScale()
     window.addEventListener('resize', updateScale)
     return () => window.removeEventListener('resize', updateScale)
-  }, [isReady, videoId])
+  }, [isReady, videoId, isFullscreen])
 
   // Reset on videoId change — resume from the persisted position.
   useEffect(() => {
@@ -258,8 +257,8 @@ export function YoutubeCustomPlayer({
 
       playerRef.current = new win.YT.Player(mountId, {
       videoId,
-      width: 3840,
-      height: 2160,
+      width: 1920,
+      height: 1080,
       playerVars: {
         autoplay:       0,
         controls:       0,
@@ -275,7 +274,7 @@ export function YoutubeCustomPlayer({
         playsinline:    1,
         wmode:          'opaque',
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
-        vq:             'highres',
+        vq:             'hd1080',
         color:          'white',
         loop:           0,
         enablejsapi:    1,
@@ -440,23 +439,39 @@ export function YoutubeCustomPlayer({
     }
   }, [])
 
-  // In fullscreen the 3840x2160 scaled iframe would appear small — make it fill 100%
+  // Fullscreen: use 3840 for 4K, normal 1920 for 1080p (prevents ABR downgrade after 20s on small display)
   useEffect(() => {
     const el = containerRef.current?.querySelector(`#yt-player-${videoId}`) as HTMLElement | null
     const iframe = el?.querySelector('iframe') as HTMLElement | null
     const target = (iframe as any) || el
     if (!target) return
     if (isFullscreen) {
-      target.style.width = '100%'
-      target.style.height = '100%'
-      ;(target.style as any).transform = 'none'
-    } else {
       target.style.width = '3840px'
       target.style.height = '2160px'
       ;(target.style as any).transform = `scale(${playerScale})`
       ;(target.style as any).transformOrigin = 'top left'
+    } else {
+      target.style.width = '1920px'
+      target.style.height = '1080px'
+      ;(target.style as any).transform = `scale(${playerScale})`
+      ;(target.style as any).transformOrigin = 'top left'
     }
   }, [isFullscreen, playerScale, videoId])
+
+  // When entering fullscreen switch to 4K, when leaving back to 1080p (prevents downgrade after 23s on small container)
+  useEffect(() => {
+    const p: any = playerRef.current
+    if (!p || typeof p.setSize !== 'function') return
+    try {
+      if (isFullscreen) {
+        p.setSize(3840, 2160)
+        try { p.setPlaybackQuality('highres'); p.setPlaybackQualityRange?.('highres', 'highres') } catch {}
+      } else {
+        p.setSize(1920, 1080)
+        try { p.setPlaybackQuality('hd1080'); p.setPlaybackQualityRange?.('hd1080', 'hd1080') } catch {}
+      }
+    } catch {}
+  }, [isFullscreen])
 
   // Controls auto-hide while playing.
   const resetControlsTimer = useCallback(() => {
@@ -608,8 +623,8 @@ export function YoutubeCustomPlayer({
           id={`yt-player-${videoId}`}
           style={
             isFullscreen
-              ? { width: '100%', height: '100%' }
-              : { width: '3840px', height: '2160px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }
+              ? { width: '3840px', height: '2160px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }
+              : { width: '1920px', height: '1080px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }
           }
         />
       </div>
