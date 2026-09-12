@@ -669,26 +669,24 @@ export function YoutubeCustomPlayer({
         </div>
       )}
 
-      {/* Paused state — YouTube draws its own paused chrome inside the iframe
-          (title bar, big center button, logo, watermark). Cover all of it with
-          our own overlay: the paused state speaks OUR design language, no
-          YouTube UI shows. */}
-      {!isPlaying && hasPlayed && !isEnded && (
+      {/* Cover YT UI — title bar, share, big center play/pause, watermark — also when playing (central pause i udostepnienie w rogu) */}
+      {hasPlayed && !isEnded && (
         <div className="absolute inset-0 z-35 pointer-events-none select-none" aria-hidden>
-          {/* Minimal top strip — only title bar (12px), mostly transparent */}
-          <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-black/40 to-transparent" />
-          {/* Minimal bottom strip — only watermark corner */}
+          <div className="absolute top-0 left-0 right-0 h-14 bg-gradient-to-b from-black/70 via-black/30 to-transparent" />
+          <div className="absolute top-0 right-0 h-12 w-40 bg-gradient-to-l from-black/50 via-black/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-0 right-0 h-8 w-32 bg-gradient-to-t from-black/40 to-transparent" />
-          {/* Tiny center dot — hides YT play button without covering film */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-10 h-10 rounded-full bg-black/20 ring-1 ring-white/5 backdrop-blur-[1px]" />
           </div>
-          <div className="absolute top-2 left-2">
-            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white/70 bg-black/40 ring-1 ring-white/10 backdrop-blur">
-              <Pause className="w-3 h-3 text-[#a78bfa]" />
-              Pauza
-            </span>
-          </div>
+          {!isPlaying && (
+            <div className="absolute top-2 left-2">
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white/70 bg-black/40 ring-1 ring-white/10 backdrop-blur">
+                <Pause className="w-3 h-3 text-[#a78bfa]" />
+                Pauza
+              </span>
+            </div>
+          )}
         </div>
       )}
 
