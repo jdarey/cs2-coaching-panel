@@ -97,9 +97,10 @@ export function getVideoEmbedUrl(url: string): string | null {
   return null
 }
 
-export async function fetchVideoDuration(url: string): Promise<number | null> {
+export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean }): Promise<number | null> {
   const ytId = getYouTubeId(url)
   if (ytId) {
+    const cacheOpts: any = opts?.noCache ? { cache: 'no-store' } : { next: { revalidate: 86400 } }
     // 1) Innertube API — probuj kilka klientow (WEB, ANDROID) bo jeden moze byc zablokowany
     for (const client of [
       { clientName: 'WEB', clientVersion: '2.20240101' },
@@ -111,7 +112,7 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ context: { client }, videoId: ytId }),
-          next: { revalidate: 86400 },
+          ...cacheOpts,
         } as any)
         if (res.ok) {
           const data = await res.json()
@@ -119,6 +120,13 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
           if (secs && /^\d+$/.test(String(secs))) return parseInt(String(secs), 10)
           const ms = data?.videoDetails?.approxDurationMs ?? data?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
           if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
+          // Fallback w obrębie Innertube: lengthText z videoDetails (np. "20:30")
+          const lengthText: string | undefined = data?.videoDetails?.lengthText?.simpleText
+          if (lengthText && /^\d+:\d+/.test(lengthText)) {
+            const parts = lengthText.split(':').map((n) => parseInt(n, 10))
+            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+            if (parts.length === 2) return parts[0] * 60 + parts[1]
+          }
         }
       } catch {}
     }
@@ -129,17 +137,31 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           Cookie: 'CONSENT=YES+cb.20210328-17-p0.en+FX+667; YSC=',
         },
-        next: { revalidate: 86400 },
+        ...cacheOpts,
       } as any)
       if (res.ok) {
         const html = await res.text()
         const idx = html.indexOf('ytInitialPlayerResponse')
         if (idx !== -1) {
-          const snippet = html.slice(idx, idx + 50000)
+          const snippet = html.slice(idx, idx + 80000)
           const m = snippet.match(/"lengthSeconds"\s*:\s*"(\d+)"/)
           if (m) return parseInt(m[1], 10)
           const mMs = snippet.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
           if (mMs) return Math.round(parseInt(mMs[1], 10) / 1000)
+          // lengthText fallback — wyciągnij pierwsze wystąpienie "simpleText":"M:SS" w obrębie playerResponse
+          const mText = snippet.match(/"lengthText"[^}]*"simpleText"\s*:\s*"(\d+:\d+(?::\d+)?)"/)
+          if (mText) {
+            const parts = mText[1].split(':').map((n) => parseInt(n, 10))
+            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+            if (parts.length === 2) return parts[0] * 60 + parts[1]
+          }
+          const mSimple = snippet.match(/"simpleText"\s*:\s*"(\d+:\d+(?::\d+)?)"/)
+          if (mSimple) {
+            const parts = mSimple[1].split(':').map((n) => parseInt(n, 10))
+            // upewnij się że to nie jest view count - sprawdź czy parts są sensowne (< 24h)
+            const total = parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1]
+            if (total > 0 && total < 86400) return total
+          }
         }
       }
     } catch {}
@@ -148,7 +170,8 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
   if (vimeoMatch) {
     try {
-      const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`, { next: { revalidate: 86400 } } as any)
+      const cacheOpts: any = opts?.noCache ? { cache: 'no-store' } : { next: { revalidate: 86400 } }
+      const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`, cacheOpts as any)
       if (res.ok) {
         const data = await res.json()
         if (typeof data.duration === 'number') return Math.round(data.duration)

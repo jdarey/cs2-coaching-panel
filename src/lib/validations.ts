@@ -22,12 +22,19 @@ export const tagSchema = z.object({
 
 export const tagUpdateSchema = tagSchema.partial()
 
-// Videos
+// Videos - duration moze przyjsc jako string '' z formularza (coach-videos-client), lub number
 export const videoSchema = z.object({
   title: z.string().min(1, 'Tytuł jest wymagany').max(200),
   url: z.string().url('Nieprawidłowy URL'),
   description: z.string().max(2000).optional(),
-  duration: z.number().int().positive().optional(),
+  duration: z.preprocess(
+    (v) => {
+      if (v === '' || v == null) return undefined
+      if (typeof v === 'string' && /^\d+$/.test(v.trim())) return parseInt(v.trim(), 10)
+      return v
+    },
+    z.number().int().positive().optional()
+  ),
   source: z.enum(['youtube', 'vimeo', 'drive', 'other']).default('youtube'),
   tagIds: z.array(z.string()).default([]),
 })

@@ -262,19 +262,35 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       const res = await fetch('/api/videos/backfill?force=1', { method: 'POST' })
       const data = await res.json()
       if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
-      if (data.updated > 0) {
-        const r = await fetch('/api/videos')
-        if (r.ok) setVideos(await r.json())
-        toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} filmów wszędzie` })
-      } else {
-        toast({ title: 'Info', description: 'Wszystkie czasy już poprawne' })
+      // Zawsze odśwież listę - nawet gdy updated==0, bo mogły być wcześniej wyświetlane stare czasy
+      const r = await fetch('/api/videos')
+      if (r.ok) {
+        const fresh = await r.json()
+        // API GET zwraca _count bez sessionVideos - uzupełnij fallback żeby nie zepsuć UI
+        setVideos((prev) => {
+          const byId = new Map(prev.map((v) => [v.id, v._count]))
+          return fresh.map((v: Video) => ({
+            ...v,
+            _count: {
+              progress: v._count?.progress ?? byId.get(v.id)?.progress ?? 0,
+              sessionVideos: (v._count as any)?.sessionVideos ?? byId.get(v.id)?.sessionVideos ?? 0,
+            },
+          }))
+        })
       }
-    } catch { toast({ title: 'Błąd', variant: 'destructive' }) } finally { setBackfillLoading(false) }
+      if (data.updated > 0) {
+        toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} z ${data.total} filmów${data.failed ? `, nie udało się ${data.failed}` : ''}` })
+      } else if (data.failed > 0) {
+        toast({ title: 'Uwaga', description: `Sprawdzono ${data.total} filmów, nie udało się pobrać czasu dla ${data.failed} (np. Drive lub prywatny film)`, variant: 'destructive' })
+      } else {
+        toast({ title: 'Info', description: `Sprawdzono ${data.total} filmów - wszystkie czasy już poprawne` })
+      }
+    } catch { toast({ title: 'Błąd', description: 'Nie udało się połączyć z serwerem', variant: 'destructive' }) } finally { setBackfillLoading(false) }
   }
 
-  // Automatycznie w tle napraw czasy - v6 po fixie braku liczenia w ogole (multi-client Innertube)
+  // Automatycznie w tle napraw czasy - v7 po fixie heurystyki i backfillu (bump żeby każdy odświeżył)
   useEffect(() => {
-    const key = 'videos-backfill-auto-v6-force'
+    const key = 'videos-backfill-auto-v7-force'
     if (typeof window !== 'undefined' && sessionStorage.getItem(key)) return
     if (typeof window !== 'undefined') sessionStorage.setItem(key, '1')
     fetch('/api/videos/backfill?force=1', { method: 'POST' })
@@ -283,7 +299,20 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
         const data = await res.json()
         if (data.updated > 0) {
           const r = await fetch('/api/videos')
-          if (r.ok) setVideos(await r.json())
+          if (r.ok) {
+            const fresh = await r.json()
+            setVideos((prev) => {
+              const byId = new Map(prev.map((v) => [v.id, v._count]))
+              return fresh.map((v: Video) => ({
+                ...v,
+                _count: {
+                  progress: v._count?.progress ?? byId.get(v.id)?.progress ?? 0,
+                  sessionVideos: (v._count as any)?.sessionVideos ?? byId.get(v.id)?.sessionVideos ?? 0,
+                },
+              }))
+            })
+            // opcjonalnie toast tylko gdy coś się zmieniło
+          }
         }
       })
       .catch(() => {})

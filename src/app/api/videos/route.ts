@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       include: {
         tags: { include: { tag: true } },
-        _count: { select: { progress: true } },
+        _count: { select: { progress: true, sessionVideos: true } },
       },
     })
 
