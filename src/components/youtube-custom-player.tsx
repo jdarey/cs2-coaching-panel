@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, RotateCcw, Loader2, Captions, CaptionsOff } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, RotateCcw, Loader2, Captions, CaptionsOff, Settings } from 'lucide-react'
 import { useContentProtection } from './use-content-protection'
 import { ContentProtectionOverlay } from './content-protection-overlay'
 
@@ -35,7 +35,21 @@ const saveVolume = (volume: number, muted: boolean) => {
   try { localStorage.setItem(VOLUME_KEY, JSON.stringify({ volume, muted })) } catch (_) {}
 }
 
-// Quality — default auto (ABR) adapts to user's connection
+const QUALITY_LABELS: Record<string, string> = {
+  auto: 'Auto',
+  tiny: '144p',
+  small: '240p',
+  medium: '360p',
+  large: '480p',
+  hd720: '720p',
+  hd1080: '1080p',
+  hd1440: '1440p',
+  hd2160: '4K',
+  highres: '4K',
+}
+const QUALITY_ORDER = ['hd2160', 'hd1440', 'highres', 'hd1080', 'hd720', 'large', 'medium', 'small', 'tiny', 'auto']
+
+// Quality — default auto (ABR) adapts to user's connection, but we force high then allow user to change
 const formatTime = (s: number) => {
   if (!isFinite(s) || s < 0) return '0:00'
   const m = Math.floor(s / 60)
@@ -66,6 +80,9 @@ export function YoutubeCustomPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [captionsOn, setCaptionsOn] = useState(false)
   const [showControls, setShowControls]  = useState(true)
+  const [showQualityMenu, setShowQualityMenu] = useState(false)
+  const [availableQualities, setAvailableQualities] = useState<string[]>(['auto'])
+  const [currentQuality, setCurrentQuality] = useState<string>('auto')
   // Opaque pre-play poster (the video's own thumbnail) so nothing YouTube
   // draws behind it — thumbnail, watermark, play button — is ever visible
   // before the student starts watching.
@@ -222,7 +239,7 @@ export function YoutubeCustomPlayer({
 
     const startSec = initialStartSeconds || 0
 
-    playerRef.current = new win.YT.Player(mountId, {
+      playerRef.current = new win.YT.Player(mountId, {
       videoId,
       playerVars: {
         autoplay:       0,
@@ -239,6 +256,7 @@ export function YoutubeCustomPlayer({
         playsinline:    1,
         wmode:          'opaque',
         start:          startSec > 0 ? Math.floor(startSec) : undefined,
+        vq:             'hd1080',
         color:          'white',
         loop:           0,
         enablejsapi:    1,
@@ -282,8 +300,31 @@ export function YoutubeCustomPlayer({
             event.target.setOption('captions', 'track', { lang: 'off' })
             event.target.setOption('cc', 'track', {})
           } catch (_) {}
+          // Quality: force high by default (hd1080/highres) then respect user choice; YT ABR will still adapt if needed
+          try {
+            const avail: string[] = event.target.getAvailableQualityLevels?.() || []
+            if (avail.length) {
+              setAvailableQualities(avail)
+              const preferred = ['hd1080', 'highres', 'hd720', 'large'].find((q) => avail.includes(q)) || avail[0]
+              if (preferred && preferred !== 'auto') {
+                try { event.target.setPlaybackQuality(preferred); event.target.setPlaybackQualityRange?.(preferred, preferred) } catch {}
+                setCurrentQuality(preferred)
+              }
+            } else {
+              // Fallback: try hd1080 directly, YT will pick closest
+              try { event.target.setPlaybackQuality('hd1080') } catch {}
+              setCurrentQuality('hd1080')
+            }
+          } catch (_) {}
         },
         onStateChange: (event: any) => applyPlayerState(event.data, event.target),
+        onPlaybackQualityChange: (event: any) => {
+          try { setCurrentQuality(event.data) } catch {}
+          try {
+            const avail: string[] = event.target.getAvailableQualityLevels?.() || []
+            if (avail.length) setAvailableQualities(avail)
+          } catch {}
+        },
       },
     })
 
@@ -444,6 +485,23 @@ export function YoutubeCustomPlayer({
       } else {
         p.unloadModule('captions')
         p.setOption('captions', 'track', {})
+      }
+    } catch {}
+    resetControlsTimer()
+  }
+  const handleQualityChange = (q: string) => {
+    const p = playerRef.current
+    if (!p) return
+    setCurrentQuality(q)
+    setShowQualityMenu(false)
+    try {
+      if (q === 'auto') {
+        // Let YT ABR decide
+        try { p.setPlaybackQuality('auto'); p.setPlaybackQualityRange?.('auto', 'auto') } catch {}
+      } else {
+        p.setPlaybackQuality(q)
+        // Pin to chosen quality so YT doesn't auto-downgrade immediately
+        try { p.setPlaybackQualityRange?.(q, q) } catch {}
       }
     } catch {}
     resetControlsTimer()
@@ -617,6 +675,25 @@ export function YoutubeCustomPlayer({
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <button onClick={() => setShowQualityMenu((v) => !v)} className={`text-white hover:text-[#a78bfa] transition-colors outline-none cursor-pointer ${showQualityMenu ? 'text-[#a78bfa]' : ''}`} title={`Jakość: ${QUALITY_LABELS[currentQuality] || currentQuality}`} aria-label="Jakość wideo">
+                <Settings className="w-5 h-5" />
+              </button>
+              {showQualityMenu && (
+                <div className="absolute bottom-8 right-0 min-w-[130px] rounded-xl overflow-hidden bg-black/90 backdrop-blur-md border border-white/10 shadow-xl z-50">
+                  <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-white/40 border-b border-white/5">Jakość</div>
+                  {QUALITY_ORDER.filter((q) => q === 'auto' || availableQualities.includes(q)).map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => handleQualityChange(q)}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${currentQuality === q ? 'bg-[#a78bfa]/20 text-[#a78bfa]' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+                    >
+                      {QUALITY_LABELS[q] || q} {currentQuality === q ? '✓' : ''}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button onClick={toggleFullscreen} className="text-white hover:text-[#a78bfa] transition-colors outline-none cursor-pointer" title={isFullscreen ? 'Wyjdź z pełnego ekranu' : 'Pełny ekran'} aria-label={isFullscreen ? 'Wyjdź z pełnego ekranu' : 'Pełny ekran'}>
               {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </button>
