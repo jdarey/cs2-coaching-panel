@@ -184,8 +184,10 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '—'
-    const mins = Math.floor(seconds / 60)
+    const h = Math.floor(seconds / 3600)
+    const mins = Math.floor((seconds % 3600) / 60)
     const secs = seconds % 60
+    if (h > 0) return `${h}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
