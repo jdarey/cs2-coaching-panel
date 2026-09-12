@@ -672,8 +672,7 @@ export function YoutubeCustomPlayer({
       {/* Cover YT UI — title bar, share, big center play/pause, watermark — also when playing (central pause i udostepnienie w rogu) */}
       {hasPlayed && !isEnded && (
         <div className="absolute inset-0 z-35 pointer-events-none select-none" aria-hidden>
-          <div className="absolute top-0 left-0 right-0 h-14 bg-gradient-to-b from-black/70 via-black/30 to-transparent" />
-          <div className="absolute top-0 right-0 h-12 w-40 bg-gradient-to-l from-black/50 via-black/20 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-14 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           {!isPlaying && (
             <div className="absolute top-2 left-2">
@@ -715,7 +714,7 @@ export function YoutubeCustomPlayer({
 
       {/* Premium corner watermark only — no large diagonal */}
       {watermark && (
-        <div className="absolute bottom-5 right-3 z-30 pointer-events-none select-none">
+        <div className="absolute bottom-2 right-2 z-30 pointer-events-none select-none">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/35 backdrop-blur-md border border-white/10 text-[10px] font-medium tracking-wider text-white/35">
             <span className="w-1 h-1 rounded-full bg-white/25" />
             {watermark}
