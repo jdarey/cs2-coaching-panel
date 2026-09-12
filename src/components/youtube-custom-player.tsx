@@ -415,6 +415,24 @@ export function YoutubeCustomPlayer({
     }
   }, [])
 
+  // In fullscreen the 1920x1080 scaled iframe would appear small (letterboxed) — make it fill 100%
+  useEffect(() => {
+    const el = containerRef.current?.querySelector(`#yt-player-${videoId}`) as HTMLElement | null
+    const iframe = el?.querySelector('iframe') as HTMLElement | null
+    const target = (iframe as any) || el
+    if (!target) return
+    if (isFullscreen) {
+      target.style.width = '100%'
+      target.style.height = '100%'
+      ;(target.style as any).transform = 'none'
+    } else {
+      target.style.width = '1920px'
+      target.style.height = '1080px'
+      ;(target.style as any).transform = `scale(${playerScale})`
+      ;(target.style as any).transformOrigin = 'top left'
+    }
+  }, [isFullscreen, playerScale, videoId])
+
   // Controls auto-hide while playing.
   const resetControlsTimer = useCallback(() => {
     setShowControls(true)
@@ -560,11 +578,15 @@ export function YoutubeCustomPlayer({
       onMouseMove={resetControlsTimer}
       title={title}
     >
-      {/* Chromeless YouTube player — controls:0 hides YT UI. For >1080p (4K) YT ignores setPlaybackQuality since 2019 (developers.google.com/youtube/iframe_api_revision_history: Oct 2019) — ABR picks quality based on player size. We render at 1920x1080 (3840 on retina) and scale down so YT picks high quality. */}
+      {/* Chromeless YouTube player — controls:0 hides YT UI. For >1080p (4K) YT ignores setPlaybackQuality since 2019 — ABR picks quality based on player size. We render at 1920x1080 (3840 on retina) and scale down so YT picks high quality; in fullscreen use 100% to fill screen. */}
       <div className="absolute inset-0 overflow-hidden">
         <div
           id={`yt-player-${videoId}`}
-          style={{ width: '1920px', height: '1080px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }}
+          style={
+            isFullscreen
+              ? { width: '100%', height: '100%' }
+              : { width: '1920px', height: '1080px', transform: `scale(${playerScale})`, transformOrigin: 'top left' }
+          }
         />
       </div>
 
