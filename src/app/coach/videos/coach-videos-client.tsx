@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { StudentPicker } from '@/components/student-picker'
@@ -271,6 +271,25 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       }
     } catch { toast({ title: 'Błąd', variant: 'destructive' }) } finally { setBackfillLoading(false) }
   }
+
+  // Automatycznie w tle napraw czasy - raz, z force zeby nadpisac tez bledne stare wartosci (poprzedni regex lapal zle)
+  useEffect(() => {
+    const key = 'videos-backfill-auto-v3-force'
+    if (typeof window !== 'undefined' && sessionStorage.getItem(key)) return
+    // odpal tylko jesli sa bledne czasy - sprawdz czy jakikolwiek ma duration null lub podejrzanie krotki (<60s dla dlugich tytulow) - dla pewnosci raz z force
+    if (typeof window !== 'undefined') sessionStorage.setItem(key, '1')
+    fetch('/api/videos/backfill?force=1', { method: 'POST' })
+      .then(async (res) => {
+        if (!res.ok) return
+        const data = await res.json()
+        if (data.updated > 0) {
+          const r = await fetch('/api/videos')
+          if (r.ok) setVideos(await r.json())
+        }
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const openEditDialog = (video: Video) => {
     setEditingVideo(video)
