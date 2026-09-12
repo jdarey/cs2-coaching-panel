@@ -378,17 +378,32 @@ export function YoutubeCustomPlayer({
         const dur = p.getDuration?.() || 0
         latestPositionRef.current = pos
         setCurrentTime(pos)
-        if (dur > 0) latestDurationRef.current = dur
+        if (dur > 0) {
+          latestDurationRef.current = dur
+          if (dur !== duration) setDuration(dur)
+        }
         const now = Date.now()
         if (now - lastSaveAtRef.current >= 5000) {
           lastSaveAtRef.current = now
           onProgressRef.current?.({ position: pos, duration: dur || latestDurationRef.current, ended: false })
         }
       }, 500)
+    } else if (isReady && duration === 0) {
+      // Gdy video jeszcze nie gralo, duration moze byc 0 — probuj pobrac dopoki nie bedzie dostepne
+      interval = setInterval(() => {
+        const p: any = playerRef.current
+        if (!p || typeof p.getDuration !== 'function') return
+        const dur = p.getDuration() || 0
+        if (dur > 0) {
+          setDuration(dur)
+          latestDurationRef.current = dur
+          if (interval) clearInterval(interval)
+        }
+      }, 500)
     }
     return () => { if (interval) clearInterval(interval) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying])
+  }, [isPlaying, isReady, duration])
 
   // Enforce highest quality (4K) while playing — YT ABR downgrades after ~8s (morphe-patches#667), setPlaybackQuality is no-op but setPlaybackQualityRange + periodic re-apply helps
   useEffect(() => {
