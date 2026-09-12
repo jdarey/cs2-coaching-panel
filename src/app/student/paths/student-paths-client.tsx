@@ -182,8 +182,10 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
 
   const allDone = (videos: PathVideo[]) => videos.length > 0 && videos.every((v) => DONE_STATUSES.includes(v.status))
   const videoCount = (p: Path) => p.modules.reduce((a, m) => a + m.videos.length, 0)
-  const totalMinutes = (p: Path) =>
+  const totalSeconds = (p: Path) =>
     p.modules.reduce((a, m) => a + m.videos.reduce((x, v) => x + (v.video.duration ?? 0), 0), 0)
+  // totalMinutes was misnamed – zwracało sekundy; alias dla kompatybilności
+  const totalMinutes = totalSeconds
 
   return (
     <StudentLayout>
@@ -399,11 +401,21 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                           <span className="inline-flex items-center gap-1">
                             <FolderOpen className="h-3 w-3" /> {p.modules.length} modułów
                           </span>
-                          {mins > 0 && (
-                            <span className="inline-flex items-center gap-1">
-                              <Clock className="h-3 w-3" /> ≈ {Math.max(1, Math.round(mins / 60))} h {Math.max(0, Math.round((mins % 60) / 10) * 10)} min
-                            </span>
-                          )}
+                          {mins > 0 && (() => {
+                            const totalMin = Math.round(mins / 60)
+                            if (totalMin < 60) return (
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3 w-3" /> ≈ {totalMin} min
+                              </span>
+                            )
+                            const h = Math.floor(totalMin / 60)
+                            const m = totalMin % 60
+                            return (
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3 w-3" /> ≈ {h} h{m > 0 ? ` ${m} min` : ''}
+                              </span>
+                            )
+                          })()}
                           <span className="text-white/30">
                             {done}/{all.length} obejrzanych
                           </span>

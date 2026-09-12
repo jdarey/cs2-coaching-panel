@@ -86,6 +86,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     title: '',
     url: '',
     description: '',
+    duration: '' as string,
     tagIds: [] as string[],
   })
   const [assignFormData, setAssignFormData] = useState({
@@ -295,6 +296,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       title: video.title,
       url: video.url,
       description: video.description || '',
+      duration: '',
       tagIds: video.tags.map((t) => t.tag.id),
     })
     setDialogOpen(true)
@@ -313,7 +315,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
   }
 
   const resetForm = () => {
-    setFormData({ title: '', url: '', description: '', tagIds: [] })
+    setFormData({ title: '', url: '', description: '', duration: '', tagIds: [] })
   }
 
   const resetAssignForm = () => {

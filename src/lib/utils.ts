@@ -117,11 +117,8 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
           const data = await res.json()
           const secs = data?.videoDetails?.lengthSeconds
           if (secs && /^\d+$/.test(String(secs))) return parseInt(String(secs), 10)
-          const len = data?.videoDetails?.lengthSeconds || data?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
-          if (len && /^\d+$/.test(String(len))) {
-            const n = parseInt(String(len), 10)
-            return n > 10000 ? Math.round(n / 1000) : n
-          }
+          const ms = data?.videoDetails?.approxDurationMs ?? data?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
+          if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
         }
       } catch {}
     }
