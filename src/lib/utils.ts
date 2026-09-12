@@ -97,6 +97,43 @@ export function getVideoEmbedUrl(url: string): string | null {
   return null
 }
 
+export async function fetchVideoDuration(url: string): Promise<number | null> {
+  const ytId = getYouTubeId(url)
+  if (ytId) {
+    try {
+      const res = await fetch(`https://www.youtube.com/watch?v=${ytId}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        next: { revalidate: 86400 },
+      } as any)
+      if (res.ok) {
+        const html = await res.text()
+        const m1 = html.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
+        if (m1) return Math.round(parseInt(m1[1], 10) / 1000)
+        const m2 = html.match(/"lengthSeconds"\s*:\s*"(\d+)"/)
+        if (m2) return parseInt(m2[1], 10)
+        const m3 = html.match(/"lengthText".*?"simpleText"\s*:\s*"([^"]+)"/)
+        if (m3) {
+          const parts = m3[1].split(':').map((n) => parseInt(n, 10))
+          if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+          if (parts.length === 2) return parts[0] * 60 + parts[1]
+        }
+      }
+    } catch {}
+    return null
+  }
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) {
+    try {
+      const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`, { next: { revalidate: 86400 } } as any)
+      if (res.ok) {
+        const data = await res.json()
+        if (typeof data.duration === 'number') return Math.round(data.duration)
+      }
+    } catch {}
+  }
+  return null
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Szkic',
   ACTIVE: 'Aktywna',

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getYouTubeId, getVideoThumbnail } from '@/lib/utils'
+import { getYouTubeId, getVideoThumbnail, fetchVideoDuration } from '@/lib/utils'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -52,9 +52,10 @@ export async function POST(req: NextRequest) {
 
   const thumbnail = getVideoThumbnail(url) || undefined
   const source = getYouTubeId(url) ? 'youtube' : url.includes('vimeo.com') ? 'vimeo' : 'other'
+  const duration = await fetchVideoDuration(url).catch(() => null)
 
   const video = await prisma.video.create({
-    data: { title, url, thumbnail, source, coachId: user.id, isActive: true },
+    data: { title, url, thumbnail, duration: duration ?? undefined, source, coachId: user.id, isActive: true },
   })
 
   return NextResponse.json(video, { status: 201 })

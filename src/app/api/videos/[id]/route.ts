@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { videoUpdateSchema } from '@/lib/validations'
-import { getVideoThumbnail } from '@/lib/utils'
+import { getVideoThumbnail, fetchVideoDuration } from '@/lib/utils'
 
 export async function PUT(
   request: NextRequest,
@@ -27,14 +27,20 @@ export async function PUT(
       return NextResponse.json({ error: 'Film nie znaleziony lub brak uprawnień' }, { status: 404 })
     }
 
-    // Update thumbnail if URL changed
+    // Update thumbnail/duration if URL changed
     const thumbnail = validated.url ? getVideoThumbnail(validated.url) : undefined
+    let fetchedDuration: number | null = null
+    if (validated.url && !validated.duration) {
+      try { fetchedDuration = await fetchVideoDuration(validated.url) } catch {}
+    }
 
     // tagIds is a validation-layer field, not a Prisma column - it is handled
     // through the relation update below instead of being spread into data.
     const { tagIds, ...videoData } = validated
     const updateData: any = { ...videoData }
     if (thumbnail) updateData.thumbnail = thumbnail
+    if (fetchedDuration) updateData.duration = fetchedDuration
+    else if (validated.url && validated.duration === null) updateData.duration = null
 
     // Handle tag updates
     if (tagIds) {
