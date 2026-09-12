@@ -272,11 +272,10 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     } catch { toast({ title: 'Błąd', variant: 'destructive' }) } finally { setBackfillLoading(false) }
   }
 
-  // Automatycznie w tle napraw czasy - raz, z force zeby nadpisac tez bledne stare wartosci (poprzedni regex lapal zle)
+  // Automatycznie w tle napraw czasy - v4 po fixie parsowania (poprzednio lapal 37h live zamiast 20min filmu)
   useEffect(() => {
-    const key = 'videos-backfill-auto-v3-force'
+    const key = 'videos-backfill-auto-v4-force'
     if (typeof window !== 'undefined' && sessionStorage.getItem(key)) return
-    // odpal tylko jesli sa bledne czasy - sprawdz czy jakikolwiek ma duration null lub podejrzanie krotki (<60s dla dlugich tytulow) - dla pewnosci raz z force
     if (typeof window !== 'undefined') sessionStorage.setItem(key, '1')
     fetch('/api/videos/backfill?force=1', { method: 'POST' })
       .then(async (res) => {

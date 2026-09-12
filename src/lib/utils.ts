@@ -116,7 +116,7 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
         if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
       }
     } catch {}
-    // 2) Fallback: watch page + ytInitialPlayerResponse
+    // 2) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse, nie pierwsze approxDurationMs z calej strony (mylilo 37h live z 20min filmem)
     try {
       const res = await fetch(`https://www.youtube.com/watch?v=${ytId}`, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
@@ -124,23 +124,21 @@ export async function fetchVideoDuration(url: string): Promise<number | null> {
       } as any)
       if (res.ok) {
         const html = await res.text()
-        const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*({.+?});/)
-        if (playerMatch) {
+        const idx = html.indexOf('ytInitialPlayerResponse')
+        if (idx !== -1) {
+          const snippet = html.slice(idx, idx + 30000)
+          const m = snippet.match(/"lengthSeconds"\s*:\s*"(\d+)"/)
+          if (m) return parseInt(m[1], 10)
+          const mMs = snippet.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
+          if (mMs) return Math.round(parseInt(mMs[1], 10) / 1000)
           try {
-            const json = JSON.parse(playerMatch[1])
-            const secs = json?.videoDetails?.lengthSeconds
-            if (secs) return parseInt(String(secs), 10)
+            const jsonMatch = snippet.match(/ytInitialPlayerResponse\s*=\s*(\{[\s\S]+?\});/)
+            if (jsonMatch) {
+              const json = JSON.parse(jsonMatch[1])
+              const secs = json?.videoDetails?.lengthSeconds
+              if (secs) return parseInt(String(secs), 10)
+            }
           } catch {}
-        }
-        const m1 = html.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
-        if (m1) return Math.round(parseInt(m1[1], 10) / 1000)
-        const m2 = html.match(/"lengthSeconds"\s*:\s*"(\d+)"/)
-        if (m2) return parseInt(m2[1], 10)
-        const m3 = html.match(/"lengthText".*?"simpleText"\s*:\s*"([^"]+)"/)
-        if (m3) {
-          const parts = m3[1].split(':').map((n) => parseInt(n, 10))
-          if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-          if (parts.length === 2) return parts[0] * 60 + parts[1]
         }
       }
     } catch {}
