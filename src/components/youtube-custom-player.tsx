@@ -265,7 +265,7 @@ export function YoutubeCustomPlayer({
         autoplay:       0,
         controls:       0,
         disablekb:      1,
-        fs:             0,
+        fs:             1,
         modestbranding: 1,
         rel:            0,
         showinfo:       0,
@@ -290,8 +290,12 @@ export function YoutubeCustomPlayer({
           // tooltips). Ours says what it is: a training video. (The API
           // already grants the frame autoplay permission itself.)
           try {
-            containerRef.current?.querySelectorAll('iframe').forEach(f => {
+            containerRef.current?.querySelectorAll('iframe').forEach((f: HTMLIFrameElement) => {
               f.title = 'Wideo treningowe'
+              f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
+              f.setAttribute('allowFullscreen', '')
+              // @ts-ignore
+              f.allowFullscreen = true
             })
           } catch (_) {}
           setIsReady(true)
@@ -397,9 +401,18 @@ export function YoutubeCustomPlayer({
 
   // Fullscreen tracking (our own button uses the container's requestFullscreen).
   useEffect(() => {
-    const onFs = () => setIsFullscreen(!!document.fullscreenElement)
+    const onFs = () => {
+      const doc: any = document
+      setIsFullscreen(!!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement))
+    }
     document.addEventListener('fullscreenchange', onFs)
-    return () => document.removeEventListener('fullscreenchange', onFs)
+    document.addEventListener('webkitfullscreenchange', onFs)
+    document.addEventListener('mozfullscreenchange', onFs)
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs)
+      document.removeEventListener('webkitfullscreenchange', onFs)
+      document.removeEventListener('mozfullscreenchange', onFs)
+    }
   }, [])
 
   // Controls auto-hide while playing.
@@ -486,10 +499,14 @@ export function YoutubeCustomPlayer({
   const toggleFullscreen = () => {
     const el = containerRef.current
     if (!el) return
-    if (document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => {})
-    } else if (typeof el.requestFullscreen === 'function') {
-      void el.requestFullscreen().catch(() => {})
+    const doc: any = document
+    const isFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement)
+    if (isFs) {
+      const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen
+      if (exit) void exit.call(document).catch(() => {})
+    } else {
+      const req = (el as any).requestFullscreen || (el as any).webkitRequestFullscreen || (el as any).mozRequestFullScreen || (el as any).msRequestFullscreen
+      if (req) void req.call(el).catch(() => {})
     }
     resetControlsTimer()
   }
