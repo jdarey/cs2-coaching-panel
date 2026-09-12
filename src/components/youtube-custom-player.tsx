@@ -675,10 +675,6 @@ export function YoutubeCustomPlayer({
           <div className="absolute top-0 left-0 right-0 h-14 bg-gradient-to-b from-black/70 via-black/30 to-transparent" />
           <div className="absolute top-0 right-0 h-12 w-40 bg-gradient-to-l from-black/50 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          <div className="absolute bottom-0 right-0 h-8 w-32 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-10 h-10 rounded-full bg-black/20 ring-1 ring-white/5 backdrop-blur-[1px]" />
-          </div>
           {!isPlaying && (
             <div className="absolute top-2 left-2">
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white/70 bg-black/40 ring-1 ring-white/10 backdrop-blur">
