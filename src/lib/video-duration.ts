@@ -133,32 +133,4 @@ export async function getVideoDuration(url: string, _opts?: { noCache?: boolean 
   return null
 }
 
-// Pomocnicze dla UI: "12:34" -> 754, "1:12:34" -> 4354, "754" -> 754
-export function parseDurationString(v: string): number | undefined {
-  const s = v.trim()
-  if (!s) return undefined
-  if (/^\d+$/.test(s)) return parseInt(s, 10)
-  const parts = s.split(':').map((p) => parseInt(p, 10))
-  if (parts.some(isNaN)) return undefined
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-  if (parts.length === 2) return parts[0] * 60 + parts[1]
-  return undefined
-}
-
-export function formatDuration(seconds: number | null): string {
-  if (!seconds) return '—'
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  return `${m}:${String(s).padStart(2, '0')}`
-}
-
-export function formatTotalDuration(totalSeconds: number): string {
-  if (totalSeconds <= 0) return '—'
-  const totalMin = Math.round(totalSeconds / 60)
-  if (totalMin < 60) return `${totalMin} min`
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  return m > 0 ? `${h} h ${m} min` : `${h} h`
-}
+export { parseDurationString, formatDuration, formatTotalDuration } from './format'

@@ -298,6 +298,58 @@ export function StudentDashboardClient({
           </div>
         </div>
 
+        {/* ===== ONE-SCREEN DZIŚ — checklist 1 rutyna + 2 filmy + 1 zadanie + Start ===== */}
+        <div className="animate-rise-in glass-liquid relative overflow-hidden rounded-3xl p-6 mb-8 spotlight-card" style={{ animationDelay: '90ms' }} onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`); e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`) }}>
+          <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-96 h-40 rounded-full bg-[#a78bfa]/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex items-center gap-3 mb-4">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20"><Sparkles className="w-4 h-4 text-white" /></span>
+            <div>
+              <h3 className="font-display text-lg font-bold text-white">Co dziś zrobić</h3>
+              <p className="text-xs text-white/45">1 rutyna + 2 filmy + 1 zadanie · jeden Start</p>
+            </div>
+            <span className="ml-auto hidden sm:inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-white/50">~30 min</span>
+          </div>
+          <ul className="relative z-10 space-y-2.5">
+            {activeRoutine ? (
+              <li className="flex items-center gap-3 rounded-2xl px-3.5 py-3 bg-white/[0.03] border border-white/[0.06] hover:border-[#a78bfa]/20 hover:bg-white/[0.05] transition-colors">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#a78bfa]/15 text-[#c4b5fd] shrink-0"><ListChecks className="w-3.5 h-3.5" /></span>
+                <span className="flex-1 min-w-0 truncate text-sm font-medium text-white/85">{activeRoutine.routine.title} · {routineDone}/{routineTotal}</span>
+                <span className="text-xs text-white/40">{routinePct}%</span>
+              </li>
+            ) : (
+              <li className="flex items-center gap-3 rounded-2xl px-3.5 py-3 bg-white/[0.02] border border-dashed border-white/10 text-sm text-white/40">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.04] shrink-0"><ListChecks className="w-3.5 h-3.5" /></span>
+                Brak aktywnej rutyny — poproś trenera
+              </li>
+            )}
+            {(nextUpVideo ? [nextUpVideo] : []).concat(progress.filter(p => p.status === 'PENDING' && p.id !== nextUpVideo?.id).slice(0,1)).slice(0,2).map((p: any) => (
+              <li key={p.id} className="flex items-center gap-3 rounded-2xl px-3.5 py-3 bg-white/[0.03] border border-white/[0.06] hover:border-[#a78bfa]/20 hover:bg-white/[0.05] transition-colors">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.04] shrink-0"><Film className="w-3.5 h-3.5 text-white/50" /></span>
+                <span className="flex-1 min-w-0 truncate text-sm font-medium text-white/85">{p.video.title}</span>
+                <span className="text-xs text-white/30 hidden sm:inline">{p.session?.title || 'Film'}</span>
+              </li>
+            ))}
+            {nextAssignment ? (
+              <li className="flex items-center gap-3 rounded-2xl px-3.5 py-3 bg-white/[0.03] border border-white/[0.06] hover:border-[#a78bfa]/20 hover:bg-white/[0.05] transition-colors">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-amber-500/15 text-amber-300 shrink-0"><Clock className="w-3.5 h-3.5" /></span>
+                <span className="flex-1 min-w-0 truncate text-sm font-medium text-white/85">{nextAssignment.title}</span>
+                {nextAssignment.dueDate && <span className="text-xs text-white/40">do {formatDate(nextAssignment.dueDate)}</span>}
+              </li>
+            ) : (
+              <li className="flex items-center gap-3 rounded-2xl px-3.5 py-3 bg-white/[0.02] border border-dashed border-white/10 text-sm text-white/40">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.04] shrink-0"><CheckCircle2 className="w-3.5 h-3.5" /></span>
+                Brak zadań — świetnie!
+              </li>
+            )}
+          </ul>
+          <div className="relative z-10 mt-4 flex gap-2">
+            <Link href={activeRoutine ? "/student/tasks" : nextUpVideo ? `/student/videos/${nextUpVideo.video.id}` : "/student/videos"} className="inline-flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold text-white btn-darey">
+              <PlayCircle className="w-4 h-4" /> Start
+            </Link>
+            <span className="hidden sm:inline-flex items-center text-xs text-white/30 ml-2">Naciśnij <kbd className="mx-1 px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-white/60">⌘K</kbd> aby szukać</span>
+          </div>
+        </div>
+
         {/* ===== ACTIVE ROUTINE ===== */}
         {activeRoutine && (
           <Link

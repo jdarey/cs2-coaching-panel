@@ -17,25 +17,7 @@ export function spotlightHandler(e: MouseEvent<HTMLElement>) {
   e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
 }
 
-export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOptions) {
-  const d = new Date(date)
-  return d.toLocaleDateString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: 'Europe/Warsaw',
-    ...options,
-  })
-}
-
-export function formatDateTime(date: Date | string) {
-  return formatDate(date, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })
-}
-
-export function formatTime(date: Date | string) {
-  const d = new Date(date)
-  return d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })
-}
+export { formatDate, formatDateTime, formatTime, formatDuration, formatTotalDuration, parseDurationString, mdToHtml } from './format'
 
 export function getInitials(name: string) {
   return name
