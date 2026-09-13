@@ -297,22 +297,69 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       if (data.updated > 0) {
         toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} z ${data.total} filmów${data.failed ? `, nie udało się ${data.failed}` : ''}${data.skipped ? `, pominięto ${data.skipped} (Drive/inne)` : ''}` })
       } else if (data.failed > 0 && data.failed === data.total) {
-        // Serwer zablokowany (Vercel IP) — próbujemy z przeglądarki (Twój IP omija blokadę) przez Piped/Invidious
-        toast({ title: 'Serwer zablokowany — próbuję z przeglądarki…', description: `YouTube zablokował Vercel. Pobieram czasy bezpośrednio z Twojej przeglądarki (3s)… Jeśli zadziała, czasy pojawią się za chwilę.` })
-        // fire-and-forget client fallback
+        // Serwer zablokowany (Vercel IP + Piped CORS) — fallback: ukryty YouTube IFrame w przeglądarce (bez CORS, działa dla niepublicznych)
+        toast({ title: 'Serwer zablokowany — próbuję z przeglądarki…', description: `YouTube zablokował Vercel. Pobieram czasy przez ukryty odtwarzacz YouTube w Twojej przeglądarce…` })
         ;(async () => {
           const getYtId = (url: string) => url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^&\n?#]+)/)?.[1] || null
-          const tryFetch = async (url: string, ms=2500) => { const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms); try{ const r=await fetch(url,{signal:c.signal} as any); if(!r.ok) return null; return await r.json()}catch{return null}finally{clearTimeout(t)}}
-          let ok=0
-          for (const v of videos.filter((x)=>x.duration==null).slice(0,12)) {
-            const ytId=getYtId(v.url); if(!ytId) continue
-            let dur:number|null=null
-            for (const base of ['https://pipedapi.kavin.rocks','https://api.piped.yt','https://pipedapi.syncpundit.io','https://pipedapi.r4fo.com']) { const j=await tryFetch(`${base}/streams/${ytId}`); if(typeof j?.duration==='number'&&j.duration>0){dur=Math.round(j.duration); break} }
-            if(!dur) for (const base of ['https://yewtu.be','https://invidious.protokolla.fi']) { const j=await tryFetch(`${base}/api/v1/videos/${ytId}`); const s=j?.lengthSeconds; if(typeof s==='number'&&s>0){dur=Math.round(s); break} if(typeof s==='string'&&/^\d+$/.test(s)){dur=parseInt(s,10); break} }
-            if(dur){ try{ const r=await fetch(`/api/videos/${v.id}/duration`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({duration:dur})}); if(r.ok){ ok++; setVideos((prev)=>prev.map((x)=>x.id===v.id?{...x,duration:dur}:x)) } }catch{} }
+          const getDurationHidden = (ytId: string): Promise<number | null> => new Promise((resolve) => {
+            const win = window as any
+            const create = () => {
+              const divId = `hidden-dur-${ytId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+              const div = document.createElement('div')
+              div.id = divId
+              div.style.position = 'absolute'; div.style.left = '-9999px'; div.style.width = '1px'; div.style.height = '1px'; div.style.overflow = 'hidden'
+              document.body.appendChild(div)
+              let done = false
+              let player: any = null
+              const cleanup = () => { try { player?.destroy?.() } catch {} try { div.remove() } catch {} }
+              const timeout = setTimeout(() => { if (!done) { done = true; cleanup(); resolve(null) } }, 8000)
+              try {
+                player = new win.YT.Player(divId, {
+                  videoId: ytId,
+                  width: 1, height: 1,
+                  playerVars: { controls: 0, playsinline: 1, rel: 0, modestbranding: 1, fs: 0, origin: window.location.origin },
+                  events: {
+                    onReady: (e: any) => {
+                      const poll = (attempts = 0) => {
+                        const d = e.target.getDuration?.()
+                        if (d && d > 0) { if (!done) { done = true; clearTimeout(timeout); cleanup(); resolve(Math.round(d)) } return }
+                        if (attempts >= 6) return
+                        setTimeout(() => poll(attempts + 1), 900)
+                      }
+                      poll()
+                    },
+                    onError: () => { if (!done) { done = true; clearTimeout(timeout); cleanup(); resolve(null) } },
+                  },
+                })
+              } catch { if (!done) { done = true; clearTimeout(timeout); cleanup(); resolve(null) } }
+            }
+            if (win.YT && win.YT.Player) create()
+            else {
+              if (!document.getElementById('youtube-iframe-api')) {
+                const tag = document.createElement('script')
+                tag.id = 'youtube-iframe-api'
+                tag.src = 'https://www.youtube.com/iframe_api'
+                document.head.appendChild(tag)
+              }
+              const prev = win.onYouTubeIframeAPIReady
+              win.onYouTubeIframeAPIReady = () => { if (prev) prev(); create() }
+              let tries = 0
+              const iv = setInterval(() => {
+                if (win.YT && win.YT.Player) { clearInterval(iv); create() }
+                else if (++tries > 25) { clearInterval(iv); resolve(null) }
+              }, 300)
+            }
+          })
+          let ok = 0
+          for (const v of videos.filter((x) => x.duration == null).slice(0, 8)) {
+            const ytId = getYtId(v.url); if (!ytId) continue
+            const dur = await getDurationHidden(ytId)
+            if (dur && dur > 0) {
+              try { const r = await fetch(`/api/videos/${v.id}/duration`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ duration: dur }) }); if (r.ok) { ok++; setVideos((prev) => prev.map((x) => x.id === v.id ? { ...x, duration: dur } : x)) } } catch {}
+            }
           }
-          if(ok>0) toast({ title: 'Sukces z przeglądarki', description: `Uzupełniono czas dla ${ok} filmów (przeglądarka ominęła blokadę Vercel).` })
-          else toast({ title: 'Nadal zablokowane', description: `Wpisz ręcznie: Edytuj → Czas trwania (12:34). Możesz dodać YOUTUBE_API_KEY w Vercel Env.`, variant: 'destructive' })
+          if (ok > 0) toast({ title: 'Sukces z przeglądarki', description: `Uzupełniono czas dla ${ok} filmów (ukryty odtwarzacz ominął blokadę).` })
+          else toast({ title: 'Nadal zablokowane', description: `Wpisz ręcznie: Edytuj → Czas trwania (12:34). Prywatne filmy wymagają ręcznego wpisu.`, variant: 'destructive' })
         })()
       } else if (data.failed > 0) {
         toast({ title: 'Uwaga', description: `Sprawdzono ${data.total} filmów, nie udało się pobrać czasu dla ${data.failed}${data.skipped ? `, pominięto ${data.skipped} Drive/inne` : ''}`, variant: 'destructive' })
