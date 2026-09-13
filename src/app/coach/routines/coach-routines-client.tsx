@@ -11,6 +11,8 @@ import {
   Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
+import { getYouTubeId } from '@/lib/utils'
+import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
 
 interface RoutineTask {
   id?: string
@@ -119,6 +121,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const [presetSearch, setPresetSearch] = useState('')
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [previewRoutine, setPreviewRoutine] = useState<Routine | null>(null)
+  const [previewTask, setPreviewTask] = useState<RoutineTask | null>(null)
   const { toast } = useToast()
 
   const addPresetToTasks = (p: ExercisePreset) => {
@@ -903,25 +906,36 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                     return (
                       <div key={d}>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd] mb-3">Dzień {d} · {dayTasks.length} {dayTasks.length===1?'zadanie':'zadań'}</p>
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {dayTasks.map((t, idx) => {
                             const vid = t.videoId ? videos.find((v)=>v.id===t.videoId) : null
                             return (
-                              <div key={idx} className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4">
-                                <div className="flex items-start gap-3">
-                                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white/70 shrink-0">{idx+1}</span>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-white">{t.title}</p>
-                                    {t.description && <div className="mt-1 text-xs text-white/55 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
-                                      {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-white/[0.06] text-white/60"><Clock className="w-3 h-3"/>~{t.minutes} min</span>}
-                                      {t.gifUrl && <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd] border border-[#a78bfa]/20"><Image className="w-3 h-3"/>GIF</span>}
-                                      {t.steamMapUrl && <a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[#f43f5e]/10 text-[#fda4af] border border-[#f43f5e]/20"><MapPin className="w-3 h-3"/>Mapa</a>}
-                                      {t.linkUrl && <a href={t.linkUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-white/[0.06] text-[#c4b5fd] border border-white/[0.08]"><Globe className="w-3 h-3"/>Link</a>}
-                                      {vid && <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd] border border-[#a78bfa]/20"><Film className="w-3 h-3"/>{vid.title}</span>}
-                                    </div>
-                                    {t.gifUrl && <img src={t.gifUrl} alt="" className="mt-3 w-full max-h-48 object-cover rounded-xl border border-white/10" loading="lazy" />}
-                                    {vid?.thumbnail && <img src={vid.thumbnail} alt={vid.title} className="mt-3 w-full max-h-28 object-cover rounded-xl border border-white/10" loading="lazy" />}
+                              <div key={idx} onClick={() => setPreviewTask(t)} className="group flex items-start gap-3 rounded-2xl p-3.5 border bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03] transition-all duration-300 relative cursor-pointer">
+                                <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white/70 shrink-0 mt-0.5">{idx+1}</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-white/90 flex items-center gap-2">
+                                    <span className="relative inline-flex items-center gap-1">
+                                      {t.title}
+                                      {t.gifUrl && (
+                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
+                                          <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35)] w-64">
+                                            <span className="relative h-36 w-64 bg-black block overflow-hidden">
+                                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                                              <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
+                                            </span>
+                                          </span>
+                                          <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#1a1628] border-l border-b border-white/10" />
+                                        </span>
+                                      )}
+                                    </span>
+                                  </p>
+                                  {t.description && <div className="mt-1 text-xs text-white/45 line-clamp-2 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}
+                                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                                    {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Clock className="w-3 h-3" />~{t.minutes} min</span>}
+                                    {t.videoId && <span className="inline-flex items-center gap-1 text-[11px] text-[#c4b5fd]"><Film className="w-3 h-3" />Film</span>}
+                                    {t.steamMapUrl && <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25"><MapPin className="w-3.5 h-3.5" />Mapa</span>}
+                                    {t.linkUrl && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Globe className="w-3 h-3" />Link</span>}
+                                    <span className="text-[11px] text-white/30 hidden sm:inline">kliknij aby zobaczyć film/opis</span>
                                   </div>
                                 </div>
                               </div>
@@ -933,8 +947,61 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   })
                 })()}
               </div>
-              <div className="p-4 border-t border-white/[0.06] flex justify-end shrink-0">
+              <div className="p-4 border-t border-white/[0.06] flex justify-between items-center shrink-0">
+                <p className="text-xs text-white/40">Tak widzi uczeń · kliknij zadanie aby zobaczyć film/GIF</p>
                 <button onClick={() => setPreviewRoutine(null)} className="px-5 h-10 rounded-xl glass-liquid text-white/70 hover:text-white">Zamknij podgląd</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {previewTask && (
+          <div className="fixed inset-0 z-[60] grid place-items-center p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={() => setPreviewTask(null)} />
+            <div className="glass-liquid relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl flex flex-col">
+              <button onClick={() => setPreviewTask(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white z-10"><X className="w-4 h-4" /></button>
+              <div className="p-6 border-b border-white/[0.06]">
+                <h3 className="font-display text-xl font-bold text-white pr-8">{previewTask.title}</h3>
+                {previewTask.description && <div className="mt-2 text-sm text-white/60 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(previewTask.description)}} />}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {previewTask.minutes && <span className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/60"><Clock className="w-3.5 h-3.5" />~{previewTask.minutes} min</span>}
+                  {previewTask.steamMapUrl && <a href={previewTask.steamMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25"><MapPin className="w-3.5 h-3.5" />Mapa Steam</a>}
+                  {previewTask.linkUrl && <a href={previewTask.linkUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/20"><Globe className="w-3.5 h-3.5" />Link</a>}
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {(() => {
+                  const vid = previewTask.videoId ? videos.find((v)=>v.id===previewTask.videoId) : null
+                  const ytId = vid ? getYouTubeId(vid.url) : null
+                  if (ytId) {
+                    return (
+                      <div className="rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
+                        <div className="aspect-video">
+                          <YoutubeCustomPlayer videoId={ytId} title={previewTask.title} />
+                        </div>
+                      </div>
+                    )
+                  }
+                  if (vid) {
+                    return (
+                      <div className="rounded-2xl overflow-hidden bg-black border border-white/[0.08] p-6 text-center">
+                        <Film className="w-8 h-8 text-white/30 mx-auto mb-2" />
+                        <p className="text-sm text-white/60">{vid.title}</p>
+                        <a href={vid.url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-[#a78bfa]/20 text-[#c4b5fd]">Otwórz film</a>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
+                {previewTask.gifUrl && (
+                  <div className="rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={previewTask.gifUrl} alt={previewTask.title} className="w-full h-auto" loading="lazy" />
+                  </div>
+                )}
+              </div>
+              <div className="p-4 border-t border-white/[0.06] flex justify-end">
+                <button onClick={() => setPreviewTask(null)} className="px-5 h-9 rounded-xl glass-liquid text-white/70">Zamknij</button>
               </div>
             </div>
           </div>
