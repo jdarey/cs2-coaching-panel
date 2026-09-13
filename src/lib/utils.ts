@@ -107,6 +107,12 @@ function parseISO8601Duration(iso: string): number | null {
   return total > 0 ? total : null
 }
 
+function fetchWithTimeout(url: string, opts: any, ms = 5000): Promise<Response> {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), ms)
+  return fetch(url, { ...opts, signal: controller.signal } as any).finally(() => clearTimeout(id))
+}
+
 export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean }): Promise<number | null> {
   const ytId = getYouTubeId(url)
   if (ytId) {
@@ -119,7 +125,7 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
       { clientName: 'MWEB', clientVersion: '2.20240101' },
     ] as const) {
       try {
-        const res = await fetch('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
+        const res = await fetchWithTimeout('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -131,7 +137,7 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
           },
           body: JSON.stringify({ context: { client }, videoId: ytId }),
           ...cacheOpts,
-        } as any)
+        } as any, 5000)
         if (res.ok) {
           const data = await res.json()
           const secs = data?.videoDetails?.lengthSeconds
@@ -149,10 +155,10 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
     }
     // 2) Fallback: Google Data API v3 (ten sam klucz) - zwraca ISO 8601 PT1H2M10S, dziala z Vercel czesciej niz Innertube
     try {
-      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
+      const res = await fetchWithTimeout(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
         headers: { 'User-Agent': UA },
         ...cacheOpts,
-      } as any)
+      } as any, 5000)
       if (res.ok) {
         const data = await res.json()
         const iso: string | undefined = data?.items?.[0]?.contentDetails?.duration
@@ -164,10 +170,10 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
     } catch {}
     // 3) Fallback: lemnoslife noKey proxy (nie wymaga klucza, omija blokady IP)
     try {
-      const res = await fetch(`https://yt.lemnoslife.com/noKey/videos?part=contentDetails&id=${ytId}`, {
+      const res = await fetchWithTimeout(`https://yt.lemnoslife.com/noKey/videos?part=contentDetails&id=${ytId}`, {
         headers: { 'User-Agent': UA },
         ...cacheOpts,
-      } as any)
+      } as any, 5000)
       if (res.ok) {
         const data = await res.json()
         const iso: string | undefined = data?.items?.[0]?.contentDetails?.duration
@@ -179,14 +185,14 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
     } catch {}
     // 4) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse, wiekszy snippet i CONSENT bypass
     try {
-      const res = await fetch(`https://www.youtube.com/watch?v=${ytId}&hl=en&has_verified=1`, {
+      const res = await fetchWithTimeout(`https://www.youtube.com/watch?v=${ytId}&hl=en&has_verified=1`, {
         headers: {
           'User-Agent': UA,
           'Accept-Language': 'en-US,en;q=0.9',
           Cookie: 'CONSENT=YES+cb.20210328-17-p0.en+FX+667; YSC=',
         },
         ...cacheOpts,
-      } as any)
+      } as any, 7000)
       if (res.ok) {
         const html = await res.text()
         const idx = html.indexOf('ytInitialPlayerResponse')
@@ -217,7 +223,7 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
   if (vimeoMatch) {
     try {
       const cacheOpts: any = opts?.noCache ? { cache: 'no-store' } : { next: { revalidate: 86400 } }
-      const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`, cacheOpts as any)
+      const res = await fetchWithTimeout(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`, cacheOpts as any, 5000)
       if (res.ok) {
         const data = await res.json()
         if (typeof data.duration === 'number') return Math.round(data.duration)
