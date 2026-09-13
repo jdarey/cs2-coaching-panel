@@ -4,11 +4,6 @@ export const PRIMARY_PRESETS = [
   { name: 'Fioletowy', value: '#a78bfa', desc: 'Domyślny' },
   { name: 'Biały', value: '#ffffff', desc: 'Minimal' },
   { name: 'Niebieski', value: '#3b82f6', desc: 'Blue' },
-  { name: 'Turkusowy', value: '#2de5ca', desc: 'Teal' },
-  { name: 'Różowy', value: '#ec4899', desc: 'Pink' },
-  { name: 'Pomarańczowy', value: '#f97316', desc: 'Orange' },
-  { name: 'Zielony', value: '#22c55e', desc: 'Green' },
-  { name: 'Czerwony', value: '#ef4444', desc: 'Red' },
 ] as const
 
 function hexToHsl(hex: string): [number, number, number] | null {
@@ -83,26 +78,50 @@ export function applyPrimaryColor(hex: string) {
     style.id = 'primary-color-override'
     document.head.appendChild(style)
   }
-  // All hardcoded violet shades map to the chosen color
+  // All hardcoded violet shades + poswiaty/obramowki map to chosen color (wszystkie w stylu strony)
   const lightHex = hslToHex(h, s, lightL)
   const darkHex = hslToHex(h, s, darkL)
   const darkerHex = hslToHex(h, s, darkerL)
+  const toRgba = (hx: string, a: number) => {
+    const r = parseInt(hx.slice(1, 3), 16), g = parseInt(hx.slice(3, 5), 16), b = parseInt(hx.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${a})`
+  }
   style.textContent = `
+    /* tła, teksty, obramowania, ring */
     .bg-\\[\\#a78bfa\\] { background-color: ${hex} !important; }
+    .bg-\\[\\#a78bfa\\]\\/10 { background-color: ${toRgba(hex, 0.1)} !important; }
+    .bg-\\[\\#a78bfa\\]\\/20 { background-color: ${toRgba(hex, 0.2)} !important; }
+    .bg-\\[\\#a78bfa\\]\\/30 { background-color: ${toRgba(hex, 0.3)} !important; }
     .bg-\\[\\#8b5cf6\\] { background-color: ${darkHex} !important; }
+    .bg-\\[\\#8b5cf6\\]\\/10 { background-color: ${toRgba(darkHex, 0.1)} !important; }
+    .bg-\\[\\#8b5cf6\\]\\/20 { background-color: ${toRgba(darkHex, 0.2)} !important; }
     .bg-\\[\\#6d28d9\\] { background-color: ${darkerHex} !important; }
     .bg-\\[\\#c4b5fd\\] { background-color: ${lightHex} !important; }
+    .bg-\\[\\#c4b5fd\\]\\/10 { background-color: ${toRgba(lightHex, 0.1)} !important; }
     .text-\\[\\#a78bfa\\] { color: ${hex} !important; }
     .text-\\[\\#c4b5fd\\] { color: ${lightHex} !important; }
     .text-\\[\\#8b5cf6\\] { color: ${darkHex} !important; }
     .border-\\[\\#a78bfa\\] { border-color: ${hex} !important; }
+    .border-\\[\\#a78bfa\\]\\/10 { border-color: ${toRgba(hex, 0.1)} !important; }
+    .border-\\[\\#a78bfa\\]\\/20 { border-color: ${toRgba(hex, 0.2)} !important; }
+    .border-\\[\\#a78bfa\\]\\/30 { border-color: ${toRgba(hex, 0.3)} !important; }
     .border-\\[\\#8b5cf6\\] { border-color: ${darkHex} !important; }
+    .border-\\[\\#8b5cf6\\]\\/20 { border-color: ${toRgba(darkHex, 0.2)} !important; }
     .from-\\[\\#a78bfa\\] { --tw-gradient-from: ${hex} var(--tw-gradient-from-position) !important; }
     .from-\\[\\#8b5cf6\\] { --tw-gradient-from: ${darkHex} var(--tw-gradient-from-position) !important; }
+    .from-\\[\\#c4b5fd\\] { --tw-gradient-from: ${lightHex} var(--tw-gradient-from-position) !important; }
     .to-\\[\\#8b5cf6\\] { --tw-gradient-to: ${darkHex} var(--tw-gradient-to-position) !important; }
     .to-\\[\\#6d28d9\\] { --tw-gradient-to: ${darkerHex} var(--tw-gradient-to-position) !important; }
     .via-\\[\\#a78bfa\\] { --tw-gradient-via: ${hex} var(--tw-gradient-via-position) !important; }
     .ring-\\[\\#a78bfa\\] { --tw-ring-color: ${hex} !important; }
+    .ring-\\[\\#a78bfa\\]\\/20 { --tw-ring-color: ${toRgba(hex, 0.2)} !important; }
+    .ring-\\[\\#a78bfa\\]\\/30 { --tw-ring-color: ${toRgba(hex, 0.3)} !important; }
+    /* poswiaty / shadowy - wszystkie w kolorze przewodnim */
+    [class*="shadow-\\[0_20px_60px"] { box-shadow: 0 20px 60px -20px ${toRgba(hex, 0.35)} !important; }
+    [class*="shadow-\\[0_18px_56px"] { box-shadow: 0 18px 56px -20px ${toRgba(hex, 0.35)} !important; }
+    [class*="shadow-\\[0_8px_24px"] { box-shadow: 0 8px 24px -8px ${toRgba(darkHex, 0.4)} !important; }
+    .spotlight-card::before { background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), ${toRgba(hex, 0.14)}, ${toRgba(lightHex, 0.06)} 40%, transparent 60%) !important; }
+    .border-glow::before { background: conic-gradient(from var(--border-angle, 0deg), transparent 0deg, ${toRgba(hex, 0.55)} 45deg, ${toRgba(lightHex, 0.9)} 90deg, ${toRgba(darkHex, 0.5)} 135deg, transparent 200deg, transparent 320deg, ${toRgba(darkerHex, 0.45)} 345deg, transparent 360deg) !important; }
     [data-primary-light="true"] .bg-\\[\\#a78bfa\\].text-white, [data-primary-light="true"] .bg-\\[\\#8b5cf6\\].text-white, [data-primary-light="true"] .from-\\[\\#a78bfa\\].text-white { color: #0a0a0a !important; }
   `
 }
