@@ -14,7 +14,8 @@ import {
   getVideoEmbedUrl,
 } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
-import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import dynamic from 'next/dynamic'
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { ProtectedEmbed } from '@/components/protected-embed'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
