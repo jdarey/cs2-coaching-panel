@@ -279,11 +279,13 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
         })
       }
       if (data.updated > 0) {
-        toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} z ${data.total} filmów${data.failed ? `, nie udało się ${data.failed}` : ''}` })
+        toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} z ${data.total} filmów${data.failed ? `, nie udało się ${data.failed}` : ''}${data.skipped ? `, pominięto ${data.skipped} (Drive/inne)` : ''}` })
+      } else if (data.failed > 0 && data.failed === data.total) {
+        toast({ title: 'Błąd pobierania', description: `YouTube zablokował pobieranie lub filmy są prywatne/usunięte. Sprawdź czy linki są publiczne (youtu.be/watch) i spróbuj ponownie za chwilę. Szczegóły w logach serwera.`, variant: 'destructive' })
       } else if (data.failed > 0) {
-        toast({ title: 'Uwaga', description: `Sprawdzono ${data.total} filmów, nie udało się pobrać czasu dla ${data.failed} (np. Drive lub prywatny film)`, variant: 'destructive' })
+        toast({ title: 'Uwaga', description: `Sprawdzono ${data.total} filmów, nie udało się pobrać czasu dla ${data.failed}${data.skipped ? `, pominięto ${data.skipped} Drive/inne` : ''}`, variant: 'destructive' })
       } else {
-        toast({ title: 'Info', description: `Sprawdzono ${data.total} filmów - wszystkie czasy już poprawne` })
+        toast({ title: 'Info', description: `Sprawdzono ${data.total} filmów - wszystkie czasy już poprawne${data.skipped ? ` (pominięto ${data.skipped} Drive/inne)` : ''}` })
       }
     } catch { toast({ title: 'Błąd', description: 'Nie udało się połączyć z serwerem', variant: 'destructive' }) } finally { setBackfillLoading(false) }
   }

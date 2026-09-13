@@ -97,11 +97,22 @@ export function getVideoEmbedUrl(url: string): string | null {
   return null
 }
 
+function parseISO8601Duration(iso: string): number | null {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  if (!m) return null
+  const h = parseInt(m[1] || '0', 10)
+  const min = parseInt(m[2] || '0', 10)
+  const s = parseInt(m[3] || '0', 10)
+  const total = h * 3600 + min * 60 + s
+  return total > 0 ? total : null
+}
+
 export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean }): Promise<number | null> {
   const ytId = getYouTubeId(url)
   if (ytId) {
     const cacheOpts: any = opts?.noCache ? { cache: 'no-store' } : { next: { revalidate: 86400 } }
-    // 1) Innertube API — probuj kilka klientow (WEB, ANDROID) bo jeden moze byc zablokowany
+    const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    // 1) Innertube API — probuj kilka klientow (WEB, ANDROID) bo jeden moze byc zablokowany na Vercel IP
     for (const client of [
       { clientName: 'WEB', clientVersion: '2.20240101' },
       { clientName: 'ANDROID', clientVersion: '19.09.37' },
@@ -110,7 +121,14 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
       try {
         const res = await fetch('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': UA,
+            Accept: 'application/json',
+            'Accept-Language': 'en-US,en;q=0.9',
+            Origin: 'https://www.youtube.com',
+            Referer: 'https://www.youtube.com/',
+          },
           body: JSON.stringify({ context: { client }, videoId: ytId }),
           ...cacheOpts,
         } as any)
@@ -120,7 +138,6 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
           if (secs && /^\d+$/.test(String(secs))) return parseInt(String(secs), 10)
           const ms = data?.videoDetails?.approxDurationMs ?? data?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
           if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
-          // Fallback w obrębie Innertube: lengthText z videoDetails (np. "20:30")
           const lengthText: string | undefined = data?.videoDetails?.lengthText?.simpleText
           if (lengthText && /^\d+:\d+/.test(lengthText)) {
             const parts = lengthText.split(':').map((n) => parseInt(n, 10))
@@ -130,11 +147,42 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
         }
       } catch {}
     }
-    // 2) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse, wiekszy snippet i CONSENT bypass
+    // 2) Fallback: Google Data API v3 (ten sam klucz) - zwraca ISO 8601 PT1H2M10S, dziala z Vercel czesciej niz Innertube
+    try {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
+        headers: { 'User-Agent': UA },
+        ...cacheOpts,
+      } as any)
+      if (res.ok) {
+        const data = await res.json()
+        const iso: string | undefined = data?.items?.[0]?.contentDetails?.duration
+        if (iso) {
+          const secs = parseISO8601Duration(iso)
+          if (secs) return secs
+        }
+      }
+    } catch {}
+    // 3) Fallback: lemnoslife noKey proxy (nie wymaga klucza, omija blokady IP)
+    try {
+      const res = await fetch(`https://yt.lemnoslife.com/noKey/videos?part=contentDetails&id=${ytId}`, {
+        headers: { 'User-Agent': UA },
+        ...cacheOpts,
+      } as any)
+      if (res.ok) {
+        const data = await res.json()
+        const iso: string | undefined = data?.items?.[0]?.contentDetails?.duration
+        if (iso) {
+          const secs = parseISO8601Duration(iso)
+          if (secs) return secs
+        }
+      }
+    } catch {}
+    // 4) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse, wiekszy snippet i CONSENT bypass
     try {
       const res = await fetch(`https://www.youtube.com/watch?v=${ytId}&hl=en&has_verified=1`, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'User-Agent': UA,
+          'Accept-Language': 'en-US,en;q=0.9',
           Cookie: 'CONSENT=YES+cb.20210328-17-p0.en+FX+667; YSC=',
         },
         ...cacheOpts,
@@ -148,7 +196,6 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
           if (m) return parseInt(m[1], 10)
           const mMs = snippet.match(/"approxDurationMs"\s*:\s*"(\d+)"/)
           if (mMs) return Math.round(parseInt(mMs[1], 10) / 1000)
-          // lengthText fallback — wyciągnij pierwsze wystąpienie "simpleText":"M:SS" w obrębie playerResponse
           const mText = snippet.match(/"lengthText"[^}]*"simpleText"\s*:\s*"(\d+:\d+(?::\d+)?)"/)
           if (mText) {
             const parts = mText[1].split(':').map((n) => parseInt(n, 10))
@@ -158,7 +205,6 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
           const mSimple = snippet.match(/"simpleText"\s*:\s*"(\d+:\d+(?::\d+)?)"/)
           if (mSimple) {
             const parts = mSimple[1].split(':').map((n) => parseInt(n, 10))
-            // upewnij się że to nie jest view count - sprawdź czy parts są sensowne (< 24h)
             const total = parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1]
             if (total > 0 && total < 86400) return total
           }

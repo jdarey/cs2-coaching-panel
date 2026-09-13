@@ -25,35 +25,34 @@ export async function POST(request: NextRequest) {
   let failed = 0
   let skipped = 0
 
-  // Rownolegle z limitem 5 jednoczesnych requestow - bez 300ms delay, szybkie
-  const CONCURRENCY = 5
-  for (let i = 0; i < videos.length; i += CONCURRENCY) {
-    const chunk = videos.slice(i, i + CONCURRENCY)
-    const results = await Promise.allSettled(
-      chunk.map(async (v) => {
-        // pomin drive/other ktore nigdy nie maja duration (oszczedza requesty)
-        if (v.url.includes('drive.google.com')) {
-          skipped++
-          return
+  // Sekwencyjnie z malym delay - YouTube blokuje masowe rownolegle requesty z Vercel IP (10/10 failed)
+  let idx = 0
+  for (const v of videos) {
+    idx++
+    const ytId = v.url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^&\n?#]+)/)?.[1]
+    const isVimeo = /vimeo\.com\/\d+/.test(v.url)
+    const isSupported = !!ytId || isVimeo
+    if (!isSupported) {
+      skipped++
+      continue
+    }
+    try {
+      const dur = await fetchVideoDuration(v.url, { noCache: true })
+      if (dur && dur > 0) {
+        if (dur !== v.duration) {
+          await prisma.video.update({ where: { id: v.id }, data: { duration: dur } })
+          updated++
         }
-        try {
-          const dur = await fetchVideoDuration(v.url, { noCache: true })
-          if (dur && dur > 0) {
-            // przy force nadpisujemy tylko gdy sie rozni - zeby nie robic zbędnych UPDATE
-            if (dur !== v.duration) {
-              await prisma.video.update({ where: { id: v.id }, data: { duration: dur } })
-              updated++
-            }
-          } else {
-            failed++
-          }
-        } catch {
-          failed++
-        }
-      })
-    )
-    // Promise.allSettled juz obsluzone wewnatrz, ale liczymy rejections
-    for (const r of results) if (r.status === 'rejected') failed++
+      } else {
+        failed++
+        console.warn(`[backfill] brak czasu dla ${v.id} (${ytId || v.url})`)
+      }
+    } catch (e) {
+      failed++
+      console.warn(`[backfill] error ${v.id}`, e)
+    }
+    // 150ms przerwy żeby nie triggerować rate-limitu YT (Vercel IP jest współdzielony)
+    if (idx < videos.length) await new Promise((r) => setTimeout(r, 150))
   }
   return NextResponse.json({ updated, failed, skipped, total: videos.length, checked: videos.length })
 }
