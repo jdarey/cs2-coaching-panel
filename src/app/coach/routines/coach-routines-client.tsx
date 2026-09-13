@@ -211,6 +211,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
             videoId: t.videoId || null,
             steamMapUrl: t.steamMapUrl || null,
             gifUrl: t.gifUrl || null,
+            linkUrl: t.linkUrl || null,
             day: Math.max(1, t.day),
             minutes: t.minutes || null,
           })),
@@ -295,7 +296,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const openEditDialog = (r: Routine) => {
     setEditing(r)
     setFormData({ title: r.title, description: r.description || '', recurring: r.recurring })
-    setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t, gifUrl: t.gifUrl || null })) : [emptyTask(1)])
+    setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t, gifUrl: t.gifUrl || null, steamMapUrl: t.steamMapUrl || null, linkUrl: t.linkUrl || null })) : [emptyTask(1)])
     setDialogOpen(true)
   }
 
