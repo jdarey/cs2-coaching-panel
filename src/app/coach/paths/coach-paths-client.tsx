@@ -399,7 +399,7 @@ export function CoachPathsClient() {
                           <div key={v.videoId} className="rounded-lg bg-white/[0.03] border border-white/[0.06] overflow-hidden">
                             <div className="flex items-center gap-2 px-3 py-2">
                               {v.video.thumbnail ? (
-                                <img src={v.video.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
+                                <img decoding="async" src={v.video.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
                               ) : (
                                 <span className="grid place-items-center w-10 h-6 rounded bg-white/[0.04] shrink-0">
                                   <Film className="w-3 h-3 text-white/30" />
@@ -482,7 +482,7 @@ export function CoachPathsClient() {
                                   className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.05] transition"
                                 >
                                   {v.thumbnail ? (
-                                    <img src={v.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
+                                    <img decoding="async" src={v.thumbnail} alt="" className="w-10 h-6 object-cover rounded shrink-0" loading="lazy" />
                                   ) : (
                                     <span className="grid place-items-center w-10 h-6 rounded bg-white/[0.05] shrink-0">
                                       <Film className="w-3 h-3 text-white/30" />
@@ -663,7 +663,7 @@ export function CoachPathsClient() {
                         {m.videos.length === 0 ? <p className="px-4 py-3 text-xs text-white/30">Brak filmów w module</p> : m.videos.map((v, vi) => (
                           <div key={v.videoId} className="flex items-center gap-3 px-4 py-3">
                             <span className="grid h-6 w-6 place-items-center rounded-md bg-white/[0.05] border border-white/[0.08] text-[11px] font-bold text-white/40 shrink-0">{vi+1}</span>
-                            {v.video.thumbnail ? <img src={v.video.thumbnail} alt="" className="w-14 h-9 object-cover rounded-md shrink-0" loading="lazy" /> : <span className="grid place-items-center w-14 h-9 rounded-md bg-white/[0.04] border border-white/[0.08] shrink-0"><Film className="w-3.5 h-3.5 text-white/30"/></span>}
+                            {v.video.thumbnail ? <img decoding="async" src={v.video.thumbnail} alt="" className="w-14 h-9 object-cover rounded-md shrink-0" loading="lazy" /> : <span className="grid place-items-center w-14 h-9 rounded-md bg-white/[0.04] border border-white/[0.08] shrink-0"><Film className="w-3.5 h-3.5 text-white/30"/></span>}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-white/80 truncate">{v.video.title}</p>
                               {v.description && <p className="text-xs text-white/40 line-clamp-2 mt-0.5">{v.description}</p>}

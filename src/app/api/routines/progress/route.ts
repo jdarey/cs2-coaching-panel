@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { publishToUsers } from '@/lib/realtime'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -86,6 +87,12 @@ export async function PATCH(request: NextRequest) {
       })
       assignmentStatus = 'ACTIVE'
     }
+
+    // Powiadom ucznia i jego trenera (dashboardy odświeżą się przez SSE, bez pollingu)
+    try {
+      const full = await prisma.routineAssignment.findUnique({ where: { id: validated.assignmentId }, select: { studentId: true, coachId: true } })
+      if (full) publishToUsers([full.studentId, full.coachId], { type: 'task:updated', payload: { assignmentId: validated.assignmentId } })
+    } catch { /* realtime best-effort */ }
 
     return NextResponse.json({ ...progress, assignmentStatus })
   } catch (error) {

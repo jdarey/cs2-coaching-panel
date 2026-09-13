@@ -518,7 +518,7 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
                                           <FileText className="w-3.5 h-3.5 text-[#c4b5fd]" />
                                         </span>
                                       ) : v.video.thumbnail ? (
-                                        <img src={v.video.thumbnail} alt="" className="w-14 h-9 object-cover rounded-md shrink-0" loading="lazy" />
+                                        <img decoding="async" src={v.video.thumbnail} alt="" className="w-14 h-9 object-cover rounded-md shrink-0" loading="lazy" />
                                       ) : (
                                         <span className="grid place-items-center w-14 h-9 rounded-md bg-white/[0.04] border border-white/[0.08] shrink-0">
                                           <Film className="w-3.5 h-3.5 text-white/30" />

@@ -29,6 +29,22 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'avatars.akamai.steamstatic.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.akamai.steamstatic.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.faceit.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.faceit-cdn.net',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
   },

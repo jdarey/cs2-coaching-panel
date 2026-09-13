@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { cn, formatDate, formatDateTime, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
-import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 import { CountUp } from '@/components/count-up'
 import { EntranceGate } from '@/components/entrance-gate'
 import { AnnouncementsFeed } from '@/components/community/announcements-feed'
@@ -71,7 +71,7 @@ const REASON_STYLE: Record<string, string> = {
 
 export function CoachDashboardClient({ initial }: { initial: CoachDashboardInitial }) {
   const router = useRouter()
-  useLiveRefresh(() => router.refresh())
+  useRealtimeRefresh(() => router.refresh())
 
   const {
     studentsCount, sessionsCount, videosCount, tagsCount, effectiveness,
@@ -189,7 +189,7 @@ export function CoachDashboardClient({ initial }: { initial: CoachDashboardIniti
                   <div className="relative h-10 w-10 shrink-0">
                     {s.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.avatarUrl} alt={s.name || s.email || 'Uczeń'} className="h-10 w-10 rounded-xl object-cover ring-1 ring-white/15" />
+                      <img decoding="async" src={s.avatarUrl} alt={s.name || s.email || 'Uczeń'} className="h-10 w-10 rounded-xl object-cover ring-1 ring-white/15" />
                     ) : (
                       <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-sm font-semibold text-white ring-1 ring-white/25">
                         {(s.name || s.email || 'U')[0]?.toUpperCase()}

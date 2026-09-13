@@ -528,7 +528,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                         <div className="flex items-start gap-3">
                           <div className="relative grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl border border-white/[0.06] bg-black/30 overflow-hidden">
                             {video.thumbnail ? (
-                              <img
+                              <img decoding="async"
                                 src={video.thumbnail}
                                 alt={video.title}
                                 className="h-full w-full object-cover"
@@ -606,7 +606,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     {session.student.avatarUrl ? (
-                      <img
+                      <img decoding="async"
                         src={session.student.avatarUrl}
                         alt={session.student.name || ''}
                         className="h-16 w-16 rounded-xl object-cover ring-1 ring-white/15"
@@ -732,7 +732,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                           <div className="grid h-12 w-16 flex-shrink-0 place-items-center overflow-hidden rounded-lg bg-black/40">
                             {v.thumbnail ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={v.thumbnail} alt="" className="h-full w-full object-cover" />
+                              <img decoding="async" src={v.thumbnail} alt="" className="h-full w-full object-cover" />
                             ) : (
                               <Video className="h-4 w-4 text-white/30" />
                             )}
@@ -893,7 +893,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0">
                           {note.user.avatarUrl ? (
-                            <img
+                            <img decoding="async"
                               src={note.user.avatarUrl}
                               alt={note.user.name || ''}
                               className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/15"

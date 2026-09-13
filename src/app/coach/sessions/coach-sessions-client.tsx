@@ -370,7 +370,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                     <div className="grid place-items-center h-10 w-10 rounded-2xl bg-gradient-to-br from-[#a78bfa]/20 to-[#6d28d9]/10 ring-1 ring-inset ring-white/10 overflow-hidden">
                       {session.student.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={session.student.avatarUrl} alt={session.student.name || ''} className="h-full w-full object-cover" />
+                        <img decoding="async" src={session.student.avatarUrl} alt={session.student.name || ''} className="h-full w-full object-cover" />
                       ) : (
                         <span className="text-xs font-semibold text-white/90">{getInitials(session.student.name || 'U')}</span>
                       )}

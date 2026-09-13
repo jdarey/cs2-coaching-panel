@@ -6,7 +6,7 @@ import { formatDate, formatDateTime, STATUS_LABELS, STATUS_COLORS, VIDEO_STATUS_
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StudentLayout } from '@/components/student-layout'
-import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 import { CountUp } from '@/components/count-up'
 import { EntranceGate } from '@/components/entrance-gate'
 import { AnnouncementsFeed } from '@/components/community/announcements-feed'
@@ -116,7 +116,7 @@ export function StudentDashboardClient({
   weekly,
 }: StudentDashboardClientProps) {
   const router = useRouter()
-  useLiveRefresh(() => router.refresh())
+  useRealtimeRefresh(() => router.refresh())
 
   const { totalVideos, pending, watching, watched, implemented, totalSessions } = initialStats
   const sessions = initialSessions
@@ -735,7 +735,7 @@ export function StudentDashboardClient({
                         <div className="relative w-20 h-12 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/10">
                           {p.video.thumbnail ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={p.video.thumbnail} alt={p.video.title} className="w-full h-full object-cover" loading="lazy" />
+                            <img decoding="async" src={p.video.thumbnail} alt={p.video.title} className="w-full h-full object-cover" loading="lazy" />
                           ) : (
                             <div className="w-full h-full grid place-items-center bg-gradient-to-br from-[#1a1c28] to-[#0f1118]">
                               <Film className="w-5 h-5 text-white/40" />

@@ -602,7 +602,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                         className="relative w-full lg:w-64 aspect-video lg:aspect-auto bg-[#060606] overflow-hidden group"
                       >
                         {video.thumbnail ? (
-                          <img
+                          <img decoding="async"
                             src={video.thumbnail}
                             alt={video.title}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"

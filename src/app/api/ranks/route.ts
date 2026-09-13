@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { publishToUsers } from '@/lib/realtime'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -100,6 +101,11 @@ export async function POST(request: NextRequest) {
         recordedAt: validated.recordedAt ? new Date(validated.recordedAt) : new Date(),
       },
     })
+
+    try {
+      const targets = studentId === userId ? [userId] : [studentId, userId]
+      publishToUsers(targets, { type: 'rank:updated', payload: { studentId } })
+    } catch { /* realtime best-effort */ }
 
     return NextResponse.json(entry, { status: 201 })
   } catch (error) {

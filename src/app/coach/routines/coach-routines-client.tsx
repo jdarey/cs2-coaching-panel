@@ -12,7 +12,8 @@ import {
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
 import { getYouTubeId } from '@/lib/utils'
-import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import dynamic from 'next/dynamic'
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 
 interface RoutineTask {
   id?: string
@@ -856,7 +857,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
               <div className="flex-1 overflow-y-auto p-4 grid gap-3 sm:grid-cols-2">
                 {exercisePresets.filter(p=> !presetSearch || p.title.toLowerCase().includes(presetSearch.toLowerCase()) || p.tags.some(t=>t.toLowerCase().includes(presetSearch.toLowerCase()))).map(p=> (
                   <div key={p.id} className="rounded-2xl bg-white/[0.04] border border-white/[0.07] overflow-hidden flex flex-col">
-                    {p.gifUrl && <div className="h-32 bg-black overflow-hidden"><img src={p.gifUrl} alt={p.title} className="w-full h-full object-cover" /></div>}
+                    {p.gifUrl && <div className="h-32 bg-black overflow-hidden"><img decoding="async" src={p.gifUrl} alt={p.title} className="w-full h-full object-cover" /></div>}
                     <div className="p-3 flex-1">
                       <p className="font-semibold text-white text-sm">{p.title}</p>
                       {p.description && <p className="text-xs text-white/40 line-clamp-2 mt-1">{p.description}</p>}
@@ -922,7 +923,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                                           <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35)] w-64">
                                             <span className="relative h-36 w-64 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
+                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                             </span>
                                           </span>
                                           <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#1a1628] border-l border-b border-white/10" />
@@ -997,7 +998,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                 {previewTask.gifUrl && (
                   <div className="rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={previewTask.gifUrl} alt={previewTask.title} className="w-full h-auto" loading="lazy" />
+                    <img decoding="async" src={previewTask.gifUrl} alt={previewTask.title} className="w-full h-auto" loading="lazy" />
                   </div>
                 )}
               </div>

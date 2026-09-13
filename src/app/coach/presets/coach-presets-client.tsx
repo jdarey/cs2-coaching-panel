@@ -64,7 +64,7 @@ export function CoachPresetsClient({ initialPresets, initialVideos }: { initialP
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {presets.map(p=> (
               <div key={p.id} className="glass-liquid rounded-3xl overflow-hidden p-5 flex flex-col">
-                {p.gifUrl && <div className="rounded-2xl overflow-hidden mb-3 h-36 bg-black"><img src={p.gifUrl} alt={p.title} className="w-full h-full object-cover" /></div>}
+                {p.gifUrl && <div className="rounded-2xl overflow-hidden mb-3 h-36 bg-black"><img decoding="async" src={p.gifUrl} alt={p.title} className="w-full h-full object-cover" /></div>}
                 <h3 className="font-display font-bold text-white">{p.title}</h3>
                 {p.description && <p className="text-sm text-white/45 line-clamp-2 mt-1">{p.description}</p>}
                 <div className="flex flex-wrap gap-1.5 mt-3 text-xs">

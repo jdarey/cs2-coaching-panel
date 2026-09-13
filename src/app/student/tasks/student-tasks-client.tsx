@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
-import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import dynamic from 'next/dynamic'
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { useSession } from 'next-auth/react'
 import {
   ClipboardList,
@@ -553,7 +554,7 @@ export function StudentTasksClient() {
                                           <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35),0_8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] w-64">
                                             <span className="relative h-36 w-64 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
+                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                               <span className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
                                             </span>
 
@@ -738,7 +739,7 @@ export function StudentTasksClient() {
           <div className="fixed inset-0 z-50 grid place-items-center p-4">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>setSelectedTask(null)} />
             <div className="glass-liquid relative w-full max-w-lg rounded-3xl overflow-hidden animate-rise-in max-h-[90vh] overflow-y-auto">
-              {selectedTask.gifUrl && <div className="h-48 bg-black shrink-0"><img src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-full object-cover" /></div>}
+              {selectedTask.gifUrl && <div className="h-48 bg-black shrink-0"><img decoding="async" src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-full object-cover" /></div>}
               <div className="p-6">
                 <button onClick={()=>setSelectedTask(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
                 <h3 className="font-display text-xl font-bold text-white pr-8">{selectedTask.title}</h3>

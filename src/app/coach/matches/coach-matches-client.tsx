@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
-import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn, formatDateTime } from '@/lib/utils'
@@ -42,7 +42,7 @@ interface MatchStatus {
 
 export function CoachMatchesClient() {
   const router = useRouter()
-  useLiveRefresh(() => router.refresh())
+  useRealtimeRefresh(() => router.refresh())
   const [matches, setMatches] = useState<Match[]>([])
   const [status, setStatus] = useState<MatchStatus | null>(null)
   const [loading, setLoading] = useState(true)

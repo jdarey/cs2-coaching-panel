@@ -37,8 +37,9 @@ import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS, getYouTubeId } from '@/lib/utils'
-import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
-import { FaceitEloChart } from '@/components/faceit-elo-chart'
+import dynamic from 'next/dynamic'
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
+const FaceitEloChart = dynamic(() => import('@/components/faceit-elo-chart').then(m => m.FaceitEloChart), { ssr: false, loading: () => <div className="rounded-3xl p-6 text-center text-white/30 text-sm">Ładowanie ELO…</div> })
 
 interface StudentDetail {
   id: string
@@ -1140,7 +1141,7 @@ export function CoachStudentDetailClient({
                                           <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35),0_8px_32px_-8px_rgba(0,0,0,0.6)] w-64">
                                             <span className="relative h-36 w-64 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
+                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                               <span className="absolute inset-0 ring-1 ring-white/10 pointer-events-none" />
                                             </span>
                                           </span>
@@ -1222,7 +1223,7 @@ export function CoachStudentDetailClient({
                 {previewTask.gifUrl && (
                   <div className="rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={previewTask.gifUrl} alt={previewTask.title} className="w-full h-auto" loading="lazy" />
+                    <img decoding="async" src={previewTask.gifUrl} alt={previewTask.title} className="w-full h-auto" loading="lazy" />
                   </div>
                 )}
                 {!previewTask.videoId && !previewTask.gifUrl && !previewTask.steamMapUrl && (

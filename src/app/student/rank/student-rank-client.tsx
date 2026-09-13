@@ -284,7 +284,7 @@ export function StudentRankClient() {
               {steamProfile && (
                 <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white/[0.02] border border-white/[0.08] p-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={steamProfile.avatar} alt="Steam" className="w-10 h-10 rounded-xl ring-1 ring-white/15" />
+                  <img decoding="async" src={steamProfile.avatar} alt="Steam" className="w-10 h-10 rounded-xl ring-1 ring-white/15" />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{steamProfile.name}</p>
                     <p className="text-[11px] text-white/40">Połączony profil Steam</p>

@@ -696,7 +696,7 @@ export function YoutubeCustomPlayer({
           sit on top. */}
       {!hasPlayed && !isEnded && (
         <div className="absolute inset-0 z-40 overflow-hidden pointer-events-none" aria-hidden>
-          <img
+          <img decoding="async"
             src={thumbSrc}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"

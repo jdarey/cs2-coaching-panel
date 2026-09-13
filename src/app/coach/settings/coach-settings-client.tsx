@@ -373,7 +373,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                 <div className="relative">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <img decoding="async"
                       src={avatarUrl}
                       alt={user.name || ''}
                       className="h-20 w-20 rounded-xl object-cover ring-1 ring-white/15"

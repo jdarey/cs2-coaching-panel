@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { cn, matchesSearch } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
-import { useLiveRefresh } from '@/hooks/use-live-refresh'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 import { CountUp } from '@/components/count-up'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -35,7 +35,7 @@ interface CoachPracticeClientProps {
 
 export function CoachPracticeClient({ rows, stats }: CoachPracticeClientProps) {
   const router = useRouter()
-  useLiveRefresh(() => router.refresh())
+  useRealtimeRefresh(() => router.refresh())
 
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('thisWeek')
