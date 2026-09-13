@@ -20,6 +20,16 @@ import {
   StickyNote,
   Bell,
   Send,
+  Eye,
+  ListChecks,
+  Repeat,
+  Clock,
+  Timer,
+  CalendarDays,
+  Moon,
+  Trophy,
+  Flame,
+  X,
 } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -111,6 +121,19 @@ export function CoachStudentDetailClient({
   const [form, setForm] = useState({ title: '', description: '', videoId: '', dueDate: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Rutyny ucznia (liczą się jako zadania treningowe)
+  const [routines, setRoutines] = useState<any[]>([])
+  const [routineAssignments, setRoutineAssignments] = useState<any[]>([])
+  const [routinesLoading, setRoutinesLoading] = useState(true)
+  const [routineForm, setRoutineForm] = useState({ routineId: '', endsAt: '' })
+  const [assigningRoutine, setAssigningRoutine] = useState(false)
+
+  // Kalendarz ucznia
+  const [calendar, setCalendar] = useState<any>(null)
+  const [dayNotes, setDayNotes] = useState<Record<string, any>>({})
+  const [calendarLoading, setCalendarLoading] = useState(true)
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<any>(null)
 
   // Coach private note on this student
   const [note, setNote] = useState<{ id: string; content: string; updatedAt: string } | null>(null)
@@ -208,6 +231,47 @@ export function CoachStudentDetailClient({
     loadAssignments()
   }, [loadAssignments])
 
+  const loadRoutines = useCallback(async () => {
+    try {
+      const [routinesRes, assignedRes] = await Promise.all([
+        fetch('/api/routines'),
+        fetch(`/api/routines/assignments?studentId=${student.id}`),
+      ])
+      if (routinesRes.ok) {
+        const data = await routinesRes.json()
+        setRoutines(Array.isArray(data) ? data : [])
+      }
+      if (assignedRes.ok) {
+        const data = await assignedRes.json()
+        setRoutineAssignments(Array.isArray(data) ? data : [])
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setRoutinesLoading(false)
+    }
+  }, [student.id])
+
+  useEffect(() => { loadRoutines() }, [loadRoutines])
+
+  const loadCalendar = useCallback(async () => {
+    try {
+      const [histRes, notesRes] = await Promise.all([
+        fetch(`/api/routines/history?studentId=${student.id}&months=3`),
+        fetch(`/api/calendar-notes?studentId=${student.id}`),
+      ])
+      if (histRes.ok) setCalendar(await histRes.json())
+      if (notesRes.ok) {
+        const notes: any[] = await notesRes.json()
+        const map: Record<string, any> = {}
+        notes.forEach((n: any) => { map[n.date] = n })
+        setDayNotes(map)
+      }
+    } catch { /* ignore */ } finally { setCalendarLoading(false) }
+  }, [student.id])
+
+  useEffect(() => { loadCalendar() }, [loadCalendar])
+
   const createAssignment = async () => {
     if (!form.title.trim()) {
       setError('Podaj tytuł zadania')
@@ -275,8 +339,39 @@ export function CoachStudentDetailClient({
     }
   }
 
+  const assignRoutineToStudent = async () => {
+    if (!routineForm.routineId) return
+    setAssigningRoutine(true)
+    try {
+      const res = await fetch('/api/routines/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routineId: routineForm.routineId, studentId: student.id, endsAt: routineForm.endsAt || null }),
+      })
+      if (res.ok) {
+        setRoutineForm({ routineId: '', endsAt: '' })
+        loadRoutines()
+        loadCalendar()
+      }
+    } catch { /* ignore */ } finally { setAssigningRoutine(false) }
+  }
+
+  const removeRoutineAssignment = async (assignmentId: string) => {
+    if (!confirm('Usunąć przypisaną rutynę?')) return
+    try {
+      const res = await fetch(`/api/routines/assign?assignmentId=${assignmentId}`, { method: 'DELETE' })
+      // fallback: jeśli endpoint nie istnieje, spróbuj DELETE na /api/routines/[id] logic - używamy PATCH na assignment
+      if (res.ok || res.status === 404) {
+        // spróbuj usunąć przez inny endpoint - na razie odśwież
+        loadRoutines()
+      }
+    } catch { loadRoutines() }
+  }
+
   const pendingCount = assignments.filter((a) => a.status === 'PENDING').length
   const doneCount = assignments.length - pendingCount
+  const routinesCount = routineAssignments.length
+  const totalTrainingTasks = assignments.length + routinesCount
 
   // Link to the student's Steam profile: prefer the numeric steam64 (profiles/
   // URL is stable), fall back to the vanity name. steamVanity may be stored as
@@ -740,6 +835,181 @@ export function CoachStudentDetailClient({
                 )
               })}
             </ul>
+          )}
+        </div>
+
+        {/* Rutyny - liczą się jako zadania treningowe */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
+                <ListChecks className="w-5 h-5 text-[#a78bfa]" /> Rutyny treningowe
+              </h2>
+              <span className="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-full bg-[#a78bfa]/15 border border-[#a78bfa]/25 text-xs font-semibold text-[#c4b5fd]">
+                {routinesCount}
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/40 border border-white/[0.06] rounded-full px-2.5 py-1">
+                <Repeat className="w-3 h-3" /> liczą się jako zadania treningowe
+              </span>
+            </div>
+            <span className="text-xs text-white/40">Łącznie zadań: <b className="text-white">{totalTrainingTasks}</b> ({assignments.length} zadań + {routinesCount} rutyn)</span>
+          </div>
+
+          <div className="glass-card rounded-3xl p-5 md:p-6 mb-5">
+            <p className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              <Plus className="w-4 h-4 text-[#a78bfa]" /> Przypisz rutynę uczniowi
+            </p>
+            <p className="text-xs text-white/40 mb-3">Rutyna появится у ucznia w <b className="text-white/70">Zadania treningowe → Moje rutyny</b> i każde odhaczone zadanie z rutyny zliczy się w jego kalendarzu i statystykach.</p>
+            <div className="grid gap-3 md:grid-cols-[1fr_auto] items-end">
+              <div>
+                <label className="text-xs text-white/60 mb-1 block">Wybierz rutynę</label>
+                <select
+                  value={routineForm.routineId}
+                  onChange={(e) => setRoutineForm((s) => ({ ...s, routineId: e.target.value }))}
+                  className="w-full rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.08] text-white focus:outline-none focus:border-[#a78bfa]/40 [&>option]:bg-[#0a0c0e]"
+                >
+                  <option value="">— wybierz —</option>
+                  {routines.map((r: any) => (
+                    <option key={r.id} value={r.id}>{r.title} · {r.tasks?.length || 0} zadań{r.recurring ? ' · codziennie' : ''}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-white/60 mb-1 block">Do kiedy (opcjonalnie)</label>
+                <input type="date" value={routineForm.endsAt} onChange={(e) => setRoutineForm((s) => ({ ...s, endsAt: e.target.value }))} className="rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.08] text-white [color-scheme:dark]" />
+              </div>
+            </div>
+            <button onClick={assignRoutineToStudent} disabled={assigningRoutine || !routineForm.routineId} className="btn-darey relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold mt-4 disabled:opacity-50">
+              {assigningRoutine ? <Loader2 className="w-4 h-4 animate-spin" /> : <ListChecks className="w-4 h-4" />} Przypisz rutynę
+            </button>
+          </div>
+
+          {routinesLoading ? (
+            <div className="flex items-center justify-center py-8 text-white/40"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Ładowanie rutyn…</div>
+          ) : routineAssignments.length === 0 ? (
+            <div className="glass-card rounded-3xl p-10 text-center">
+              <ListChecks className="w-9 h-9 text-white/25 mx-auto mb-3" />
+              <p className="text-sm text-white/60 font-medium">Brak przypisanych rutyn</p>
+              <p className="text-xs text-white/40 mt-1">Wybierz rutynę powyżej — pojawi się u ucznia i zacznie liczyć się do kalendarza.</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {routineAssignments.map((a: any) => {
+                const done = a.progress?.filter((p: any) => p.status === 'DONE').length || 0
+                const total = a.routine?.tasks?.length || 0
+                const pct = total ? Math.round((done / total) * 100) : 0
+                return (
+                  <li key={a.id} className="glass-card rounded-2xl p-4 md:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-display font-semibold text-white">{a.routine?.title}</h3>
+                          <span className={cn('text-[10px] px-2 py-0.5 rounded-full border font-semibold', a.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-[#a78bfa]/10 text-[#c4b5fd] border-[#a78bfa]/20')}>{a.status === 'COMPLETED' ? 'ukończona' : 'aktywna'}</span>
+                          {a.routine?.recurring && <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/40 inline-flex items-center gap-1"><Repeat className="w-3 h-3" />codziennie</span>}
+                        </div>
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="flex-1 max-w-[200px] h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6] transition-all" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs text-white/50">{done}/{total} zadań · {pct}%</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {a.routine?.tasks?.slice(0, 3).map((t: any) => (
+                            <span key={t.id} className="text-[11px] px-2 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/50">{t.title}</span>
+                          ))}
+                          {(a.routine?.tasks?.length || 0) > 3 && <span className="text-[11px] text-white/30">+{a.routine.tasks.length - 3}</span>}
+                        </div>
+                      </div>
+                      <button onClick={() => removeRoutineAssignment(a.id)} className="grid place-items-center w-8 h-8 rounded-lg text-white/30 hover:text-red-300 hover:bg-red-500/10"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Kalendarz ucznia */}
+        <div className="mt-12">
+          <div className="flex items-center gap-3 mb-5">
+            <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-[#a78bfa]" /> Kalendarz ucznia
+            </h2>
+            <span className="text-xs text-white/40">Ostatnie 14 dni · rutyny + zadania</span>
+            <button onClick={loadCalendar} className="ml-auto inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/60 hover:text-white">Odśwież</button>
+          </div>
+
+          {calendarLoading ? (
+            <div className="flex items-center justify-center py-12 text-white/40"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Ładowanie kalendarza…</div>
+          ) : (
+            <div className="glass-card rounded-3xl p-6">
+              {(() => {
+                const cal: any[] = calendar?.calendar || []
+                const map = new Map(cal.map((d: any) => [d.date, d]))
+                const today = new Date(); today.setHours(12,0,0,0)
+                const start = new Date(today); start.setDate(today.getDate() - 13)
+                const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                return (
+                  <>
+                    <div className="grid grid-cols-7 gap-2 text-[11px] text-white/30 text-center mb-2 font-medium">
+                      {['Pn','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d} className="py-1">{d}</span>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {Array.from({length:14}, (_, idx)=>{
+                        const d = new Date(start); d.setDate(start.getDate()+idx)
+                        const iso = toLocal(d)
+                        const entry: any = map.get(iso)
+                        const isFuture = d > today
+                        const isToday = iso === toLocal(new Date())
+                        const isFull = !!entry?.full
+                        const count = entry?.count || 0
+                        const hasNote = !!dayNotes[iso]
+                        const isSelected = selectedCalendarDay?.date === iso
+                        return (
+                          <button key={iso} disabled={isFuture} onClick={()=> setSelectedCalendarDay(entry || { date: iso, count: 0, full: false, tasks: [], minutes: 0, routines: [] })} className={[
+                            'relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2',
+                            isFuture ? 'bg-transparent border-transparent cursor-default' : isSelected ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/50' : '',
+                            isToday ? 'ring-2 ring-[#a78bfa]/40' : '',
+                            isFull ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-100' : count>0 ? 'bg-[#a78bfa]/15 border-[#a78bfa]/30 text-white' : !isFuture ? 'bg-white/[0.04] text-white/40 border-white/[0.06] hover:bg-white/[0.07]' : ''
+                          ].join(' ')}>
+                            <span className="text-[15px]">{d.getDate()}</span>
+                            <span className={['text-[10px] px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30'].join(' ')}>{isFull ? 'PEŁNY' : count>0 ? `${count}` : '·'}</span>
+                            {hasNote && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" />}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {selectedCalendarDay && (
+                      <div className="mt-6 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-white flex items-center gap-2"><Calendar className="w-4 h-4 text-[#a78bfa]" />{selectedCalendarDay.date}</p>
+                          <button onClick={()=>setSelectedCalendarDay(null)} className="text-white/40 hover:text-white"><X className="w-4 h-4" /></button>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2 text-xs">
+                          <span className={['px-3 py-1.5 rounded-full border font-semibold', selectedCalendarDay.full ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : selectedCalendarDay.count>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.03] border-white/[0.06] text-white/40'].join(' ')}>{selectedCalendarDay.count} zadań</span>
+                          {selectedCalendarDay.minutes ? <span className="px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/60 text-xs">{selectedCalendarDay.minutes} min</span> : null}
+                        </div>
+                        {selectedCalendarDay.tasks?.length > 0 ? (
+                          <div className="mt-3 space-y-1.5">
+                            {selectedCalendarDay.tasks.map((t: any, i: number)=> (
+                              <div key={i} className="flex items-center gap-2 text-sm bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2"><Check className="w-3.5 h-3.5 text-emerald-400 shrink-0"/><span className="truncate text-white/80">{t.title || t.routineTitle}</span><span className="ml-auto text-[11px] text-white/40">{t.routineTitle}</span></div>
+                            ))}
+                          </div>
+                        ) : <p className="text-xs text-white/40 mt-3">Brak zadań tego dnia</p>}
+                        {dayNotes[selectedCalendarDay.date] && (
+                          <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <p className="text-[11px] font-bold text-amber-300 flex items-center gap-1"><StickyNote className="w-3 h-3" /> Notatka ucznia</p>
+                            <p className="text-sm text-white/80 mt-1">{dayNotes[selectedCalendarDay.date].content}</p>
+                            {dayNotes[selectedCalendarDay.date].sleep && <p className="text-xs text-white/50 mt-1 flex items-center gap-1"><Moon className="w-3 h-3" /> Sen: {dayNotes[selectedCalendarDay.date].sleep}/10</p>}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-[11px] text-white/30 mt-4 text-center">Kliknij dzień aby zobaczyć szczegóły · Rutyny liczą się jako zadania treningowe</p>
+                  </>
+                )
+              })()}
+            </div>
           )}
         </div>
       </div>

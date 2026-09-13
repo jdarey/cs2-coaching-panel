@@ -59,6 +59,7 @@ export function CoachPathsClient() {
   const [quickUrl, setQuickUrl] = useState<Record<number, string>>({})
   const [quickBusy, setQuickBusy] = useState<Record<number, boolean>>({})
   const [pickerOpen, setPickerOpen] = useState<Record<number, boolean>>({})
+  const [previewPath, setPreviewPath] = useState<Path | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -575,6 +576,13 @@ export function CoachPathsClient() {
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
+                      onClick={() => setPreviewPath(p)}
+                      title="Podgląd — jak zobaczy uczeń"
+                      className="grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-[#2de5ca]/10 hover:border-[#2de5ca]/30 transition-all"
+                    >
+                      <Eye className="w-4 h-4 text-[#2de5ca]" />
+                    </button>
+                    <button
                       onClick={() => duplicate(p)}
                       title="Duplikuj ścieżkę"
                       className="grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-[#2de5ca]/10 hover:border-[#2de5ca]/30 transition-all"
@@ -611,6 +619,68 @@ export function CoachPathsClient() {
             ))
           )}
         </div>
+
+        {/* Podgląd ścieżki - jak zobaczy uczeń */}
+        {previewPath && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4 animate-fade-up">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={() => setPreviewPath(null)} aria-hidden="true" />
+            <div className="glass-liquid relative w-full max-w-3xl max-h-[88vh] overflow-hidden rounded-3xl flex flex-col animate-rise-in" role="dialog" aria-modal="true">
+              <div className="p-6 border-b border-white/[0.06] shrink-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#2de5ca] to-[#147a6b] ring-1 ring-white/20 shrink-0">
+                      <Eye className="h-5 w-5 text-white" />
+                    </span>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-[#2de5ca] font-semibold">Podgląd ucznia</p>
+                      <h3 className="font-display text-xl font-bold text-white mt-1">{previewPath.title}</h3>
+                      {previewPath.description && <p className="mt-2 text-sm text-white/60 leading-relaxed">{previewPath.description}</p>}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 h-6 text-[11px] font-medium bg-white/[0.04] border border-white/[0.08] text-white/50"><FolderOpen className="w-3 h-3 text-[#2de5ca]"/>{previewPath.modules.length} modułów</span>
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 h-6 text-[11px] font-medium bg-white/[0.04] border border-white/[0.08] text-white/50"><Film className="w-3 h-3 text-[#2de5ca]"/>{videoCount(previewPath)} lekcji</span>
+                        {!previewPath.isActive && <span className="inline-flex items-center gap-1 rounded-full px-2.5 h-6 text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20">ukryta</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => setPreviewPath(null)} className="grid place-items-center w-9 h-9 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] shrink-0"><X className="w-5 h-5"/></button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {previewPath.modules.length === 0 ? (
+                  <p className="text-sm text-white/40 text-center py-8">Brak modułów w tej ścieżce</p>
+                ) : (
+                  previewPath.modules.map((m, mi) => (
+                    <div key={mi} className="rounded-2xl bg-white/[0.03] border border-white/[0.07] overflow-hidden">
+                      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+                        <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[#2de5ca] to-[#147a6b] text-xs font-bold text-white shrink-0">{mi+1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{m.title || `Moduł ${mi+1}`}</p>
+                          <p className="text-[11px] text-white/40">{m.videos.length} {m.videos.length===1?'lekcja':'lekcji'}</p>
+                        </div>
+                      </div>
+                      {m.description && <p className="px-4 py-2 text-xs text-white/55 leading-relaxed border-b border-white/[0.06]">{m.description}</p>}
+                      <div className="divide-y divide-white/[0.04]">
+                        {m.videos.length === 0 ? <p className="px-4 py-3 text-xs text-white/30">Brak filmów w module</p> : m.videos.map((v, vi) => (
+                          <div key={v.videoId} className="flex items-center gap-3 px-4 py-3">
+                            <span className="grid h-6 w-6 place-items-center rounded-md bg-white/[0.05] border border-white/[0.08] text-[11px] font-bold text-white/40 shrink-0">{vi+1}</span>
+                            {v.video.thumbnail ? <img src={v.video.thumbnail} alt="" className="w-14 h-9 object-cover rounded-md shrink-0" loading="lazy" /> : <span className="grid place-items-center w-14 h-9 rounded-md bg-white/[0.04] border border-white/[0.08] shrink-0"><Film className="w-3.5 h-3.5 text-white/30"/></span>}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-white/80 truncate">{v.video.title}</p>
+                              {v.description && <p className="text-xs text-white/40 line-clamp-2 mt-0.5">{v.description}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="p-4 border-t border-white/[0.06] flex justify-end shrink-0">
+                <button onClick={() => setPreviewPath(null)} className="px-5 h-10 rounded-xl glass-liquid text-white/70 hover:text-white">Zamknij podgląd</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </CoachLayout>
   )

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Search, Trash2, Pencil, Loader2, X, Sparkles, UserPlus, ListChecks,
   CalendarRange, Clock, Film, Check, ChevronDown, ChevronUp, PlayCircle, Users, MapPin, Repeat,
-  Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe,
+  Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
 
@@ -118,6 +118,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const [presetPickerOpen, setPresetPickerOpen] = useState(false)
   const [presetSearch, setPresetSearch] = useState('')
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
+  const [previewRoutine, setPreviewRoutine] = useState<Routine | null>(null)
   const { toast } = useToast()
 
   const addPresetToTasks = (p: ExercisePreset) => {
@@ -462,6 +463,14 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                         Przypisz
                       </button>
                       <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setPreviewRoutine(r)}
+                          className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#2de5ca]/25 transition"
+                          aria-label="Podgląd rutyny"
+                          title="Podgląd — jak zobaczy uczeń"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => openEditDialog(r)}
                           className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#a78bfa]/25 transition"
@@ -856,6 +865,76 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
               </div>
               <div className="p-4 border-t border-white/[0.06] flex justify-end">
                 <button onClick={()=>setPresetPickerOpen(false)} className="px-5 h-10 rounded-xl glass-liquid text-white/70">Zamknij</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Podgląd rutyny - jak zobaczy uczeń */}
+        {previewRoutine && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4 animate-fade-up">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={() => setPreviewRoutine(null)} aria-hidden="true" />
+            <div className="glass-liquid relative w-full max-w-3xl max-h-[88vh] overflow-hidden rounded-3xl flex flex-col animate-rise-in" role="dialog" aria-modal="true">
+              <div className="p-6 border-b border-white/[0.06] shrink-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20 shrink-0">
+                      <Eye className="h-5 w-5 text-white" />
+                    </span>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-[#c4b5fd] font-semibold">Podgląd ucznia</p>
+                      <h3 className="font-display text-xl font-bold text-white mt-1">{previewRoutine.title}</h3>
+                      {previewRoutine.description && <div className="mt-2 text-sm text-white/60 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(previewRoutine.description)}} />}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {previewRoutine.recurring && <span className="inline-flex items-center gap-1 rounded-full px-2.5 h-6 text-[11px] font-semibold bg-[#a78bfa]/10 text-[#c4b5fd] border border-[#a78bfa]/20"><Repeat className="h-3 w-3"/>Codziennie</span>}
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 h-6 text-[11px] font-medium bg-white/[0.04] border border-white/[0.08] text-white/50"><Clock className="h-3 w-3"/>{totalMinutes(previewRoutine)} min</span>
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 h-6 text-[11px] font-medium bg-white/[0.04] border border-white/[0.08] text-white/50"><ListChecks className="h-3 w-3"/>{previewRoutine.tasks.length} zadań</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => setPreviewRoutine(null)} className="grid place-items-center w-9 h-9 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] shrink-0"><X className="w-5 h-5"/></button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {(() => {
+                  const days = Array.from(new Set(previewRoutine.tasks.map((t) => t.day))).sort((a,b)=>a-b)
+                  return days.map((d) => {
+                    const dayTasks = previewRoutine.tasks.filter((t)=>t.day===d)
+                    return (
+                      <div key={d}>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd] mb-3">Dzień {d} · {dayTasks.length} {dayTasks.length===1?'zadanie':'zadań'}</p>
+                        <div className="space-y-3">
+                          {dayTasks.map((t, idx) => {
+                            const vid = t.videoId ? videos.find((v)=>v.id===t.videoId) : null
+                            return (
+                              <div key={idx} className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4">
+                                <div className="flex items-start gap-3">
+                                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white/70 shrink-0">{idx+1}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-white">{t.title}</p>
+                                    {t.description && <div className="mt-1 text-xs text-white/55 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}
+                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                      {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-white/[0.06] text-white/60"><Clock className="w-3 h-3"/>~{t.minutes} min</span>}
+                                      {t.gifUrl && <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd] border border-[#a78bfa]/20"><Image className="w-3 h-3"/>GIF</span>}
+                                      {t.steamMapUrl && <a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[#f43f5e]/10 text-[#fda4af] border border-[#f43f5e]/20"><MapPin className="w-3 h-3"/>Mapa</a>}
+                                      {t.linkUrl && <a href={t.linkUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-white/[0.06] text-[#c4b5fd] border border-white/[0.08]"><Globe className="w-3 h-3"/>Link</a>}
+                                      {vid && <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd] border border-[#a78bfa]/20"><Film className="w-3 h-3"/>{vid.title}</span>}
+                                    </div>
+                                    {t.gifUrl && <img src={t.gifUrl} alt="" className="mt-3 w-full max-h-48 object-cover rounded-xl border border-white/10" loading="lazy" />}
+                                    {vid?.thumbnail && <img src={vid.thumbnail} alt={vid.title} className="mt-3 w-full max-h-28 object-cover rounded-xl border border-white/10" loading="lazy" />}
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+              <div className="p-4 border-t border-white/[0.06] flex justify-end shrink-0">
+                <button onClick={() => setPreviewRoutine(null)} className="px-5 h-10 rounded-xl glass-liquid text-white/70 hover:text-white">Zamknij podgląd</button>
               </div>
             </div>
           </div>
