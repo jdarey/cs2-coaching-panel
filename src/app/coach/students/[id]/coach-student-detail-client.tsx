@@ -426,14 +426,16 @@ export function CoachStudentDetailClient({
                 </Avatar>
                 <span className={cn('absolute -bottom-1 -right-1 h-4 w-4 rounded-full ring-2 ring-[#0f0f12] border border-white/10', isOnline ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse' : 'bg-white/25')} title={isOnline ? 'Online teraz' : `Offline • ${formatLastSeen()}`} />
               </div>
-              <div className="min-w-0">
-                <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight truncate flex items-center gap-3">
-                  {student.name || 'Bez nazwy'}
-                  <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border', isOnline ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30' : 'bg-white/[0.04] text-white/35 border-white/[0.08]')}>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-3 min-w-0">
+                  <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight break-words min-w-0">
+                    {student.name || 'Bez nazwy'}
+                  </h1>
+                  <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border shrink-0', isOnline ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30' : 'bg-white/[0.04] text-white/35 border-white/[0.08]')}>
                     <span className={cn('h-2 w-2 rounded-full', isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-white/30')} />
                     {isOnline ? 'Online' : `Offline • ${formatLastSeen()}`}
                   </span>
-                </h1>
+                </div>
                 <p className="mt-1.5 text-white/45 text-sm flex items-center gap-1.5 truncate">
                   <Mail className="w-3.5 h-3.5 shrink-0" />
                   {student.email}
