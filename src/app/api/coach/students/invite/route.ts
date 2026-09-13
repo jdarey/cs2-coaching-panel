@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
+import { emailLayout, infoCard } from '@/lib/email-layout'
 import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
@@ -58,38 +59,18 @@ export async function POST(request: NextRequest) {
     const inviteUrl = `${process.env.NEXTAUTH_URL}/register?invite=${token}`
     const coachName = (session.user as any).name || 'Twój trener'
 
-    const html = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-radius: 16px; padding: 40px; color: white;">
-            <div style="text-align: center; margin-bottom: 32px;">
-              <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #2de5ca 0%, #14b8a6 100%); margin-bottom: 16px;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <h1 style="margin: 0; font-size: 24px; font-weight: 700;">CS2 Coaching Panel</h1>
-            </div>
-
-            <p style="font-size: 16px; line-height: 1.6; color: #e2e8f0; margin-bottom: 16px;">
-              Cześć! <strong>${coachName}</strong> zaprasza Cię do swojego panelu treningowego CS2.
-            </p>
-
-            <p style="font-size: 16px; line-height: 1.6; color: #94a3b8; margin-bottom: 32px;">
-              Jako uczeń będziesz mieć dostęp do: biblioteki filmów treningowych, sesji z trenerem, zadań domowych, śledzenia rangi (Premier/Faceit ELO), komunikacji z trenerem i wielu innych narzędzi pomagających w rozwoju w CS2.
-            </p>
-
-            <div style="text-align: center; margin-bottom: 32px;">
-              <a href="${inviteUrl}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #2de5ca 0%, #14b8a6 100%); color: #060606; font-weight: 700; border-radius: 12px; text-decoration: none; font-size: 16px;">
-                Utwórz konto i dołącz
-              </a>
-            </div>
-
-            <p style="font-size: 12px; color: #64748b; text-align: center;">
-              Link wygasa za 7 dni. Jeśli nie prosiłeś o zaproszenie, zignoruj tę wiadomość.
-            </p>
-          </div>
-        </div>
-      `
+    const { html } = emailLayout({
+      preheader: `${coachName} zaprasza Cię do panelu CS2 Coaching`,
+      badge: '🎯 Zaproszenie',
+      title: `${coachName} zaprasza Cię do treningu`,
+      subtitle: 'Dołącz do panelu i zacznij robić postępy już dziś — filmy, sesje na żywo i plan pod Ciebie.',
+      bodyHtml: `
+        <p style="margin:0;">Cześć! Trener <strong style="color:#f4f6f7;">${coachName}</strong> dodał Cię do swojego panelu coachingowego CS2. Czekają tam na Ciebie:</p>
+        ${infoCard('Co dostajesz', ['🎬 Biblioteka filmów treningowych', '📅 Sesje 1:1 z trenerem i demo-review', '✅ Zadania i rutyny z kalendarzem', '📈 Śledzenie Faceit ELO na żywo'])}
+        <p style="margin:0;">Założenie konta zajmie Ci mniej niż minutę. Do zobaczenia na serwerze! 🔥</p>`,
+      button: { label: 'Utwórz konto i dołącz →', url: inviteUrl },
+      buttonNote: 'Link wygasa za 7 dni.',
+    })
     const text = `Cześć! ${coachName} zaprasza Cię do panelu CS2 Coaching.\n\nJako uczeń będziesz mieć dostęp do: biblioteki filmów treningowych, sesji z trenerem, zadań domowych, śledzenia rangi (Premier/Faceit ELO), komunikacji z trenerem.\n\nUtwórz konto i dołącz: ${inviteUrl}\n\nLink wygasa za 7 dni.`
 
     await sendEmail({

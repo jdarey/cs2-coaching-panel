@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createPasswordResetToken } from '@/lib/password-reset'
 import { sendEmail } from '@/lib/mail'
+import { emailLayout } from '@/lib/email-layout'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,17 +30,18 @@ export async function POST(request: NextRequest) {
     const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
     const name = user.name || 'tam'
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #0d0d0d; border-radius: 16px; color: #e5e7eb;">
-        <p style="font-size: 20px; font-weight: 700; color: #ffffff; margin: 0 0 8px;">Zresetuj hasło</p>
-        <p style="color: #9ca3af; line-height: 1.6;">Cześć ${name}! Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta w panelu CS2 Coaching.</p>
-        <p style="color: #9ca3af; line-height: 1.6;">Kliknij poniższy przycisk, aby ustawić nowe hasło. Link jest ważny przez 1 godzinę.</p>
-        <p style="text-align: center; margin: 28px 0;">
-          <a href="${resetUrl}" style="display: inline-block; padding: 12px 28px; border-radius: 12px; background: #a78bfa; color: #062a24; font-weight: 700; text-decoration: none;">Ustaw nowe hasło</a>
-        </p>
-        <p style="color: #6b7280; font-size: 13px;">Jeśli to nie Ty prosiłeś o zmianę hasła, zignoruj tę wiadomość.</p>
-      </div>
-    `
+    const { html } = emailLayout({
+      preheader: 'Ustaw nowe hasło — link ważny 1 godzinę',
+      badge: '🔐 Reset hasła',
+      title: `Cześć ${name}, ustaw nowe hasło`,
+      subtitle: 'Dostałeś tę wiadomość, bo ktoś poprosił o reset hasła do Twojego konta. Dasz radę w mniej niż minutę — obiecujemy, że to prostsze niż clutch 1v3.',
+      bodyHtml: `
+        <p style="margin:0;">Kliknij wielki fioletowy przycisk poniżej i wpisz nowe hasło (min. 8 znaków). Link działa <strong style="color:#f4f6f7;">tylko 1 godzinę</strong> i tylko raz — potem wygasa dla Twojego bezpieczeństwa.</p>
+        <p style="margin:12px 0 0;">Po zmianie od razu zalogujesz się nowym hasłem i wrócisz do treningu. Powodzenia na serwerze! 🎯</p>`,
+      button: { label: 'Ustaw nowe hasło →', url: resetUrl },
+      buttonNote: 'Przycisk nie działa? Wklej ten link do przeglądarki.',
+      footerNote: 'Nie prosiłeś o reset? Zignoruj tę wiadomość — Twoje hasło zostaje bez zmian, a link sam wygaśnie.',
+    })
 
     await sendEmail({
       to: email,

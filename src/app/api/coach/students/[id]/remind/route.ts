@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
+import { emailLayout, infoCard } from '@/lib/email-layout'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,17 +42,24 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
         .join('\n')
     : 'Czeka na Ciebie nowa sesja treningowa. Zajrzyj do panelu ucznia, aby zobaczyć szczegóły.'
 
+  const taskLines = pending.map((a) => {
+    const due = a.dueDate ? ` <span style="color:rgba(244,246,247,0.45);">· termin ${new Date(a.dueDate).toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}</span>` : ''
+    return `✅ ${a.title}${due}`
+  })
+  const { html } = emailLayout({
+    preheader: `${coachName} przypomina o treningu — ${pending.length} zadań czeka`,
+    badge: '💪 Czas na trening',
+    title: `Cześć${student.name ? ` ${student.name}` : ''}, trener o Tobie pamięta!`,
+    subtitle: `${coachName} sprawdził Twój plan i podrzuca rzeczy do nadrobienia. Mały krok dziś = duży skok ELO jutro.`,
+    bodyHtml: pending.length
+      ? infoCard('Twoje zadania', taskLines) + `<p style="margin:0;">Wejdź do panelu, odhacz je po kolei i patrz jak rośnie seria dni. Dasz radę! 🔥</p>`
+      : `<p style="margin:0;">Dobra wiadomość: nic nie zalega! Zajrzyj do panelu po nową sesję treningową i trzymaj formę. 🚀</p>`,
+    button: { label: 'Otwórz panel ucznia →', url: `${APP_URL}/student/dashboard` },
+  })
   const result = await sendEmail({
     to: student.email,
-    subject: `📣 Przypomnienie od trenera (${coachName})`,
-    html: `
-      <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #0a0a0a; border-radius: 20px; border: 1px solid rgba(45,229,202,0.25);">
-        <h2 style="color:#fff; margin:0 0 8px;">Cześć${student.name ? ` ${student.name}` : ''}!</h2>
-        <p style="color:rgba(255,255,255,0.8); line-height:1.6; margin:0;">Twój trener <strong style="color:#2de5ca;">${coachName}</strong> przypomina o treningu.</p>
-        <div style="background:rgba(255,255,255,0.05); border-radius:14px; padding:16px 18px; margin:18px 0; color:rgba(255,255,255,0.85); white-space:pre-line; line-height:1.6; font-size:14px;">${lines}</div>
-        <a href="${APP_URL}/student/dashboard" style="display:inline-block; background:linear-gradient(135deg,#2de5ca,#147a6b); color:#fff; text-decoration:none; padding:12px 22px; border-radius:12px; font-weight:600;">Otwórz panel ucznia</a>
-        <p style="color:rgba(255,255,255,0.4); font-size:12px; margin-top:24px;">To wiadomość automatyczna z Twojego panelu coachingowego.</p>
-      </div>`,
+    subject: `💪 ${coachName} przypomina o treningu — ${pending.length} zadań czeka`,
+    html,
     text: `Cześć${student.name ? ` ${student.name}` : ''}!\nTwój trener ${coachName} przypomina o treningu.\n\n${lines}\n\nOtwórz panel ucznia: ${APP_URL}/student/dashboard`,
   })
 

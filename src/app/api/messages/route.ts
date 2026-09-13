@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
+import { emailLayout } from '@/lib/email-layout'
 import { sendDiscordNotification } from '@/lib/discord'
 import { publishToUsers } from '@/lib/realtime'
 
@@ -179,19 +180,19 @@ export async function POST(request: NextRequest) {
         const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3000}`
         const link = user.role === 'COACH' ? `${baseUrl}/student/messages` : `${baseUrl}/coach/messages`
 
+        const safeContent = message.content.replace(/</g, '&lt;').replace(/\n/g, '<br/>')
+        const { html: msgHtml } = emailLayout({
+          preheader: `${senderName}: ${message.content.slice(0, 80)}`,
+          badge: '💬 Nowa wiadomość',
+          title: `${senderName} napisał do Ciebie`,
+          subtitle: 'Nie przegap — szybka odpowiedź trzyma trening w rytmie.',
+          bodyHtml: `<div style="margin:0; padding:16px 18px; border-radius:14px; background:#14161c; border:1px solid rgba(255,255,255,0.08); border-left:3px solid #a78bfa; line-height:1.7;">${safeContent}</div>`,
+          button: { label: 'Odpisz w czacie →', url: link },
+        })
         await sendEmail({
           to: receiver.email,
-          subject: `Nowa wiadomość od ${senderName} — CS2 Coaching`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #0d0d0d; border-radius: 16px; color: #e5e7eb;">
-              <p style="font-size: 20px; font-weight: 700; color: #ffffff; margin: 0 0 8px;">Nowa wiadomość</p>
-              <p style="color: #9ca3af; line-height: 1.6;"><strong style="color: #ffffff;">${senderName}</strong> napisał(a):</p>
-              <div style="margin: 20px 0; padding: 16px 20px; border-radius: 12px; background: #1a1a1a; border-left: 3px solid #a78bfa; color: #e5e7eb; line-height: 1.6;">${message.content.replace(/</g, '&lt;').replace(/\n/g, '<br/>')}</div>
-              <p style="text-align: center; margin: 24px 0;">
-                <a href="${link}" style="display: inline-block; padding: 12px 28px; border-radius: 12px; background: #a78bfa; color: #062a24; font-weight: 700; text-decoration: none;">Otwórz czat</a>
-              </p>
-            </div>
-          `,
+          subject: `💬 ${senderName}: ${message.content.slice(0, 60)}${message.content.length > 60 ? '…' : ''}`,
+          html: msgHtml,
           text: `Nowa wiadomość od ${senderName} — CS2 Coaching\n\n${message.content}\n\nOtwórz czat: ${link}`,
         })
       }
