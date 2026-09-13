@@ -297,7 +297,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       if (data.updated > 0) {
         toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} z ${data.total} filmów${data.failed ? `, nie udało się ${data.failed}` : ''}${data.skipped ? `, pominięto ${data.skipped} (Drive/inne)` : ''}` })
       } else if (data.failed > 0 && data.failed === data.total) {
-        toast({ title: 'Prywatne filmy', description: `Twoje filmy są prywatne – YouTube nie udostępnia czasu dla prywatnych. Zmień je na Niepubliczne (Unlisted) lub wpisz czas ręcznie: Edytuj film → Czas trwania (np. 12:34).`, variant: 'destructive' })
+        toast({ title: 'Nie udało się pobrać', description: `YouTube zablokował pobieranie na serwerze Vercel (dotyczy też niepublicznych). Spróbuj ponownie za chwilę lub wpisz czas ręcznie: Edytuj → Czas trwania (12:34). Możesz też dodać YOUTUBE_API_KEY w Vercel Env.`, variant: 'destructive' })
       } else if (data.failed > 0) {
         toast({ title: 'Uwaga', description: `Sprawdzono ${data.total} filmów, nie udało się pobrać czasu dla ${data.failed}${data.skipped ? `, pominięto ${data.skipped} Drive/inne` : ''}`, variant: 'destructive' })
       } else {

@@ -182,7 +182,19 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
         }
       }
     } catch {}
-    // 4) Fallback: watch page — ostatecznosc (najwolniejsze, 4s)
+    // 4) Fallback: Piped (pipedapi.kavin.rocks) - czesto dziala gdy YT blokuje Vercel IP, zwraca duration w sekundach
+    try {
+      const res = await fetchWithTimeout(`https://pipedapi.kavin.rocks/streams/${ytId}`, {
+        headers: { 'User-Agent': UA },
+        ...cacheOpts,
+      } as any, 4000)
+      if (res.ok) {
+        const data = await res.json()
+        const d = (data as any)?.duration
+        if (typeof d === 'number' && d > 0) return Math.round(d)
+      }
+    } catch {}
+    // 5) Fallback: watch page — ostatecznosc (najwolniejsze, 4s)
     try {
       const res = await fetchWithTimeout(`https://www.youtube.com/watch?v=${ytId}&hl=en&has_verified=1`, {
         headers: {
