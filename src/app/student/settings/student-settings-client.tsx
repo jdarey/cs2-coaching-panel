@@ -557,7 +557,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                   </div>
 
                   {gamingResult && (
-                    <p className={cn('mt-4 text-sm', gamingResult.ok ? 'text-emerald-300' : 'text-red-300')}>
+                    <p className={cn('mt-4 text-sm', gamingResult.ok ? 'text-[#c4b5fd]' : 'text-red-300')}>
                       {gamingResult.message}
                     </p>
                   )}

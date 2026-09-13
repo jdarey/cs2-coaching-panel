@@ -713,7 +713,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                         Testuj klucz
                       </button>
                       {faceitTest.state === 'ok' && (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#c4b5fd]">
                           <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-500/15">✓</span>
                           {faceitTest.message.replace(/^✓ /, '')}
                         </span>
@@ -772,7 +772,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                   </div>
 
                   {apiKeysSaved && (
-                    <p className="text-xs text-emerald-300">✓ Klucze zapisane</p>
+                    <p className="text-xs text-[#c4b5fd]">✓ Klucze zapisane</p>
                   )}
 
                   <button
