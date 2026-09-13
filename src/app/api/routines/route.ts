@@ -64,10 +64,17 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
     })
-    // Daily reset for recurring routines: if completed yesterday (or earlier), start fresh for today
+    // Daily reset dla rutyn codziennych: od nowego dnia wszystkie zadania sie odznaczaja same (jak powtorz rutyne), niezaleznie czy ukonczona
     const todayStart = new Date(); todayStart.setHours(0,0,0,0)
     for (const a of assignments) {
-      if (a.status === 'COMPLETED' && a.routine.recurring && a.completedAt && new Date(a.completedAt) < todayStart && (!a.endsAt || new Date(a.endsAt) > new Date())) {
+      if (!a.routine.recurring) continue
+      if (a.endsAt && new Date(a.endsAt) <= new Date()) continue
+      const hasDone = (a.progress as any[]).some((p: any) => p.status === 'DONE')
+      if (!hasDone) continue
+      // ostatnia aktywnosc (dowolne DONE) przed dzisiaj -> reset
+      const dones = (a.progress as any[]).filter((p: any) => p.status === 'DONE' && p.completedAt).sort((x: any, y: any) => new Date(y.completedAt).getTime() - new Date(x.completedAt).getTime())
+      const lastActivity = dones.length ? new Date(dones[0].completedAt) : (a.completedAt ? new Date(a.completedAt) : null)
+      if (lastActivity && lastActivity < todayStart) {
         await prisma.routineTaskProgress.updateMany({ where: { assignmentId: a.id }, data: { status: 'PENDING', completedAt: null } })
         await prisma.routineAssignment.update({ where: { id: a.id }, data: { status: 'ACTIVE', completedAt: null } })
         a.status = 'ACTIVE'; (a as any).completedAt = null; (a as any).progress = (a as any).progress.map((p:any)=> ({...p, status:'PENDING', completedAt:null}))
