@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     let failed = 0
     let skipped = 0
 
-    const CONCURRENCY = 3
+    const CONCURRENCY = 5
     for (let i = 0; i < videos.length; i += CONCURRENCY) {
       const chunk = videos.slice(i, i + CONCURRENCY)
       await Promise.all(
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
           try {
             const dur = await Promise.race([
               fetchVideoDuration(v.url, { noCache: true }),
-              new Promise<null>((res) => setTimeout(() => res(null), 8000)),
+              new Promise<null>((res) => setTimeout(() => res(null), 6000)),
             ])
             if (dur && dur > 0) {
               if (dur !== v.duration) {

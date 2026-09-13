@@ -118,11 +118,25 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
   if (ytId) {
     const cacheOpts: any = opts?.noCache ? { cache: 'no-store' } : { next: { revalidate: 86400 } }
     const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-    // 1) Innertube API — probuj kilka klientow (WEB, ANDROID) bo jeden moze byc zablokowany na Vercel IP
+    // 1) Data API v3 - najszybsze i najpewniejsze na Vercel (1 request, 3s timeout, oficialne)
+    try {
+      const res = await fetchWithTimeout(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
+        headers: { 'User-Agent': UA },
+        ...cacheOpts,
+      } as any, 3000)
+      if (res.ok) {
+        const data = await res.json()
+        const iso: string | undefined = data?.items?.[0]?.contentDetails?.duration
+        if (iso) {
+          const secs = parseISO8601Duration(iso)
+          if (secs) return secs
+        }
+      }
+    } catch {}
+    // 2) Innertube API — backup gdy Data API quota przekroczone
     for (const client of [
       { clientName: 'WEB', clientVersion: '2.20240101' },
       { clientName: 'ANDROID', clientVersion: '19.09.37' },
-      { clientName: 'MWEB', clientVersion: '2.20240101' },
     ] as const) {
       try {
         const res = await fetchWithTimeout('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
@@ -137,7 +151,7 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
           },
           body: JSON.stringify({ context: { client }, videoId: ytId }),
           ...cacheOpts,
-        } as any, 5000)
+        } as any, 3000)
         if (res.ok) {
           const data = await res.json()
           const secs = data?.videoDetails?.lengthSeconds
@@ -153,27 +167,12 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
         }
       } catch {}
     }
-    // 2) Fallback: Google Data API v3 (ten sam klucz) - zwraca ISO 8601 PT1H2M10S, dziala z Vercel czesciej niz Innertube
-    try {
-      const res = await fetchWithTimeout(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
-        headers: { 'User-Agent': UA },
-        ...cacheOpts,
-      } as any, 5000)
-      if (res.ok) {
-        const data = await res.json()
-        const iso: string | undefined = data?.items?.[0]?.contentDetails?.duration
-        if (iso) {
-          const secs = parseISO8601Duration(iso)
-          if (secs) return secs
-        }
-      }
-    } catch {}
     // 3) Fallback: lemnoslife noKey proxy (nie wymaga klucza, omija blokady IP)
     try {
       const res = await fetchWithTimeout(`https://yt.lemnoslife.com/noKey/videos?part=contentDetails&id=${ytId}`, {
         headers: { 'User-Agent': UA },
         ...cacheOpts,
-      } as any, 5000)
+      } as any, 3000)
       if (res.ok) {
         const data = await res.json()
         const iso: string | undefined = data?.items?.[0]?.contentDetails?.duration
@@ -183,7 +182,7 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
         }
       }
     } catch {}
-    // 4) Fallback: watch page — tylko videoDetails z ytInitialPlayerResponse, wiekszy snippet i CONSENT bypass
+    // 4) Fallback: watch page — ostatecznosc (najwolniejsze, 4s)
     try {
       const res = await fetchWithTimeout(`https://www.youtube.com/watch?v=${ytId}&hl=en&has_verified=1`, {
         headers: {
@@ -192,7 +191,7 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
           Cookie: 'CONSENT=YES+cb.20210328-17-p0.en+FX+667; YSC=',
         },
         ...cacheOpts,
-      } as any, 7000)
+      } as any, 4000)
       if (res.ok) {
         const html = await res.text()
         const idx = html.indexOf('ytInitialPlayerResponse')
