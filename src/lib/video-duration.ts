@@ -35,22 +35,25 @@ async function fetchJson(url: string, opts: RequestInit, ms = 3500): Promise<any
 }
 
 // Publiczne API: zwraca sekundy lub null (wtedy UI wymaga recznego wpisania)
+// Bez klucza: Piped + Innertube (wystarcza dla publicznych/niepublicznych). Data API tylko jeśli YOUTUBE_API_KEY ustawiony.
 export async function getVideoDuration(url: string, _opts?: { noCache?: boolean }): Promise<number | null> {
   const ytId = getYouTubeId(url)
   if (ytId) {
     const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    const key = process.env.YOUTUBE_API_KEY || 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'
+    const apiKey = process.env.YOUTUBE_API_KEY
 
-    // 1) Data API v3 - najszybsze, dziala dla publicznych i niepublicznych, nie dla prywatnych
-    const dataApi = await fetchJson(
-      `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=${key}`,
-      { headers: { 'User-Agent': UA }, cache: 'no-store' as any },
-      3500
-    )
-    const iso = dataApi?.items?.[0]?.contentDetails?.duration as string | undefined
-    if (iso) {
-      const secs = parseISO8601(iso)
-      if (secs) return secs
+    // 1) Data API v3 - tylko jeśli klucz dostępny (bez klucza pomijamy, nie używamy hardkodowanego)
+    if (apiKey) {
+      const dataApi = await fetchJson(
+        `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=${apiKey}`,
+        { headers: { 'User-Agent': UA }, cache: 'no-store' as any },
+        3500
+      )
+      const iso = dataApi?.items?.[0]?.contentDetails?.duration as string | undefined
+      if (iso) {
+        const secs = parseISO8601(iso)
+        if (secs) return secs
+      }
     }
 
     // 2) Piped - omija blokady IP Vercel, nie wymaga klucza, dziala dla niepublicznych
