@@ -93,17 +93,10 @@ export function YoutubeCustomPlayer({
 
   const isPlayingRef     = useRef(false)
   const controlsTimerRef = useRef<NodeJS.Timeout | null>(null)
-  // YouTube embeds sometimes swallow the FIRST playVideo() call after a cold
-  // load (player goes buffering → unstarted, no error). Retry once if
-  // playback hasn't actually started shortly after the user's click.
   const retryTimerRef = useRef<NodeJS.Timeout | null>(null)
   const clearRetry = useCallback(() => {
     if (retryTimerRef.current) { clearTimeout(retryTimerRef.current); retryTimerRef.current = null }
   }, [])
-  // In some environments YouTube stops an API-started video a few seconds in
-  // (it wants a gesture inside its own frame; the webview is stricter than a
-  // real browser). Auto-resume a few times when that happens, unless the
-  // user paused on purpose or the video ended.
   const intendPlayRef     = useRef(false)
   const resumeAttemptsRef = useRef(0)
 
@@ -115,6 +108,8 @@ export function YoutubeCustomPlayer({
   const latestPositionRef = useRef(initialStartSeconds || 0)
   const latestDurationRef = useRef(0)
   const lastSaveAtRef     = useRef(0)
+  // Duration fetch guard - only fetch once when player becomes ready
+  const durationFetchedRef = useRef(false)
 
   // Content protection (shared with the raw-embed wrapper): blocked capture
   // shortcuts, DevTools detection with auto-pause, and the tab-hide warning.
@@ -153,6 +148,7 @@ export function YoutubeCustomPlayer({
     latestPositionRef.current = initialStartSeconds || 0
     latestDurationRef.current = 0
     lastSaveAtRef.current     = 0
+    durationFetchedRef.current = false
     setCurrentTime(initialStartSeconds || 0)
     setIsPlaying(false); isPlayingRef.current = false
     setIsEnded(false)
@@ -194,6 +190,7 @@ export function YoutubeCustomPlayer({
       setIsPlaying(true); isPlayingRef.current = true
       setIsBuffering(false); setIsEnded(false)
       setHasPlayed(true)
+      // Get duration on play start (some videos only report duration after playback begins)
       const dur = target.getDuration?.() || 0
       if (dur > 0) { setDuration(dur); latestDurationRef.current = dur }
       clearRetry()
@@ -285,62 +282,67 @@ export function YoutubeCustomPlayer({
       },
       events: {
         onReady: (event: any) => {
-          // Override the iframe title — YouTube sets it to the real video
-          // title, which leaks out of the chromeless player (screen readers,
-          // tooltips). Ours says what it is: a training video. (The API
-          // already grants the frame autoplay permission itself.)
-          try {
-            containerRef.current?.querySelectorAll('iframe').forEach((f: HTMLIFrameElement) => {
-              f.title = 'Wideo treningowe'
-              f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
-              f.setAttribute('allowFullscreen', '')
-              // @ts-ignore
-              f.allowFullscreen = true
-            })
-          } catch (_) {}
-          setIsReady(true)
-          const readyDur = event.target.getDuration?.() || 0
-          if (readyDur > 0) { setDuration(readyDur); latestDurationRef.current = readyDur }
-          // Safety: if the resume point is beyond the real duration (e.g. a
-          // different edit of the video), restart from 0 instead of erroring.
-          if (readyDur > 0 && startSec > readyDur - 1) {
-            latestPositionRef.current = 0
-            setCurrentTime(0)
-            try { event.target.seekTo(0) } catch (_) {}
-          }
-          // Apply the user's remembered volume/mute.
-          const storedVol = loadVolume()
-          try {
-            event.target.setVolume(storedVol.volume)
-            storedVol.muted ? event.target.mute() : event.target.unMute()
-          } catch (_) {}
-          setVolume(storedVol.volume)
-          setIsMuted(storedVol.muted)
-          // Force disable captions + hide YT layout (no CC, no endscreen)
-          try {
-            event.target.unloadModule('captions')
-            event.target.loadModule('captions')
-            event.target.setOption('captions', 'track', {})
-            event.target.setOption('captions', 'track', { lang: 'off' })
-            event.target.setOption('cc', 'track', {})
-          } catch (_) {}
-          // Quality: force highest available (4K) by default — 99% filmów ma 4K, ABR i tak wybierze max na podstawie rozmiaru 3840
-          try {
-            const avail: string[] = event.target.getAvailableQualityLevels?.() || []
-            if (avail.length) {
-              setAvailableQualities(avail)
-              const preferred = ['hd2160', 'hd1440', 'highres', 'hd1080', 'hd720', 'large'].find((q) => avail.includes(q)) || avail[0]
-              if (preferred && preferred !== 'auto') {
-                try { event.target.setPlaybackQuality(preferred); event.target.setPlaybackQualityRange?.(preferred, preferred) } catch {}
-                setCurrentQuality(preferred)
-              }
-            } else {
-              // Fallback: try highres (4K) directly, YT will pick closest
-              try { event.target.setPlaybackQuality('highres') } catch {}
-              setCurrentQuality('highres')
+            // Override the iframe title — YouTube sets it to the real video
+            // title, which leaks out of the chromeless player (screen readers,
+            // tooltips). Ours says what it is: a training video. (The API
+            // already grants the frame autoplay permission itself.)
+            try {
+              containerRef.current?.querySelectorAll('iframe').forEach((f: HTMLIFrameElement) => {
+                f.title = 'Wideo treningowe'
+                f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
+                f.setAttribute('allowFullscreen', '')
+                // @ts-ignore
+                f.allowFullscreen = true
+              })
+            } catch (_) {}
+            setIsReady(true)
+            // Get duration on ready - this is the most reliable moment
+            const readyDur = event.target.getDuration?.() || 0
+            if (readyDur > 0) { 
+              setDuration(readyDur); 
+              latestDurationRef.current = readyDur 
+              durationFetchedRef.current = true
             }
-          } catch (_) {}
-        },
+            // Safety: if the resume point is beyond the real duration (e.g. a
+            // different edit of the video), restart from 0 instead of erroring.
+            if (readyDur > 0 && startSec > readyDur - 1) {
+              latestPositionRef.current = 0
+              setCurrentTime(0)
+              try { event.target.seekTo(0) } catch (_) {}
+            }
+            // Apply the user's remembered volume/mute.
+            const storedVol = loadVolume()
+            try {
+              event.target.setVolume(storedVol.volume)
+              storedVol.muted ? event.target.mute() : event.target.unMute()
+            } catch (_) {}
+            setVolume(storedVol.volume)
+            setIsMuted(storedVol.muted)
+            // Force disable captions + hide YT layout (no CC, no endscreen)
+            try {
+              event.target.unloadModule('captions')
+              event.target.loadModule('captions')
+              event.target.setOption('captions', 'track', {})
+              event.target.setOption('captions', 'track', { lang: 'off' })
+              event.target.setOption('cc', 'track', {})
+            } catch (_) {}
+            // Quality: force highest available (4K) by default — 99% filmów ma 4K, ABR i tak wybierze max na podstawie rozmiaru 3840
+            try {
+              const avail: string[] = event.target.getAvailableQualityLevels?.() || []
+              if (avail.length) {
+                setAvailableQualities(avail)
+                const preferred = ['hd2160', 'hd1440', 'highres', 'hd1080', 'hd720', 'large'].find((q) => avail.includes(q)) || avail[0]
+                if (preferred && preferred !== 'auto') {
+                  try { event.target.setPlaybackQuality(preferred); event.target.setPlaybackQualityRange?.(preferred, preferred) } catch {}
+                  setCurrentQuality(preferred)
+                }
+              } else {
+                // Fallback: try highres (4K) directly, YT will pick closest
+                try { event.target.setPlaybackQuality('highres') } catch {}
+                setCurrentQuality('highres')
+              }
+            } catch (_) {}
+          },
         onStateChange: (event: any) => applyPlayerState(event.data, event.target),
         onPlaybackQualityChange: (event: any) => {
           try { setCurrentQuality(event.data) } catch {}
@@ -372,7 +374,9 @@ export function YoutubeCustomPlayer({
   // parent (throttled to ~5s) so the resume point is persisted while watching.
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined
+    
     if (isPlaying) {
+      // Playing: poll position and duration every 500ms
       interval = setInterval(() => {
         const p = playerRef.current
         if (!p || typeof p.getCurrentTime !== 'function') return
@@ -380,9 +384,10 @@ export function YoutubeCustomPlayer({
         const dur = p.getDuration?.() || 0
         latestPositionRef.current = pos
         setCurrentTime(pos)
-        if (dur > 0) {
+        // Update duration if we get a valid one (some videos report duration only after playback starts)
+        if (dur > 0 && dur !== latestDurationRef.current) {
           latestDurationRef.current = dur
-          if (dur !== duration) setDuration(dur)
+          setDuration(dur)
         }
         const now = Date.now()
         if (now - lastSaveAtRef.current >= 5000) {
@@ -390,22 +395,27 @@ export function YoutubeCustomPlayer({
           onProgressRef.current?.({ position: pos, duration: dur || latestDurationRef.current, ended: false })
         }
       }, 500)
-    } else if (isReady && duration === 0) {
-      // Gdy video jeszcze nie gralo, duration moze byc 0 — probuj pobrac dopoki nie bedzie dostepne
+    } else if (isReady && !durationFetchedRef.current) {
+      // Player ready but duration not yet fetched: poll once per second for up to 10s
+      let attempts = 0
       interval = setInterval(() => {
-        const p: any = playerRef.current
+        const p = playerRef.current
         if (!p || typeof p.getDuration !== 'function') return
         const dur = p.getDuration() || 0
         if (dur > 0) {
           setDuration(dur)
           latestDurationRef.current = dur
+          durationFetchedRef.current = true
+          if (interval) clearInterval(interval)
+        } else if (++attempts >= 10) {
+          // Give up after 10 seconds - duration unavailable (private/unplayable video)
           if (interval) clearInterval(interval)
         }
-      }, 500)
+      }, 1000)
     }
+    
     return () => { if (interval) clearInterval(interval) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, isReady, duration])
+  }, [isPlaying, isReady])
 
   // Enforce highest quality (4K) while playing — YT ABR downgrades after ~8s (morphe-patches#667), setPlaybackQuality is no-op but setPlaybackQualityRange + periodic re-apply helps
   useEffect(() => {
