@@ -1,8 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { TrendingUp, Crown, Loader2, ExternalLink, Trophy } from 'lucide-react'
+import { TrendingUp, Loader2, ExternalLink, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+function FaceitIcon({ className }: { className?: string }) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M23.999 2.705a.167.167 0 00-.312-.1 1141.27 1141.27 0 00-6.053 9.375H.218c-.221 0-.301.282-.11.352 7.227 2.73 17.667 6.836 23.5 9.134.15.06.39-.08.39-.18z" />
+    </svg>
+  )
+}
 
 interface RankEntry {
   id: string
@@ -18,17 +26,18 @@ const FACEIT_LEVEL_COLORS: Record<number, string> = {
   6: '#ff9800', 7: '#ff9800', 8: '#ff5722', 9: '#f44336', 10: '#d50000',
 }
 
+// Progi CS2 aktualne 2025 (Faceit 2.0): 1:100-500, 2:501-750, 3:751-900, 4:901-1050, 5:1051-1200, 6:1201-1350, 7:1351-1530, 8:1531-1750, 9:1751-2000, 10:2001+
 function levelFromElo(elo: number | null): number | null {
   if (elo == null) return null
-  if (elo < 801) return 1
-  if (elo < 951) return 2
-  if (elo < 1101) return 3
-  if (elo < 1251) return 4
-  if (elo < 1401) return 5
-  if (elo < 1551) return 6
-  if (elo < 1701) return 7
-  if (elo < 1851) return 8
-  if (elo < 2001) return 9
+  if (elo <= 500) return 1
+  if (elo <= 750) return 2
+  if (elo <= 900) return 3
+  if (elo <= 1050) return 4
+  if (elo <= 1200) return 5
+  if (elo <= 1350) return 6
+  if (elo <= 1530) return 7
+  if (elo <= 1750) return 8
+  if (elo <= 2000) return 9
   return 10
 }
 
@@ -43,15 +52,20 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const url = studentId ? `/api/ranks?studentId=${studentId}` : '/api/ranks'
-    fetch(url)
-      .then(r => r.ok ? r.json() : [])
-      .then((data: RankEntry[]) => {
-        const faceitOnly = (Array.isArray(data) ? data : []).filter(e => e.mode === 'FACEIT' && e.elo != null)
-        setEntries(faceitOnly.sort((a,b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()))
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    const fetchRanks = () => {
+      const url = studentId ? `/api/ranks?studentId=${studentId}` : '/api/ranks'
+      fetch(url)
+        .then(r => r.ok ? r.json() : [])
+        .then((data: RankEntry[]) => {
+          const faceitOnly = (Array.isArray(data) ? data : []).filter(e => e.mode === 'FACEIT' && e.elo != null)
+          setEntries(faceitOnly.sort((a,b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()))
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    }
+    fetchRanks()
+    const id = setInterval(fetchRanks, 30_000)
+    return () => clearInterval(id)
   }, [studentId])
 
   const currentElo = faceitElo ?? (entries.length ? entries[entries.length - 1].elo : null)
@@ -76,15 +90,14 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
     <div className={cn('glass-card rounded-3xl overflow-hidden relative', compact ? 'p-4' : 'p-6')}>
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#ff5500] to-[#ff1a1a] ring-1 ring-white/15">
-            <Crown className="w-4 h-4 text-white" />
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15">
+            <FaceitIcon className="w-5 h-5 text-white" />
           </span>
           <div>
             <h3 className="font-display font-bold text-white flex items-center gap-2">
               Faceit ELO
               {faceitNickname && <span className="text-xs font-normal text-white/40">· {faceitNickname}</span>}
             </h3>
-            <p className="text-[11px] text-white/40">Na żywo jak u ucznia i trenera — ten sam wykres</p>
           </div>
         </div>
         {faceitNickname && (
@@ -162,13 +175,9 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
         </div>
       )}
 
-      {/* Hosted widget fallback - 100% jak premier widget, bez klucza */}
+      {/* Hosted widget - bez opisu, tylko iframe */}
       {faceitNickname && (
         <div className="rounded-2xl overflow-hidden border border-white/[0.06] bg-black/20">
-          <div className="flex items-center justify-between px-3 py-2 bg-white/[0.03] border-b border-white/[0.06]">
-            <p className="text-[11px] font-semibold text-white/60 flex items-center gap-1.5"><Trophy className="w-3 h-3 text-[#ff5500]" /> Widget na stream (mxgic1337) — ten sam jak premier</p>
-            <a href={widgetUrl!} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white">Otwórz</a>
-          </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <iframe
             src={widgetUrl!}
@@ -178,7 +187,6 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
             loading="lazy"
             sandbox="allow-scripts allow-same-origin"
           />
-          <p className="text-[10px] text-white/25 px-3 py-1.5 text-center">Widget działa bez klucza na hostowanym `widget.mxgic1337.xyz` — jak premierowy `LevanisART`. Self-host wymaga `VITE_FACEIT_API_KEY`.</p>
         </div>
       )}
     </div>

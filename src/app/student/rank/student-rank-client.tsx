@@ -292,10 +292,9 @@ export function StudentRankClient() {
         </div>
       </div>
 
-      {/* Faceit ELO — ten sam u ucznia i trenera, na bazie mxgic1337 widget (sprawdzony) */}
+      {/* Faceit ELO */}
       <div className="mb-10">
         <FaceitEloChart />
-        <p className="text-[11px] text-white/30 mt-2 text-center">Ten sam wykres widzi trener na Twoim profilu — śledźcie progres na bieżąco. Widget <a href="https://github.com/mxgic1337/faceit-stats-widget" target="_blank" rel="noopener noreferrer" className="text-[#ff9a5c] hover:underline">mxgic1337/faceit-stats-widget</a> działa bez klucza na <code>widget.mxgic1337.xyz</code>.</p>
       </div>
 
       {/* Rank tracking — real in-game rank / ELO over time */}
