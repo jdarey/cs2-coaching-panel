@@ -124,7 +124,7 @@ export function CoachMessagesClient() {
 
   const timeLabel = (iso: string) => {
     const d = new Date(iso)
-    return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', timeZone: 'Europe/Warsaw' }) + ', ' + d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })
   }
 
   return (
@@ -176,7 +176,7 @@ export function CoachMessagesClient() {
                         <p className="text-sm font-semibold text-white truncate">{c.name || 'Uczeń'}</p>
                         {c.lastMessage && (
                           <span className="text-[10px] text-white/35 shrink-0">
-                            {new Date(c.lastMessage.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+                            {new Date(c.lastMessage.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', timeZone: 'Europe/Warsaw' })}
                           </span>
                         )}
                       </div>

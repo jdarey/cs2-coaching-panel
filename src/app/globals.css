@@ -722,8 +722,8 @@
     transition: opacity 0.4s ease;
     background: radial-gradient(
       560px circle at var(--mx, 50%) var(--my, 50%),
-      rgba(45, 229, 202, 0.12),
-      rgba(140, 255, 239, 0.05) 40%,
+      rgba(167, 139, 250, 0.14),
+      rgba(196, 181, 253, 0.06) 40%,
       transparent 60%
     );
   }
@@ -744,12 +744,12 @@
     background: conic-gradient(
       from var(--border-angle, 0deg),
       transparent 0deg,
-      rgba(45, 229, 202, 0.55) 45deg,
-      rgba(140, 255, 239, 0.9) 90deg,
-      rgba(45, 229, 202, 0.5) 135deg,
+      rgba(167, 139, 250, 0.55) 45deg,
+      rgba(196, 181, 253, 0.9) 90deg,
+      rgba(139, 92, 246, 0.5) 135deg,
       transparent 200deg,
       transparent 320deg,
-      rgba(20, 184, 166, 0.45) 345deg,
+      rgba(109, 40, 217, 0.45) 345deg,
       transparent 360deg
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);

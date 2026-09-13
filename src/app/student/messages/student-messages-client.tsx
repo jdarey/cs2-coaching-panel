@@ -103,8 +103,8 @@ export function StudentMessagesClient() {
   }
 
   const timeLabel = (iso: string) =>
-    new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }) + ', ' +
-    new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+    new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', timeZone: 'Europe/Warsaw' }) + ', ' +
+    new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })
 
   return (
     <StudentLayout>

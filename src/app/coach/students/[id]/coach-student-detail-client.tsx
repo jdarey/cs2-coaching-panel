@@ -153,6 +153,42 @@ export function CoachStudentDetailClient({
   const [reminding, setReminding] = useState(false)
   const [reminded, setReminded] = useState(false)
 
+  // Live Faceit ELO obok Steam - auto co 30s, progi CS2 aktualne
+  const [liveFaceitElo, setLiveFaceitElo] = useState<number | null>(student.faceitElo)
+  const [liveFaceitLevel, setLiveFaceitLevel] = useState<number | null>(student.faceitLevel)
+  const levelFromEloLive = (elo: number | null) => {
+    if (elo == null) return null
+    if (elo <= 500) return 1
+    if (elo <= 750) return 2
+    if (elo <= 900) return 3
+    if (elo <= 1050) return 4
+    if (elo <= 1200) return 5
+    if (elo <= 1350) return 6
+    if (elo <= 1530) return 7
+    if (elo <= 1750) return 8
+    if (elo <= 2000) return 9
+    return 10
+  }
+  useEffect(() => {
+    const fetchLiveElo = () => {
+      fetch(`/api/ranks?studentId=${student.id}`)
+        .then(r => r.ok ? r.json() : [])
+        .then((data: any[]) => {
+          const faceitOnly = (Array.isArray(data) ? data : []).filter((e: any) => e.mode === 'FACEIT' && e.elo != null)
+          if (faceitOnly.length) {
+            const sorted = faceitOnly.sort((a: any, b: any) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+            const last = sorted[sorted.length - 1]
+            setLiveFaceitElo(last.elo)
+            setLiveFaceitLevel(levelFromEloLive(last.elo))
+          }
+        })
+        .catch(() => {})
+    }
+    fetchLiveElo()
+    const id2 = setInterval(fetchLiveElo, 30_000)
+    return () => clearInterval(id2)
+  }, [student.id])
+
   // Online presence (heartbeat updates lastActiveAt every 60s)
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id) }, [])
@@ -492,6 +528,15 @@ export function CoachStudentDetailClient({
                         </span>
                       ))}
                   </div>
+                )}
+                {/* Wyraźne ELO obok Steam - aktualne, 1:1, auto co 30s */}
+                {liveFaceitElo != null && (
+                  <a href={student.faceitNickname ? `https://www.faceit.com/pl/players/${encodeURIComponent(student.faceitNickname)}` : undefined} target={student.faceitNickname ? "_blank" : undefined} rel={student.faceitNickname ? "noopener noreferrer" : undefined} className="mt-3 inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-gradient-to-br from-[#ff5500]/15 to-[#ff1a1a]/10 border border-[#ff5500]/20 hover:border-[#ff5500]/30 hover:bg-[#ff5500]/20 transition-colors">
+                    <FaceitIcon className="w-4 h-4 text-[#ff5500]" />
+                    <span className="text-sm font-bold text-white">{liveFaceitElo} ELO</span>
+                    {liveFaceitLevel && <span className="text-xs text-white/50">· Lvl {liveFaceitLevel}</span>}
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" title="auto co 30s" />
+                  </a>
                 )}
               </div>
             </div>

@@ -124,7 +124,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
     }
     const formatLabel = (iso: string) => {
       const d = new Date(iso + 'T12:00:00')
-      return d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })
+      return d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Warsaw' })
     }
     const weeks: Record<string, { watched: number; implemented: number; label: string }> = {}
     const now = new Date()
@@ -135,7 +135,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
       const key = toMondayKey(d)
       const monday = new Date(key + 'T12:00:00')
       const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
-      const label = `${monday.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })}`
+      const label = `${monday.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Warsaw' })}`
       weeks[key] = { watched: 0, implemented: 0, label }
     }
     progress

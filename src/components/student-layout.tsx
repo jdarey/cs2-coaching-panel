@@ -70,6 +70,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [faceitElo, setFaceitElo] = useState<number | null>(null)
   const [faceitLevel, setFaceitLevel] = useState<number | null>(null)
+  const [faceitNickname, setFaceitNickname] = useState<string | null>(null)
   useEffect(() => {
     const fetchElo = () => {
       fetch('/api/ranks')
@@ -85,7 +86,14 @@ export function StudentLayout({ children }: { children: ReactNode }) {
         })
         .catch(() => {})
     }
+    const fetchProfile = () => {
+      fetch('/api/user/profile')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data?.faceitNickname) setFaceitNickname(data.faceitNickname) })
+        .catch(() => {})
+    }
     fetchElo()
+    fetchProfile()
     const id = setInterval(fetchElo, 30_000)
     return () => clearInterval(id)
   }, [])
@@ -273,21 +281,37 @@ export function StudentLayout({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            {/* Faceit ELO - po panelu gdzie jest wyloguj, auto co 30s, progi CS2 aktualne */}
+            {/* Faceit ELO - po panelu gdzie jest wyloguj, auto co 30s, progi CS2 aktualne - klik w logo przenosi na Faceit */}
             <div className="p-3 pt-0">
-              <div className="rounded-2xl p-3 bg-gradient-to-br from-[#ff5500]/10 to-[#ff1a1a]/5 border border-[#ff5500]/15 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15 shrink-0">
-                  <FaceitIcon className="w-5 h-5 text-white" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">Faceit ELO</p>
-                  <p className="text-sm font-bold text-white flex items-center gap-1.5">
-                    <span className="truncate">{faceitElo ?? '—'}</span>
-                    {faceitLevel && <span className="text-[11px] font-normal text-white/40 shrink-0">· Lvl {faceitLevel}</span>}
-                    <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="auto co 30s" />
-                  </p>
+              {faceitNickname ? (
+                <a href={`https://www.faceit.com/pl/players/${encodeURIComponent(faceitNickname)}`} target="_blank" rel="noopener noreferrer" className="block rounded-2xl p-3 bg-gradient-to-br from-[#ff5500]/10 to-[#ff1a1a]/5 border border-[#ff5500]/15 flex items-center gap-3 hover:border-[#ff5500]/30 hover:bg-[#ff5500]/15 transition-colors">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15 shrink-0">
+                    <FaceitIcon className="w-5 h-5 text-white" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">Faceit ELO</p>
+                    <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <span className="truncate">{faceitElo ?? '—'}</span>
+                      {faceitLevel && <span className="text-[11px] font-normal text-white/40 shrink-0">· Lvl {faceitLevel}</span>}
+                      <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="auto co 30s" />
+                    </p>
+                  </div>
+                </a>
+              ) : (
+                <div className="rounded-2xl p-3 bg-gradient-to-br from-[#ff5500]/10 to-[#ff1a1a]/5 border border-[#ff5500]/15 flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15 shrink-0">
+                    <FaceitIcon className="w-5 h-5 text-white" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">Faceit ELO</p>
+                    <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <span className="truncate">{faceitElo ?? '—'}</span>
+                      {faceitLevel && <span className="text-[11px] font-normal text-white/40 shrink-0">· Lvl {faceitLevel}</span>}
+                      <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="auto co 30s" />
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </aside>

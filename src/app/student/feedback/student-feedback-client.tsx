@@ -221,7 +221,7 @@ export function StudentFeedbackClient() {
                     {f.session && <p className="text-[11px] text-white/40 mb-1">Sesja: {f.session.title}</p>}
                     <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap">{f.content}</p>
                     <p className="text-[11px] text-white/30 mt-2">
-                      {new Date(f.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {new Date(f.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Warsaw' })}
                     </p>
                     {f.response && (
                       <div className="mt-3 rounded-xl bg-white/[0.04] border border-white/[0.08] p-3">

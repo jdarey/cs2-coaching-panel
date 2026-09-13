@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState, useEffect } from 'react'
+import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
@@ -42,53 +42,11 @@ const navSections: { label: string; items: NavItem[] }[] = [
   },
 ]
 
-function FaceitIcon({ className }: { className?: string }) {
-  return (
-    <svg role="img" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M23.999 2.705a.167.167 0 00-.312-.1 1141.27 1141.27 0 00-6.053 9.375H.218c-.221 0-.301.282-.11.352 7.227 2.73 17.667 6.836 23.5 9.134.15.06.39-.08.39-.18z" />
-    </svg>
-  )
-}
-function levelFromElo(elo: number | null): number | null {
-  if (elo == null) return null
-  if (elo <= 500) return 1
-  if (elo <= 750) return 2
-  if (elo <= 900) return 3
-  if (elo <= 1050) return 4
-  if (elo <= 1200) return 5
-  if (elo <= 1350) return 6
-  if (elo <= 1530) return 7
-  if (elo <= 1750) return 8
-  if (elo <= 2000) return 9
-  return 10
-}
-
 export function CoachLayout({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const router = useRouter()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [faceitElo, setFaceitElo] = useState<number | null>(null)
-  const [faceitLevel, setFaceitLevel] = useState<number | null>(null)
-  useEffect(() => {
-    const fetchElo = () => {
-      fetch('/api/ranks')
-        .then(r => r.ok ? r.json() : [])
-        .then((data: any[]) => {
-          const faceitOnly = (Array.isArray(data) ? data : []).filter((e: any) => e.mode === 'FACEIT' && e.elo != null)
-          if (faceitOnly.length) {
-            const sorted = faceitOnly.sort((a: any, b: any) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
-            const last = sorted[sorted.length - 1]
-            setFaceitElo(last.elo)
-            setFaceitLevel(levelFromElo(last.elo))
-          }
-        })
-        .catch(() => {})
-    }
-    fetchElo()
-    const id = setInterval(fetchElo, 30_000)
-    return () => clearInterval(id)
-  }, [])
 
   const user = session?.user
 
@@ -268,23 +226,6 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                     <LogOut className="w-3.5 h-3.5" />
                     Wyloguj
                   </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Faceit ELO - po panelu gdzie jest wyloguj, auto co 30s, progi CS2 aktualne */}
-            <div className="p-3 pt-0">
-              <div className="rounded-2xl p-3 bg-gradient-to-br from-[#ff5500]/10 to-[#ff1a1a]/5 border border-[#ff5500]/15 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15 shrink-0">
-                  <FaceitIcon className="w-5 h-5 text-white" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">Faceit ELO</p>
-                  <p className="text-sm font-bold text-white flex items-center gap-1.5">
-                    <span className="truncate">{faceitElo ?? '—'}</span>
-                    {faceitLevel && <span className="text-[11px] font-normal text-white/40 shrink-0">· Lvl {faceitLevel}</span>}
-                    <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="auto co 30s" />
-                  </p>
                 </div>
               </div>
             </div>

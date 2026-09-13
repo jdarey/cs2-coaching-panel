@@ -23,12 +23,18 @@ export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOpt
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    timeZone: 'Europe/Warsaw',
     ...options,
   })
 }
 
 export function formatDateTime(date: Date | string) {
-  return formatDate(date, { hour: '2-digit', minute: '2-digit' })
+  return formatDate(date, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })
+}
+
+export function formatTime(date: Date | string) {
+  const d = new Date(date)
+  return d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })
 }
 
 export function getInitials(name: string) {

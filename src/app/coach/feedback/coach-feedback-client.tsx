@@ -177,7 +177,7 @@ export function CoachFeedbackClient() {
                     {f.session && <p className="text-[11px] text-white/40 mb-1">Sesja: {f.session.title}</p>}
                     <p className={cn('text-sm leading-relaxed', open ? 'text-white/90' : 'text-white/60 line-clamp-2')}>{f.content}</p>
                     <p className="text-[11px] text-white/30 mt-2">
-                      {new Date(f.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {new Date(f.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Warsaw' })}
                     </p>
                   </div>
                 </button>
@@ -214,7 +214,7 @@ export function CoachFeedbackClient() {
                       </div>
                     ) : (
                       <p className="mt-4 text-[11px] text-white/30">
-                        Odpowiedziano {f.respondedAt ? new Date(f.respondedAt).toLocaleString('pl-PL') : ''}
+                        Odpowiedziano {f.respondedAt ? new Date(f.respondedAt).toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' }) : ''}
                       </p>
                     )}
                   </div>

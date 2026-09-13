@@ -450,7 +450,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     <div className="flex items-center gap-2 shrink-0">
                       <Link
                         href={`/coach/messages?student=${student.id}`}
-                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-emerald-500/[0.08] hover:bg-emerald-500/15 hover:border-emerald-400/30 transition-all duration-300"
+                        className="group/act relative grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-emerald-500/[0.08] hover:bg-[#a78bfa]/10 hover:border-[#a78bfa]/20 transition-all duration-300"
                         title="Napisz wiadomość"
                       >
                         <MessageSquare className="w-4 h-4 text-emerald-300 group-hover/act:scale-110 transition-transform duration-300" strokeWidth={2.1} />

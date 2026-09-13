@@ -184,7 +184,7 @@ export function StudentGoalsClient() {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setStatus(g, 'DONE')}
-                        className="inline-flex items-center gap-1.5 rounded-xl px-3.5 h-9 text-xs font-semibold text-emerald-300 bg-emerald-500/[0.1] border border-emerald-500/25 hover:bg-emerald-500/20 transition"
+                        className="inline-flex items-center gap-1.5 rounded-xl px-3.5 h-9 text-xs font-semibold text-emerald-300 bg-emerald-500/[0.1] border border-emerald-500/25 hover:bg-[#a78bfa]/10 transition"
                       >
                         <Check className="w-3.5 h-3.5" />
                         Osiągnięty

@@ -82,11 +82,11 @@ export async function GET(request: NextRequest) {
               <p><strong>Uczeń:</strong> ${assignment.student.name || assignment.student.email}</p>
               <p><strong>Zadanie:</strong> ${assignment.title}</p>
               ${assignment.video ? `<p><strong>Film:</strong> ${assignment.video.title}</p>` : ''}
-              <p><strong>Termin:</strong> ${assignment.dueDate?.toLocaleDateString('pl-PL')}</p>
+              <p><strong>Termin:</strong> ${assignment.dueDate?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}</p>
               <p style="margin-top: 20px;"><a href="${process.env.NEXTAUTH_URL}/coach/students/${assignment.student.id}" style="background: #ef4444; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Otwórz profil ucznia</a></p>
             </div>
           `,
-          text: `Zadanie "${assignment.title}" ucznia ${assignment.student.name || assignment.student.email} było do oddania ${assignment.dueDate?.toLocaleDateString('pl-PL')}.`,
+          text: `Zadanie "${assignment.title}" ucznia ${assignment.student.name || assignment.student.email} było do oddania ${assignment.dueDate?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}.`,
         })
         results.overdueNotified++
       } catch (e) {
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
             <div style="font-family: system-ui; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #0ea5e9;">Uczeń nieaktywny od ${days} dni</h2>
               <p><strong>Uczeń:</strong> ${student.name || student.email}</p>
-              <p><strong>Ostatnia aktywność:</strong> ${lastActivity?.toLocaleDateString('pl-PL')}</p>
+              <p><strong>Ostatnia aktywność:</strong> ${lastActivity?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}</p>
               <p style="margin-top: 20px;"><a href="${process.env.NEXTAUTH_URL}/coach/students/${student.id}" style="background: #0ea5e9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Otwórz profil</a></p>
             </div>
           `,

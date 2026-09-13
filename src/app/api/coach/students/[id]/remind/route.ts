@@ -35,7 +35,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   const lines = pending.length
     ? pending
         .map((a) => {
-          const due = a.dueDate ? ` (termin: ${new Date(a.dueDate).toLocaleDateString('pl-PL')})` : ''
+          const due = a.dueDate ? ` (termin: ${new Date(a.dueDate).toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })})` : ''
           return `• ${a.title}${due}`
         })
         .join('\n')

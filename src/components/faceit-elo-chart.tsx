@@ -90,9 +90,15 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
     <div className={cn('glass-card rounded-3xl overflow-hidden relative', compact ? 'p-4' : 'p-6')}>
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15">
-            <FaceitIcon className="w-5 h-5 text-white" />
-          </span>
+          {faceitNickname ? (
+            <a href={`https://www.faceit.com/pl/players/${encodeURIComponent(faceitNickname)}`} target="_blank" rel="noopener noreferrer" className="grid h-8 w-8 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15 hover:ring-white/25 transition-colors">
+              <FaceitIcon className="w-5 h-5 text-white" />
+            </a>
+          ) : (
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#ff5500] ring-1 ring-white/15">
+              <FaceitIcon className="w-5 h-5 text-white" />
+            </span>
+          )}
           <div>
             <h3 className="font-display font-bold text-white flex items-center gap-2">
               Faceit ELO
@@ -156,7 +162,7 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
                   <div key={e.id} className="flex-1 flex flex-col items-center gap-1 group/bar">
                     <span className="text-[8px] text-white/0 group-hover/bar:text-white/60 transition-colors truncate max-w-full">{e.elo}</span>
                     <div className="w-full rounded-t-md transition-all duration-500 relative" style={{ height: `${h}%`, minHeight: 8, background: `linear-gradient(to top, ${col}dd, ${col})`, boxShadow: isMax ? `0 0 8px ${col}66` : undefined, opacity: isMin ? 0.7 : 1 }} />
-                    <span className="text-[7px] text-white/20">{new Date(e.recordedAt).toLocaleDateString('pl-PL', { month: '2-digit', day: '2-digit' })}</span>
+                    <span className="text-[7px] text-white/20">{new Date(e.recordedAt).toLocaleDateString('pl-PL', { month: '2-digit', day: '2-digit', timeZone: 'Europe/Warsaw' })}</span>
                   </div>
                 )
               })

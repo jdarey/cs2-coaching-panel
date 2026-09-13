@@ -180,7 +180,7 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
         <div class="header">
           <div>
             <h1>Demo Review: ${match.map}</h1>
-            <p>${match.student.name || match.student.email} • ${new Date(match.createdAt).toLocaleDateString('pl-PL')}</p>
+            <p>${match.student.name || match.student.email} • ${new Date(match.createdAt).toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}</p>
           </div>
           <div style="text-align: right;">
             <span style="font-size: 24px; font-weight: bold; color: ${match.result === 'WIN' ? '#16a34a' : '#dc2626'};">
@@ -236,7 +236,7 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
         <PageHeader
           icon={Flag}
           title="Demo Review"
-          subtitle={`${match.map} • ${match.student.name || match.student.email} • ${new Date(match.createdAt).toLocaleDateString('pl-PL')}`}
+          subtitle={`${match.map} • ${match.student.name || match.student.email} • ${new Date(match.createdAt).toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}`}
         >
           <div className="flex items-center gap-2">
             <Link
@@ -467,7 +467,7 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
                       i + 1 === currentRound
                         ? 'bg-[#a78bfa] text-white ring-2 ring-[#a78bfa]'
                         : rounds[i].won
-                          ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                          ? 'bg-emerald-500/20 text-emerald-300 hover:bg-[#a78bfa]/10'
                           : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
                     )}
                   >
