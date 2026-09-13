@@ -97,29 +97,8 @@ export function getVideoEmbedUrl(url: string): string | null {
   return null
 }
 
-/** 
- * Fetch video duration using YouTube oEmbed (no API key required, works for public videos).
- * Returns seconds or null if unavailable (private/unlisted/deleted videos).
- * Used only as a convenience for pre-display; the player gets accurate duration from YouTube IFrame API.
- */
-export async function fetchVideoDuration(url: string): Promise<number | null> {
-  const ytId = getYouTubeId(url)
-  if (!ytId) return null
-
-  try {
-    const res = await fetch(
-      `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${ytId}`)}&format=json`,
-      { cache: 'no-store' }
-    )
-    if (!res.ok) return null
-    const data = await res.json()
-    // oEmbed doesn't include duration, so we can't get it from here
-    // This is kept for API compatibility - returns null so manual entry is used
-    return null
-  } catch {
-    return null
-  }
-}
+// fetchVideoDuration przeniesione do ./video-duration.ts - tu zostawiamy alias dla kompatybilnosci
+export { getVideoDuration as fetchVideoDuration } from './video-duration'
 
 export const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Szkic',

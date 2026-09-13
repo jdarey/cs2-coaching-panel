@@ -9,11 +9,15 @@ interface YoutubeCustomPlayerProps {
   videoId: string
   title?: string
   watermark?: string
+  // DB video id — jeśli podane, duration z IFrame API zostanie zapisany do DB (backfill)
+  dbVideoId?: string
   // Resume point (seconds) — the player starts here instead of 0.
   initialStartSeconds?: number
   // Called while watching (throttled to ~5s), on pause, on video end and on
   // unmount, so the page can persist the resume point to the server.
   onProgressChange?: (info: { position: number; duration: number; ended: boolean }) => void
+  // Called when player finally knows the real duration
+  onDurationDetected?: (duration: number) => void
 }
 
 // Volume persistence — the player remembers the user's volume and mute across
@@ -63,8 +67,10 @@ export function YoutubeCustomPlayer({
   videoId,
   title = 'Wideo',
   watermark,
+  dbVideoId,
   initialStartSeconds = 0,
   onProgressChange,
+  onDurationDetected,
 }: YoutubeCustomPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef     = useRef<any>(null)
@@ -105,11 +111,27 @@ export function YoutubeCustomPlayer({
   // callback ref avoids stale closures inside intervals and listeners.
   const onProgressRef = useRef(onProgressChange)
   useEffect(() => { onProgressRef.current = onProgressChange }, [onProgressChange])
+  const onDurationRef = useRef(onDurationDetected)
+  useEffect(() => { onDurationRef.current = onDurationDetected }, [onDurationDetected])
   const latestPositionRef = useRef(initialStartSeconds || 0)
   const latestDurationRef = useRef(0)
   const lastSaveAtRef     = useRef(0)
   // Duration fetch guard - only fetch once when player becomes ready
   const durationFetchedRef = useRef(false)
+  const durationPersistedRef = useRef(false)
+
+  const persistDuration = useCallback((dur: number) => {
+    if (!dbVideoId || durationPersistedRef.current) return
+    if (!dur || dur <= 0) return
+    durationPersistedRef.current = true
+    onDurationRef.current?.(dur)
+    // best-effort backfill do DB - nie blokuje playera, student też może uzupełnić
+    fetch(`/api/videos/${dbVideoId}/duration`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ duration: Math.round(dur) }),
+    }).catch(() => {})
+  }, [dbVideoId])
 
   // Content protection (shared with the raw-embed wrapper): blocked capture
   // shortcuts, DevTools detection with auto-pause, and the tab-hide warning.
@@ -149,6 +171,7 @@ export function YoutubeCustomPlayer({
     latestDurationRef.current = 0
     lastSaveAtRef.current     = 0
     durationFetchedRef.current = false
+    durationPersistedRef.current = false
     setCurrentTime(initialStartSeconds || 0)
     setIsPlaying(false); isPlayingRef.current = false
     setIsEnded(false)
@@ -192,7 +215,7 @@ export function YoutubeCustomPlayer({
       setHasPlayed(true)
       // Get duration on play start (some videos only report duration after playback begins)
       const dur = target.getDuration?.() || 0
-      if (dur > 0) { setDuration(dur); latestDurationRef.current = dur }
+      if (dur > 0) { setDuration(dur); latestDurationRef.current = dur; persistDuration(dur) }
       clearRetry()
     } else if (state === 2) {
       // YouTube sometimes stops an API-started video a few seconds in (see
@@ -302,6 +325,7 @@ export function YoutubeCustomPlayer({
               setDuration(readyDur); 
               latestDurationRef.current = readyDur 
               durationFetchedRef.current = true
+              persistDuration(readyDur)
             }
             // Safety: if the resume point is beyond the real duration (e.g. a
             // different edit of the video), restart from 0 instead of erroring.
@@ -388,6 +412,7 @@ export function YoutubeCustomPlayer({
         if (dur > 0 && dur !== latestDurationRef.current) {
           latestDurationRef.current = dur
           setDuration(dur)
+          persistDuration(dur)
         }
         const now = Date.now()
         if (now - lastSaveAtRef.current >= 5000) {
@@ -406,6 +431,7 @@ export function YoutubeCustomPlayer({
           setDuration(dur)
           latestDurationRef.current = dur
           durationFetchedRef.current = true
+          persistDuration(dur)
           if (interval) clearInterval(interval)
         } else if (++attempts >= 10) {
           // Give up after 10 seconds - duration unavailable (private/unplayable video)

@@ -448,6 +448,7 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                     <YoutubeCustomPlayer
                       videoId={getYouTubeId(currentVideo.url) as string}
                       title={currentVideo.title}
+                      dbVideoId={currentVideo.id}
                     />
                   ) : currentVideo && getVideoEmbedUrl(currentVideo.url) ? (
                     <ProtectedEmbed

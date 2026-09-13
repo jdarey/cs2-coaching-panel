@@ -734,7 +734,7 @@ export function StudentTasksClient() {
                   <div className="mt-4 rounded-2xl overflow-hidden bg-black border border-white/[0.08]">
                     {getYouTubeId(selectedTask.video.url) ? (
                       <div className="aspect-video">
-                        <YoutubeCustomPlayer videoId={getYouTubeId(selectedTask.video.url)!} title={selectedTask.video.title} watermark={watermark} />
+                        <YoutubeCustomPlayer videoId={getYouTubeId(selectedTask.video.url)!} title={selectedTask.video.title} watermark={watermark} dbVideoId={selectedTask.video.id} />
                       </div>
                     ) : (
                       <div className="aspect-video grid place-items-center bg-white/[0.03] p-6 text-center">

@@ -19,7 +19,7 @@ export function CoachVideoPlayerClient({ video }: { video: { id: string, title: 
         </Link>
         <div className="rounded-3xl glass-card overflow-hidden">
           <div className="aspect-video w-full bg-black">
-            {ytId ? <YoutubeCustomPlayer videoId={ytId} title={video.title} watermark={watermark} /> : video.embedUrl ? <ProtectedEmbed src={video.embedUrl} title={video.title} /> : <div className="w-full h-full grid place-items-center bg-white/[0.03]"><Film className="w-8 h-8 text-white/30"/></div>}
+            {ytId ? <YoutubeCustomPlayer videoId={ytId} title={video.title} watermark={watermark} dbVideoId={video.id} /> : video.embedUrl ? <ProtectedEmbed src={video.embedUrl} title={video.title} /> : <div className="w-full h-full grid place-items-center bg-white/[0.03]"><Film className="w-8 h-8 text-white/30"/></div>}
           </div>
         </div>
         <h1 className="font-display text-2xl sm:text-3xl font-bold text-white mt-6">{video.title}</h1>

@@ -306,9 +306,9 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     } catch { toast({ title: 'Błąd', description: 'Nie udało się połączyć z serwerem', variant: 'destructive' }) } finally { setBackfillLoading(false) }
   }
 
-  // Automatycznie w tle napraw czasy - v7 po fixie heurystyki i backfillu (bump żeby każdy odświeżył)
+  // Automatycznie w tle napraw czasy - v8 po przywróceniu video-duration + backfill (bump żeby każdy odświeżył)
   useEffect(() => {
-    const key = 'videos-backfill-auto-v7-force'
+    const key = 'videos-backfill-auto-v8-force'
     if (typeof window !== 'undefined' && sessionStorage.getItem(key)) return
     if (typeof window !== 'undefined') sessionStorage.setItem(key, '1')
     fetch('/api/videos/backfill?force=1', { method: 'POST' })

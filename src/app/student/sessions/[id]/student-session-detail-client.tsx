@@ -289,7 +289,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
               onContextMenu={(e) => e.preventDefault()}
             >
               {activeVideo && activeVideoYtId ? (
-                <YoutubeCustomPlayer videoId={activeVideoYtId} title={activeVideo.title} />
+                <YoutubeCustomPlayer videoId={activeVideoYtId} title={activeVideo.title} dbVideoId={activeVideo.id} />
               ) : activeEmbedUrl ? (
                 <ProtectedEmbed src={activeEmbedUrl} title={activeVideo?.title || 'Wideo'} />
               ) : activeVideo ? (

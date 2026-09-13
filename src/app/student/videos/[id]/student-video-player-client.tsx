@@ -86,6 +86,7 @@ export function StudentVideoPlayerClient({
                 videoId={ytId}
                 title={video.title}
                 watermark={watermark}
+                dbVideoId={video.id}
                 initialStartSeconds={initialStartSeconds}
                 onProgressChange={handleProgress}
               />

@@ -22,7 +22,7 @@ export const tagSchema = z.object({
 
 export const tagUpdateSchema = tagSchema.partial()
 
-// Videos - duration moze przyjsc jako string '' z formularza (coach-videos-client), lub number
+// Videos - duration moze przyjsc jako string '' z formularza (coach-videos-client), lub number, lub "mm:ss" / "hh:mm:ss"
 export const videoSchema = z.object({
   title: z.string().min(1, 'Tytuł jest wymagany').max(200),
   url: z.string().url('Nieprawidłowy URL'),
@@ -30,7 +30,18 @@ export const videoSchema = z.object({
   duration: z.preprocess(
     (v) => {
       if (v === '' || v == null) return undefined
-      if (typeof v === 'string' && /^\d+$/.test(v.trim())) return parseInt(v.trim(), 10)
+      if (typeof v === 'number') return v
+      if (typeof v === 'string') {
+        const s = v.trim()
+        if (!s) return undefined
+        if (/^\d+$/.test(s)) return parseInt(s, 10)
+        // "mm:ss" lub "hh:mm:ss"
+        const parts = s.split(':').map((p) => parseInt(p, 10))
+        if (parts.some(isNaN)) return v // nech Zod zgłosi błąd
+        if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+        if (parts.length === 2) return parts[0] * 60 + parts[1]
+        if (parts.length === 1) return parts[0]
+      }
       return v
     },
     z.number().int().positive().optional()
