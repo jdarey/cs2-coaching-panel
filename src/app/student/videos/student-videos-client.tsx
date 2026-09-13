@@ -62,12 +62,12 @@ interface StudentVideosClientProps {
   initialProgress: Progress[]
 }
 
-// Premium status meta — pairs the palette hex with an icon + label.
+// Premium status meta — pairs the palette hex with an icon + label. Glow ujednolicony na fiolet (styl strony), bez zielonej poswiaty
 const STATUS_META: Record<string, { color: string; icon: typeof Clock; dot: string; ring: string; glow: string }> = {
-  PENDING: { color: '#fbbf24', icon: Hourglass, dot: 'bg-[#fbbf24]', ring: 'ring-[#fbbf24]/30', glow: 'rgba(251,191,36,0.35)' },
-  WATCHING: { color: '#a78bfa', icon: CircleDot, dot: 'bg-[#a78bfa]', ring: 'ring-[#a78bfa]/30', glow: 'rgba(45,229,202,0.35)' },
-  WATCHED: { color: '#34d399', icon: CheckCircle2, dot: 'bg-[#34d399]', ring: 'ring-[#34d399]/30', glow: 'rgba(52,211,153,0.35)' },
-  IMPLEMENTED: { color: '#8b5cf6', icon: CheckCircle2, dot: 'bg-[#8b5cf6]', ring: 'ring-[#8b5cf6]/30', glow: 'rgba(20,184,166,0.35)' },
+  PENDING: { color: '#fbbf24', icon: Hourglass, dot: 'bg-[#fbbf24]', ring: 'ring-[#fbbf24]/30', glow: 'rgba(139,92,246,0.35)' },
+  WATCHING: { color: '#a78bfa', icon: CircleDot, dot: 'bg-[#a78bfa]', ring: 'ring-[#a78bfa]/30', glow: 'rgba(139,92,246,0.35)' },
+  WATCHED: { color: '#34d399', icon: CheckCircle2, dot: 'bg-[#34d399]', ring: 'ring-[#34d399]/30', glow: 'rgba(139,92,246,0.35)' },
+  IMPLEMENTED: { color: '#8b5cf6', icon: CheckCircle2, dot: 'bg-[#8b5cf6]', ring: 'ring-[#8b5cf6]/30', glow: 'rgba(139,92,246,0.35)' },
 }
 
 
