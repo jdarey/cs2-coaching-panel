@@ -32,8 +32,6 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
-import { getRank, getLevel } from '@/lib/gamification'
-import { RankEmblem } from '@/components/rank-emblem'
 
 interface Student {
   id: string
@@ -397,8 +395,6 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                         100
                     )
                   : 0
-              const rank = getRank(completion)
-              const levelInfo = getLevel(student.progressStats.watched + student.progressStats.implemented)
               return (
                 <div
                   key={student.id} className="glass-liquid rise-in group relative rounded-3xl p-6 hover:border-[#a78bfa]/25 overflow-hidden"
@@ -527,13 +523,6 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     )}
                     {student.progressStats.total > 0 && (
                       <div className="flex items-center gap-2.5 ml-auto flex-wrap">
-                        <span className="inline-flex items-center gap-1.5 text-xs text-white/55">
-                          <RankEmblem rank={rank} size={22} glow={false} />
-                          {rank.name}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-xs text-white/45">
-                          Lv.{levelInfo.level}
-                        </span>
                         <div className="h-1.5 w-28 rounded-full bg-white/[0.05] overflow-hidden border border-white/[0.04]">
                           <div
                             className="h-full rounded-full transition-all duration-700"

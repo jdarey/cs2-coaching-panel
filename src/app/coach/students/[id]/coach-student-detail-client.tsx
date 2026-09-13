@@ -37,8 +37,6 @@ import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS, getYouTubeId } from '@/lib/utils'
-import { getRank, getLevel } from '@/lib/gamification'
-import { RankEmblem } from '@/components/rank-emblem'
 import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
 import { FaceitEloChart } from '@/components/faceit-elo-chart'
 
@@ -561,14 +559,9 @@ export function CoachStudentDetailClient({
               {(() => {
                 const total = progressStats.total ?? 0
                 const completion = total > 0 ? Math.round(((progressStats.watched ?? 0) + (progressStats.implemented ?? 0)) / total * 100) : 0
-                const rank = getRank(completion)
-                const levelInfo = getLevel((progressStats.watched ?? 0) + (progressStats.implemented ?? 0))
                 return (
                   <span className="inline-flex items-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-full px-3.5 py-1.5 text-xs font-semibold text-white/85">
-                    <RankEmblem rank={rank} size={26} glow={false} />
-                    {rank.name}
-                    <span className="text-white/35">·</span>
-                    Lv.{levelInfo.level}
+                    {completion}% ukończone
                   </span>
                 )
               })()}
