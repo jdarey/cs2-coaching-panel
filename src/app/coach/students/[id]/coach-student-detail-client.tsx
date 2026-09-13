@@ -128,8 +128,9 @@ export function CoachStudentDetailClient({
   const [routinesLoading, setRoutinesLoading] = useState(true)
   const [routineForm, setRoutineForm] = useState({ routineId: '', endsAt: '' })
   const [assigningRoutine, setAssigningRoutine] = useState(false)
+  const [previewAssignment, setPreviewAssignment] = useState<any | null>(null)
 
-  // Kalendarz ucznia
+  // Kalendarz ucznia - 1:1 jak u ucznia
   const [calendar, setCalendar] = useState<any>(null)
   const [dayNotes, setDayNotes] = useState<Record<string, any>>({})
   const [calendarLoading, setCalendarLoading] = useState(true)
@@ -920,7 +921,10 @@ export function CoachStudentDetailClient({
                           {(a.routine?.tasks?.length || 0) > 3 && <span className="text-[11px] text-white/30">+{a.routine.tasks.length - 3}</span>}
                         </div>
                       </div>
-                      <button onClick={() => removeRoutineAssignment(a.id)} className="grid place-items-center w-8 h-8 rounded-lg text-white/30 hover:text-red-300 hover:bg-red-500/10"><Trash2 className="w-4 h-4" /></button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => setPreviewAssignment(a)} className="grid place-items-center w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/50 hover:text-white hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/10" title="Podgląd 1:1 jak widzi uczeń"><Eye className="w-4 h-4" /></button>
+                        <button onClick={() => removeRoutineAssignment(a.id)} className="grid place-items-center w-8 h-8 rounded-lg text-white/30 hover:text-red-300 hover:bg-red-500/10"><Trash2 className="w-4 h-4" /></button>
+                      </div>
                     </div>
                   </li>
                 )
@@ -929,18 +933,41 @@ export function CoachStudentDetailClient({
           )}
         </div>
 
-        {/* Kalendarz ucznia */}
+        {/* Kalendarz ucznia - 1:1 jak u ucznia + ile razy, czy w ogóle */}
         <div className="mt-12">
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center gap-3 mb-2">
             <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
               <CalendarDays className="w-5 h-5 text-[#a78bfa]" /> Kalendarz ucznia
             </h2>
-            <span className="text-xs text-white/40">Ostatnie 14 dni · rutyny + zadania</span>
+            <span className="text-xs text-white/40">1:1 jak u ucznia · rutyny+zadania</span>
             <button onClick={loadCalendar} className="ml-auto inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/60 hover:text-white">Odśwież</button>
+          </div>
+          {calendar?.summary && (
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-3 text-center">
+                <p className="text-lg font-bold text-white">{calendar.summary.totalDays}</p>
+                <p className="text-[11px] text-white/40">dni z treningiem</p>
+              </div>
+              <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-3 text-center">
+                <p className="text-lg font-bold text-emerald-300">{calendar.summary.totalSessions}</p>
+                <p className="text-[11px] text-white/40">zadań wykonanych</p>
+              </div>
+              <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-3 text-center">
+                <p className="text-lg font-bold text-[#c4b5fd]">{calendar.summary.totalMinutes} min</p>
+                <p className="text-[11px] text-white/40">czasu</p>
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-[11px] text-white/30 mb-3">
+            <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />Pełny</span>
+            <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#a78bfa]" />Częściowy</span>
+            <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/20" />Brak</span>
+            <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" />Notatka</span>
+            <span className="ml-auto text-white/40">kolor = czy zrobił, liczba = ile zadań, 2× = ile razy</span>
           </div>
 
           {calendarLoading ? (
-            <div className="flex items-center justify-center py-12 text-white/40"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Ładowanie kalendarza…</div>
+            <div className="glass-card rounded-3xl p-6 flex items-center justify-center py-12 text-white/40"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Ładowanie kalendarza…</div>
           ) : (
             <div className="glass-card rounded-3xl p-6">
               {(() => {
@@ -973,7 +1000,7 @@ export function CoachStudentDetailClient({
                             isFull ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-100' : count>0 ? 'bg-[#a78bfa]/15 border-[#a78bfa]/30 text-white' : !isFuture ? 'bg-white/[0.04] text-white/40 border-white/[0.06] hover:bg-white/[0.07]' : ''
                           ].join(' ')}>
                             <span className="text-[15px]">{d.getDate()}</span>
-                            <span className={['text-[10px] px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30'].join(' ')}>{isFull ? 'PEŁNY' : count>0 ? `${count}` : '·'}</span>
+                            <span className={['text-[10px] px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30'].join(' ')}>{isFull ? (entry?.times > 1 ? `${entry.times}× PEŁNY` : 'PEŁNY') : count>0 ? `${count}${entry?.times > 1 ? ` · ${entry.times}×` : ''}` : '·'}</span>
                             {hasNote && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" />}
                           </button>
                         )
@@ -985,9 +1012,10 @@ export function CoachStudentDetailClient({
                           <p className="text-sm font-semibold text-white flex items-center gap-2"><Calendar className="w-4 h-4 text-[#a78bfa]" />{selectedCalendarDay.date}</p>
                           <button onClick={()=>setSelectedCalendarDay(null)} className="text-white/40 hover:text-white"><X className="w-4 h-4" /></button>
                         </div>
-                        <div className="mt-2 flex items-center gap-2 text-xs">
-                          <span className={['px-3 py-1.5 rounded-full border font-semibold', selectedCalendarDay.full ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : selectedCalendarDay.count>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.03] border-white/[0.06] text-white/40'].join(' ')}>{selectedCalendarDay.count} zadań</span>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                          <span className={['px-3 py-1.5 rounded-full border font-semibold', selectedCalendarDay.full ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : selectedCalendarDay.count>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.03] border-white/[0.06] text-white/40'].join(' ')}>{selectedCalendarDay.count} zadań{selectedCalendarDay.times > 1 ? ` · ${selectedCalendarDay.times}×` : ''} {selectedCalendarDay.full ? '✓' : ''}</span>
                           {selectedCalendarDay.minutes ? <span className="px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/60 text-xs">{selectedCalendarDay.minutes} min</span> : null}
+                          {selectedCalendarDay.routines?.length > 0 && <span className="px-3 py-1.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#c4b5fd] text-xs">{selectedCalendarDay.routines.join(', ')}</span>}
                         </div>
                         {selectedCalendarDay.tasks?.length > 0 ? (
                           <div className="mt-3 space-y-1.5">
@@ -1012,6 +1040,68 @@ export function CoachStudentDetailClient({
             </div>
           )}
         </div>
+
+        {/* Podgląd rutyny 1:1 jak widzi uczeń */}
+        {previewAssignment && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={() => setPreviewAssignment(null)} />
+            <div className="glass-liquid relative w-full max-w-3xl max-h-[88vh] overflow-hidden rounded-3xl flex flex-col">
+              <div className="p-6 border-b border-white/[0.06] shrink-0 flex items-start justify-between gap-4">
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20 shrink-0"><Eye className="h-5 w-5 text-white" /></span>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#c4b5fd] font-semibold">Podgląd ucznia — 1:1</p>
+                    <h3 className="font-display text-lg font-bold text-white mt-1">{previewAssignment.routine?.title}</h3>
+                    {previewAssignment.routine?.description && <p className="text-sm text-white/55 mt-1 line-clamp-2">{previewAssignment.routine.description}</p>}
+                  </div>
+                </div>
+                <button onClick={() => setPreviewAssignment(null)} className="grid h-9 w-9 place-items-center rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06]"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {(() => {
+                  const tasks: any[] = previewAssignment.routine?.tasks || []
+                  const progress: any[] = previewAssignment.progress || []
+                  const days = Array.from(new Set(tasks.map((t: any) => t.day))).sort((a: number, b: number) => a - b)
+                  const isDone = (id: string) => progress.find((p: any) => p.taskId === id)?.status === 'DONE'
+                  return days.map((d: any) => {
+                    const dayTasks = tasks.filter((t: any) => t.day === d)
+                    const doneCount = dayTasks.filter((t: any) => isDone(t.id)).length
+                    return (
+                      <div key={d}>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd] mb-3">Dzień {d} · {doneCount}/{dayTasks.length} {doneCount===dayTasks.length && dayTasks.length>0 ? '✓' : ''}</p>
+                        <div className="space-y-3">
+                          {dayTasks.map((t: any) => {
+                            const done = isDone(t.id)
+                            return (
+                              <div key={t.id} className={['rounded-2xl p-4 border flex gap-3', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.03] border-white/[0.07]'].join(' ')}>
+                                <span className={['grid h-7 w-7 place-items-center rounded-lg text-xs font-bold shrink-0 mt-0.5', done ? 'bg-emerald-500 text-white' : 'bg-white/[0.06] text-white/40'].join(' ')}>{done ? <Check className="w-4 h-4" /> : <span>{t.order + 1}</span>}</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className={['text-sm font-semibold', done ? 'text-white/50 line-through' : 'text-white'].join(' ')}>{t.title}</p>
+                                  {t.description && <p className="text-xs text-white/45 mt-1">{t.description}</p>}
+                                  <div className="mt-2 flex flex-wrap gap-1.5">
+                                    {t.minutes && <span className="text-[11px] px-2 py-1 rounded-full bg-white/[0.06] text-white/60 inline-flex items-center gap-1"><Clock className="w-3 h-3" />{t.minutes} min</span>}
+                                    {t.gifUrl && <span className="text-[11px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd] border border-[#a78bfa]/20">GIF</span>}
+                                    {t.videoId && <span className="text-[11px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd] border border-[#a78bfa]/20 inline-flex items-center gap-1"><Film className="w-3 h-3" />Film</span>}
+                                  </div>
+                                  {t.gifUrl && <img src={t.gifUrl} alt="" className="mt-3 w-full max-h-40 object-cover rounded-xl border border-white/10" loading="lazy" />}
+                                </div>
+                                <span className={['text-[11px] px-2 py-1 rounded-full border font-semibold shrink-0', done ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-white/[0.04] border-white/[0.08] text-white/30'].join(' ')}>{done ? 'zrobione' : 'oczekuje'}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+              <div className="p-4 border-t border-white/[0.06] flex justify-between items-center shrink-0">
+                <p className="text-xs text-white/40">Tak widzi uczeń w <b className="text-white/70">Zadania → Moje rutyny</b></p>
+                <button onClick={() => setPreviewAssignment(null)} className="px-5 h-9 rounded-xl glass-liquid text-white/70">Zamknij</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </CoachLayout>
   )
