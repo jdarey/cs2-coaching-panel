@@ -37,10 +37,7 @@ export async function POST(request: NextRequest) {
             return
           }
           try {
-            const dur = await Promise.race([
-              fetchVideoDuration(v.url, { noCache: true }),
-              new Promise<null>((res) => setTimeout(() => res(null), 6000)),
-            ])
+            const dur = await fetchVideoDuration(v.url, { noCache: true })
             if (dur && dur > 0) {
               if (dur !== v.duration) {
                 await prisma.video.update({ where: { id: v.id }, data: { duration: dur } })
