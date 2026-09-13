@@ -68,6 +68,8 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
   const [inviteLoading, setInviteLoading] = useState(false)
   const [formData, setFormData] = useState({ email: '', name: '', password: '' })
   const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
+  const [inviteMailSent, setInviteMailSent] = useState(true)
   const [attachOpen, setAttachOpen] = useState(false)
   const [attachQuery, setAttachQuery] = useState('')
   const [attachResults, setAttachResults] = useState<Student[]>([])
@@ -134,9 +136,14 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
         return
       }
 
-      setInviteDialogOpen(false)
+      setInviteLink(data.inviteUrl || null)
+      setInviteMailSent(data.emailSent !== false)
       setInviteEmail('')
-      toast({ title: 'Sukces', description: 'Zaproszenie wysłane na email ucznia' })
+      toast({
+        title: data.emailSent === false ? 'Link gotowy — mail nie doszedł' : 'Sukces',
+        description: data.message || 'Zaproszenie wysłane na email ucznia',
+        variant: data.emailSent === false ? 'destructive' : undefined,
+      })
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
     } finally {
@@ -685,7 +692,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                     type="email"
                     placeholder="uczen@email.com"
                     value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
+                    onChange={(e) => { setInviteEmail(e.target.value); setInviteLink(null) }}
                     required
                     disabled={inviteLoading}
                     className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8b5cf6]/25 focus-visible:border-[#a78bfa]/40 transition-all duration-300"
@@ -693,6 +700,34 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                 </div>
                 <p className="text-[11px] text-white/40">Uczeń otrzyma email z linkiem do rejestracji. Link wygasa po 7 dniach.</p>
               </div>
+
+              {inviteLink && (
+                <div className="rounded-2xl bg-amber-500/10 border border-amber-500/25 p-4">
+                  <p className="text-xs font-semibold text-amber-200 mb-1">
+                    {inviteMailSent ? 'Link zaproszenia (na wszelki wypadek):' : '⚠️ Mail nie doszedł — wyślij ten link ręcznie:'}
+                  </p>
+                  <p className="text-[11px] text-white/50 mb-2">
+                    {inviteMailSent
+                      ? 'Skopiuj go np. na Discorda, gdyby mail zginął w spamie.'
+                      : 'Bez zweryfikowanej domeny w Resend maile dochodzą tylko na Twoje konto. Wklej link uczniowi na Discordzie/SMS.'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={inviteLink}
+                      onFocus={(e) => e.target.select()}
+                      className="flex-1 min-w-0 h-10 rounded-xl bg-black/40 border border-white/10 px-3 text-xs text-white/80 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { navigator.clipboard?.writeText(inviteLink).catch(() => {}); toast({ title: 'Skopiowano', description: 'Link zaproszenia w schowku' }) }}
+                      className="shrink-0 inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9]"
+                    >
+                      Kopiuj
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <DialogFooter className="mt-6 gap-2 sm:space-x-2">
                 <button

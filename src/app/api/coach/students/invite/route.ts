@@ -73,14 +73,24 @@ export async function POST(request: NextRequest) {
     })
     const text = `Cześć! ${coachName} zaprasza Cię do panelu CS2 Coaching.\n\nJako uczeń będziesz mieć dostęp do: biblioteki filmów treningowych, sesji z trenerem, zadań domowych, śledzenia rangi (Premier/Faceit ELO), komunikacji z trenerem.\n\nUtwórz konto i dołącz: ${inviteUrl}\n\nLink wygasa za 7 dni.`
 
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: email,
       subject: `Zaproszenie do panelu CS2 Coaching od ${coachName}`,
       html,
       text,
     })
 
-    return NextResponse.json({ ok: true, message: 'Zaproszenie wysłane na email ucznia' })
+    // Zawsze zwracaj link — bez zweryfikowanej domeny Resend wysyła tylko na
+    // własne konto, więc trener wyśle link ręcznie (Discord/SMS). Link działa
+    // tak samo niezależnie od maila.
+    return NextResponse.json({
+      ok: true,
+      message: emailResult.ok
+        ? 'Zaproszenie wysłane na email ucznia'
+        : 'Utworzono zaproszenie, ale mail nie doszedł (brak zweryfikowanej domeny w Resend) — wyślij link ręcznie',
+      inviteUrl,
+      emailSent: emailResult.ok,
+    })
   } catch (error) {
     console.error('Student invite error:', error)
     return NextResponse.json({ error: 'Błąd wysyłania zaproszenia' }, { status: 500 })
