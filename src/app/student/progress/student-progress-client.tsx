@@ -112,30 +112,44 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
       .sort((a, b) => b.rate - a.rate)
   }, [progress, tags])
 
-  // Weekly activity (last 8 weeks)
+  // Weekly activity (last 8 weeks) - poprawione: tydzień = poniedziałek-niedziela, etykieta to data poniedziałku
   const weeklyActivity = useMemo(() => {
-    const weeks: Record<string, { watched: number; implemented: number }> = {}
-    const now = new Date()
-
-    for (let i = 7; i >= 0; i--) {
-      const date = new Date(now)
-      date.setDate(date.getDate() - i * 7)
-      const weekKey = `${date.getFullYear()}-W${String(Math.ceil(date.getDate() / 7)).padStart(2, '0')}`
-      weeks[weekKey] = { watched: 0, implemented: 0 }
+    const toMondayKey = (d: Date) => {
+      const x = new Date(d)
+      x.setHours(12, 0, 0, 0)
+      const day = x.getDay()
+      const diff = x.getDate() - day + (day === 0 ? -6 : 1)
+      x.setDate(diff)
+      return x.toISOString().slice(0, 10)
     }
-
+    const formatLabel = (iso: string) => {
+      const d = new Date(iso + 'T12:00:00')
+      return d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })
+    }
+    const weeks: Record<string, { watched: number; implemented: number; label: string }> = {}
+    const now = new Date()
+    // 8 poniedziałków wstecz
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i * 7)
+      const key = toMondayKey(d)
+      const monday = new Date(key + 'T12:00:00')
+      const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
+      const label = `${monday.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })}`
+      weeks[key] = { watched: 0, implemented: 0, label }
+    }
     progress
       .filter((p) => p.watchedAt && (p.status === 'WATCHED' || p.status === 'IMPLEMENTED'))
       .forEach((p) => {
-        const date = new Date(p.watchedAt!)
-        const weekKey = `${date.getFullYear()}-W${String(Math.ceil(date.getDate() / 7)).padStart(2, '0')}`
-        if (weeks[weekKey]) {
-          if (p.status === 'IMPLEMENTED') weeks[weekKey].implemented++
-          else weeks[weekKey].watched++
+        const key = toMondayKey(new Date(p.watchedAt!))
+        if (weeks[key]) {
+          if (p.status === 'IMPLEMENTED') weeks[key].implemented++
+          else weeks[key].watched++
         }
       })
-
-    return Object.entries(weeks).map(([week, data]) => ({ week, ...data }))
+    return Object.entries(weeks)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, data]) => ({ week: key, ...data }))
   }, [progress])
 
   // chart data derived from weekly activity
@@ -144,6 +158,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
     return weeklyActivity.map((w, i) => ({
       idx: i,
       week: w.week,
+      label: (w as any).label,
       total: w.watched + w.implemented,
       watched: w.watched,
       implemented: w.implemented,
@@ -152,6 +167,7 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
   }, [weeklyActivity])
 
   const totalChartEvents = useMemo(() => chartData.reduce((s, c) => s + c.total, 0), [chartData])
+  const maxWeekVal = useMemo(() => Math.max(1, ...chartData.map(c => c.total)), [chartData])
 
   // Recent activity
   const recentActivity = progress.slice(0, 10)
@@ -403,81 +419,93 @@ export function StudentProgressClient({ initialProgress, initialSessions, initia
           </div>
 
           {totalChartEvents > 0 ? (
-            <div className="relative">
-              <svg viewBox="0 0 800 260" className="w-full h-[260px]" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="chartStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#c4b5fd" />
-                    <stop offset="50%" stopColor="#8b5cf6" />
-                    <stop offset="100%" stopColor="#8b5cf6" />
-                  </linearGradient>
-                  <linearGradient id="chartFill" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="rgba(124,111,255,0.35)" />
-                    <stop offset="100%" stopColor="rgba(124,111,255,0)" />
-                  </linearGradient>
-                  <linearGradient id="chartFillImpl" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="rgba(45,229,202,0.22)" />
-                    <stop offset="100%" stopColor="rgba(45,229,202,0)" />
-                  </linearGradient>
-                </defs>
-
-                {[0.25, 0.5, 0.75, 1].map((t) => (
-                  <line
-                    key={t}
-                    x1="0"
-                    x2="800"
-                    y1={240 - 200 * t}
-                    y2={240 - 200 * t}
-                    stroke="rgba(255,255,255,0.05)"
-                    strokeWidth="1"
-                  />
-                ))}
-
-                {/* area fill */}
-                {(() => {
-                  const pts = chartData.map((d, i) => {
-                    const x = 40 + i * ((800 - 80) / Math.max(chartData.length - 1, 1))
-                    const y = 240 - (d.pct / 100) * 200
-                    return { x, y, d }
-                  })
-                  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-                  return (
-                    <>
-                      <path d={`${linePath} L 760 240 L 40 240 Z`} fill="url(#chartFill)" />
-                      <path d={linePath} fill="none" stroke="url(#chartStroke)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      {pts.map((p, i) => (
-                        <g
-                          key={i}
-                          onMouseEnter={() => setHoverPoint(i)}
-                          onMouseLeave={() => setHoverPoint(null)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <circle cx={p.x} cy={p.y} r={hoverPoint === i ? 7 : 4.5} fill="#060606" stroke="url(#chartStroke)" strokeWidth="2.5" />
-                        </g>
-                      ))}
-                    </>
-                  )
-                })()}
-              </svg>
-
-              {/* tooltip */}
-              {hoverPoint !== null && (
-                <div
-                  className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full px-3 py-2 rounded-xl glass-liquid text-xs whitespace-nowrap"
-                  style={{
-                    left: `calc(${(40 + hoverPoint * ((800 - 80) / Math.max(chartData.length - 1, 1))) / 8}%)`,
-                    top: `calc(${(240 - (chartData[hoverPoint].pct / 100) * 200) / 2.6}px)`,
-                  }}
-                >
-                  <p className="text-white/45 font-medium">{chartData[hoverPoint].week}</p>
-                  <p className="text-[#c4b5fd] font-display font-semibold">{chartData[hoverPoint].watched} obejrz.</p>
-                  <p className="text-fuchsia-300 font-display font-semibold">{chartData[hoverPoint].implemented} wdr.</p>
+            <div>
+              {/* Podsumowanie nad wykresem - od razu widać liczby */}
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-3 text-center">
+                  <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">Razem</p>
+                  <p className="font-display text-xl font-bold text-white mt-1">{totalChartEvents}</p>
+                  <p className="text-[11px] text-white/30">filmów / 8 tyg.</p>
                 </div>
-              )}
+                <div className="rounded-2xl bg-[#c4b5fd]/10 border border-[#c4b5fd]/20 p-3 text-center">
+                  <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd]/70 font-semibold">Obejrzane</p>
+                  <p className="font-display text-xl font-bold text-[#c4b5fd]">{chartData.reduce((s,c)=>s+c.watched,0)}</p>
+                  <p className="text-[11px] text-white/30">średnio {Math.round(chartData.reduce((s,c)=>s+c.watched,0)/8)}/tydz.</p>
+                </div>
+                <div className="rounded-2xl bg-[#a78bfa]/10 border border-[#a78bfa]/20 p-3 text-center">
+                  <p className="text-[11px] uppercase tracking-widest text-[#a78bfa]/70 font-semibold">Wdrożone</p>
+                  <p className="font-display text-xl font-bold text-[#a78bfa]">{chartData.reduce((s,c)=>s+c.implemented,0)}</p>
+                  <p className="text-[11px] text-white/30">średnio {Math.round(chartData.reduce((s,c)=>s+c.implemented,0)/8)}/tydz.</p>
+                </div>
+              </div>
 
-              <div className="mt-2 flex justify-between px-10 text-[10px] text-white/30 font-medium tracking-wide">
+              {/* Słupkowy wykres - dużo bardziej czytelny niż linia */}
+              <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-4">
+                <div className="flex gap-2 h-[180px] items-end">
+                  {/* oś Y */}
+                  <div className="flex flex-col justify-between h-full py-1 pr-2 text-right shrink-0" style={{ width: 24 }}>
+                    <span className="text-[10px] text-white/30 font-medium">{maxWeekVal}</span>
+                    <span className="text-[10px] text-white/30 font-medium">{Math.ceil(maxWeekVal/2)}</span>
+                    <span className="text-[10px] text-white/30 font-medium">0</span>
+                  </div>
+                  <div className="flex-1 flex gap-2 h-full items-end">
+                    {chartData.map((d, i) => {
+                      const isHover = hoverPoint === i
+                      const hTotal = maxWeekVal > 0 ? (d.total / maxWeekVal) * 100 : 0
+                      const hWatched = d.total > 0 ? (d.watched / d.total) * 100 : 0
+                      const isEmpty = d.total === 0
+                      return (
+                        <div key={d.idx} className="flex-1 flex flex-col items-center gap-2 min-w-0" onMouseEnter={() => setHoverPoint(i)} onMouseLeave={() => setHoverPoint(null)}>
+                          <div className="relative w-full flex flex-col justify-end items-center" style={{ height: 140 }}>
+                            {/* liczba nad słupkiem */}
+                            <span className={`text-[11px] font-bold tabular-nums mb-1 ${isEmpty ? 'text-white/20' : isHover ? 'text-white' : 'text-white/60'}`}>{d.total || '·'}</span>
+                            {/* słupek */}
+                            <div className={`w-full max-w-[48px] mx-auto rounded-t-xl overflow-hidden flex flex-col justify-end border ${isEmpty ? 'bg-white/[0.03] border-white/[0.04] border-dashed' : isHover ? 'border-white/20 shadow-[0_4px_16px_rgba(139,92,246,0.3)]' : 'border-white/10'} transition-all`} style={{ height: isEmpty ? 24 : `${Math.max(12, hTotal)}%`, minHeight: isEmpty ? 24 : 12 }}>
+                              {!isEmpty && (
+                                <>
+                                  <div className="w-full bg-gradient-to-t from-[#a78bfa] to-[#8b5cf6]" style={{ height: `${100 - hWatched}%`, minHeight: d.implemented > 0 ? 6 : 0 }} title={`${d.implemented} wdroż.`} />
+                                  <div className="w-full bg-gradient-to-t from-[#c4b5fd] to-[#ddd6fe]" style={{ height: `${hWatched}%`, minHeight: d.watched > 0 ? 6 : 0 }} title={`${d.watched} obejrz.`} />
+                                </>
+                              )}
+                            </div>
+                            {/* tooltip on hover */}
+                            {isHover && (
+                              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none px-3 py-2 rounded-xl bg-[#0a0c0e] border border-white/15 shadow-xl whitespace-nowrap">
+                                <p className="text-[11px] font-semibold text-white">{d.label} <span className="text-white/40 font-normal">{d.week}</span></p>
+                                <p className="text-xs text-[#c4b5fd] mt-1">● {d.watched} obejrzane</p>
+                                <p className="text-xs text-[#a78bfa]">● {d.implemented} wdrożone</p>
+                                <p className="text-[11px] text-white/30 mt-1 border-t border-white/10 pt-1">Razem: <b className="text-white">{d.total}</b></p>
+                              </div>
+                            )}
+                          </div>
+                          <span className={`text-[10px] font-medium truncate w-full text-center ${isHover ? 'text-white' : 'text-white/40'}`}>{d.label}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                {/* oś X label */}
+                <div className="mt-3 flex items-center justify-between text-[10px] text-white/25 px-7">
+                  <span>8 tyg. temu</span>
+                  <span>dziś</span>
+                </div>
+              </div>
+
+              {/* Tabela tygodni - pełna przejrzystość */}
+              <div className="mt-4 overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                <div className="grid grid-cols-[1fr_70px_70px_60px] gap-2 px-4 py-2 text-[10px] uppercase tracking-widest text-white/30 font-semibold bg-white/[0.03] border-b border-white/[0.06]">
+                  <span>Tydzień (pon.)</span>
+                  <span className="text-center">Obejrzane</span>
+                  <span className="text-center">Wdrożone</span>
+                  <span className="text-right">Razem</span>
+                </div>
                 {chartData.map((d) => (
-                  <span key={d.idx}>{d.week.split('-')[1] || ''}</span>
+                  <div key={d.idx} className={`grid grid-cols-[1fr_70px_70px_60px] gap-2 px-4 py-2.5 text-sm items-center border-b border-white/[0.03] last:border-0 ${d.total > 0 ? 'bg-white/[0.01] hover:bg-white/[0.04]' : ''}`}>
+                    <span className="text-white/70 font-medium">{d.label} <span className="text-white/25 text-xs ml-1">{d.week}</span></span>
+                    <span className="text-center"><span className="inline-flex min-w-[28px] justify-center rounded-full px-2 py-0.5 text-xs font-bold bg-[#c4b5fd]/15 text-[#c4b5fd] border border-[#c4b5fd]/20">{d.watched}</span></span>
+                    <span className="text-center"><span className="inline-flex min-w-[28px] justify-center rounded-full px-2 py-0.5 text-xs font-bold bg-[#a78bfa]/15 text-[#a78bfa] border border-[#a78bfa]/20">{d.implemented}</span></span>
+                    <span className="text-right font-display font-bold text-white">{d.total || '—'}</span>
+                  </div>
                 ))}
               </div>
             </div>
