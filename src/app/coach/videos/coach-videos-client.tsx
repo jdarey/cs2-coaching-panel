@@ -108,6 +108,18 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     return matchesSearch && matchesTab && matchesTag
   })
 
+  const parseDurationToSeconds = (val: string): number | undefined => {
+    const v = val.trim()
+    if (!v) return undefined
+    if (/^\d+$/.test(v)) return parseInt(v, 10)
+    const parts = v.split(':').map((p) => parseInt(p, 10))
+    if (parts.some(isNaN)) return undefined
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    if (parts.length === 2) return parts[0] * 60 + parts[1]
+    if (parts.length === 1) return parts[0]
+    return undefined
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim() || !formData.url.trim()) return
@@ -117,11 +129,15 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     try {
       const url = editingVideo ? `/api/videos/${editingVideo.id}` : '/api/videos'
       const method = editingVideo ? 'PUT' : 'POST'
+      const durationSec = parseDurationToSeconds(formData.duration)
+      const payload: any = { ...formData }
+      if (durationSec !== undefined) payload.duration = durationSec
+      else delete payload.duration
 
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
 
       const data = await res.json()
@@ -281,7 +297,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       if (data.updated > 0) {
         toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} z ${data.total} filmów${data.failed ? `, nie udało się ${data.failed}` : ''}${data.skipped ? `, pominięto ${data.skipped} (Drive/inne)` : ''}` })
       } else if (data.failed > 0 && data.failed === data.total) {
-        toast({ title: 'Błąd pobierania', description: `YouTube zablokował pobieranie lub filmy są prywatne/usunięte. Sprawdź czy linki są publiczne (youtu.be/watch) i spróbuj ponownie za chwilę. Szczegóły w logach serwera.`, variant: 'destructive' })
+        toast({ title: 'Prywatne filmy', description: `Twoje filmy są prywatne – YouTube nie udostępnia czasu dla prywatnych. Zmień je na Niepubliczne (Unlisted) lub wpisz czas ręcznie: Edytuj film → Czas trwania (np. 12:34).`, variant: 'destructive' })
       } else if (data.failed > 0) {
         toast({ title: 'Uwaga', description: `Sprawdzono ${data.total} filmów, nie udało się pobrać czasu dla ${data.failed}${data.skipped ? `, pominięto ${data.skipped} Drive/inne` : ''}`, variant: 'destructive' })
       } else {
@@ -323,11 +339,12 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
 
   const openEditDialog = (video: Video) => {
     setEditingVideo(video)
+    const dur = video.duration ? (video.duration >= 3600 ? `${Math.floor(video.duration/3600)}:${String(Math.floor((video.duration%3600)/60)).padStart(2,'0')}:${String(video.duration%60).padStart(2,'0')}` : `${Math.floor(video.duration/60)}:${String(video.duration%60).padStart(2,'0')}`) : ''
     setFormData({
       title: video.title,
       url: video.url,
       description: video.description || '',
-      duration: '',
+      duration: dur,
       tagIds: video.tags.map((t) => t.tag.id),
     })
     setDialogOpen(true)
@@ -717,6 +734,27 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                   </div>
                   <p className="text-xs text-white/40">
                     Obsługiwane: YouTube, Vimeo, Google Drive, linki bezpośrednie. Źródło wykrywane automatycznie.
+                  </p>
+                </div>
+
+                {/* Duration - ręcznie dla prywatnych filmów */}
+                <div className="space-y-1.5">
+                  <label htmlFor="duration" className="text-xs font-medium text-white/55">
+                    Czas trwania (opcjonalnie)
+                  </label>
+                  <div className="relative">
+                    <Clock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <input
+                      id="duration"
+                      placeholder="np. 12:34, 1:12:34 lub 754 (sekundy) - dla prywatnych filmów YT"
+                      value={formData.duration}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, duration: e.target.value }))}
+                      disabled={isLoading}
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                    />
+                  </div>
+                  <p className="text-xs text-white/40">
+                    Dla <span className="text-white/60">prywatnych</span> filmów YouTube nie da się pobrać czasu automatycznie – wpisz ręcznie. Publiczne/niepubliczne pobierają się same.
                   </p>
                 </div>
 
