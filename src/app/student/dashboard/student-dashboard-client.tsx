@@ -16,8 +16,7 @@ import {
   TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks, Timer,
 } from 'lucide-react'
 import Link from 'next/link'
-import { getRank, nextRank, getLevel, getStreak } from '@/lib/gamification'
-import { RankEmblem } from '@/components/rank-emblem'
+import { getStreak } from '@/lib/gamification'
 
 interface Session {
   id: string
@@ -128,9 +127,6 @@ export function StudentDashboardClient({
   const assignments = initialAssignments
 
   const completionRate = totalVideos > 0 ? Math.round(((watched + implemented) / totalVideos) * 100) : 0
-  const rank = getRank(completionRate)
-  const next = nextRank(completionRate)
-  const levelInfo = getLevel(watched + implemented)
   const streak = getStreak(progress.map((p) => p.watchedAt || p.updatedAt))
 
   const nextUpVideo = progress.find((p) => p.status === 'PENDING' || p.status === 'WATCHING')
@@ -209,10 +205,6 @@ export function StudentDashboardClient({
                 {streak} {streak === 1 ? 'dzień' : 'dni'} serii
               </div>
             )}
-            <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold glass border border-[#8b5cf6]/40 text-[#c4b5fd]">
-              <Zap className="w-3.5 h-3.5" />
-              Poziom {levelInfo.level}
-            </div>
             {weekly.overdueAssignments > 0 && (
               <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold glass border border-red-500/40 text-red-300">
                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -395,33 +387,18 @@ export function StudentDashboardClient({
           </Link>
         )}
 
-        {/* ===== PROGRESS + ELO TRAJECTORY ===== */}
+        {/* ===== PROGRESS + ELO TRAJECTORY (samo ELO, bez rangi strony) ===== */}
         <div className="grid gap-6 lg:grid-cols-5 mb-8">
-          {/* Progress card */}
+          {/* Progress card - postep filmow bez rangi/levelu */}
           <div className="animate-rise-in lg:col-span-3 relative rounded-3xl p-6 md:p-7 glass-liquid border-glow overflow-hidden" style={{ animationDelay: '120ms' }}>
             <div className="flex items-center gap-6 relative z-10">
-              <RankEmblem rank={rank} size={76} />
+              <div className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-1">Twoja ranga</p>
-                <h2 className="font-display text-2xl font-bold text-white leading-tight truncate" title={rank.name}>{rank.name}</h2>
-                <div className="mt-2 flex items-center gap-2 min-w-0 max-w-sm">
-                  <div className="w-28 shrink-0 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-1000"
-                      style={{
-                        width: `${next ? Math.min(100, ((completionRate - rank.min) / ((next.min - rank.min) || 1)) * 100) : 100}%`,
-                        background: `linear-gradient(90deg, ${rank.color}, ${next?.color || rank.color})`,
-                      }}
-                    />
-                  </div>
-                  <span className="text-xs text-white/45 truncate min-w-0 flex-1" title={next ? `${next.min - completionRate}% do ${next.name}` : 'Maks!'}>
-                    {next ? `${next.min - completionRate}% do ${next.name}` : 'Maks!'}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-xs text-white/45">
-                  <Zap className="w-3.5 h-3.5 text-[#a78bfa] shrink-0" />
-                  Poziom {levelInfo.level} · {levelInfo.xp}/{levelInfo.xpToNext} XP
-                </div>
+                <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-1">Twój postęp</p>
+                <h2 className="font-display text-2xl font-bold text-white leading-tight">{completionRate}% ukończone</h2>
+                <p className="mt-1 text-xs text-white/45">{watched + implemented} z {totalVideos} filmów · seria {streak} {streak === 1 ? 'dzień' : 'dni'}</p>
               </div>
             </div>
           </div>
