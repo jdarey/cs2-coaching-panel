@@ -49,7 +49,9 @@ export async function GET(request: NextRequest) {
 
     const entries = await prisma.rankEntry.findMany({
       where,
+      select: { id: true, mode: true, rank: true, elo: true, source: true, note: true, recordedAt: true },
       orderBy: { recordedAt: 'asc' },
+      take: 200,
     })
 
     return NextResponse.json(entries)

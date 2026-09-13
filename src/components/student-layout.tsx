@@ -94,7 +94,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     }
     fetchElo()
     fetchProfile()
-    const id = setInterval(fetchElo, 30_000)
+    const id = setInterval(fetchElo, 60_000)
     return () => clearInterval(id)
   }, [])
 

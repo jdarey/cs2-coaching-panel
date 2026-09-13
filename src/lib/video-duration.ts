@@ -88,14 +88,14 @@ export async function getVideoDuration(url: string, _opts?: { noCache?: boolean 
       if (typeof secs === 'string' && /^\d+$/.test(secs) && parseInt(secs, 10) > 0) return parseInt(secs, 10)
     }
 
-    // 4) Innertube - 3 klienci (WEB, ANDROID, IOS) - różne klucze/fingerprints, część omija blokadę
+    // 4) Innertube - 3 klienci równolegle (WEB/ANDROID/IOS), pierwszy ważny wygrywa
     const INNER_CLIENTS = [
       { clientName: 'WEB', clientVersion: '2.20240101', key: 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8' },
       { clientName: 'ANDROID', clientVersion: '20.10.38', key: 'AIzaSyA8eiZmM1FaDVjRy-df2UTQQRi2r7KI4TY' },
       { clientName: 'IOS', clientVersion: '20.10.38', key: 'AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc' },
     ]
-    for (const c of INNER_CLIENTS) {
-      const innertube = await fetchJson(
+    const innerResults = await Promise.allSettled(
+      INNER_CLIENTS.map((c) => fetchJson(
         `https://www.youtube.com/youtubei/v1/player?key=${c.key}`,
         {
           method: 'POST',
@@ -107,16 +107,18 @@ export async function getVideoDuration(url: string, _opts?: { noCache?: boolean 
             Referer: 'https://www.youtube.com/',
           },
           body: JSON.stringify({ context: { client: { clientName: c.clientName, clientVersion: c.clientVersion } }, videoId: ytId }),
-          cache: 'no-store' as any,
+          next: { revalidate: 86400 } as any,
         },
         2500
-      )
-      if (innertube) {
-        const secs = innertube?.videoDetails?.lengthSeconds
-        if (secs && /^\d+$/.test(String(secs)) && parseInt(String(secs), 10) > 0) return parseInt(String(secs), 10)
-        const ms = innertube?.videoDetails?.approxDurationMs ?? innertube?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
-        if (ms && /^\d+$/.test(String(ms)) && parseInt(String(ms), 10) > 0) return Math.round(parseInt(String(ms), 10) / 1000)
-      }
+      ))
+    )
+    for (const r of innerResults) {
+      if (r.status !== 'fulfilled' || !r.value) continue
+      const innertube = r.value
+      const secs = innertube?.videoDetails?.lengthSeconds
+      if (secs && /^\d+$/.test(String(secs)) && parseInt(String(secs), 10) > 0) return parseInt(String(secs), 10)
+      const ms = innertube?.videoDetails?.approxDurationMs ?? innertube?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
+      if (ms && /^\d+$/.test(String(ms)) && parseInt(String(ms), 10) > 0) return Math.round(parseInt(String(ms), 10) / 1000)
     }
 
     return null // prywatne / usunięte / wszystko zablokowane -> trener wpisuje ręcznie

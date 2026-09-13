@@ -22,20 +22,23 @@ export default async function StudentDashboardPage() {
       where: { studentId: userId, status: { in: ['ACTIVE', 'COMPLETED'] } },
       orderBy: { scheduledAt: 'desc' },
       take: 5,
-      include: {
+      select: {
+        id: true, title: true, status: true, scheduledAt: true, completedAt: true, createdAt: true, updatedAt: true,
         coach: { select: { id: true, name: true, email: true, avatarUrl: true } },
-        tags: { include: { tag: true } },
-        videos: { include: { video: true }, orderBy: { order: 'asc' } },
+        tags: { select: { tag: { select: { id: true, name: true, color: true } } } },
+        videos: { select: { video: { select: { id: true, title: true, thumbnail: true } } }, orderBy: { order: 'asc' }, take: 6 },
         _count: { select: { videos: true } },
       },
     }),
     prisma.videoProgress.findMany({
       where: { userId },
-      include: {
-        video: { include: { tags: { include: { tag: true } } } },
+      select: {
+        id: true, status: true, progress: true, note: true, watchedAt: true, updatedAt: true, createdAt: true,
+        video: { select: { id: true, title: true, thumbnail: true, tags: { select: { tag: { select: { id: true, name: true, color: true } } } } } },
         session: { select: { id: true, title: true } },
       },
       orderBy: { updatedAt: 'desc' },
+      take: 60,
     }),
     prisma.user.findUnique({
       where: { id: userId },
@@ -69,17 +72,21 @@ export default async function StudentDashboardPage() {
       prisma.assignment.count({ where: { studentId: userId, completedAt: { gte: weekAgo } } }),
       prisma.session.count({ where: { studentId: userId, createdAt: { gte: weekAgo } } }),
     ]),
-    // My routines with progress
+    // My routines with progress - tylko aktywne + lekkie pola
     prisma.routineAssignment.findMany({
-      where: { studentId: userId },
-      include: {
+      where: { studentId: userId, status: 'ACTIVE' },
+      select: {
+        id: true, status: true,
         routine: {
-          include: { tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+          select: {
+            id: true, title: true, description: true,
+            tasks: { select: { id: true, title: true, description: true, videoId: true, day: true, minutes: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
+          },
         },
-        progress: true,
+        progress: { select: { taskId: true, status: true } },
       },
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      take: 5,
     }),
     // Completed practice sessions (last 8 weeks for the chart)
     prisma.practiceSession.findMany({
