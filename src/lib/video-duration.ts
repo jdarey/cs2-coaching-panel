@@ -56,33 +56,34 @@ export async function getVideoDuration(url: string, _opts?: { noCache?: boolean 
       }
     }
 
-    // 2) Piped - multi-instancje, omijają blokady IP Vercel (Piped proxy'uje YouTube)
+    // 2) Piped - 4 instancje równolegle (Promise.allSettled), omijają blokady IP Vercel
     const PIPED_INSTANCES = [
       'https://pipedapi.kavin.rocks',
       'https://api.piped.yt',
       'https://pipedapi.syncpundit.io',
       'https://pipedapi.r4fo.com',
-      'https://pipedapi.leptons.xyz',
-      'https://piped-api.privacy.com.de',
-      'https://pipedapi.adminforge.de',
-      'https://pipedapi.frontendfriendly.xyz',
     ]
-    for (const base of PIPED_INSTANCES) {
-      const piped = await fetchJson(`${base}/streams/${ytId}`, { headers: { 'User-Agent': UA }, cache: 'no-store' as any }, 2500)
-      if (typeof piped?.duration === 'number' && piped.duration > 0) return Math.round(piped.duration)
-      // jeśli instancja zwróci błąd, próbuj kolejną — nie czekaj długo
+    const pipedResults = await Promise.allSettled(
+      PIPED_INSTANCES.map((base) => fetchJson(`${base}/streams/${ytId}`, { headers: { 'User-Agent': UA }, next: { revalidate: 86400 } as any }, 2500))
+    )
+    for (const r of pipedResults) {
+      if (r.status === 'fulfilled') {
+        const piped = r.value
+        if (typeof piped?.duration === 'number' && piped.duration > 0) return Math.round(piped.duration)
+      }
     }
 
-    // 3) Invidious - alternatywne proxy, też omija Vercel IP block
+    // 3) Invidious - 2 instancje równolegle
     const INVIDIOUS_INSTANCES = [
       'https://yewtu.be',
       'https://invidious.protokolla.fi',
-      'https://iv.ggtyler.dev',
-      'https://invidious.privacydev.net',
     ]
-    for (const base of INVIDIOUS_INSTANCES) {
-      const inv = await fetchJson(`${base}/api/v1/videos/${ytId}`, { headers: { 'User-Agent': UA }, cache: 'no-store' as any }, 2500)
-      const secs = inv?.lengthSeconds
+    const invResults = await Promise.allSettled(
+      INVIDIOUS_INSTANCES.map((base) => fetchJson(`${base}/api/v1/videos/${ytId}`, { headers: { 'User-Agent': UA }, next: { revalidate: 86400 } as any }, 2500))
+    )
+    for (const r of invResults) {
+      if (r.status !== 'fulfilled') continue
+      const secs = (r.value as any)?.lengthSeconds
       if (secs && Number.isFinite(secs) && secs > 0) return Math.round(secs)
       if (typeof secs === 'string' && /^\d+$/.test(secs) && parseInt(secs, 10) > 0) return parseInt(secs, 10)
     }

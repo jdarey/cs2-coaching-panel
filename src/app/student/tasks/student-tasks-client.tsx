@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
@@ -360,6 +360,29 @@ export function StudentTasksClient() {
     return ad - bd
   })
 
+  const calendarDays = useMemo(() => {
+    const map = new Map((overallHistory?.calendar || []).map((d: any) => [d.date, d]))
+    const today = new Date(); today.setHours(12, 0, 0, 0)
+    const start = new Date(today); start.setDate(today.getDate() - 13)
+    const todayIso = toLocalDate(new Date())
+    return Array.from({ length: 14 }, (_, idx) => {
+      const d = new Date(start); d.setDate(start.getDate() + idx)
+      const iso = toLocalDate(d)
+      const entry = map.get(iso) as any
+      return {
+        iso,
+        d,
+        entry,
+        isFuture: d > today,
+        isToday: iso === todayIso,
+        isFull: !!entry?.full,
+        count: entry?.count || 0,
+        times: entry?.times || 0,
+        hasNote: !!dayNotes[iso],
+      }
+    })
+  }, [overallHistory, dayNotes])
+
   return (
     <StudentLayout>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-24 space-y-8">
@@ -429,32 +452,14 @@ export function StudentTasksClient() {
                 {['Pn','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d=> <span key={d} className="py-1">{d}</span>)}
               </div>
               <div className="grid grid-cols-7 gap-2">
-                {(() => {
-                  const map = new Map((overallHistory?.calendar || []).map((d:any)=>[d.date, d]))
-                  const today = new Date(); today.setHours(12,0,0,0)
-                  /* align */
-                  const start = new Date(today); start.setDate(today.getDate() - 13)
-                  /* adjust */
-                  return Array.from({length:14}, (_,idx)=>{
-                    const d = new Date(start); d.setDate(start.getDate()+idx)
-                    const iso = toLocalDate(d)
-                    const entry = map.get(iso) as any
-                    const isFuture = d > today
-                    const isToday = iso === toLocalDate(new Date())
-                    const isFull = !!entry?.full
-                    const count = entry?.count || 0
-                    const times = entry?.times || 0
-                    const hasNote = !!dayNotes[iso]
-                    return (
+                {calendarDays.map(({ iso, d, entry, isFuture, isToday, isFull, count, times, hasNote }) => (
                       <button key={iso} disabled={isFuture} onClick={()=> setSelectedDay({date:iso, entry: entry || {count:0, full:false, tasks:[], minutes:0, date:iso, times:0, routines:[]}})} className={['relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 border-2 text-xs font-bold transition-all py-2', isFuture ? 'bg-transparent border-transparent cursor-default' : isToday ? 'ring-2 ring-[#a78bfa] border-[#a78bfa]/30' : 'border-transparent', isFull ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-100 hover:bg-[#a78bfa]/10' : count>0 ? 'bg-[#a78bfa]/15 border-[#a78bfa]/30 text-white hover:bg-[#a78bfa]/20' : !isFuture ? 'bg-white/[0.04] text-white/40 border-white/[0.06] hover:bg-white/[0.07]' : '', !isFuture ? 'cursor-pointer hover:scale-[1.03]' : ''].join(' ')} title={`${iso}: ${entry?.routines?.join(', ') || ''} ${count ? count+' zadań' : 'brak'}${isFull && times>1 ? ` ${times}×`:''}`}>
                         <span className={['text-[15px] leading-none', isToday ? 'font-black text-[#c4b5fd]' : 'font-bold'].join(' ')}>{d.getDate()}</span>
                         <span className={['text-[10px] leading-none px-1.5 py-0.5 rounded-full font-bold', isFull ? 'bg-emerald-500/20 text-emerald-200' : count>0 ? 'bg-[#a78bfa]/20 text-white' : 'text-white/30'].join(' ')}>{times>1 ? `${times}×` : isFull ? 'PEŁNY' : count>0 ? `${count}` : '·'}</span>
                         {hasNote && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-1 ring-black/20" />}
                         {dayNotes[iso]?.sleep && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#a78bfa] text-white text-[9px] font-bold grid place-items-center ring-1 ring-black/20">{dayNotes[iso].sleep}</span>}
                       </button>
-                    )
-                  })
-                })()}
+                    ))}
               </div>
               <p className="text-[10px] text-white/25 mt-3 text-center">Kliknij dzień aby zobaczyć rutynę, zadania i dodać notatkę / sen 1-10</p>
             </div>

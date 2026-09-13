@@ -36,13 +36,19 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
 
     if (role === 'COACH') {
+      const full = searchParams.get('full') === '1'
       const routines = await prisma.routine.findMany({
         where: { coachId: userId },
         include: {
-          tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
+          tasks: full
+            ? { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] }
+            : { select: { id: true, title: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }], take: 3 },
           assignments: {
-            include: { student: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+            select: { id: true, status: true, student: { select: { id: true, name: true, email: true } } },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
           },
+          _count: { select: { tasks: true, assignments: true } },
         },
         orderBy: { updatedAt: 'desc' },
       })

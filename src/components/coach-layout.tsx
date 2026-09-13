@@ -68,6 +68,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="relative min-h-screen bg-[#07060c] font-sans text-white overflow-x-clip">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-white focus:text-black focus:text-sm focus:font-semibold">Przejdź do treści</a>
       <AuroraBackground />
 
       {/* Ambient floating orbs — premium depth */}
@@ -248,7 +249,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             <div className="w-10" />
           </header>
 
-          <main className="flex-1 min-h-screen pt-6 lg:pt-8">
+          <main id="main-content" className="flex-1 min-h-screen pt-6 lg:pt-8">
             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
           </main>
         </div>

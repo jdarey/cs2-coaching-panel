@@ -17,10 +17,13 @@ export default async function CoachRoutinesPage() {
     prisma.routine.findMany({
       where: { coachId: userId },
       include: {
-        tasks: { orderBy: [{ day: 'asc' }, { order: 'asc' }] },
+        tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
         assignments: {
-          include: { student: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+          select: { id: true, status: true, student: { select: { id: true, name: true, email: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
         },
+        _count: { select: { tasks: true, assignments: true } },
       },
       orderBy: { updatedAt: 'desc' },
     }),
