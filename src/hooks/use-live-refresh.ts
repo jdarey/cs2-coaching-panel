@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef } from 'react'
  * `interval` ms — but ONLY while the tab is actually visible. Hidden tabs
  * are skipped entirely (no wasted requests) and refresh on return.
  */
-export function useLiveRefresh(refresh: () => void, { interval = 15000 }: { interval?: number } = {}) {
+export function useLiveRefresh(refresh: () => void, { interval = 60000 }: { interval?: number } = {}) {
   const refreshRef = useRef(refresh)
   refreshRef.current = refresh
 
