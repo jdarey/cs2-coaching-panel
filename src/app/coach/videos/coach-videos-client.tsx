@@ -297,7 +297,23 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       if (data.updated > 0) {
         toast({ title: 'Sukces', description: `Przeładowano czas dla ${data.updated} z ${data.total} filmów${data.failed ? `, nie udało się ${data.failed}` : ''}${data.skipped ? `, pominięto ${data.skipped} (Drive/inne)` : ''}` })
       } else if (data.failed > 0 && data.failed === data.total) {
-        toast({ title: 'Nie udało się pobrać', description: `YouTube zablokował pobieranie na serwerze Vercel (dotyczy też niepublicznych). Spróbuj ponownie za chwilę lub wpisz czas ręcznie: Edytuj → Czas trwania (12:34). Możesz też dodać YOUTUBE_API_KEY w Vercel Env.`, variant: 'destructive' })
+        // Serwer zablokowany (Vercel IP) — próbujemy z przeglądarki (Twój IP omija blokadę) przez Piped/Invidious
+        toast({ title: 'Serwer zablokowany — próbuję z przeglądarki…', description: `YouTube zablokował Vercel. Pobieram czasy bezpośrednio z Twojej przeglądarki (3s)… Jeśli zadziała, czasy pojawią się za chwilę.` })
+        // fire-and-forget client fallback
+        ;(async () => {
+          const getYtId = (url: string) => url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^&\n?#]+)/)?.[1] || null
+          const tryFetch = async (url: string, ms=2500) => { const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms); try{ const r=await fetch(url,{signal:c.signal} as any); if(!r.ok) return null; return await r.json()}catch{return null}finally{clearTimeout(t)}}
+          let ok=0
+          for (const v of videos.filter((x)=>x.duration==null).slice(0,12)) {
+            const ytId=getYtId(v.url); if(!ytId) continue
+            let dur:number|null=null
+            for (const base of ['https://pipedapi.kavin.rocks','https://api.piped.yt','https://pipedapi.syncpundit.io','https://pipedapi.r4fo.com']) { const j=await tryFetch(`${base}/streams/${ytId}`); if(typeof j?.duration==='number'&&j.duration>0){dur=Math.round(j.duration); break} }
+            if(!dur) for (const base of ['https://yewtu.be','https://invidious.protokolla.fi']) { const j=await tryFetch(`${base}/api/v1/videos/${ytId}`); const s=j?.lengthSeconds; if(typeof s==='number'&&s>0){dur=Math.round(s); break} if(typeof s==='string'&&/^\d+$/.test(s)){dur=parseInt(s,10); break} }
+            if(dur){ try{ const r=await fetch(`/api/videos/${v.id}/duration`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({duration:dur})}); if(r.ok){ ok++; setVideos((prev)=>prev.map((x)=>x.id===v.id?{...x,duration:dur}:x)) } }catch{} }
+          }
+          if(ok>0) toast({ title: 'Sukces z przeglądarki', description: `Uzupełniono czas dla ${ok} filmów (przeglądarka ominęła blokadę Vercel).` })
+          else toast({ title: 'Nadal zablokowane', description: `Wpisz ręcznie: Edytuj → Czas trwania (12:34). Możesz dodać YOUTUBE_API_KEY w Vercel Env.`, variant: 'destructive' })
+        })()
       } else if (data.failed > 0) {
         toast({ title: 'Uwaga', description: `Sprawdzono ${data.total} filmów, nie udało się pobrać czasu dla ${data.failed}${data.skipped ? `, pominięto ${data.skipped} Drive/inne` : ''}`, variant: 'destructive' })
       } else {
@@ -336,6 +352,52 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
       .catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Client-side fallback: gdy serwer Vercel zablokowany, przeglądarka (Twój IP) pobiera czas przez Piped/Invidious i zapisuje do DB
+  useEffect(() => {
+    const pending = videos.filter((v) => v.duration == null)
+    if (pending.length === 0) return
+    // nie spamuj — max 8 na raz, kolejka
+    const queue = pending.slice(0, 8)
+    let cancelled = false
+    const getYtId = (url: string) => url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^&\n?#]+)/)?.[1] || null
+    const clientFetchDuration = async (ytId: string): Promise<number | null> => {
+      const tryFetch = async (url: string, ms = 2500) => {
+        const c = new AbortController()
+        const t = setTimeout(() => c.abort(), ms)
+        try { const r = await fetch(url, { signal: c.signal } as any); if (!r.ok) return null; return await r.json() } catch { return null } finally { clearTimeout(t) }
+      }
+      const pipedBases = ['https://pipedapi.kavin.rocks','https://api.piped.yt','https://pipedapi.syncpundit.io','https://pipedapi.r4fo.com']
+      for (const base of pipedBases) {
+        const j = await tryFetch(`${base}/streams/${ytId}`)
+        if (typeof j?.duration === 'number' && j.duration > 0) return Math.round(j.duration)
+      }
+      const invBases = ['https://yewtu.be','https://invidious.protokolla.fi','https://iv.ggtyler.dev']
+      for (const base of invBases) {
+        const j = await tryFetch(`${base}/api/v1/videos/${ytId}`)
+        const s = j?.lengthSeconds
+        if (typeof s === 'number' && s > 0) return Math.round(s)
+        if (typeof s === 'string' && /^\d+$/.test(s) && parseInt(s,10)>0) return parseInt(s,10)
+      }
+      return null
+    }
+    ;(async () => {
+      for (const v of queue) {
+        if (cancelled) break
+        const ytId = getYtId(v.url)
+        if (!ytId) continue
+        const dur = await clientFetchDuration(ytId)
+        if (dur && !cancelled) {
+          try {
+            const r = await fetch(`/api/videos/${v.id}/duration`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ duration: dur }) })
+            if (r.ok) setVideos((prev) => prev.map((x) => x.id === v.id ? { ...x, duration: dur } : x))
+          } catch {}
+        }
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videos.length])
 
   const openEditDialog = (video: Video) => {
     setEditingVideo(video)
