@@ -39,6 +39,7 @@ import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS, getYouTubeId
 import { getRank, getLevel } from '@/lib/gamification'
 import { RankEmblem } from '@/components/rank-emblem'
 import { YoutubeCustomPlayer } from '@/components/youtube-custom-player'
+import { FaceitEloChart } from '@/components/faceit-elo-chart'
 
 interface StudentDetail {
   id: string
@@ -611,6 +612,12 @@ export function CoachStudentDetailClient({
               </>
             )}
           </div>
+        </div>
+
+        {/* Faceit ELO - wykres 1:1 jak premier widget, u trenera i ucznia ten sam */}
+        <div className="mb-8">
+          <FaceitEloChart studentId={student.id} faceitNickname={student.faceitNickname} faceitElo={student.faceitElo} faceitLevel={student.faceitLevel} />
+          <p className="text-[11px] text-white/30 mt-2 text-center">Ten sam wykres widzi uczeń w <b className="text-white/50">Moja ranga → Faceit ELO</b> — na bieżąco śledzi progres (Leetify + Faceit na żywo + historia). Oparty o <a href="https://github.com/mxgic1337/faceit-stats-widget" target="_blank" rel="noopener noreferrer" className="text-[#ff9a5c] hover:underline">mxgic1337/faceit-stats-widget</a> (sprawdzony, host <code>widget.mxgic1337.xyz</code> działa bez klucza).</p>
         </div>
 
         {/* Sessions header */}
