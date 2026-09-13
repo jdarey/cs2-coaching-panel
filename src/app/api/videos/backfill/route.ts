@@ -5,8 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { fetchVideoDuration } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
-// Vercel ma limit 10s na Hobby, wiec zwiekszamy timeout na max (300s na Pro) i robimy rownolegle
-export const maxDuration = 60
+export const maxDuration = 10
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)

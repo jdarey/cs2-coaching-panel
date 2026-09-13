@@ -130,7 +130,6 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
             Referer: 'https://www.youtube.com/',
           },
           body: JSON.stringify({ context: { client }, videoId: ytId }),
-          signal: (AbortSignal as any).timeout ? (AbortSignal as any).timeout(5000) : undefined,
           ...cacheOpts,
         } as any)
         if (res.ok) {
@@ -152,7 +151,6 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
     try {
       const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ytId}&key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
         headers: { 'User-Agent': UA },
-        signal: (AbortSignal as any).timeout ? (AbortSignal as any).timeout(5000) : undefined,
         ...cacheOpts,
       } as any)
       if (res.ok) {
@@ -168,7 +166,6 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
     try {
       const res = await fetch(`https://yt.lemnoslife.com/noKey/videos?part=contentDetails&id=${ytId}`, {
         headers: { 'User-Agent': UA },
-        signal: (AbortSignal as any).timeout ? (AbortSignal as any).timeout(5000) : undefined,
         ...cacheOpts,
       } as any)
       if (res.ok) {
@@ -188,7 +185,6 @@ export async function fetchVideoDuration(url: string, opts?: { noCache?: boolean
           'Accept-Language': 'en-US,en;q=0.9',
           Cookie: 'CONSENT=YES+cb.20210328-17-p0.en+FX+667; YSC=',
         },
-        signal: (AbortSignal as any).timeout ? (AbortSignal as any).timeout(7000) : undefined,
         ...cacheOpts,
       } as any)
       if (res.ok) {
