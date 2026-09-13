@@ -5,6 +5,7 @@ import { formatDate, getInitials, cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { applyStoredTheme } from '@/components/providers'
+import { ThemeColorPicker } from '@/components/theme-color-picker'
 import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -843,6 +844,9 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     </button>
                   )
                 })}
+              </div>
+              <div className="mt-6">
+                <ThemeColorPicker />
               </div>
             </section>
           )}

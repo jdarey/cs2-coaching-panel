@@ -5,6 +5,7 @@ import { formatDate, getInitials, cn } from '@/lib/utils'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { applyStoredTheme } from '@/components/providers'
+import { ThemeColorPicker } from '@/components/theme-color-picker'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Settings,
@@ -634,6 +635,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
 
             {/* ===== APPEARANCE ===== */}
             {activeSection === 'appearance' && (
+              <>
               <div className="grid gap-4 sm:grid-cols-3" style={{ animationDelay: '0.15s' }}>
                 {(['light', 'dark', 'system'] as const).map((t) => {
                   const Icon = t === 'light' ? Sun : t === 'dark' ? Moon : Shield
@@ -678,6 +680,10 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                   )
                 })}
               </div>
+              <div className="mt-6">
+                <ThemeColorPicker />
+              </div>
+            </>
             )}
           </div>
         </div>

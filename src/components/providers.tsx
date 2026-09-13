@@ -30,6 +30,11 @@ function PresenceManager() {
 export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyStoredTheme()
+    // primary color per user
+    try {
+      const { applyStoredPrimaryColor } = require('@/lib/theme-color')
+      applyStoredPrimaryColor()
+    } catch {}
   }, [])
 
   return (
