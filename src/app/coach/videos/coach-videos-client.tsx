@@ -353,51 +353,8 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Client-side fallback: gdy serwer Vercel zablokowany, przeglądarka (Twój IP) pobiera czas przez Piped/Invidious i zapisuje do DB
-  useEffect(() => {
-    const pending = videos.filter((v) => v.duration == null)
-    if (pending.length === 0) return
-    // nie spamuj — max 8 na raz, kolejka
-    const queue = pending.slice(0, 8)
-    let cancelled = false
-    const getYtId = (url: string) => url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^&\n?#]+)/)?.[1] || null
-    const clientFetchDuration = async (ytId: string): Promise<number | null> => {
-      const tryFetch = async (url: string, ms = 2500) => {
-        const c = new AbortController()
-        const t = setTimeout(() => c.abort(), ms)
-        try { const r = await fetch(url, { signal: c.signal } as any); if (!r.ok) return null; return await r.json() } catch { return null } finally { clearTimeout(t) }
-      }
-      const pipedBases = ['https://pipedapi.kavin.rocks','https://api.piped.yt','https://pipedapi.syncpundit.io','https://pipedapi.r4fo.com']
-      for (const base of pipedBases) {
-        const j = await tryFetch(`${base}/streams/${ytId}`)
-        if (typeof j?.duration === 'number' && j.duration > 0) return Math.round(j.duration)
-      }
-      const invBases = ['https://yewtu.be','https://invidious.protokolla.fi','https://iv.ggtyler.dev']
-      for (const base of invBases) {
-        const j = await tryFetch(`${base}/api/v1/videos/${ytId}`)
-        const s = j?.lengthSeconds
-        if (typeof s === 'number' && s > 0) return Math.round(s)
-        if (typeof s === 'string' && /^\d+$/.test(s) && parseInt(s,10)>0) return parseInt(s,10)
-      }
-      return null
-    }
-    ;(async () => {
-      for (const v of queue) {
-        if (cancelled) break
-        const ytId = getYtId(v.url)
-        if (!ytId) continue
-        const dur = await clientFetchDuration(ytId)
-        if (dur && !cancelled) {
-          try {
-            const r = await fetch(`/api/videos/${v.id}/duration`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ duration: dur }) })
-            if (r.ok) setVideos((prev) => prev.map((x) => x.id === v.id ? { ...x, duration: dur } : x))
-          } catch {}
-        }
-      }
-    })()
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videos.length])
+  // Client-side fallback auto-run wyłączony — zostaje tylko fallback na klik `Przeładuj` (mniej ryzyka dla auto-blokady CORS)
+  // Jeśli chcesz auto, odkomentuj powyższy useEffect po przetestowaniu w przeglądarce
 
   const openEditDialog = (video: Video) => {
     setEditingVideo(video)
