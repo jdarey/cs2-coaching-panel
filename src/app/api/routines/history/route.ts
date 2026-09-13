@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     // build calendar: merge completions (full) + progress (partial today)
     const byDate = new Map<string, { date: string; count: number; full: boolean; tasks: any[]; minutes: number; times: number; routines: string[] }>()
 
-    const toLocalDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    const toLocalDate = (d: Date) => d.toLocaleDateString('en-CA', { timeZone: 'Europe/Warsaw' })
     for (const c of completions) {
       const d = toLocalDate(new Date(c.completedAt))
       const routineTitle = (c as any).assignment?.routine?.title || 'Rutyna'

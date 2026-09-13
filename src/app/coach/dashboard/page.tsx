@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachDashboardClient } from './coach-dashboard-client'
 
+export const revalidate = 30
+
 export default async function CoachDashboardPage() {
   const session = await getServerSession(authOptions)
 

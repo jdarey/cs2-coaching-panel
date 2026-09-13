@@ -69,7 +69,7 @@ function mdToHtml(md: string): string {
   if (inList) out += '</ul>'
   return out
 }
-function toLocalDate(d: Date): string { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
+function toLocalDate(d: Date): string { return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Warsaw' }) }
 
 interface RoutineAssignment {
   id: string
@@ -582,12 +582,19 @@ export function StudentTasksClient() {
           </section>
         )}
 
-        {/* Dobra robota - wszystkie zadania zrobione */}
+        {/* Dobra robota - wszystkie zadania zrobione.
+            Pokazuj TYLKO gdy dziś jest aktywność w kalendarzu I nic nie czeka:
+            - po resecie rutyny (Powtórz / nowy dzień) progress wraca do PENDING -> ukryj
+            - nowy dzień bez aktywności -> ukryj (todayEntry puste)
+            - zaległe zwykłe zadania (pendingCount>0) -> ukryj */}
         {(() => {
-          const todayIso = new Date().toISOString().split('T')[0]
-          const todayFull = overallHistory?.calendar?.find((d:any)=> d.date===todayIso)?.full
-          const allRoutinesDone = routines.length>0 && routines.every(ra=> ra.progress.filter((p:any)=>p.status==='DONE').length >= ra.routine.tasks.length && ra.routine.tasks.length>0)
-          const showDone = !loading && !loadingOverall && (todayFull || allRoutinesDone)
+          const todayIso = toLocalDate(new Date())
+          const todayEntry = overallHistory?.calendar?.find((d:any)=> d.date===todayIso)
+          const hasActivityToday = !!todayEntry && (todayEntry.count ?? 0) > 0
+          const allRoutinesDone = routines.length===0 ? true : routines.every(ra=> ra.routine.tasks.length>0 && ra.progress.filter((p:any)=>p.status==='DONE').length >= ra.routine.tasks.length)
+          const hasRoutines = routines.length>0
+          const nothingPending = pendingCount===0 && (!hasRoutines || allRoutinesDone)
+          const showDone = !loading && !loadingOverall && hasActivityToday && nothingPending && (hasRoutines || assignments.length>0)
           if (!showDone) return null
           return (
             <div className="glass-liquid rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden border border-emerald-500/20">

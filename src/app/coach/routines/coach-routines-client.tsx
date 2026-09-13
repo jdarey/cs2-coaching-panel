@@ -381,7 +381,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
               return (
                 <article
                   key={r.id}
-                  className="glass-liquid rise-in spotlight-card sheen group relative flex flex-col rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_60px_-20px_rgba(139,92,246,0.35)]"
+                  className="glass-liquid rise-in spotlight-card group relative flex flex-col rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_60px_-20px_rgba(139,92,246,0.35)]"
                   style={{ animationDelay: `${i * 70}ms` }}
                   onMouseMove={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect()

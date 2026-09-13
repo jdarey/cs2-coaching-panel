@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { AuroraBackground } from '@/components/aurora-background'
 import { UnreadBadge } from '@/components/unread-badge'
-import { CmdkSearch } from '@/components/cmdk-search'
 import {
   LayoutDashboard, BookOpen, Video, BarChart2, Settings, LogOut, Menu, X,
   GraduationCap, MessageSquare, MessageSquareHeart, Trophy, ClipboardList, Swords, Target, Megaphone,
@@ -338,7 +337,6 @@ export function StudentLayout({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
-      <CmdkSearch />
     </div>
   )
 }

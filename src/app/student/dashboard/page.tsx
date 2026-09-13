@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { StudentDashboardClient } from './student-dashboard-client'
 
+export const revalidate = 30
+
 export default async function StudentDashboardPage() {
   const session = await getServerSession(authOptions)
 

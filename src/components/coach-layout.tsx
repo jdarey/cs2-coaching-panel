@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { AuroraBackground } from '@/components/aurora-background'
 import { UnreadBadge } from '@/components/unread-badge'
-import { CmdkSearch } from '@/components/cmdk-search'
 import {
   LayoutDashboard, Users, BookOpen, Video, Tag, Settings, LogOut, Menu, X,
   ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords, Megaphone, GraduationCap, Zap,
@@ -254,7 +253,6 @@ export function CoachLayout({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
-      <CmdkSearch />
     </div>
   )
 }
