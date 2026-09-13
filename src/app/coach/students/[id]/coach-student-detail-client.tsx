@@ -31,6 +31,7 @@ import {
   Flame,
   X,
   MapPin,
+  Globe,
 } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -1115,8 +1116,8 @@ export function CoachStudentDetailClient({
                                   <div className="mt-2 flex flex-wrap items-center gap-2">
                                     {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Clock className="w-3 h-3" />~{t.minutes} min</span>}
                                     {t.videoId && <span className="inline-flex items-center gap-1 text-[11px] text-[#c4b5fd]"><Film className="w-3 h-3" />Film</span>}
-                                    {t.steamMapUrl && <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25"><MapPin className="w-3.5 h-3.5" />Mapa</span>}
-                                    {t.linkUrl && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><span className="w-1 h-1 rounded-full bg-white/30" />Link</span>}
+                                    {t.steamMapUrl && <span onClick={e=>e.stopPropagation()}><a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25 hover:bg-[#f43f5e]/[0.16] hover:border-[#f43f5e]/40 transition-all"><MapPin className="w-3.5 h-3.5" />Mapa</a></span>}
+                                    {t.linkUrl && <span onClick={e=>e.stopPropagation()}><a href={t.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 hover:bg-[#a78bfa]/[0.16] hover:border-[#a78bfa]/30 transition-all"><Globe className="w-3.5 h-3.5" />Link</a></span>}
                                     {done && <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/70"><Check className="w-3 h-3" />zrobione</span>}
                                     {!done && t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/30">kliknij aby zobaczyć film/opis</span>}
                                   </div>
