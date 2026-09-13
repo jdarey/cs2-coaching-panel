@@ -1,9 +1,9 @@
 // Czysty modul liczenia czasu filmu - napisany od zera
-// Zasady: prosto, przewidywalnie, bez 5 fallbackow ktore wisza 30s
-// YouTube: Data API v3 (jesli klucz) -> Piped -> Innertube (1 klient) -> null (wymaga recznie)
+// YouTube BEZ KLUCZA: multi-Piped (8 instancji) -> multi-Invidious (4) -> Innertube 3 klienty (WEB/ANDROID/IOS)
+// Data API tylko jeśli YOUTUBE_API_KEY ustawiony. Omija blokady IP Vercel - Piped/Invidious proxy'ują YouTube.
 // Vimeo: oEmbed -> null
-// Prywatne/unlisted ktore nie zwroci API -> null -> trener wpisuje recznie w UI
-// Manual: parseDurationString obsluguje "12:34", "1:12:34", "754"
+// Prywatne/unlisted które nie zwróci żadne proxy -> null -> trener wpisuje ręcznie w UI
+// Manual: parseDurationString obsługuje "12:34", "1:12:34", "754"
 
 function getYouTubeId(url: string): string | null {
   const m = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^&\n?#]+)/)
@@ -56,35 +56,69 @@ export async function getVideoDuration(url: string, _opts?: { noCache?: boolean 
       }
     }
 
-    // 2) Piped - omija blokady IP Vercel, nie wymaga klucza, dziala dla niepublicznych
-    const piped = await fetchJson(`https://pipedapi.kavin.rocks/streams/${ytId}`, { headers: { 'User-Agent': UA }, cache: 'no-store' as any }, 3500)
-    if (typeof piped?.duration === 'number' && piped.duration > 0) return Math.round(piped.duration)
-
-    // 3) Innertube - jeden klient WEB, bez petli po 3 klientach
-    const innertube = await fetchJson(
-      'https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': UA,
-          Accept: 'application/json',
-          Origin: 'https://www.youtube.com',
-          Referer: 'https://www.youtube.com/',
-        },
-        body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: '2.20240101' } }, videoId: ytId }),
-        cache: 'no-store' as any,
-      },
-      3500
-    )
-    if (innertube) {
-      const secs = innertube?.videoDetails?.lengthSeconds
-      if (secs && /^\d+$/.test(String(secs))) return parseInt(String(secs), 10)
-      const ms = innertube?.videoDetails?.approxDurationMs ?? innertube?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
-      if (ms && /^\d+$/.test(String(ms))) return Math.round(parseInt(String(ms), 10) / 1000)
+    // 2) Piped - multi-instancje, omijają blokady IP Vercel (Piped proxy'uje YouTube)
+    const PIPED_INSTANCES = [
+      'https://pipedapi.kavin.rocks',
+      'https://api.piped.yt',
+      'https://pipedapi.syncpundit.io',
+      'https://pipedapi.r4fo.com',
+      'https://pipedapi.leptons.xyz',
+      'https://piped-api.privacy.com.de',
+      'https://pipedapi.adminforge.de',
+      'https://pipedapi.frontendfriendly.xyz',
+    ]
+    for (const base of PIPED_INSTANCES) {
+      const piped = await fetchJson(`${base}/streams/${ytId}`, { headers: { 'User-Agent': UA }, cache: 'no-store' as any }, 2500)
+      if (typeof piped?.duration === 'number' && piped.duration > 0) return Math.round(piped.duration)
+      // jeśli instancja zwróci błąd, próbuj kolejną — nie czekaj długo
     }
 
-    return null // prywatne / usuniete -> trener wpisuje recznie
+    // 3) Invidious - alternatywne proxy, też omija Vercel IP block
+    const INVIDIOUS_INSTANCES = [
+      'https://yewtu.be',
+      'https://invidious.protokolla.fi',
+      'https://iv.ggtyler.dev',
+      'https://invidious.privacydev.net',
+    ]
+    for (const base of INVIDIOUS_INSTANCES) {
+      const inv = await fetchJson(`${base}/api/v1/videos/${ytId}`, { headers: { 'User-Agent': UA }, cache: 'no-store' as any }, 2500)
+      const secs = inv?.lengthSeconds
+      if (secs && Number.isFinite(secs) && secs > 0) return Math.round(secs)
+      if (typeof secs === 'string' && /^\d+$/.test(secs) && parseInt(secs, 10) > 0) return parseInt(secs, 10)
+    }
+
+    // 4) Innertube - 3 klienci (WEB, ANDROID, IOS) - różne klucze/fingerprints, część omija blokadę
+    const INNER_CLIENTS = [
+      { clientName: 'WEB', clientVersion: '2.20240101', key: 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8' },
+      { clientName: 'ANDROID', clientVersion: '20.10.38', key: 'AIzaSyA8eiZmM1FaDVjRy-df2UTQQRi2r7KI4TY' },
+      { clientName: 'IOS', clientVersion: '20.10.38', key: 'AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc' },
+    ]
+    for (const c of INNER_CLIENTS) {
+      const innertube = await fetchJson(
+        `https://www.youtube.com/youtubei/v1/player?key=${c.key}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': UA,
+            Accept: 'application/json',
+            Origin: 'https://www.youtube.com',
+            Referer: 'https://www.youtube.com/',
+          },
+          body: JSON.stringify({ context: { client: { clientName: c.clientName, clientVersion: c.clientVersion } }, videoId: ytId }),
+          cache: 'no-store' as any,
+        },
+        2500
+      )
+      if (innertube) {
+        const secs = innertube?.videoDetails?.lengthSeconds
+        if (secs && /^\d+$/.test(String(secs)) && parseInt(String(secs), 10) > 0) return parseInt(String(secs), 10)
+        const ms = innertube?.videoDetails?.approxDurationMs ?? innertube?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
+        if (ms && /^\d+$/.test(String(ms)) && parseInt(String(ms), 10) > 0) return Math.round(parseInt(String(ms), 10) / 1000)
+      }
+    }
+
+    return null // prywatne / usunięte / wszystko zablokowane -> trener wpisuje ręcznie
   }
 
   // Vimeo
