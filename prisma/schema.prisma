@@ -102,6 +102,8 @@ model User {
   studentCoachNotes CoachStudentNote[] @relation("CoachNotesAsStudent")
   studentInvites    StudentInvite[]
   sessionTemplates  SessionTemplate[]
+  // Wpisy finansowe trenera (kosztorys)
+  financeEntries    FinanceEntry[]
 
   // Skool-style community: announcements the coach publishes + comments on videos
   announcements Announcement[]
@@ -780,6 +782,25 @@ model EmailTemplate {
   // Dotyczy tylko szablonów automatycznych (reminder-*).
   enabled    Boolean  @default(true)
   updatedAt  DateTime @updatedAt
+}
+
+// Wpisy finansowe trenera (kosztorys): wpływy za coaching i wydatki.
+// Kwoty w groszach (Int), żeby uniknąć błędów zaokrągleń.
+model FinanceEntry {
+  id        String   @id @default(cuid())
+  coachId   String
+  kind      String   @default("INCOME") // INCOME (wpływ) | EXPENSE (wydatek)
+  person    String   // od kogo / komu (uczeń, kontrahent...)
+  title     String   // za co (np. "Pakiet 4 sesje", "Montaż intro")
+  amount    Int      // grosze, np. 14999 = 149,99 zł
+  date      DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
+  @@index([coachId, date])
 }
 
 // Coach-specific settings (fully customizable)

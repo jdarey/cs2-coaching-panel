@@ -11,7 +11,7 @@ import { AuroraBackground } from '@/components/aurora-background'
 import { UnreadBadge } from '@/components/unread-badge'
 import {
   LayoutDashboard, Users, BookOpen, Video, Tag, Settings, LogOut, Menu, X,
-  ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords, Megaphone, GraduationCap, Zap, Crown,
+  ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords, Megaphone, GraduationCap, Zap, Crown, Wallet,
 } from 'lucide-react'
 
 // Email właściciela — to samo co ADMIN_EMAIL na serwerze (lib/admin.ts).
@@ -34,6 +34,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { name: 'Praktyka', href: '/coach/practice', icon: Timer },
       { name: 'Mecze uczniów', href: '/coach/matches', icon: Swords },
       { name: 'Tagi', href: '/coach/tags', icon: Tag },
+      { name: 'Finanse', href: '/coach/finance', icon: Wallet },
     ],
   },
   {
