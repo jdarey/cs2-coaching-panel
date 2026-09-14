@@ -1,12 +1,26 @@
 import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-// Email is optional: without RESEND_API_KEY the app still works and the
-// "sent" mail is logged to the server console instead (handy for local dev).
-const apiKey = process.env.RESEND_API_KEY
+// Kolejność wysyłki: Resend (jeśli klucz) -> Gmail SMTP (darmowy, najlepsza
+// dostarczalność za 0 zł) -> dry-run (log, dev). Dzięki temu maile nie lądują
+// w spamie: Gmail wysyła z prawdziwego konta z poprawnym SPF/DKIM Google.
+const resendKey = process.env.RESEND_API_KEY
 
 function resend(): Resend | null {
-  if (!apiKey) return null
-  return new Resend(apiKey)
+  if (!resendKey) return null
+  return new Resend(resendKey)
+}
+
+function smtpTransport() {
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+  if (!user || !pass) return null
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: (process.env.SMTP_SECURE ?? 'true') !== 'false',
+    auth: { user, pass },
+  })
 }
 
 export interface SendEmailInput {
@@ -17,26 +31,30 @@ export interface SendEmailInput {
 }
 
 export async function sendEmail({ to, subject, html, text }: SendEmailInput): Promise<{ ok: boolean; note?: string }> {
-  const client = resend()
-
-  if (!client) {
-    console.log(`[mail:dry-run] to=${to} subject="${subject}"\n${text}`)
-    return { ok: true, note: 'RESEND_API_KEY not set — email logged instead of sent' }
-  }
-
   const from = process.env.EMAIL_FROM || 'CS2 Coaching <onboarding@resend.dev>'
 
-  try {
-    await client.emails.send({
-      from,
-      to: [to],
-      subject,
-      html,
-      text,
-    })
-    return { ok: true }
-  } catch (error) {
-    console.error('Email send error:', error)
-    return { ok: false, note: 'Email service error' }
+  const client = resend()
+  if (client) {
+    try {
+      await client.emails.send({ from, to: [to], subject, html, text })
+      return { ok: true }
+    } catch (error) {
+      console.error('Email send error (resend):', error)
+      return { ok: false, note: 'Email service error' }
+    }
   }
+
+  const smtp = smtpTransport()
+  if (smtp) {
+    try {
+      await smtp.sendMail({ from, to, subject, html, text })
+      return { ok: true }
+    } catch (error) {
+      console.error('Email send error (smtp):', error)
+      return { ok: false, note: 'Email service error' }
+    }
+  }
+
+  console.log(`[mail:dry-run] to=${to} subject="${subject}"\n${text}`)
+  return { ok: true, note: 'RESEND_API_KEY/SMTP not set — email logged instead of sent' }
 }
