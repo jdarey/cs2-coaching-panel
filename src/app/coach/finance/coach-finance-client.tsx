@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Wallet, Plus, Trash2, Loader2, TrendingUp, TrendingDown, Scale, Info } from 'lucide-react'
+import { Wallet, Plus, Trash2, Loader2, TrendingUp, TrendingDown, Scale, Info, ShieldCheck, ShieldAlert, Download, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Entry {
@@ -45,9 +45,16 @@ function parseDisplayDate(s: string): string | null {
 
 export function CoachFinanceClient() {
   const [month, setMonth] = useState(() => toMonth(new Date()))
+  const [viewAll, setViewAll] = useState(false)
   const [entries, setEntries] = useState<Entry[]>([])
   const [summary, setSummary] = useState({ income: 0, expense: 0 })
   const [yearSummary, setYearSummary] = useState({ income: 0, expense: 0, year: new Date().getFullYear() })
+  const [tax, setTax] = useState<{
+    status: { level: string; title: string; detail: string }
+    monthlyLimitPln: number
+    year: number
+    worstMonth: { month: string; income: number } | null
+  } | null>(null)
   const [loading, setLoading] = useState(true)
 
   const [kind, setKind] = useState<'INCOME' | 'EXPENSE'>('INCOME')
@@ -62,18 +69,19 @@ export function CoachFinanceClient() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/coach/finance?month=${month}`)
+      const res = await fetch(viewAll ? '/api/coach/finance?all=1' : `/api/coach/finance?month=${month}`)
       if (!res.ok) return
       const data = await res.json()
       setEntries(data.entries ?? [])
       setSummary(data.summary ?? { income: 0, expense: 0 })
       setYearSummary(data.yearSummary ?? { income: 0, expense: 0, year: new Date().getFullYear() })
+      setTax(data.tax ?? null)
     } catch {
       /* ignore */
     } finally {
       setLoading(false)
     }
-  }, [month])
+  }, [month, viewAll])
 
   useEffect(() => {
     load()
@@ -138,15 +146,55 @@ export function CoachFinanceClient() {
               <h1 className="font-display text-2xl font-bold">Finanse</h1>
             </div>
           </div>
-          <input
-            type="month"
-            value={month}
-            onChange={(e) => e.target.value && setMonth(e.target.value)}
-            className="h-11 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 text-sm text-white outline-none focus:border-[#a78bfa]/50 [color-scheme:dark]"
-          />
+          <div className="flex items-center gap-2">
+            {!viewAll && (
+              <input
+                type="month"
+                value={month}
+                onChange={(e) => e.target.value && setMonth(e.target.value)}
+                className="h-11 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 text-sm text-white outline-none focus:border-[#a78bfa]/50 [color-scheme:dark]"
+              />
+            )}
+            <button
+              onClick={() => setViewAll((v) => !v)}
+              className={cn(
+                'inline-flex items-center gap-2 h-11 rounded-xl px-4 text-sm font-semibold border transition-colors',
+                viewAll
+                  ? 'bg-[#a78bfa]/15 border-[#a78bfa]/40 text-white'
+                  : 'bg-white/[0.04] border-white/[0.08] text-white/60 hover:text-white',
+              )}
+            >
+              <LayoutGrid className="w-4 h-4" /> {viewAll ? 'Całość' : 'Wgląd na całość'}
+            </button>
+            <a
+              href="/api/coach/finance/export"
+              className="inline-flex items-center gap-2 h-11 rounded-xl px-4 text-sm font-semibold text-white/80 bg-white/[0.05] border border-white/[0.1] hover:bg-white/[0.09]"
+            >
+              <Download className="w-4 h-4" /> Eksport CSV
+            </a>
+          </div>
         </div>
 
-        {/* Podsumowanie miesiąca */}
+        {/* Status podatkowy z Twoich wpisów */}
+        {tax && (
+          <div className={cn('rounded-2xl border p-5 mb-4', tax.status.level === 'ok' ? 'border-emerald-500/25 bg-emerald-500/[0.06]' : 'border-red-500/30 bg-red-500/[0.07]')}>
+            <p className="flex items-center gap-2 text-sm font-bold mb-1">
+              {tax.status.level === 'ok'
+                ? <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                : <ShieldAlert className="w-4 h-4 text-red-300" />}
+              <span className={tax.status.level === 'ok' ? 'text-emerald-200' : 'text-red-200'}>Podatek: {tax.status.title}</span>
+            </p>
+            <p className="text-sm text-white/60 leading-relaxed">{tax.status.detail}</p>
+            <p className="mt-2 text-xs text-white/35">
+              Limit nierejestrowanej: {tax.monthlyLimitPln.toLocaleString('pl-PL')} zł/mies.
+              {tax.worstMonth && tax.worstMonth.income > 0 && (
+                <> · najlepszy miesiąc: {tax.worstMonth.month} ({pln(tax.worstMonth.income)})</>
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* Podsumowanie miesiąca / całości */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-5">
             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-300/80 mb-1"><TrendingUp className="w-3.5 h-3.5" /> Wpływy</p>
@@ -212,7 +260,7 @@ export function CoachFinanceClient() {
               <Loader2 className="w-5 h-5 animate-spin mr-2" /> Ładowanie…
             </div>
           ) : entries.length === 0 ? (
-            <p className="py-16 text-center text-sm text-white/40">Brak wpisów w tym miesiącu. Dodaj pierwszy powyżej.</p>
+            <p className="py-16 text-center text-sm text-white/40">{viewAll ? 'Brak wpisów. Dodaj pierwszy powyżej.' : 'Brak wpisów w tym miesiącu. Dodaj pierwszy powyżej.'}</p>
           ) : (
             <ul className="divide-y divide-white/[0.06]">
               {entries.map((e) => (
@@ -241,7 +289,7 @@ export function CoachFinanceClient() {
 
         {/* Ściąga podatkowa */}
         <div className="rounded-2xl border border-[#a78bfa]/25 bg-[#a78bfa]/[0.05] p-5 sm:p-6">
-          <p className="flex items-center gap-2 text-sm font-bold text-white mb-3"><Info className="w-4 h-4 text-[#c4b5fd]" /> Ściąga: podatek bez działalności (uczeń, rocznik 2007)</p>
+          <p className="flex items-center gap-2 text-sm font-bold text-white mb-3"><Info className="w-4 h-4 text-[#c4b5fd]" /> Ściąga: podatek bez działalności (uczeń, bez firmy)</p>
           <ul className="space-y-2.5 text-sm text-white/65 leading-relaxed">
             <li><b className="text-white/85">Małe kwoty, nieregularnie → działalność nierejestrowana.</b> Bez ZUS, bez rejestracji — warunek: przychód w miesiącu do 75% minimalnego wynagrodzenia (kwota rośnie co roku, sprawdź aktualną). Raz w roku rozliczasz się w PIT-36.</li>
             <li><b className="text-white/85">Regularnie / powyżej limitu → firma (JDG).</b> Na start ulga: 6 mies. bez składek społecznych + 2 lata preferencyjnych („mały ZUS").</li>
