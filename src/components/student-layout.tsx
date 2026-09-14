@@ -94,12 +94,12 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     }
     fetchElo()
     fetchProfile()
-    // ELO w sidebarze ucznia: od zalogowania do wylogowania co 5 min.
+    // ELO w sidebarze ucznia: od zalogowania do wylogowania co 30 s.
     // Layout żyje przez całą sesję. Ukryta karta nie pyta (po powrocie
     // i tak odświeża na focus) — ten sam UX, mniej transferu.
     const id = setInterval(() => {
       if (document.visibilityState === 'visible') fetchElo()
-    }, 300_000)
+    }, 30_000)
     const onFocus = () => fetchElo()
     window.addEventListener('focus', onFocus)
     return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }

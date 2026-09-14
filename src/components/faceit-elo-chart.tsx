@@ -133,9 +133,9 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
       }
     }
     fetchRanks()
-    // Wykres ELO: odświeżanie co 5 min + na focus (historia + 1x live Faceit).
+    // Wykres ELO: odświeżanie co 30 s + na focus (historia + 1x live Faceit).
     // Live ELO ląduje w DB max. 1x na 6h, więc trajektoria rośnie sama.
-    const id = setInterval(fetchRanks, 300_000)
+    const id = setInterval(fetchRanks, 30_000)
     const onFocus = () => fetchRanks()
     window.addEventListener('focus', onFocus)
     return () => { cancelled = true; clearInterval(id); window.removeEventListener('focus', onFocus) }
