@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
       faceitNickname: true,
       steamId: true,
       steamVanity: true,
+      coach: { select: { id: true, name: true, email: true } },
       lastActiveAt: true,
       createdAt: true,
       _count: { select: { sessionsAsStudent: true } },
