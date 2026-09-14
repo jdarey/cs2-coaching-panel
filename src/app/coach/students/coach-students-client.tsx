@@ -564,7 +564,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
               <div className="flex items-center gap-3 mb-1">
                 <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#6d28d9]">
                   <UserPlus className="w-5 h-5 text-white" strokeWidth={2.2} />
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
+                  <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/25" aria-hidden="true" />
                 </div>
                 <DialogTitle className="font-display text-xl font-bold text-gradient-violet">
                   {editingStudent ? 'Edytuj ucznia' : 'Dodaj nowego ucznia'}
@@ -671,7 +671,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
               <div className="flex items-center gap-3 mb-1">
                 <div className="relative w-10 h-10 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f59e0b]">
                   <Gift className="w-5 h-5 text-white" strokeWidth={2.2} />
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
+                  <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/25" aria-hidden="true" />
                 </div>
                 <DialogTitle className="font-display text-xl font-bold text-gradient-violet">
                   Zaproś ucznia do drużyny

@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
           <Link href="/login" className="inline-flex items-center gap-3 mb-8 group">
             <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
               <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
-              <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10" aria-hidden="true" />
             </div>
           </Link>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest text-white/55 font-semibold mb-5">
