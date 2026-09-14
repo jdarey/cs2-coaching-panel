@@ -76,6 +76,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
       fetch('/api/ranks')
         .then(r => r.ok ? r.json() : [])
         .then((data: any[]) => {
+          console.log('[StudentLayout] Ranks data:', data)
           const faceitOnly = (Array.isArray(data) ? data : []).filter((e: any) => e.mode === 'FACEIT' && e.elo != null)
           if (faceitOnly.length) {
             const sorted = faceitOnly.sort((a: any, b: any) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
@@ -89,7 +90,10 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     const fetchProfile = () => {
       fetch('/api/user/profile')
         .then(r => r.ok ? r.json() : null)
-        .then(data => { if (data?.faceitNickname) setFaceitNickname(data.faceitNickname) })
+        .then(data => { 
+          console.log('[StudentLayout] Profile data:', data)
+          if (data?.faceitNickname) setFaceitNickname(data.faceitNickname) 
+        })
         .catch(() => {})
     }
     fetchElo()

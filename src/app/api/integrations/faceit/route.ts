@@ -45,8 +45,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Podaj nickname Faceit' }, { status: 400 })
     }
 
+    console.log('[FaceitAPI] Fetching for nickname:', nickname)
+
     // 1) Keyless legacy endpoint — works without any API key
     const legacy = await fetchFaceitLegacy(nickname)
+    console.log('[FaceitAPI] Legacy result:', legacy)
     if (legacy) {
       return NextResponse.json({
         faceitId: legacy.faceitId,

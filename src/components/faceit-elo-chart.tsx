@@ -119,17 +119,20 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
           nicknameRef.current = nick
         }
         if (!nick || cancelled) return
+        console.log('[FaceitEloChart] Fetching live ELO for:', nick)
         const r = await fetch(`/api/integrations/faceit?nickname=${encodeURIComponent(nick)}`, { cache: 'no-store' })
+        console.log('[FaceitEloChart] Response status:', r.status)
         if (!r.ok || cancelled) return
         const data = await r.json()
+        console.log('[FaceitEloChart] Response data:', data)
         if (typeof data?.elo === 'number' && !cancelled) {
           setLiveElo(data.elo)
           const lvl = typeof data?.skillLevel === 'number' ? data.skillLevel : levelFromElo(data.elo)
           setLiveLevel(lvl)
           maybeAutoSave(data.elo, lvl, history)
         }
-      } catch {
-        /* Faceit limit/404 — wykres żyje z historii DB */
+      } catch (e) {
+        console.error('[FaceitEloChart] Error:', e)
       }
     }
     fetchRanks()
