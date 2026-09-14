@@ -9,7 +9,7 @@ import { RedirectOverlay } from '@/components/redirect-overlay'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Mail, Lock, User, AlertCircle, Sparkles, ChevronRight, GraduationCap as GraduationCapIcon, ShieldCheck as ShieldCheckIcon, CheckCircle2, Gift } from 'lucide-react'
+import { Loader2, Mail, Lock, User, AlertCircle, Sparkles, ChevronRight, GraduationCap as GraduationCapIcon, CheckCircle2, Gift } from 'lucide-react'
 
 function RegisterForm() {
   const router = useRouter()
@@ -25,8 +25,9 @@ function RegisterForm() {
     password: '',
     confirmPassword: '',
     name: '',
-    role: 'STUDENT' as 'COACH' | 'STUDENT',
   })
+  const [coachCode, setCoachCode] = useState('')
+  const [showCoachCode, setShowCoachCode] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -110,7 +111,8 @@ function RegisterForm() {
           email: formData.email,
           password: formData.password,
           name: formData.name || undefined,
-          role: formData.role,
+          role: coachCode.trim() ? 'COACH' : 'STUDENT',
+          coachInviteCode: coachCode.trim() || undefined,
           inviteToken: inviteToken || undefined,
         }),
       })
@@ -144,10 +146,8 @@ function RegisterForm() {
     }
   }
 
-  const roles: { key: 'STUDENT' | 'COACH'; label: string; sub: string; Icon: typeof GraduationCapIcon; color: string; ring: string }[] = [
-    { key: 'STUDENT', label: 'Uczeń', sub: 'Chcę się uczyć', Icon: GraduationCapIcon, color: 'from-[#a78bfa] to-[#c4b5fd]', ring: 'rgba(167,139,250,0.4)' },
-    { key: 'COACH', label: 'Trener', sub: 'Chcę uczyć innych', Icon: ShieldCheckIcon, color: 'from-[#a78bfa] to-[#8b5cf6]', ring: 'rgba(20,184,166,0.4)' },
-  ]
+  // Rejestracja publiczna = tylko konto ucznia. Trenerów dodaje właściciel
+  // osobiście kodem (COACH_INVITE_CODE) — nie ma wyboru roli w UI.
 
   // If invite is invalid, show error state
   if (inviteToken && inviteValid === false) {
@@ -246,44 +246,39 @@ function RegisterForm() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5 animate-rise-in-delay-2" style={{ animationDelay: '100ms' }}>
-              {/* Role selector - hidden if invite */}
+              {/* Konto ucznia — trenerów dodaje właściciel osobiście */}
               {!inviteData && (
-                <div className="space-y-3">
-                  <Label className="label-premium">Kim chcesz być?</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {roles.map((r) => {
-                      const Icon = r.Icon
-                      const active = formData.role === r.key
-                      return (
-                        <button
-                          type="button"
-                          key={r.key}
-                          onClick={() => setFormData((prev) => ({ ...prev, role: r.key }))}
-                          className={cn(
-                            'relative group flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border transition-all duration-300 overflow-hidden',
-                            active
-                              ? 'border-[#a78bfa]/50 bg-[#a78bfa]/10'
-                              : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]',
-                          )}
-                        >
-                          <div
-                            className={cn('relative p-3.5 rounded-xl bg-gradient-to-br grid place-items-center', r.color)}
-                            style={{ boxShadow: active ? `0 12px 32px -8px ${r.ring}` : 'none' }}
-                          >
-                            <Icon className="w-6 h-6 text-white" strokeWidth={2.2} />
-                            <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
-                          </div>
-                          <div className="text-center">
-                            <p className="font-semibold text-sm">{r.label}</p>
-                            <p className="text-[11px] text-white/45">{r.sub}</p>
-                          </div>
-                          {active && (
-                            <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-[#a78bfa]" />
-                          )}
-                        </button>
-                      )
-                    })}
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 flex items-center gap-3">
+                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#c4b5fd] grid place-items-center shrink-0">
+                    <GraduationCapIcon className="w-5 h-5 text-white" strokeWidth={2.2} />
+                    <div className="absolute inset-0 rounded-xl ring-1 ring-white/25" />
                   </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-white">Konto ucznia</p>
+                    <p className="text-[11px] text-white/45">Trenerów dodaję osobiście — masz kod? rozwiń poniżej.</p>
+                  </div>
+                </div>
+              )}
+              {!inviteData && (
+                <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowCoachCode((v) => !v)}
+                    className="text-xs font-medium text-white/45 hover:text-white/80 transition-colors"
+                  >
+                    {showCoachCode ? '− Ukryj kod trenera' : '+ Mam kod trenera'}
+                  </button>
+                  {showCoachCode && (
+                    <Input
+                      name="coachCode"
+                      type="text"
+                      placeholder="Wklej kod od właściciela"
+                      value={coachCode}
+                      onChange={(e) => setCoachCode(e.target.value)}
+                      disabled={isLoading}
+                      className="h-12 rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 focus:border-[#a78bfa]/40 transition"
+                    />
+                  )}
                 </div>
               )}
 

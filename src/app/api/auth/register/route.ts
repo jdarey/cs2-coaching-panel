@@ -6,8 +6,19 @@ import { registerSchema } from '@/lib/validations'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { inviteToken, ...registrationData } = body
+    const { inviteToken, coachInviteCode, ...registrationData } = body
     const validated = registerSchema.parse(registrationData)
+
+    // Rejestracja publiczna zakłada ZAWSZE konto ucznia. Konto trenera
+    // powstaje tylko z osobistym kodem właściciela (COACH_INVITE_CODE).
+    let role: 'COACH' | 'STUDENT' = 'STUDENT'
+    if (validated.role === 'COACH') {
+      const secret = process.env.COACH_INVITE_CODE
+      if (!secret || coachInviteCode !== secret) {
+        return NextResponse.json({ error: 'Konta trenerów zakładam osobiście — skontaktuj się z właścicielem po kod.' }, { status: 403 })
+      }
+      role = 'COACH'
+    }
 
     // If invite token provided, validate it
     let invite: { coachId: string; email: string; usedAt: Date | null; expiresAt: Date } | null = null
@@ -47,7 +58,7 @@ export async function POST(request: NextRequest) {
         email: validated.email,
         passwordHash,
         name: validated.name,
-        role: validated.role,
+        role,
         // Associate with coach if invite provided
         coachId: invite?.coachId || null,
       },
