@@ -803,6 +803,25 @@ model FinanceEntry {
   @@index([coachId, date])
 }
 
+// Logi audytu: kto, co, kiedy, szczegóły. Read-only, append-only.
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String   // kto wykonał czynność (admin ID)
+  actorRole String   // rola aktora w momencie zdarzenia
+  action    String   // np. "USER_RESET_PASSWORD", "COACH_CHANGED", "EMAIL_TEMPLATE_UPDATED"
+  targetId  String?  // ID obiektu, na którym operacja (user ID, template key, etc.)
+  targetType String? // "USER", "EMAIL_TEMPLATE", "FINANCE_ENTRY", etc.
+  details   Json?    // dodatkowe dane (przed/po, IP, user-agent, etc.)
+  ip        String?  // IP aktora
+  userAgent String?  // user agent
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([action])
+  @@index([createdAt])
+}
+
 // Coach-specific settings (fully customizable)
 model CoachSettings {
   id                String   @id @default(cuid())

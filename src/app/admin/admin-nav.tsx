@@ -2,12 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, Mail } from 'lucide-react'
+import { Users, Mail, Shield, Activity, Database, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const items = [
   { name: 'Użytkownicy', href: '/admin/users', icon: Users },
   { name: 'Maile', href: '/admin/emails', icon: Mail },
+  { name: 'Logi audytu', href: '/admin/audit-logs', icon: Shield },
+  { name: 'Monitoring', href: '/admin/monitoring', icon: Activity },
+  { name: 'Feature Flags', href: '/admin/feature-flags', icon: Settings },
+  { name: 'Backup/Restore', href: '/admin/backup', icon: Database },
 ]
 
 export function AdminNav({ mobile = false }: { mobile?: boolean }) {
