@@ -137,25 +137,45 @@ function stripHtml(html: string): string {
     .trim()
 }
 
+export interface TemplateOverrides {
+  subject?: string
+  preheader?: string
+  badge?: string
+  title?: string
+  subtitle?: string
+  bodyHtml?: string
+  buttonLabel?: string
+  buttonNote?: string
+  footerNote?: string
+}
+
 export async function renderEmail(
   key: string,
   vars: TemplateVars,
   opts: { buttonUrl?: string; rawUrl?: string; safeKeys?: string[] } = {},
+  overrides?: TemplateOverrides,
 ): Promise<{ subject: string; html: string; text: string }> {
   const def = TEMPLATE_DEFAULTS[key]
   if (!def) throw new Error(`Nieznany szablon maila: ${key}`)
 
   const row = await prisma.emailTemplate.findUnique({ where: { key } }).catch(() => null)
+  const pick = (field: keyof TemplateOverrides, fallback: string): string => {
+    const o = overrides?.[field]
+    if (typeof o === 'string') return o
+    const db = row?.[field as keyof typeof row]
+    if (typeof db === 'string') return db
+    return fallback
+  }
   const tpl = {
-    subject: row?.subject ?? def.subject,
-    preheader: row?.preheader ?? def.preheader ?? '',
-    badge: row?.badge ?? def.badge ?? '',
-    title: row?.title ?? def.title,
-    subtitle: row?.subtitle ?? def.subtitle ?? '',
-    bodyHtml: row?.bodyHtml ?? def.bodyHtml,
-    buttonLabel: row?.buttonLabel ?? def.buttonLabel ?? '',
-    buttonNote: row?.buttonNote ?? def.buttonNote ?? '',
-    footerNote: row?.footerNote ?? def.footerNote ?? '',
+    subject: pick('subject', def.subject),
+    preheader: pick('preheader', def.preheader ?? ''),
+    badge: pick('badge', def.badge ?? ''),
+    title: pick('title', def.title),
+    subtitle: pick('subtitle', def.subtitle ?? ''),
+    bodyHtml: pick('bodyHtml', def.bodyHtml),
+    buttonLabel: pick('buttonLabel', def.buttonLabel ?? ''),
+    buttonNote: pick('buttonNote', def.buttonNote ?? ''),
+    footerNote: pick('footerNote', def.footerNote ?? ''),
   }
 
   const safe = new Set(opts.safeKeys ?? [])
@@ -183,3 +203,12 @@ export async function renderEmail(
 
   return { subject, html, text }
 }
+
+// Czy cron ma wysyłać dany typ maila? Brak wiersza = włączone (domyślnie).
+export async function isTemplateEnabled(key: string): Promise<boolean> {
+  const row = await prisma.emailTemplate.findUnique({ where: { key }, select: { enabled: true } }).catch(() => null)
+  return row?.enabled ?? true
+}
+
+// Szablony wysyłane automatycznie przez crona (te mają włącznik w panelu).
+export const AUTO_TEMPLATE_KEYS = ['reminder-overdue', 'reminder-due-tomorrow', 'reminder-inactive']

@@ -9,6 +9,8 @@ interface Template {
   label: string
   hint: string
   customized: boolean
+  enabled: boolean
+  auto: boolean
   updatedAt: string | null
   subject: string
   preheader: string
@@ -40,7 +42,11 @@ export function AdminEmailsClient() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [toggling, setToggling] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // Podgląd na żywo (iframe): odświeżany ~1s po ostatniej zmianie w drafcie
+  const [previewHtml, setPreviewHtml] = useState<string>('')
+  const [previewSubject, setPreviewSubject] = useState<string>('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -69,7 +75,52 @@ export function AdminEmailsClient() {
     setMsg(null)
   }, [activeKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const dirty = !!draft && !!active && FIELDS.some((f) => draft[f.name] !== active[f.name])
+  const dirty = !!draft && !!active && (FIELDS.some((f) => draft[f.name] !== active[f.name]) || draft.enabled !== active.enabled)
+
+  // Podgląd na żywo z roboczej treści (niezapisanej) — debounce, żeby nie
+  // strzelać requestem na każdą literkę.
+  useEffect(() => {
+    if (!draft) return
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/admin/email-templates/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(draft),
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setPreviewHtml(data.html ?? '')
+        setPreviewSubject(data.subject ?? '')
+      } catch {
+        /* ignore */
+      }
+    }, 900)
+    return () => clearTimeout(t)
+  }, [draft])
+
+  // Włącznik auto-wysyłki (tylko szablony crona): zapis od razu, bez "Zapisz".
+  const toggleEnabled = async () => {
+    if (!active || toggling) return
+    if (dirty && !confirm('Masz niezapisany tekst — przełącznik zapisze POPRZEDNIĄ wersję tekstu. Kontynuować?')) return
+    setToggling(true)
+    setMsg(null)
+    try {
+      const res = await fetch('/api/admin/email-templates', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...active, enabled: !active.enabled }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Błąd zapisu')
+      setMsg({ ok: true, text: data.enabled ? 'Automatyczne maile WŁĄCZONE.' : 'Automatyczne maile WYŁĄCZONE — cron będzie je pomijał.' })
+      load()
+    } catch (e: any) {
+      setMsg({ ok: false, text: e.message || 'Błąd zapisu' })
+    } finally {
+      setToggling(false)
+    }
+  }
 
   const save = async () => {
     if (!draft) return
@@ -155,6 +206,26 @@ export function AdminEmailsClient() {
       {draft && (
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:p-6">
           <p className="text-xs text-white/40 mb-4">{templates.find((t) => t.key === draft.key)?.hint}</p>
+          {draft.auto && (
+            <button
+              onClick={toggleEnabled}
+              disabled={toggling}
+              className={cn(
+                'mb-5 w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 border text-sm font-semibold transition-colors disabled:opacity-50',
+                draft.enabled
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+                  : 'bg-white/[0.03] border-white/[0.1] text-white/50',
+              )}
+            >
+              <span className="flex items-center gap-2.5">
+                <span className={cn('relative h-5 w-9 rounded-full transition-colors', draft.enabled ? 'bg-emerald-500' : 'bg-white/15')}>
+                  <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all', draft.enabled ? 'left-[18px]' : 'left-0.5')} />
+                </span>
+                {toggling ? 'Przełączanie…' : draft.enabled ? 'Auto-wysyłka WŁĄCZONA' : 'Auto-wysyłka WYŁĄCZONA'}
+              </span>
+              <span className="text-xs font-normal opacity-70">cron {draft.enabled ? 'wysyła' : 'pomija'} te maile</span>
+            </button>
+          )}
           {msg && (
             <div className={cn('mb-4 rounded-xl px-4 py-3 text-sm border', msg.ok ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200' : 'bg-red-500/10 border-red-500/25 text-red-200')}>
               {msg.text}
@@ -202,6 +273,27 @@ export function AdminEmailsClient() {
                 <RotateCcw className="w-3.5 h-3.5" /> Cofnij zmiany
               </button>
             )}
+          </div>
+          {/* Podgląd na żywo — render roboczej treści, nic nie wysyła */}
+          <div className="mt-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/45 mb-2">
+              Podgląd na żywo {previewSubject && <span className="normal-case font-normal text-white/35">· temat: {previewSubject}</span>}
+            </p>
+            <div className="rounded-2xl overflow-hidden border border-white/[0.08] bg-[#05060a]">
+              {previewHtml ? (
+                <iframe
+                  title="Podgląd maila"
+                  srcDoc={previewHtml}
+                  className="w-full bg-[#05060a]"
+                  style={{ height: 560, border: 0 }}
+                  sandbox=""
+                />
+              ) : (
+                <div className="flex items-center justify-center py-16 text-sm text-white/30">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Renderowanie podglądu…
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

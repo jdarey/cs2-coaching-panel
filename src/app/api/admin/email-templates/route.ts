@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin'
-import { TEMPLATE_DEFAULTS } from '@/lib/email-templates'
+import { TEMPLATE_DEFAULTS, AUTO_TEMPLATE_KEYS } from '@/lib/email-templates'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +23,8 @@ export async function GET() {
       label: def.label,
       hint: def.hint,
       customized: !!row,
+      enabled: row?.enabled ?? true,
+      auto: AUTO_TEMPLATE_KEYS.includes(key),
       updatedAt: row?.updatedAt ?? null,
       subject: row?.subject ?? def.subject,
       preheader: row?.preheader ?? def.preheader ?? '',
@@ -40,7 +42,7 @@ export async function GET() {
 }
 
 // PUT: zapis szablonu { key, subject, preheader, badge, title, subtitle,
-// bodyHtml, buttonLabel, buttonNote, footerNote }
+// bodyHtml, buttonLabel, buttonNote, footerNote, enabled }
 export async function PUT(request: NextRequest) {
   try {
     await requireAdmin()
@@ -54,6 +56,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Nieznany szablon' }, { status: 400 })
   }
 
+  // enabled tylko dla szablonów automatycznych (cron) — reszta zawsze wysyła
+  const enabled = AUTO_TEMPLATE_KEYS.includes(key) ? body.enabled !== false : true
+
   const str = (v: any) => (typeof v === 'string' ? v.slice(0, 20000) : '')
   const data = {
     subject: str(body.subject) || TEMPLATE_DEFAULTS[key].subject,
@@ -65,6 +70,7 @@ export async function PUT(request: NextRequest) {
     buttonLabel: str(body.buttonLabel),
     buttonNote: str(body.buttonNote),
     footerNote: str(body.footerNote),
+    enabled,
   }
 
   const saved = await prisma.emailTemplate.upsert({
@@ -73,5 +79,5 @@ export async function PUT(request: NextRequest) {
     update: data,
   })
 
-  return NextResponse.json({ ok: true, updatedAt: saved.updatedAt })
+  return NextResponse.json({ ok: true, updatedAt: saved.updatedAt, enabled: saved.enabled })
 }

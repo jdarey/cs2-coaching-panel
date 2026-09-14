@@ -7,8 +7,8 @@ import { infoCard } from '@/lib/email-layout'
 export const dynamic = 'force-dynamic'
 
 // POST { key }: wyślij test szablonu na adres admina (1 mail z limitu).
-// Przykładowe dane, żeby było widać każdą zmienną.
-const SAMPLE_VARS: Record<string, any> = {
+// Przykładowe dane do testu i podglądu (eksportowane dla preview).
+export const SAMPLE_VARS: Record<string, any> = {
   'reset-password': { name: 'Darey', resetUrl: 'https://twoja-strona.pl/reset-password?token=PRZYKLAD' },
   'new-message': {
     senderName: 'Trener',
@@ -52,7 +52,7 @@ const SAMPLE_VARS: Record<string, any> = {
   },
 }
 
-const SAMPLE_BUTTON_URL: Record<string, string> = {
+export const SAMPLE_BUTTON_URL: Record<string, string> = {
   'reset-password': 'https://twoja-strona.pl/reset-password?token=PRZYKLAD',
   'new-message': 'https://twoja-strona.pl/student/messages',
   invite: 'https://twoja-strona.pl/register?invite=PRZYKLAD',

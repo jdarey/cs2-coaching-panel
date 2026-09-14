@@ -776,6 +776,9 @@ model EmailTemplate {
   buttonLabel String?
   buttonNote String?
   footerNote String?
+  // Włącznik auto-wysyłki (cron). false = cron pomija ten typ maila.
+  // Dotyczy tylko szablonów automatycznych (reminder-*).
+  enabled    Boolean  @default(true)
   updatedAt  DateTime @updatedAt
 }
 

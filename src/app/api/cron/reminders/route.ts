@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
-import { renderEmail } from '@/lib/email-templates'
+import { renderEmail, isTemplateEnabled } from '@/lib/email-templates'
 import { infoCard } from '@/lib/email-layout'
 import crypto from 'crypto'
 
@@ -69,11 +69,23 @@ export async function GET(request: NextRequest) {
       overdueNotified: 0,
       dueTomorrowNotified: 0,
       inactiveNotified: 0,
+      skipped: [] as string[],
       errors: [] as string[],
     }
 
+    // Włączniki z panelu admina (/admin/emails) — wyłączony typ jest pomijany.
+    const [overdueOn, dueTomorrowOn, inactiveOn] = await Promise.all([
+      isTemplateEnabled('reminder-overdue'),
+      isTemplateEnabled('reminder-due-tomorrow'),
+      isTemplateEnabled('reminder-inactive'),
+    ])
+    if (!overdueOn) results.skipped.push('reminder-overdue')
+    if (!dueTomorrowOn) results.skipped.push('reminder-due-tomorrow')
+    if (!inactiveOn) results.skipped.push('reminder-inactive')
+
     // Send overdue notifications to coaches
     for (const assignment of overdueAssignments) {
+      if (!overdueOn) break
       try {
         const due = assignment.dueDate?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })
         const studentName = assignment.student.name || assignment.student.email
@@ -107,6 +119,7 @@ export async function GET(request: NextRequest) {
 
     // Send due tomorrow notifications to students
     for (const assignment of dueTomorrow) {
+      if (!dueTomorrowOn) break
       try {
         const studentName = assignment.student.name || 'graczu'
         const { subject, html, text } = await renderEmail(
@@ -135,6 +148,7 @@ export async function GET(request: NextRequest) {
 
     // Send inactivity notifications to coaches
     for (const student of inactiveStudents) {
+      if (!inactiveOn) break
       if (!student.coach) continue
       try {
         const lastActivity = student.videoProgress[0]?.updatedAt
