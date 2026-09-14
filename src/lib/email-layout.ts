@@ -74,6 +74,11 @@ ${preheader ? `<div style="display:none; max-height:0; overflow:hidden; opacity:
   </td></tr>` : ''}
   <tr><td style="background-color:${BG}; border:1px solid ${CARD_EDGE}; border-top:none; border-radius:0 0 20px 20px; padding:22px 32px 26px;">
     <p style="margin:0; font-size:11px; line-height:1.7; color:${FAINT}; text-align:center;">${escapeHtml(footerNote || 'To wiadomość automatyczna z Twojego panelu coachingowego. Jeśli jej nie oczekiwałeś, zignoruj ją.')}</p>
+    <p style="margin:14px 0 0; font-size:13px; text-align:center;">
+      ${socialLink(SITE_URL, '🌐 Strona')}
+      ${YOUTUBE_URL ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span>${socialLink(YOUTUBE_URL, '▶️ YouTube')}` : ''}
+      ${DISCORD_URL ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span>${socialLink(DISCORD_URL, '💬 Discord')}` : ''}
+    </p>
     <p style="margin:10px 0 0; font-size:11px; color:${FAINT}; text-align:center;">Nie odpowiadaj na tę wiadomość — napisz bezpośrednio w panelu. ✨</p>
   </td></tr>
 </table>
@@ -88,6 +93,17 @@ ${preheader ? `<div style="display:none; max-height:0; overflow:hidden; opacity:
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+// Linki do stopki — ze zmiennych środowiskowych, żeby trener podmienił bez
+// grzebania w kodzie. SITE_URL ma sensowny domyślny (strona reklamowa).
+const SITE_URL = process.env.SITE_URL || 'https://dareycs2.vercel.app/'
+const YOUTUBE_URL = process.env.YOUTUBE_URL || ''
+const DISCORD_URL = process.env.DISCORD_URL || ''
+
+function socialLink(url: string, label: string): string {
+  const safe = url.replace(/"/g, '%22')
+  return `<a href="${safe}" style="color:${ACCENT}; font-weight:700; text-decoration:none;">${label}</a>`
 }
 
 export function infoCard(title: string, lines: string[]): string {
