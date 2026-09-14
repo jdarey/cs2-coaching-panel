@@ -23,7 +23,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             </Link>
           </div>
           <AdminNav />
-          <div className="p-3 border-t border-white/[0.06]">
+          <div className="p-3 border-t border-white/[0.06] space-y-2">
+            <Link
+              href="/coach/dashboard"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-white/50 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              ← Wróć do panelu trenera
+            </Link>
             <p className="text-[11px] text-white/35 truncate px-2">{(session?.user as any)?.email}</p>
           </div>
         </aside>

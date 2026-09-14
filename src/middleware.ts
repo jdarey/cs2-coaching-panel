@@ -129,16 +129,11 @@ export async function middleware(request: NextRequest) {
     const role = (token as any).role
     const email = (token as any).email as string | undefined
     const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com'
+    // Admin to konto trenera z dodatkowymi prawami: widzi zwykły panel
+    // trenera, a do /admin przechodzi przyciskiem w menu bocznym.
     const isAdmin = role === 'ADMIN' || (!!email && email.trim().toLowerCase() === adminEmail)
     if (pathname.startsWith('/admin') && !isAdmin) {
       return NextResponse.redirect(new URL(role === 'COACH' ? '/coach/dashboard' : '/student/dashboard', request.url))
-    }
-    // Admin ma własny panel — nie wpuszczamy go do widoków trenera/ucznia
-    // (ich layouty i tak by go odrzuciły, a tak nie ma pętli przekierowań).
-    if (isAdmin && (pathname.startsWith('/coach') || pathname.startsWith('/student'))) {
-      if (!/^\/student\/matches\/[^/]+$/.test(pathname)) {
-        return NextResponse.redirect(new URL('/admin', request.url))
-      }
     }
     if (pathname.startsWith('/coach') && role !== 'COACH' && !isAdmin) {
       return NextResponse.redirect(new URL('/student/dashboard', request.url))

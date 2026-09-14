@@ -11,8 +11,12 @@ import { AuroraBackground } from '@/components/aurora-background'
 import { UnreadBadge } from '@/components/unread-badge'
 import {
   LayoutDashboard, Users, BookOpen, Video, Tag, Settings, LogOut, Menu, X,
-  ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords, Megaphone, GraduationCap, Zap,
+  ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords, Megaphone, GraduationCap, Zap, Crown,
 } from 'lucide-react'
+
+// Email właściciela — to samo co ADMIN_EMAIL na serwerze (lib/admin.ts).
+// NEXT_PUBLIC_*, żeby było widoczne w przeglądarce; fallback hardcoded.
+const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com')
 
 type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback' }
 
@@ -195,6 +199,25 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                   </li>
                 </ul>
               </div>
+              {/* Panel admina — tylko właściciel (ADMIN_EMAIL) */}
+              {(user as any)?.email?.trim().toLowerCase() === ADMIN_EMAIL && (
+                <div className="mb-2">
+                  <p className="px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold">Administracja</p>
+                  <ul className="space-y-0.5">
+                    <li>
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileSidebarOpen(false)}
+                        className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 text-[#c4b5fd] hover:text-white hover:bg-[#a78bfa]/[0.1]"
+                      >
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-[#a78bfa] opacity-60" />
+                        <Crown className="relative w-[18px] h-[18px] shrink-0" strokeWidth={2.1} />
+                        <span className="relative">Panel admina</span>
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </nav>
 
             {/* User card */}
