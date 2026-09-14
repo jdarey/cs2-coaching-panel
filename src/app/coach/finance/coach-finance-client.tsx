@@ -20,6 +20,29 @@ const pln = (grosze: number) =>
 
 const toMonth = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 
+// Format DD-MM-RRRR: maska (same cyfry + myślniki) i walidacja prawdziwej daty
+const toDisplayDate = (d: Date) =>
+  `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`
+
+function maskDateInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 8)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 4) return `${digits.slice(0, 2)}-${digits.slice(2)}`
+  return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`
+}
+
+function parseDisplayDate(s: string): string | null {
+  const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+  if (!m) return null
+  const dd = Number(m[1])
+  const mm = Number(m[2])
+  const yyyy = Number(m[3])
+  if (yyyy < 2000 || yyyy > 2100 || mm < 1 || mm > 12 || dd < 1 || dd > 31) return null
+  const d = new Date(yyyy, mm - 1, dd)
+  if (d.getFullYear() !== yyyy || d.getMonth() !== mm - 1 || d.getDate() !== dd) return null
+  return `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`
+}
+
 export function CoachFinanceClient() {
   const [month, setMonth] = useState(() => toMonth(new Date()))
   const [entries, setEntries] = useState<Entry[]>([])
@@ -31,7 +54,7 @@ export function CoachFinanceClient() {
   const [person, setPerson] = useState('')
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(() => toDisplayDate(new Date()))
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -58,8 +81,13 @@ export function CoachFinanceClient() {
 
   const add = async () => {
     const plnValue = Number(String(amount).replace(',', '.'))
+    const isoDate = parseDisplayDate(date)
     if (!person.trim() || !title.trim() || !(plnValue > 0)) {
       setMsg({ ok: false, text: 'Uzupełnij: kto, za co i kwotę większą od zera.' })
+      return
+    }
+    if (!isoDate) {
+      setMsg({ ok: false, text: 'Zła data — wpisz w formacie DZIEŃ-MIESIĄC-ROK, np. 14-09-2026.' })
       return
     }
     setSaving(true)
@@ -68,7 +96,7 @@ export function CoachFinanceClient() {
       const res = await fetch('/api/coach/finance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind, person: person.trim(), title: title.trim(), amountPln: plnValue, date, note: note.trim() || null }),
+        body: JSON.stringify({ kind, person: person.trim(), title: title.trim(), amountPln: plnValue, date: isoDate, note: note.trim() || null }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Błąd zapisu')
@@ -165,7 +193,7 @@ export function CoachFinanceClient() {
             <input value={person} onChange={(e) => setPerson(e.target.value)} placeholder={kind === 'INCOME' ? 'Od kogo? (np. uczeń, nick)' : 'Komu? (np. montażysta)'} className="h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30" />
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Za co? (np. pakiet 4 sesje)" className="h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30" />
             <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="Kwota w zł (np. 149,99)" className="h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30 tabular-nums" />
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 [color-scheme:dark]" />
+            <input value={date} onChange={(e) => setDate(maskDateInput(e.target.value))} inputMode="numeric" placeholder="DD-MM-RRRR (np. 14-09-2026)" maxLength={10} className="h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30 tabular-nums" />
           </div>
           <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Notatka (opcjonalnie, np. forma płatności)" className="mt-3 w-full h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30" />
           <button
