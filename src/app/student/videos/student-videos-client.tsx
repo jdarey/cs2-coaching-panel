@@ -382,7 +382,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
               return (
                 <div
                   key={`${item.sessionId}-${video.id}`}
-                  className="glass-liquid rise-in rounded-3xl relative overflow-hidden group hover:border-[#a78bfa]/30 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_56px_-20px_rgba(139,92,246,0.35)]" style={{
+                  className="glass-liquid rise-in rounded-3xl relative overflow-hidden group hover:border-[#a78bfa]/50 transition-all duration-500 hover:shadow-[0_0_0_1px_rgba(167,139,250,0.35),0_18px_60px_-20px_rgba(139,92,246,0.5)]" style={{
                     animationDelay: `${Math.min(idx * 60, 600)}ms`,
                   }}
                 >
@@ -395,7 +395,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         loading="lazy"
-                        className="object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+                        className="object-cover transition-[filter] duration-500 group-hover:brightness-110 group-hover:saturate-[1.15]"
                       />
                     ) : (
                       <div className="w-full h-full grid place-items-center bg-gradient-to-br from-[#0c0f1a] to-[#070810]">
@@ -403,9 +403,18 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       </div>
                     )}
 
+                    {/* Smuga światła przejeżdżająca po miniaturce */}
                     <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                      style={{ background: 'linear-gradient(180deg, rgba(45,229,202,0.40) 0%, rgba(6,7,13,0) 60%)' }}
+                      className="absolute inset-0 -translate-x-[110%] group-hover:translate-x-[110%] transition-transform duration-1000 ease-out pointer-events-none"
+                      style={{ background: 'linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.28) 50%, transparent 58%)' }}
+                      aria-hidden
+                    />
+
+                    {/* Przyciemnienie dołu (zawsze, dla czytelności) + mocniejsze na hover */}
+                    <div
+                      className="absolute inset-x-0 bottom-0 h-2/3 opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, rgba(6,7,13,0) 0%, rgba(6,7,13,0.55) 55%, rgba(76,29,149,0.55) 100%)' }}
+                      aria-hidden
                     />
 
                     {/* Status badge pill — top-left */}
@@ -432,15 +441,15 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       </span>
                     </div>
 
-                    {/* Play overlay (center) */}
+                    {/* Pasek „Oglądaj" wysuwany z dołu miniaturki */}
                     {embedUrl && (
                       <Link
                         href={`/student/videos/${video.id}`}
-                        className="absolute inset-0 grid place-items-center"
+                        className="absolute inset-x-0 bottom-0 z-10 flex justify-center pb-3 pt-8"
                         aria-label={`Odtwórz: ${video.title}`}
                       >
-                        <span className="grid place-items-center h-14 w-14 rounded-full bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500">
-                          <Play className="h-6 w-6 text-white translate-x-0.5" fill="currentColor" />
+                        <span className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest text-white bg-[#a78bfa]/90 backdrop-blur-md ring-1 ring-white/40 shadow-[0_8px_28px_-6px_rgba(139,92,246,0.8)] translate-y-[200%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
+                          <Play className="h-3.5 w-3.5" fill="currentColor" /> Oglądaj
                         </span>
                       </Link>
                     )}
@@ -448,8 +457,8 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
 
                   {/* ===== Body ===== */}
                   <div className="p-4">
-                    {/* Title — turns violet on hover, clamps to 2 lines */}
-                    <h3 className="font-display text-lg font-bold leading-snug text-white transition-colors duration-300 group-hover:text-[#c4b5fd] line-clamp-2">
+                    {/* Title — fioletowe podkreślenie rysuje się na hover, 2 linie */}
+                    <h3 className="font-display text-lg font-bold leading-snug text-white line-clamp-2 w-fit max-w-full bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6] bg-no-repeat bg-left-bottom bg-[length:0%_2px] group-hover:bg-[length:100%_2px] transition-[background-size] duration-500 pb-0.5">
                       {video.title}
                     </h3>
 

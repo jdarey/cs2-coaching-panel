@@ -10,6 +10,7 @@ datasource db {
 enum Role {
   COACH
   STUDENT
+  ADMIN
 }
 
 enum SessionStatus {
@@ -761,6 +762,21 @@ model DayNote {
   @@unique([studentId, date])
   @@index([studentId])
   @@index([date])
+}
+
+// Edytowalne treści maili (panel admina). Brak wiersza = domyślny tekst z kodu.
+model EmailTemplate {
+  key        String   @id // np. reset-password, new-message, invite, remind, ...
+  subject    String
+  preheader  String?
+  badge      String?
+  title      String
+  subtitle   String?
+  bodyHtml   String   // HTML; zmienne {{nazwa}} podmieniane przy wysyłce
+  buttonLabel String?
+  buttonNote String?
+  footerNote String?
+  updatedAt  DateTime @updatedAt
 }
 
 // Coach-specific settings (fully customizable)

@@ -115,7 +115,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected routes
-  const protectedPaths = ['/coach', '/student']
+  const protectedPaths = ['/coach', '/student', '/admin']
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path))
 
   if (isProtected && !token) {
@@ -127,10 +127,23 @@ export async function middleware(request: NextRequest) {
   // Role-based access
   if (token && isProtected) {
     const role = (token as any).role
-    if (pathname.startsWith('/coach') && role !== 'COACH') {
+    const email = (token as any).email as string | undefined
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com'
+    const isAdmin = role === 'ADMIN' || (!!email && email.trim().toLowerCase() === adminEmail)
+    if (pathname.startsWith('/admin') && !isAdmin) {
+      return NextResponse.redirect(new URL(role === 'COACH' ? '/coach/dashboard' : '/student/dashboard', request.url))
+    }
+    // Admin ma własny panel — nie wpuszczamy go do widoków trenera/ucznia
+    // (ich layouty i tak by go odrzuciły, a tak nie ma pętli przekierowań).
+    if (isAdmin && (pathname.startsWith('/coach') || pathname.startsWith('/student'))) {
+      if (!/^\/student\/matches\/[^/]+$/.test(pathname)) {
+        return NextResponse.redirect(new URL('/admin', request.url))
+      }
+    }
+    if (pathname.startsWith('/coach') && role !== 'COACH' && !isAdmin) {
       return NextResponse.redirect(new URL('/student/dashboard', request.url))
     }
-    if (pathname.startsWith('/student') && role !== 'STUDENT') {
+    if (pathname.startsWith('/student') && role !== 'STUDENT' && !isAdmin) {
       // Coaches may open a student's match detail page to leave a demo
       // review (timestamped notes + verdict) — everything else under
       // /student is student-only.
@@ -144,6 +157,7 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users from auth pages
   if ((pathname === '/login' || pathname === '/register') && token) {
     const role = (token as any).role
+    if (role === 'ADMIN') return NextResponse.redirect(new URL('/admin', request.url))
     return NextResponse.redirect(new URL(role === 'COACH' ? '/coach/dashboard' : '/student/dashboard', request.url))
   }
 

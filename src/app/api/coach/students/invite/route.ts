@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
-import { emailLayout, infoCard } from '@/lib/email-layout'
+import { renderEmail } from '@/lib/email-templates'
+import { infoCard } from '@/lib/email-layout'
 import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
@@ -68,26 +69,18 @@ export async function POST(request: NextRequest) {
     const inviteUrl = `${process.env.NEXTAUTH_URL}/register?invite=${token}`
     const coachName = (session.user as any).name || 'Twój trener'
 
-    const { html } = emailLayout({
-      preheader: `Kupiłeś coaching u ${coachName} — oto Twój dostęp do platformy`,
-      badge: 'Twój dostęp',
-      title: `Dzięki za zakup coachingu! Oto Twój dostęp`,
-      subtitle: `Kupiłeś coaching u trenera ${coachName}. Ten link to Twoje wejście na platformę — załóż konto i zacznij trenować już dziś.`,
-      bodyHtml: `
-        <p style="margin:0;">Cześć! Trener <strong style="color:#f4f6f7;">${coachName}</strong> aktywował Ci dostęp do platformy CS2 Coaching. W środku czeka Twój wykupiony program:</p>
-        ${infoCard('Twój pakiet', ['Biblioteka filmów treningowych', 'Sesje 1:1 z trenerem i demo-review', 'Zadania i rutyny z kalendarzem', 'Śledzenie Faceit ELO na żywo', 'Bezpośredni kontakt z trenerem'])}
-        <p style="margin:0;">Założenie konta zajmie Ci mniej niż minutę. Do zobaczenia na serwerze!</p>`,
-      button: { label: 'Aktywuj dostęp →', url: inviteUrl },
-      buttonNote: 'Link wygasa za 7 dni.',
-    })
-    const text = `Dzięki za zakup coachingu u ${coachName}!\n\nOto Twój dostęp do platformy CS2 Coaching: filmy treningowe, sesje z trenerem, zadania, śledzenie Faceit ELO.\n\nAktywuj dostęp: ${inviteUrl}\n\nLink wygasa za 7 dni.`
+    // Treść z szablonu (edytowalna w /admin/emails, klucz invite)
+    const { subject, html, text } = await renderEmail(
+      'invite',
+      {
+        coachName,
+        inviteUrl,
+        packageHtml: infoCard('Twój pakiet', ['Biblioteka filmów treningowych', 'Sesje 1:1 z trenerem i demo-review', 'Zadania i rutyny z kalendarzem', 'Śledzenie Faceit ELO na żywo', 'Bezpośredni kontakt z trenerem']),
+      },
+      { buttonUrl: inviteUrl, safeKeys: ['packageHtml'] },
+    )
 
-    const emailResult = await sendEmail({
-      to: email,
-      subject: `Zaproszenie do panelu CS2 Coaching od ${coachName}`,
-      html,
-      text,
-    })
+    const emailResult = await sendEmail({ to: email, subject, html, text })
 
     // Zawsze zwracaj link — bez zweryfikowanej domeny Resend wysyła tylko na
     // własne konto, więc trener wyśle link ręcznie (Discord/SMS). Link działa

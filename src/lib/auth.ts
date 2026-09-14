@@ -58,11 +58,21 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials')
         }
 
+        // Jedyny admin: właścicielski email zawsze dostaje rolę ADMIN
+        // (nadawana przy logowaniu, więc nie trzeba grzebać w bazie).
+        let role = user.role
+        if (user.email.trim().toLowerCase() === (process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com')) {
+          role = 'ADMIN' as any
+          if (user.role !== 'ADMIN') {
+            await prisma.user.update({ where: { id: user.id }, data: { role: 'ADMIN' as any } }).catch(() => {})
+          }
+        }
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role,
           avatarUrl: user.avatarUrl,
           remember: (credentials as any).remember !== 'false',
         } as any

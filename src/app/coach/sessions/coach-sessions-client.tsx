@@ -352,7 +352,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
                         <span className="h-1 w-1 rounded-full bg-[#8b5cf6]" />
                         Sesja
                       </div>
-                      <h3 className="font-display text-lg font-bold leading-snug text-white/90 transition-colors duration-300 group-hover:text-gradient-violet group-hover:text-transparent">
+                      <h3 className="font-display text-lg font-bold leading-snug text-white/90 group-hover:text-gradient-violet">
                         {session.title}
                       </h3>
                     </div>

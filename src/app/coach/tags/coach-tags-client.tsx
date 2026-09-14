@@ -309,7 +309,7 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     </div>
                   </div>
 
-                  <h3 className="font-display text-lg font-bold text-white/90 group-hover:text-gradient-violet transition-colors line-clamp-1">
+                  <h3 className="font-display text-lg font-bold text-white/90 group-hover:text-gradient-violet line-clamp-1">
                     {tag.name}
                   </h3>
 

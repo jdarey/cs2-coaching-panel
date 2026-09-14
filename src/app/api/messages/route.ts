@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
-import { emailLayout } from '@/lib/email-layout'
+import { renderEmail } from '@/lib/email-templates'
 import { sendDiscordNotification } from '@/lib/discord'
 import { publishToUsers } from '@/lib/realtime'
 
@@ -181,20 +181,19 @@ export async function POST(request: NextRequest) {
         const link = user.role === 'COACH' ? `${baseUrl}/student/messages` : `${baseUrl}/coach/messages`
 
         const safeContent = message.content.replace(/</g, '&lt;').replace(/\n/g, '<br/>')
-        const { html: msgHtml } = emailLayout({
-          preheader: `${senderName}: ${message.content.slice(0, 80)}`,
-          badge: 'Nowa wiadomość',
-          title: `${senderName} napisał do Ciebie`,
-          subtitle: 'Nie przegap — szybka odpowiedź trzyma trening w rytmie.',
-          bodyHtml: `<div style="margin:0; padding:16px 18px; border-radius:14px; background:#14161c; border:1px solid rgba(255,255,255,0.08); border-left:3px solid #a78bfa; line-height:1.7;">${safeContent}</div>`,
-          button: { label: 'Odpisz w czacie →', url: link },
-        })
-        await sendEmail({
-          to: receiver.email,
-          subject: `${senderName}: ${message.content.slice(0, 60)}${message.content.length > 60 ? '…' : ''}`,
-          html: msgHtml,
-          text: `Nowa wiadomość od ${senderName} — CS2 Coaching\n\n${message.content}\n\nOtwórz czat: ${link}`,
-        })
+        // Treść z szablonu (edytowalna w /admin/emails, klucz new-message)
+        const snippet = `${message.content.slice(0, 60)}${message.content.length > 60 ? '…' : ''}`
+        const { subject, html: msgHtml, text } = await renderEmail(
+          'new-message',
+          {
+            senderName,
+            snippet,
+            chatUrl: link,
+            messageHtml: `<div style="margin:0; padding:16px 18px; border-radius:14px; background:#14161c; border:1px solid rgba(255,255,255,0.08); border-left:3px solid #a78bfa; line-height:1.7;">${safeContent}</div>`,
+          },
+          { buttonUrl: link, safeKeys: ['messageHtml'] },
+        )
+        await sendEmail({ to: receiver.email, subject, html: msgHtml, text })
       }
 
       // Discord: notify the coach when a student writes. When a student sends,

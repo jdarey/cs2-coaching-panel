@@ -411,7 +411,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                       </div>
                     </div>
 
-                    <h3 className="font-display text-lg font-bold leading-snug text-white/90 group-hover:text-gradient-violet transition-colors">
+                    <h3 className="font-display text-lg font-bold leading-snug text-white/90 group-hover:text-gradient-violet">
                       {r.title}
                     </h3>
                       {r.description && <p className="mt-1.5 text-sm text-white/45 line-clamp-2">{r.description}</p>}

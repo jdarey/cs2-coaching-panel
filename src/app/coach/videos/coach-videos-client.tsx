@@ -664,7 +664,7 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
 
                   <div className="flex flex-1 flex-col p-5 pt-3">
                     <Link href={`/coach/videos/${video.id}`} className="block">
-                      <h3 className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 transition-all duration-300 group-hover:text-gradient-violet">
+                      <h3 className="font-display text-lg font-bold leading-snug line-clamp-2 text-white/90 group-hover:text-gradient-violet">
                         {video.title}
                       </h3>
                     </Link>
