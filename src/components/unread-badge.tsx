@@ -5,9 +5,39 @@ import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useRealtime } from '@/hooks/use-realtime'
 
+type UnreadData = { messages: number; feedback: number }
+
+// Współdzielony cache: w menu siedzą 2 instancje badge'a (Wiadomości + Opinia)
+// i obie pytają TEN SAM endpoint. Cache 45s = 1 request zamiast 2 przy każdym
+// ticku, a liczniki zawsze świeże. Zero różnicy w UX.
+let cachedAt = 0
+let cachedData: UnreadData | null = null
+let inflight: Promise<UnreadData | null> | null = null
+
+function fetchUnreadShared(): Promise<UnreadData | null> {
+  if (cachedData && Date.now() - cachedAt < 45_000) return Promise.resolve(cachedData)
+  if (!inflight) {
+    inflight = fetch('/api/messages/unread', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          cachedData = data
+          cachedAt = Date.now()
+        }
+        return data
+      })
+      .catch(() => null)
+      .finally(() => {
+        inflight = null
+      })
+  }
+  return inflight
+}
+
 /** Unread badge for nav items. Picks up new events instantly via SSE,
- *  refreshes on window focus and on navigation, and polls every 15s as a
- *  fallback (only while the tab is visible). */
+ *  refreshes on window focus and on navigation, and polls every 5 min as a
+ *  fallback (only while the tab is visible). 15s -> 5 min = 20x mniej
+ *  requestów do /api/messages/unread (5760 -> ~300/dzień/zakładka). */
 export function UnreadBadge({ kind }: { kind: 'messages' | 'feedback' }) {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -16,9 +46,8 @@ export function UnreadBadge({ kind }: { kind: 'messages' | 'feedback' }) {
 
   const load = async () => {
     try {
-      const res = await fetch('/api/messages/unread', { cache: 'no-store' })
-      if (!res.ok) return
-      const data = await res.json()
+      const data = await fetchUnreadShared()
+      if (!data) return
       setCount(kind === 'messages' ? (data.messages ?? 0) : (data.feedback ?? 0))
     } catch {
       /* ignore */
@@ -40,7 +69,7 @@ export function UnreadBadge({ kind }: { kind: 'messages' | 'feedback' }) {
     load()
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') load()
-    }, 15000)
+    }, 300000)
     const onFocus = () => load()
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onFocus)

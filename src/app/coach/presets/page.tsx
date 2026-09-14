@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachPresetsClient } from './coach-presets-client'
 
+export const metadata = {
+  title: 'Presety',
+}
+
 export default async function CoachPresetsPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user || (session.user as any).role !== 'COACH') redirect('/login')

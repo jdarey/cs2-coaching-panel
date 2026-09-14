@@ -184,13 +184,16 @@ export function CoachStudentDetailClient({
         .catch(() => {})
     }
     fetchLiveElo()
-    const id2 = setInterval(fetchLiveElo, 30_000)
+    // ELO: co 15 min jak reszta apki (wcześniej 30s).
+    const id2 = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchLiveElo()
+    }, 900_000)
     return () => clearInterval(id2)
   }, [student.id])
 
-  // Online presence (heartbeat updates lastActiveAt every 60s)
+  // Online presence (heartbeat updates lastActiveAt every 180s)
   const [now, setNow] = useState(() => Date.now())
-  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id) }, [])
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 60_000); return () => clearInterval(id) }, [])
   const isOnline = !!student.lastActiveAt && now - new Date(student.lastActiveAt).getTime() < 5 * 60 * 1000
   const formatLastSeen = () => {
     if (!student.lastActiveAt) return 'nigdy'

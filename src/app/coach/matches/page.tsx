@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { CoachMatchesClient } from './coach-matches-client'
 
+export const metadata = {
+  title: 'Mecze',
+}
+
 export default async function CoachMatchesPage() {
   const session = await getServerSession(authOptions)
 

@@ -153,6 +153,13 @@ export function StudentRankClient() {
     load()
   }, [load])
 
+  // Auto-zapis z wykresu (live Faceit): odśwież listę bez przeładowania strony
+  useEffect(() => {
+    const onUpdate = () => load()
+    window.addEventListener('ranks:updated', onUpdate)
+    return () => window.removeEventListener('ranks:updated', onUpdate)
+  }, [load])
+
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-24 flex items-center justify-center text-white/40">

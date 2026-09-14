@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachDemoReviewClient } from './coach-demo-review-client'
 
+export const metadata = {
+  title: 'Analiza dema',
+}
+
 export default async function CoachDemoReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
 

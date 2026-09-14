@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { CoachMessagesClient } from './coach-messages-client'
 
+export const metadata = {
+  title: 'Wiadomości',
+}
+
 export default async function CoachMessagesPage() {
   const session = await getServerSession(authOptions)
 

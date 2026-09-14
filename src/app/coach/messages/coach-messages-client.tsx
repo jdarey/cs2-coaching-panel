@@ -70,13 +70,16 @@ export function CoachMessagesClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId])
 
-  // Poll for new messages every 5s while a thread is open, 15s otherwise.
+  // Poll dla nowych wiadomości: SSE dostarcza natychmiast, więc polling to
+  // tylko fallback — co 5 min + tylko widoczna karta.
+  // Wcześniej 5s/15s = ~17k req/dzień; teraz ~600/dzień (Vercel + Neon).
   useEffect(() => {
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(() => {
+      if (document.visibilityState !== 'visible') return
       if (activeId) loadThread(activeId)
       loadConversations()
-    }, activeId ? 5000 : 15000)
+    }, 300_000)
     return () => {
       if (pollRef.current) clearInterval(pollRef.current)
     }

@@ -5,6 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { fetchBestFaceitElo, resolveStudentSteamId } from '@/lib/gaming'
 import { CoachStudentDetailClient } from './coach-student-detail-client'
 
+export const metadata = {
+  title: 'Profil ucznia',
+}
+
 export default async function CoachStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
 

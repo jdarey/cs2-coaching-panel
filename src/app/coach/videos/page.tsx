@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachVideosClient } from './coach-videos-client'
 
+export const metadata = {
+  title: 'Filmy',
+}
+
 export default async function CoachVideosPage() {
   const session = await getServerSession(authOptions)
 

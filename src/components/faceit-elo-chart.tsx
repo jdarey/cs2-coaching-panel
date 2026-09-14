@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { TrendingUp, Loader2, ExternalLink, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -50,33 +50,111 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
 }) {
   const [entries, setEntries] = useState<RankEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [liveElo, setLiveElo] = useState<number | null>(null)
+  const [liveLevel, setLiveLevel] = useState<number | null>(null)
+  // nick cache'owany raz (prop albo profil) — live ELO nie wymaga klikania
+  const nicknameRef = useRef<string | null>(faceitNickname ?? null)
+  // guard przed podwójnym auto-zapisem (np. 2 zakładki naraz)
+  const lastAutoSaveAt = useRef<number>(0)
+
+  // Dopisz punkt trajektorii do bazy max. 1x na 6h i tylko gdy ELO się zmieniło.
+  // Dzięki temu historia buduje się SAMA z Faceit — bez crona i bez przycisku.
+  const maybeAutoSave = useCallback(async (elo: number, level: number | null, history: RankEntry[]) => {
+    if (Date.now() - lastAutoSaveAt.current < 6 * 3600_000) return
+    const last = history.length ? history[history.length - 1] : null
+    const lastTime = last ? new Date(last.recordedAt).getTime() : 0
+    if (last && last.elo === elo) return
+    if (last && Date.now() - lastTime < 6 * 3600_000) return
+    lastAutoSaveAt.current = Date.now()
+    try {
+      const body: any = {
+        mode: 'FACEIT',
+        rank: `${elo} ELO`,
+        elo,
+        source: 'FACEIT_LIVE',
+        note: 'Auto (Faceit na żywo)',
+      }
+      if (studentId) body.studentId = studentId
+      const res = await fetch('/api/ranks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        const entry = await res.json()
+        setEntries((prev) => [...prev, entry].sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()))
+        // daj znać reszcie strony (np. lista wpisów na /student/rank)
+        window.dispatchEvent(new CustomEvent('ranks:updated'))
+      }
+    } catch {
+      /* best-effort — wykres i tak pokaże live */
+    }
+  }, [studentId])
 
   useEffect(() => {
+    let cancelled = false
     const fetchRanks = () => {
+      if (document.visibilityState === 'hidden') return
       const url = studentId ? `/api/ranks?studentId=${studentId}` : '/api/ranks'
       fetch(url)
         .then(r => r.ok ? r.json() : [])
         .then((data: RankEntry[]) => {
+          if (cancelled) return
           const faceitOnly = (Array.isArray(data) ? data : []).filter(e => e.mode === 'FACEIT' && e.elo != null)
-          setEntries(faceitOnly.sort((a,b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()))
+          const sorted = faceitOnly.sort((a,b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+          setEntries(sorted)
+          // live ELO dopiero gdy znamy historię (do porównania przy auto-zapisie)
+          fetchLive(sorted)
         })
         .catch(() => {})
-        .finally(() => setLoading(false))
+        .finally(() => { if (!cancelled) setLoading(false) })
+    }
+    // Live ELO z Faceit (keyless, 1 request): bieżąca wartość + auto-punkt trajektorii
+    const fetchLive = async (history: RankEntry[]) => {
+      try {
+        let nick = nicknameRef.current
+        if (!nick && !studentId) {
+          const p = await fetch('/api/user/profile').then(r => r.ok ? r.json() : null).catch(() => null)
+          nick = p?.faceitNickname ?? null
+          nicknameRef.current = nick
+        }
+        if (!nick || cancelled) return
+        const r = await fetch(`/api/integrations/faceit?nickname=${encodeURIComponent(nick)}`, { cache: 'no-store' })
+        if (!r.ok || cancelled) return
+        const data = await r.json()
+        if (typeof data?.elo === 'number' && !cancelled) {
+          setLiveElo(data.elo)
+          const lvl = typeof data?.skillLevel === 'number' ? data.skillLevel : levelFromElo(data.elo)
+          setLiveLevel(lvl)
+          maybeAutoSave(data.elo, lvl, history)
+        }
+      } catch {
+        /* Faceit limit/404 — wykres żyje z historii DB */
+      }
     }
     fetchRanks()
-    const id = setInterval(fetchRanks, 30_000)
-    return () => clearInterval(id)
-  }, [studentId])
+    // Wykres ELO: odświeżanie co 15 min + na focus (historia + 1x live Faceit).
+    // Live ELO ląduje w DB max. 1x na 6h, więc trajektoria rośnie sama.
+    const id = setInterval(fetchRanks, 900_000)
+    const onFocus = () => fetchRanks()
+    window.addEventListener('focus', onFocus)
+    return () => { cancelled = true; clearInterval(id); window.removeEventListener('focus', onFocus) }
+  }, [studentId, maybeAutoSave])
 
-  const currentElo = faceitElo ?? (entries.length ? entries[entries.length - 1].elo : null)
-  const currentLevel = faceitLevel ?? levelFromElo(currentElo) ?? (entries.length ? levelFromElo(entries[entries.length - 1].elo) : null)
+  // Bieżące ELO: live z Faceit > prop > ostatni wpis historii.
+  const currentElo = liveElo ?? faceitElo ?? (entries.length ? entries[entries.length - 1].elo : null)
+  const currentLevel = liveLevel ?? faceitLevel ?? levelFromElo(currentElo) ?? (entries.length ? levelFromElo(entries[entries.length - 1].elo) : null)
   const prevElo = entries.length >= 2 ? entries[entries.length - 2].elo : null
   const delta = currentElo != null && prevElo != null ? currentElo - prevElo : null
+  // Trajektoria kończy się ZAWSZE na live ELO (punkt podglądowy, jeszcze niezapisany).
+  const chartEntries: RankEntry[] = liveElo != null && (entries.length === 0 || entries[entries.length - 1].elo !== liveElo)
+    ? [...entries, { id: 'live', mode: 'FACEIT', rank: `${liveElo} ELO`, elo: liveElo, source: 'FACEIT_LIVE', recordedAt: new Date().toISOString() }]
+    : entries
 
   // Fallback to widget iframe if we have nickname but no history yet — widget shows live stats without needing history
   const widgetUrl = faceitNickname ? `https://widget.mxgic1337.xyz/widget?username=${encodeURIComponent(faceitNickname)}&stats=1&history=1&lang=pl` : null
 
-  if (!faceitNickname && entries.length === 0 && !loading) {
+  if (!faceitNickname && nicknameRef.current == null && entries.length === 0 && liveElo == null && !loading) {
     return (
       <div className="glass-card rounded-3xl p-6 text-center">
         <Trophy className="w-8 h-8 text-white/20 mx-auto mb-2" />
@@ -138,15 +216,15 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
         </div>
       </div>
 
-      {/* Wykres - jak w pkawai/mxgic */}
+      {/* Wykres - jak w pkawai/mxgic, ostatni słupek to zawsze live ELO z Faceit */}
       {loading ? (
         <div className="h-32 flex items-center justify-center text-white/30"><Loader2 className="w-5 h-5 animate-spin mr-2" />Ładowanie…</div>
-      ) : entries.length >= 2 ? (
+      ) : chartEntries.length >= 2 ? (
         <div className="mb-4">
-          <p className="text-[11px] uppercase tracking-widest text-white/30 font-semibold mb-2">Trend ELO — ostatnie {Math.min(entries.length, 12)} wpisów</p>
+          <p className="text-[11px] uppercase tracking-widest text-white/30 font-semibold mb-2">Trend ELO — ostatnie {Math.min(chartEntries.length, 12)} wpisów{liveElo != null ? ' · ostatni słupek to live' : ''}</p>
           <div className="h-28 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-3 flex items-end gap-1 overflow-hidden">
             {(() => {
-              const slice = entries.slice(-12)
+              const slice = chartEntries.slice(-12)
               const min = Math.min(...slice.map(e => e.elo!))
               const max = Math.max(...slice.map(e => e.elo!))
               const range = Math.max(1, max - min)
@@ -158,11 +236,12 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
                 const col = lvl ? FACEIT_LEVEL_COLORS[lvl] : '#ff5500'
                 const isMax = e.elo === maxVal
                 const isMin = e.elo === minVal
+                const isLive = e.id === 'live'
                 return (
                   <div key={e.id} className="flex-1 flex flex-col items-center gap-1 group/bar">
-                    <span className="text-[8px] text-white/0 group-hover/bar:text-white/60 transition-colors truncate max-w-full">{e.elo}</span>
-                    <div className="w-full rounded-t-md transition-all duration-500 relative" style={{ height: `${h}%`, minHeight: 8, background: `linear-gradient(to top, ${col}dd, ${col})`, boxShadow: isMax ? `0 0 8px ${col}66` : undefined, opacity: isMin ? 0.7 : 1 }} />
-                    <span className="text-[7px] text-white/20">{new Date(e.recordedAt).toLocaleDateString('pl-PL', { month: '2-digit', day: '2-digit', timeZone: 'Europe/Warsaw' })}</span>
+                    <span className="text-[8px] text-white/0 group-hover/bar:text-white/60 transition-colors truncate max-w-full">{e.elo}{isLive ? ' •' : ''}</span>
+                    <div className="w-full rounded-t-md transition-all duration-500 relative" style={{ height: `${h}%`, minHeight: 8, background: `linear-gradient(to top, ${col}dd, ${col})`, boxShadow: isMax ? `0 0 8px ${col}66` : undefined, opacity: isLive ? 1 : isMin ? 0.7 : 1, outline: isLive ? `1px dashed ${col}` : undefined }} />
+                    <span className="text-[7px] text-white/20">{isLive ? 'live' : new Date(e.recordedAt).toLocaleDateString('pl-PL', { month: '2-digit', day: '2-digit', timeZone: 'Europe/Warsaw' })}</span>
                   </div>
                 )
               })
@@ -170,9 +249,9 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
           </div>
           <p className="text-[10px] text-white/25 mt-1 text-center">Najedź na słupek aby zobaczyć ELO · kolor = poziom Faceit</p>
         </div>
-      ) : entries.length === 1 ? (
+      ) : chartEntries.length === 1 ? (
         <div className="mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-3 text-center">
-          <p className="text-xs text-amber-200">Jeden wpis — zagraj i zapisz kolejny aby zobaczyć trend</p>
+          <p className="text-xs text-amber-200">Pierwszy odczyt ELO ({chartEntries[0].elo}) — trajektoria urośnie sama, max. 1 wpis na 6h</p>
         </div>
       ) : (
         <div className="mb-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-4 text-center">

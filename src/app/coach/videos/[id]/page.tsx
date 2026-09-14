@@ -5,6 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { getYouTubeId, getVideoEmbedUrl } from '@/lib/utils'
 import { CoachVideoPlayerClient } from './coach-video-player-client'
 
+export const metadata = {
+  title: 'Podgląd filmu',
+}
+
 export default async function CoachVideoPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user || (session.user as any).role !== 'COACH') redirect('/login')

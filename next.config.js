@@ -5,7 +5,8 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // tree-shake cięższych paczek: mniej JS w _next/static = mniej Vercel bandwidth
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', 'date-fns', '@tanstack/react-table'],
   },
   images: {
     remotePatterns: [
@@ -47,10 +48,13 @@ const nextConfig = {
       },
     ],
     formats: ['image/avif', 'image/webp'],
+    // Dłuższy cache zoptymalizowanych obrazów = mniej Vercel Image Optimization hits (limit free).
+    minimumCacheTTL: 86400,
   },
   async headers() {
     return [
       {
+        // DNS-prefetch dla YouTube (player ładuje się szybciej, mniej TTFB).
         source: '/:path*',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },

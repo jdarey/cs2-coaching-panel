@@ -60,11 +60,13 @@ export function StudentMessagesClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coach?.id])
 
-  // Poll for new messages every 5s
+  // Poll dla nowych wiadomości co 5 min (fallback dla SSE, które daje instant).
+  // Wcześniej 5s = 17280 req/dzień; teraz ~600/dzień + pauza w ukrytej karcie.
   useEffect(() => {
     const interval = setInterval(() => {
+      if (document.visibilityState !== 'visible') return
       if (coach) loadThread()
-    }, 5000)
+    }, 300_000)
     return () => clearInterval(interval)
   }, [coach, loadThread])
 

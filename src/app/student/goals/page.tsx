@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { StudentGoalsClient } from './student-goals-client'
 
+export const metadata = {
+  title: 'Moje cele',
+}
+
 export default async function StudentGoalsPage() {
   const session = await getServerSession(authOptions)
 

@@ -1,6 +1,8 @@
 // Czysty modul liczenia czasu filmu - napisany od zera
-// YouTube BEZ KLUCZA: multi-Piped (8 instancji) -> multi-Invidious (4) -> Innertube 3 klienty (WEB/ANDROID/IOS)
-// Data API tylko jeśli YOUTUBE_API_KEY ustawiony. Omija blokady IP Vercel - Piped/Invidious proxy'ują YouTube.
+// YouTube BEZ KLUCZA: Piped (2 instancje) -> Invidious (1) -> Innertube WEB (1)
+// Kolejno z early-exit, NIE równolegle wszystko naraz. Wcześniej fan-out do 9
+// outbound/1 film (30 filmów w cron = 270 req); teraz max 4, zwykle 1-2.
+// Data API tylko jeśli YOUTUBE_API_KEY ustawiony.
 // Vimeo: oEmbed -> null
 // Prywatne/unlisted które nie zwróci żadne proxy -> null -> trener wpisuje ręcznie w UI
 // Manual: parseDurationString obsługuje "12:34", "1:12:34", "754"
@@ -56,68 +58,47 @@ export async function getVideoDuration(url: string, _opts?: { noCache?: boolean 
       }
     }
 
-    // 2) Piped - 4 instancje równolegle (Promise.allSettled), omijają blokady IP Vercel
+    // 2) Piped - max 2 instancje sekwencyjnie (early-exit po pierwszym trafieniu).
+    // 4 równolegle = 4x transfer na każdy film; 2 wystarczą, reszta to fallback.
     const PIPED_INSTANCES = [
       'https://pipedapi.kavin.rocks',
-      'https://api.piped.yt',
       'https://pipedapi.syncpundit.io',
-      'https://pipedapi.r4fo.com',
     ]
-    const pipedResults = await Promise.allSettled(
-      PIPED_INSTANCES.map((base) => fetchJson(`${base}/streams/${ytId}`, { headers: { 'User-Agent': UA }, next: { revalidate: 86400 } as any }, 2500))
-    )
-    for (const r of pipedResults) {
-      if (r.status === 'fulfilled') {
-        const piped = r.value
-        if (typeof piped?.duration === 'number' && piped.duration > 0) return Math.round(piped.duration)
-      }
+    for (const base of PIPED_INSTANCES) {
+      const piped = await fetchJson(`${base}/streams/${ytId}`, { headers: { 'User-Agent': UA }, next: { revalidate: 86400 } as any }, 3000)
+      if (typeof piped?.duration === 'number' && piped.duration > 0) return Math.round(piped.duration)
     }
 
-    // 3) Invidious - 2 instancje równolegle
-    const INVIDIOUS_INSTANCES = [
-      'https://yewtu.be',
-      'https://invidious.protokolla.fi',
-    ]
-    const invResults = await Promise.allSettled(
-      INVIDIOUS_INSTANCES.map((base) => fetchJson(`${base}/api/v1/videos/${ytId}`, { headers: { 'User-Agent': UA }, next: { revalidate: 86400 } as any }, 2500))
-    )
-    for (const r of invResults) {
-      if (r.status !== 'fulfilled') continue
-      const secs = (r.value as any)?.lengthSeconds
-      if (secs && Number.isFinite(secs) && secs > 0) return Math.round(secs)
+    // 3) Invidious - 1 instancja (fallback, nie równolegle 2x)
+    const inv = await fetchJson(`https://yewtu.be/api/v1/videos/${ytId}`, { headers: { 'User-Agent': UA }, next: { revalidate: 86400 } as any }, 3000)
+    {
+      const secs = (inv as any)?.lengthSeconds
+      if (secs && Number.isFinite(Number(secs)) && Number(secs) > 0) return Math.round(Number(secs))
       if (typeof secs === 'string' && /^\d+$/.test(secs) && parseInt(secs, 10) > 0) return parseInt(secs, 10)
     }
 
-    // 4) Innertube - 3 klienci równolegle (WEB/ANDROID/IOS), pierwszy ważny wygrywa
-    const INNER_CLIENTS = [
-      { clientName: 'WEB', clientVersion: '2.20240101', key: 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8' },
-      { clientName: 'ANDROID', clientVersion: '20.10.38', key: 'AIzaSyA8eiZmM1FaDVjRy-df2UTQQRi2r7KI4TY' },
-      { clientName: 'IOS', clientVersion: '20.10.38', key: 'AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc' },
-    ]
-    const innerResults = await Promise.allSettled(
-      INNER_CLIENTS.map((c) => fetchJson(
-        `https://www.youtube.com/youtubei/v1/player?key=${c.key}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': UA,
-            Accept: 'application/json',
-            Origin: 'https://www.youtube.com',
-            Referer: 'https://www.youtube.com/',
-          },
-          body: JSON.stringify({ context: { client: { clientName: c.clientName, clientVersion: c.clientVersion } }, videoId: ytId }),
-          next: { revalidate: 86400 } as any,
+    // 4) Innertube - tylko klient WEB (1x POST zamiast 3x). ANDROID/IOS
+    // klucze to głównie duplikaty tego samego; WEB wystarcza w >95% przypadków.
+    const inner = await fetchJson(
+      `https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': UA,
+          Accept: 'application/json',
+          Origin: 'https://www.youtube.com',
+          Referer: 'https://www.youtube.com/',
         },
-        2500
-      ))
+        body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: '2.20240101' } }, videoId: ytId }),
+        next: { revalidate: 86400 } as any,
+      },
+      3000
     )
-    for (const r of innerResults) {
-      if (r.status !== 'fulfilled' || !r.value) continue
-      const innertube = r.value
-      const secs = innertube?.videoDetails?.lengthSeconds
+    if (inner) {
+      const secs = inner?.videoDetails?.lengthSeconds
       if (secs && /^\d+$/.test(String(secs)) && parseInt(String(secs), 10) > 0) return parseInt(String(secs), 10)
-      const ms = innertube?.videoDetails?.approxDurationMs ?? innertube?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
+      const ms = inner?.videoDetails?.approxDurationMs ?? inner?.streamingData?.adaptiveFormats?.[0]?.approxDurationMs
       if (ms && /^\d+$/.test(String(ms)) && parseInt(String(ms), 10) > 0) return Math.round(parseInt(String(ms), 10) / 1000)
     }
 

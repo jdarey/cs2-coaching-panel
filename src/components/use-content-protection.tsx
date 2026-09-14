@@ -50,15 +50,14 @@ export function useContentProtection(opts: UseContentProtectionOptions = {}) {
   // other dimension to stay near-normal avoids false positives (browser zoom,
   // embedded webviews, which inflate both).
   useEffect(() => {
-    const interval = setInterval(() => {
-      const ow = window.outerWidth, ih = window.innerHeight, iw = window.innerWidth, oh = window.outerHeight
+    const interval = setInterval(() => {      const ow = window.outerWidth, ih = window.innerHeight, iw = window.innerWidth, oh = window.outerHeight
       if (ow <= 0 || oh <= 0) return
       const w = ow - iw, h = oh - ih
       const open = (w > 160 && h < 120) || (h > 160 && w < 120)
       if (open === devtoolsOpen) return
       setDevtoolsOpen(open)
       if (open) onDevtoolsOpenRef.current?.()
-    }, 1500)
+    }, 3000)
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devtoolsOpen])

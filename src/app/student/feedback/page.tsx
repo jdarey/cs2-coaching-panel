@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { StudentFeedbackClient } from './student-feedback-client'
 
+export const metadata = {
+  title: 'Moja opinia',
+}
+
 export default async function StudentFeedbackPage() {
   const session = await getServerSession(authOptions)
 

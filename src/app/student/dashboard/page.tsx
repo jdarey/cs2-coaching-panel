@@ -6,6 +6,10 @@ import { StudentDashboardClient } from './student-dashboard-client'
 
 export const revalidate = 30
 
+export const metadata = {
+  title: 'Dashboard',
+}
+
 export default async function StudentDashboardPage() {
   const session = await getServerSession(authOptions)
 

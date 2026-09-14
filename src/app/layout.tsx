@@ -4,19 +4,23 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 
 // Vantor template typography: Lexend Deca everywhere (400-700, latin-ext for Polish)
+// JEDEN import fontu = ~2x mniej woff2 do pobrania (~100-200KB oszczędności na cold load).
+// display:swap zapobiega FOIT, preload tylko dla pierwszego widoku.
 const lexend = Lexend_Deca({
   subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
+  display: 'swap',
+  preload: true,
 })
-const lexendDisplay = Lexend_Deca({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['500', '600', '700'],
-  variable: '--font-display',
-})
+// display używa tego samego pliku fontu co sans — alias CSS bez drugiego pobierania.
+const lexendDisplay = lexend
 
 export const metadata: Metadata = {
-  title: 'CS2 Coaching Panel',
+  title: {
+    default: 'CS2 Coaching Panel',
+    template: '%s • CS2 Coaching',
+  },
   description: 'Panel do zarządzania treningiem CS2 - tagi, filmy, sesje, postęp',
   icons: {
     icon: '/icon.png',

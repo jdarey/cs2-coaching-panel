@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
+import { PageTitle } from '@/components/page-title'
 import { RedirectOverlay } from '@/components/redirect-overlay'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -248,6 +249,7 @@ export default function LoginPage() {
         </div>
       }
     >
+      <PageTitle title="Logowanie" />
       <LoginForm />
     </Suspense>
   )

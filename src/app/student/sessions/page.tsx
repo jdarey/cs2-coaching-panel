@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { StudentSessionsClient } from './student-sessions-client'
 
+export const metadata = {
+  title: 'Moje sesje',
+}
+
 export default async function StudentSessionsPage() {
   const session = await getServerSession(authOptions)
 

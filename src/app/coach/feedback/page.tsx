@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { CoachFeedbackClient } from './coach-feedback-client'
 
+export const metadata = {
+  title: 'Opinie',
+}
+
 export default async function CoachFeedbackPage() {
   const session = await getServerSession(authOptions)
 

@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachPracticeClient } from './coach-practice-client'
 
+export const metadata = {
+  title: 'Trening',
+}
+
 export default async function CoachPracticePage() {
   const session = await getServerSession(authOptions)
 

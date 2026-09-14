@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { StudentMessagesClient } from './student-messages-client'
 
+export const metadata = {
+  title: 'Wiadomości',
+}
+
 export default async function StudentMessagesPage() {
   const session = await getServerSession(authOptions)
 

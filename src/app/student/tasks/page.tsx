@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { StudentTasksClient } from './student-tasks-client'
 
+export const metadata = {
+  title: 'Zadania treningowe',
+}
+
 export default async function StudentTasksPage() {
   const session = await getServerSession(authOptions)
 

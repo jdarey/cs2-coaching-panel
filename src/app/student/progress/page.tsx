@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { StudentProgressClient } from './student-progress-client'
 
+export const metadata = {
+  title: 'Mój postęp',
+}
+
 export default async function StudentProgressPage() {
   const session = await getServerSession(authOptions)
 

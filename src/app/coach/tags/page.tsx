@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachTagsClient } from './coach-tags-client'
 
+export const metadata = {
+  title: 'Tagi',
+}
+
 export default async function CoachTagsPage() {
   const session = await getServerSession(authOptions)
 

@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { StudentPathsClient } from './student-paths-client'
 
+export const metadata = {
+  title: 'Ścieżki treningowe',
+}
+
 export default async function StudentPathsPage() {
   const session = await getServerSession(authOptions)
   const user = session?.user as any

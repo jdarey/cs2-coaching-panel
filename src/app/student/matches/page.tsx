@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { StudentMatchesClient } from './student-matches-client'
 
+export const metadata = {
+  title: 'Log meczów',
+}
+
 export default async function StudentMatchesPage() {
   const session = await getServerSession(authOptions)
 

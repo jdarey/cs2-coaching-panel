@@ -338,7 +338,6 @@ export function StudentDashboardClient({
             <Link href={activeRoutine ? "/student/tasks" : nextUpVideo ? `/student/videos/${nextUpVideo.video.id}` : "/student/videos"} className="inline-flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold text-white btn-darey">
               <PlayCircle className="w-4 h-4" /> Start
             </Link>
-            <span className="hidden sm:inline-flex items-center text-xs text-white/30 ml-2">Naciśnij <kbd className="mx-1 px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-white/60">⌘K</kbd> aby szukać</span>
           </div>
         </div>
 

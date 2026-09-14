@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { StudentSettingsClient } from './student-settings-client'
 
+export const metadata = {
+  title: 'Ustawienia',
+}
+
 export default async function StudentSettingsPage() {
   const session = await getServerSession(authOptions)
 

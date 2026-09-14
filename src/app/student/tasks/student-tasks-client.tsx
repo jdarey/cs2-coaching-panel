@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
@@ -174,16 +174,23 @@ export function StudentTasksClient() {
     load()
   }, [load])
 
-  // live tick for reset countdown
+  // tick dla licznika resetu — 30s wystarczy (minuty, nie sekundy).
+  // Wcześniej cała strona przerysowywała się co sekundę (bateria w telefonie).
   const [tick, setTick] = useState(Date.now())
-  useEffect(()=>{ const id=setInterval(()=>setTick(Date.now()),1000); return ()=>clearInterval(id)},[])
+  useEffect(()=>{ const id=setInterval(()=>{ if (document.visibilityState === 'visible') setTick(Date.now()) },30000); return ()=>clearInterval(id)},[])
   useEffect(()=>{ if(selectedDay) { const n = dayNotes[selectedDay.date] as any; setNoteDraft(n?.content || ""); setSleepDraft(n?.sleep ?? null) } }, [selectedDay, dayNotes])
 
   // auto-refresh routines at midnight so recurring daily reset appears without manual reload
+  // (guard na wypadek kilku ticków w tej samej minucie)
+  const lastMidnightLoad = useRef<string | null>(null)
   useEffect(()=>{
     const d=new Date(tick)
-    if(d.getHours()===0 && d.getMinutes()===0 && d.getSeconds()===0){
-      load(); loadOverallHistory()
+    if(d.getHours()===0 && d.getMinutes()===0){
+      const key=d.toDateString()
+      if(lastMidnightLoad.current!==key){
+        lastMidnightLoad.current=key
+        load(); loadOverallHistory()
+      }
     }
   }, [tick])
 
@@ -508,7 +515,7 @@ export function StudentTasksClient() {
                       </div>
                       {completed && ra.routine.recurring && (
                         <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full px-2.5 py-1">
-                          <Clock className="w-3 h-3"/> Reset za {(() => { const ms = new Date(new Date(tick).setHours(24,0,0,0)).getTime() - tick; const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); const s=Math.floor((ms%60000)/1000); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`})()} • jutro
+                          <Clock className="w-3 h-3"/> Reset za {(() => { const ms = new Date(new Date(tick).setHours(24,0,0,0)).getTime() - tick; const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`})()} • jutro
                         </div>
                       )}
                     </div>

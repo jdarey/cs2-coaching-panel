@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { StudentVideosClient } from './student-videos-client'
 
+export const metadata = {
+  title: 'Filmy do oglądania',
+}
+
 export default async function StudentVideosPage() {
   const session = await getServerSession(authOptions)
 

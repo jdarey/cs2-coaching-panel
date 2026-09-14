@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { StudentRankClient } from './student-rank-client'
 
+export const metadata = {
+  title: 'Moja ranga',
+}
+
 export default async function StudentRankPage() {
   const session = await getServerSession(authOptions)
 

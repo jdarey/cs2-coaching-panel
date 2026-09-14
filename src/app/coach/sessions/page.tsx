@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachSessionsClient } from './coach-sessions-client'
 
+export const metadata = {
+  title: 'Sesje',
+}
+
 export default async function CoachSessionsPage() {
   const session = await getServerSession(authOptions)
 

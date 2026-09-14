@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
+import { PageTitle } from '@/components/page-title'
 import { RedirectOverlay } from '@/components/redirect-overlay'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -421,6 +422,7 @@ function cn(...classes: (string | undefined | null | false)[]) {
 export default function RegisterPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
+      <PageTitle title="Rejestracja" />
       <AuroraBackground variant="auth" />
       <Suspense fallback={
         <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">

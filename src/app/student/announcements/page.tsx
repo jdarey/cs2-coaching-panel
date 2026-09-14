@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { StudentAnnouncementsClient } from './student-announcements-client'
 
+export const metadata = {
+  title: 'Ogłoszenia',
+}
+
 export default async function StudentAnnouncementsPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user || (session.user as any).role !== 'STUDENT') {

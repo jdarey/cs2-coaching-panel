@@ -9,7 +9,11 @@ export function usePresenceHeartbeat(enabled = true) {
       try { await fetch('/api/presence/heartbeat', { method: 'POST' }) } catch {}
     }
     beat()
-    const interval = setInterval(beat, 60_000)
+    // 60s -> 180s: online/offline i tak ma 5-minutowe okno tolerancji,
+    // więc 3x mniej POST /api/presence/heartbeat (1440 -> 480/dzień/user).
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') beat()
+    }, 180_000)
     const onVisible = () => { if (document.visibilityState === 'visible') beat() }
     document.addEventListener('visibilitychange', onVisible)
     window.addEventListener('focus', beat)

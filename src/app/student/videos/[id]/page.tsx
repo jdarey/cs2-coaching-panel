@@ -5,6 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { getYouTubeId, getVideoEmbedUrl } from '@/lib/utils'
 import { StudentVideoPlayerClient } from './student-video-player-client'
 
+export const metadata = {
+  title: 'Odtwarzacz',
+}
+
 export default async function StudentVideoPlayerPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
 

@@ -395,7 +395,7 @@ export function YoutubeCustomPlayer({
   }, [isApiReady, videoId])
 
   // Time polling — keeps the seek bar in sync AND reports progress to the
-  // parent (throttled to ~5s) so the resume point is persisted while watching.
+  // parent (throttled to ~20s) so the resume point is persisted while watching.
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined
     
@@ -415,7 +415,7 @@ export function YoutubeCustomPlayer({
           persistDuration(dur)
         }
         const now = Date.now()
-        if (now - lastSaveAtRef.current >= 5000) {
+        if (now - lastSaveAtRef.current >= 20000) {
           lastSaveAtRef.current = now
           onProgressRef.current?.({ position: pos, duration: dur || latestDurationRef.current, ended: false })
         }

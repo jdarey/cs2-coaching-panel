@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AuroraBackground } from '@/components/aurora-background'
+import { PageTitle } from '@/components/page-title'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,6 +42,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
+      <PageTitle title="Odzyskiwanie hasła" />
       <AuroraBackground variant="auth" />
 
       <div className="relative z-10 w-full max-w-md animate-rise-in">
