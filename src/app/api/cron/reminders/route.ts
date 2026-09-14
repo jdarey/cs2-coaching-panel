@@ -77,20 +77,20 @@ export async function GET(request: NextRequest) {
         const due = assignment.dueDate?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })
         const { html } = emailLayout({
           preheader: `${assignment.student.name || assignment.student.email} spóźnia się z zadaniem`,
-          badge: '⚠️ Po terminie',
+          badge: 'Po terminie',
           title: `Zadanie po terminie: ${assignment.title}`,
           subtitle: 'Warto napisać do ucznia — jedno zdanie potrafi uratować serię treningową.',
           bodyHtml: infoCard('Szczegóły', [
-            `👤 Uczeń: <strong style="color:#f4f6f7;">${assignment.student.name || assignment.student.email}</strong>`,
-            `📝 Zadanie: <strong style="color:#f4f6f7;">${assignment.title}</strong>`,
-            ...(assignment.video ? [`🎬 Film: ${assignment.video.title}`] : []),
-            ...(due ? [`📅 Termin był: ${due}`] : []),
+            `Uczeń: <strong style="color:#f4f6f7;">${assignment.student.name || assignment.student.email}</strong>`,
+            `Zadanie: <strong style="color:#f4f6f7;">${assignment.title}</strong>`,
+            ...(assignment.video ? [`Film: ${assignment.video.title}`] : []),
+            ...(due ? [`Termin był: ${due}`] : []),
           ]),
           button: { label: 'Otwórz profil ucznia →', url: `${process.env.NEXTAUTH_URL}/coach/students/${assignment.student.id}` },
         })
         await sendEmail({
           to: assignment.coach.email,
-          subject: `⚠️ Po terminie: ${assignment.title} (${assignment.student.name || assignment.student.email})`,
+          subject: `Po terminie: ${assignment.title} (${assignment.student.name || assignment.student.email})`,
           html,
           text: `Zadanie "${assignment.title}" ucznia ${assignment.student.name || assignment.student.email} było do oddania ${due}.`,
         })
@@ -105,18 +105,18 @@ export async function GET(request: NextRequest) {
       try {
         const { html } = emailLayout({
           preheader: `Jutro mija termin: ${assignment.title}`,
-          badge: '📅 Twój coaching',
+          badge: 'Jutro termin',
           title: `Hej ${assignment.student.name || 'graczu'}, jutro termin!`,
           subtitle: 'Wykorzystaj swój wykupiony coaching — jedno zadanie dziś wieczorem i seria uratowana.',
           bodyHtml: infoCard('Twoje zadanie', [
-            `📝 <strong style="color:#f4f6f7;">${assignment.title}</strong>`,
-            ...(assignment.video ? [`🎬 Film do obejrzenia: ${assignment.video.title}`] : []),
-          ]) + `<p style="margin:0;">Wejdź w zadania, odhacz je i idź spać ze spokojną głową. 🔥</p>`,
+            `<strong style="color:#f4f6f7;">${assignment.title}</strong>`,
+            ...(assignment.video ? [`Film do obejrzenia: ${assignment.video.title}`] : []),
+          ]) + `<p style="margin:0;">Wejdź w zadania, odhacz je i idź spać ze spokojną głową.</p>`,
           button: { label: 'Otwórz zadania →', url: `${process.env.NEXTAUTH_URL}/student/tasks` },
         })
         await sendEmail({
           to: assignment.student.email,
-          subject: `📅 Jutro termin: ${assignment.title} — dasz radę!`,
+          subject: `Jutro termin: ${assignment.title} — dasz radę!`,
           html,
           text: `Przypomnienie: zadanie "${assignment.title}" jest do oddania jutro.`,
         })
@@ -135,18 +135,18 @@ export async function GET(request: NextRequest) {
 
         const { html } = emailLayout({
           preheader: `${student.name || student.email} nie trenuje od ${days} dni`,
-          badge: '😴 Twój coaching czeka',
+          badge: 'Brak aktywności',
           title: `${student.name || student.email} nie korzysta z coachingu od ${days} dni`,
           subtitle: 'Wykupiony program sam się nie zrobi — krótka wiadomość od trenera często wystarcza, żeby wrócić do gry.',
           bodyHtml: infoCard('Uczeń', [
-            `👤 <strong style="color:#f4f6f7;">${student.name || student.email}</strong>`,
-            `📅 Ostatnia aktywność: ${lastActivity?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}`,
+            `<strong style="color:#f4f6f7;">${student.name || student.email}</strong>`,
+            `Ostatnia aktywność: ${lastActivity?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}`,
           ]),
           button: { label: 'Napisz do ucznia →', url: `${process.env.NEXTAUTH_URL}/coach/students/${student.id}` },
         })
         await sendEmail({
           to: student.coach.email,
-          subject: `😴 ${student.name || student.email} nieaktywny od ${days} dni`,
+          subject: `${student.name || student.email} nieaktywny od ${days} dni`,
           html,
           text: `Uczeń ${student.name || student.email} jest nieaktywny od ${days} dni.`,
         })

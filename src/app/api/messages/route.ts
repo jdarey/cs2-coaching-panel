@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
         const safeContent = message.content.replace(/</g, '&lt;').replace(/\n/g, '<br/>')
         const { html: msgHtml } = emailLayout({
           preheader: `${senderName}: ${message.content.slice(0, 80)}`,
-          badge: '💬 Nowa wiadomość',
+          badge: 'Nowa wiadomość',
           title: `${senderName} napisał do Ciebie`,
           subtitle: 'Nie przegap — szybka odpowiedź trzyma trening w rytmie.',
           bodyHtml: `<div style="margin:0; padding:16px 18px; border-radius:14px; background:#14161c; border:1px solid rgba(255,255,255,0.08); border-left:3px solid #a78bfa; line-height:1.7;">${safeContent}</div>`,
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
         })
         await sendEmail({
           to: receiver.email,
-          subject: `💬 ${senderName}: ${message.content.slice(0, 60)}${message.content.length > 60 ? '…' : ''}`,
+          subject: `${senderName}: ${message.content.slice(0, 60)}${message.content.length > 60 ? '…' : ''}`,
           html: msgHtml,
           text: `Nowa wiadomość od ${senderName} — CS2 Coaching\n\n${message.content}\n\nOtwórz czat: ${link}`,
         })

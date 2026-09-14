@@ -70,13 +70,13 @@ export async function POST(request: NextRequest) {
 
     const { html } = emailLayout({
       preheader: `Kupiłeś coaching u ${coachName} — oto Twój dostęp do platformy`,
-      badge: '🎯 Twój dostęp',
+      badge: 'Twój dostęp',
       title: `Dzięki za zakup coachingu! Oto Twój dostęp`,
       subtitle: `Kupiłeś coaching u trenera ${coachName}. Ten link to Twoje wejście na platformę — załóż konto i zacznij trenować już dziś.`,
       bodyHtml: `
         <p style="margin:0;">Cześć! Trener <strong style="color:#f4f6f7;">${coachName}</strong> aktywował Ci dostęp do platformy CS2 Coaching. W środku czeka Twój wykupiony program:</p>
-        ${infoCard('Twój pakiet', ['🎬 Biblioteka filmów treningowych', '📅 Sesje 1:1 z trenerem i demo-review', '✅ Zadania i rutyny z kalendarzem', '📈 Śledzenie Faceit ELO na żywo', '💬 Bezpośredni kontakt z trenerem'])}
-        <p style="margin:0;">Założenie konta zajmie Ci mniej niż minutę. Do zobaczenia na serwerze! 🔥</p>`,
+        ${infoCard('Twój pakiet', ['Biblioteka filmów treningowych', 'Sesje 1:1 z trenerem i demo-review', 'Zadania i rutyny z kalendarzem', 'Śledzenie Faceit ELO na żywo', 'Bezpośredni kontakt z trenerem'])}
+        <p style="margin:0;">Założenie konta zajmie Ci mniej niż minutę. Do zobaczenia na serwerze!</p>`,
       button: { label: 'Aktywuj dostęp →', url: inviteUrl },
       buttonNote: 'Link wygasa za 7 dni.',
     })

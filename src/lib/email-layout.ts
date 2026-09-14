@@ -49,8 +49,13 @@ ${preheader ? `<div style="display:none; max-height:0; overflow:hidden; opacity:
 <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px; width:100%; border-collapse:separate;">
   <tr><td style="background:linear-gradient(90deg, ${ACCENT} 0%, ${ACCENT_DARK} 55%, #2de5ca 130%); border-radius:20px 20px 0 0; font-size:0; line-height:0; height:4px;">&nbsp;</td></tr>
   <tr><td style="background-color:${BG}; border-left:1px solid ${CARD_EDGE}; border-right:1px solid ${CARD_EDGE}; padding:30px 32px 0; text-align:center;">
-    <div style="display:inline-block; width:56px; height:56px; line-height:56px; border-radius:16px; background:linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%); box-shadow:0 8px 28px rgba(167,139,250,0.45), inset 0 1px 0 rgba(255,255,255,0.25); font-size:26px; font-weight:800; color:#ffffff;">C</div>
-    <p style="margin:12px 0 0; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:${FAINT}; font-weight:700;">CS2 Coaching · Premium</p>
+    <div style="display:inline-block; width:56px; height:56px; line-height:52px; border-radius:16px; background:linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%); box-shadow:0 8px 28px rgba(167,139,250,0.45), inset 0 1px 0 rgba(255,255,255,0.25); text-align:center;">
+      <!--[if !mso]><!-->
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></svg>
+      <!--<![endif]-->
+      <!--[if mso]><span style="font-size:26px; font-weight:800; color:#ffffff;">C</span><![endif]-->
+    </div>
+    <p style="margin:12px 0 0; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:${FAINT}; font-weight:700;">CS2 Coaching</p>
   </td></tr>
   <tr><td style="background-color:${BG}; border-left:1px solid ${CARD_EDGE}; border-right:1px solid ${CARD_EDGE}; padding:22px 32px 0;">
     ${badge ? `<p style="margin:0 0 10px;"><span style="display:inline-block; font-size:11px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:${ACCENT}; background:rgba(167,139,250,0.12); border:1px solid rgba(167,139,250,0.35); border-radius:999px; padding:6px 14px;">${escapeHtml(badge)}</span></p>` : ''}
@@ -75,12 +80,12 @@ ${preheader ? `<div style="display:none; max-height:0; overflow:hidden; opacity:
   <tr><td style="background-color:${BG}; border:1px solid ${CARD_EDGE}; border-top:none; border-radius:0 0 20px 20px; padding:22px 32px 26px;">
     <p style="margin:0; font-size:11px; line-height:1.7; color:${FAINT}; text-align:center;">${escapeHtml(footerNote || 'To wiadomość automatyczna z Twojego panelu coachingowego. Jeśli jej nie oczekiwałeś, zignoruj ją.')}</p>
     <p style="margin:14px 0 0; font-size:13px; text-align:center;">
-      ${socialLink(SITE_URL, '🌐 Strona')}
-      ${YOUTUBE_URL ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span>${socialLink(YOUTUBE_URL, '▶️ YouTube')}` : ''}
+      ${socialLink(SITE_URL, 'Strona')}
+      ${YOUTUBE_URL ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span>${socialLink(YOUTUBE_URL, 'YouTube')}` : ''}
       ${DISCORD_URL
-        ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span>${socialLink(DISCORD_URL, '💬 Discord')}`
+        ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span>${socialLink(DISCORD_URL, 'Discord')}`
         : DISCORD_NAME
-          ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span><span style="color:${MUTED}; font-weight:700;">💬 Discord: ${escapeHtml(DISCORD_NAME)}</span>`
+          ? `<span style="color:${FAINT};">&nbsp;·&nbsp;</span><span style="color:${MUTED}; font-weight:700;">Discord: ${escapeHtml(DISCORD_NAME)}</span>`
           : ''}
     </p>
     <p style="margin:10px 0 0; font-size:11px; color:${FAINT}; text-align:center;">Nie odpowiadaj na tę wiadomość — napisz bezpośrednio w panelu. ✨</p>
@@ -112,7 +117,9 @@ function socialLink(url: string, label: string): string {
 }
 
 export function infoCard(title: string, lines: string[]): string {
-  const rows = lines.map((l) => `<p style="margin:5px 0; font-size:14px; line-height:1.6; color:${TEXT};">${l}</p>`).join('')
+  const rows = lines
+    .map((l) => `<p style="margin:5px 0; font-size:14px; line-height:1.6; color:${TEXT};"><span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:${ACCENT}; margin-right:9px; vertical-align:2px;"></span>${l}</p>`)
+    .join('')
   return `<div style="background:${CARD}; border:1px solid rgba(255,255,255,0.09); border-left:3px solid ${ACCENT}; border-radius:0 14px 14px 0; padding:16px 18px; margin:16px 0; box-shadow:0 6px 20px rgba(0,0,0,0.35);"><p style="margin:0 0 8px; font-size:11px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:${ACCENT};">${escapeHtml(title)}</p>${rows}</div>`
 }
 

@@ -44,21 +44,21 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
 
   const taskLines = pending.map((a) => {
     const due = a.dueDate ? ` <span style="color:rgba(244,246,247,0.45);">· termin ${new Date(a.dueDate).toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}</span>` : ''
-    return `✅ ${a.title}${due}`
+    return `${a.title}${due}`
   })
   const { html } = emailLayout({
     preheader: `${coachName} przypomina o treningu — ${pending.length} zadań czeka`,
-    badge: '💪 Twój coaching',
+    badge: 'Twój coaching',
     title: `Cześć${student.name ? ` ${student.name}` : ''}, Twój coaching czeka!`,
     subtitle: `Trener ${coachName} sprawdził Twój wykupiony plan i podrzuca rzeczy do nadrobienia. Wykorzystaj coaching w 100% — mały krok dziś to duży skok ELO jutro.`,
     bodyHtml: pending.length
-      ? infoCard('Twoje zadania', taskLines) + `<p style="margin:0;">Wejdź do panelu, odhacz je po kolei i patrz jak rośnie seria dni. Dasz radę! 🔥</p>`
-      : `<p style="margin:0;">Dobra wiadomość: nic nie zalega! Zajrzyj do panelu po nową sesję treningową i trzymaj formę. 🚀</p>`,
+      ? infoCard('Twoje zadania', taskLines) + `<p style="margin:0;">Wejdź do panelu, odhacz je po kolei i patrz jak rośnie seria dni. Dasz radę!</p>`
+      : `<p style="margin:0;">Dobra wiadomość: nic nie zalega! Zajrzyj do panelu po nową sesję treningową i trzymaj formę.</p>`,
     button: { label: 'Otwórz panel ucznia →', url: `${APP_URL}/student/dashboard` },
   })
   const result = await sendEmail({
     to: student.email,
-    subject: `💪 ${coachName} przypomina o treningu — ${pending.length} zadań czeka`,
+    subject: `${coachName} przypomina o treningu — ${pending.length} zadań czeka`,
     html,
     text: `Cześć${student.name ? ` ${student.name}` : ''}!\nTwój trener ${coachName} przypomina o treningu.\n\n${lines}\n\nOtwórz panel ucznia: ${APP_URL}/student/dashboard`,
   })

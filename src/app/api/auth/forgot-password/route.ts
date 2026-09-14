@@ -32,12 +32,12 @@ export async function POST(request: NextRequest) {
     const name = user.name || 'tam'
     const { html } = emailLayout({
       preheader: 'Ustaw nowe hasło — link ważny 1 godzinę',
-      badge: '🔐 Reset hasła',
+      badge: 'Reset hasła',
       title: `Cześć ${name}, ustaw nowe hasło`,
       subtitle: 'Dostałeś tę wiadomość, bo ktoś poprosił o reset hasła do Twojego konta. Dasz radę w mniej niż minutę — obiecujemy, że to prostsze niż clutch 1v3.',
       bodyHtml: `
         <p style="margin:0;">Kliknij wielki fioletowy przycisk poniżej i wpisz nowe hasło (min. 8 znaków). Link działa <strong style="color:#f4f6f7;">tylko 1 godzinę</strong> i tylko raz — potem wygasa dla Twojego bezpieczeństwa.</p>
-        <p style="margin:12px 0 0;">Po zmianie od razu zalogujesz się nowym hasłem i wrócisz do treningu. Powodzenia na serwerze! 🎯</p>`,
+        <p style="margin:12px 0 0;">Po zmianie od razu zalogujesz się nowym hasłem i wrócisz do treningu. Powodzenia na serwerze!</p>`,
       button: { label: 'Ustaw nowe hasło →', url: resetUrl },
       buttonNote: 'Przycisk nie działa? Wklej ten link do przeglądarki.',
       footerNote: 'Nie prosiłeś o reset? Zignoruj tę wiadomość — Twoje hasło zostaje bez zmian, a link sam wygaśnie.',
