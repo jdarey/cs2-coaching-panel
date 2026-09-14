@@ -45,11 +45,11 @@ export function ThemeColorPicker() {
         </div>
         <div className="flex-1">
           <h3 className="font-display font-semibold text-white">Kolor przewodni</h3>
-          <p className="text-sm text-white/45 mt-1">Wybierz kolor, który zastąpi fioletowy w całej aplikacji. Każdy użytkownik widzi swój własny — np. biały zamiast fioletu. Zapisuje się lokalnie.</p>
+          <p className="text-sm text-white/45 mt-1">Wybierz kolor przewodni — ikony, obramowania, przyciski i poświaty w całej aplikacji dopasują się do niego. Każdy użytkownik widzi swój własny. Zapisuje się lokalnie.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {PRIMARY_PRESETS.map((p) => (
           <button
             key={p.value}
@@ -97,7 +97,7 @@ export function ThemeColorPicker() {
 
       <div className="mt-5 rounded-2xl p-4 bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
         <div className="h-8 flex-1 rounded-xl flex items-center justify-center text-xs font-bold text-white" style={{ background: current }}>Podgląd: {current}</div>
-        <span className="text-xs text-white/40">Wszystko co było fioletowe będzie w tym kolorze</span>
+        <span className="text-xs text-white/40">Ikony, obramowania i poświaty w tym kolorze</span>
       </div>
     </div>
   )
