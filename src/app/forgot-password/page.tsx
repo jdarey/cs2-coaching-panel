@@ -46,16 +46,18 @@ export default function ForgotPasswordPage() {
       <div className="relative z-10 w-full max-w-md animate-rise-in">
         {/* Brand */}
         <div className="text-center mb-10">
-          <Link href="/login" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/15 shadow-[0_0_40px_-8px_rgba(139,92,246,0.55)] transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_0_56px_-6px_rgba(139,92,246,0.8)]">
+          <Link href="/login" className="group inline-block" aria-label="CS2 Coaching — logowanie">
+            <div className="relative mx-auto w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/15 shadow-[0_0_40px_-8px_rgba(139,92,246,0.55)] transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_0_56px_-6px_rgba(139,92,246,0.8)]">
               <GraduationCap className="w-7 h-7 text-white" strokeWidth={2} />
             </div>
           </Link>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest text-white/55 font-semibold mb-5">
-            <span className="live-dot" />
-            Odzyskaj dostęp
+          <div className="mt-6 flex justify-center">
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass text-[10px] uppercase tracking-[0.22em] text-white/60 font-semibold">
+              <span className="live-dot" />
+              Odzyskaj dostęp
+            </div>
           </div>
-          <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-vantor mb-3">
+          <h1 className="font-display text-display-md font-bold tracking-tight text-gradient-vantor mt-4 mb-3">
             CS2 Coaching
           </h1>
           <p className="text-white/45 text-sm font-light">Zresetuj swoje hasło</p>
