@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler } from '@/lib/utils'
-import { Trophy, Loader2, TrendingUp, Plus, Trash2, BarChart3 } from 'lucide-react'
+import { Trophy, Loader2, TrendingUp, Trash2, BarChart3 } from 'lucide-react'
 import { FaceitEloChart } from '@/components/faceit-elo-chart'
 
 interface RankEntry {
@@ -26,81 +26,7 @@ const SOURCE_LABELS: Record<string, { label: string; color: string; dot: string 
 export function StudentRankClient() {
   const [loading, setLoading] = useState(true)
   const [rankEntries, setRankEntries] = useState<RankEntry[]>([])
-  const [newRank, setNewRank] = useState({ mode: 'PREMIER', rank: '', elo: '' as string, note: '' })
-  const [savingRank, setSavingRank] = useState(false)
-  const [autoFetch, setAutoFetch] = useState({ loading: false, message: '' as string | null, error: '' as string | null })
   const [steamProfile, setSteamProfile] = useState<{ name: string; avatar: string } | null>(null)
-
-  const fetchFromGaming = async () => {
-    setAutoFetch({ loading: true, message: null, error: null })
-    try {
-      const res = await fetch(`/api/user/profile`)
-      if (!res.ok) {
-        setAutoFetch({ loading: false, message: null, error: 'Brak powiązanych kont. Dodaj Steam lub Faceit w Ustawieniach.' })
-        return
-      }
-      const me = await res.json()
-      const identifier = me.steamVanity || me.steamId || me.faceitNickname
-      if (!identifier) {
-        setAutoFetch({ loading: false, message: null, error: 'Dodaj link do Steam lub nick Faceit w Ustawieniach → Gry i konta.' })
-        return
-      }
-
-      // Unified keyless integration: Premier + Faceit in one call, no API keys
-      const r = await fetch(`/api/integrations/leetify?identifier=${encodeURIComponent(identifier)}`)
-      const data = await r.json()
-      if (!r.ok) {
-        setAutoFetch({ loading: false, message: null, error: data.error || 'Nie udało się pobrać rangi' })
-        return
-      }
-
-      if (data.steamId) {
-        setSteamProfile({ name: data.name || identifier, avatar: '' })
-      }
-
-      let saved = 0
-      const parts: string[] = []
-      if (data.premier != null) {
-        parts.push(`Premier: ${data.premier}`)
-        const save = await fetch('/api/ranks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'PREMIER', rank: `${data.premier} Premier`, elo: data.premier, source: 'LEETIFY', note: 'Pobrano automatycznie (Leetify)' }),
-        })
-        if (save.ok) {
-          saved++
-          const entry = await save.json()
-          setRankEntries((prev) => [...prev, entry])
-        }
-      }
-      if (data.faceitElo != null || data.faceitLevel != null) {
-        parts.push(data.faceitElo != null ? `Faceit ELO: ${data.faceitElo}` : `Poziom: ${data.faceitLevel}`)
-        const save = await fetch('/api/ranks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mode: 'FACEIT',
-            rank: data.faceitElo != null ? `${data.faceitElo} ELO` : `Poziom ${data.faceitLevel}`,
-            elo: data.faceitElo,
-            source: data.faceitSource === 'faceit' ? 'FACEIT_LIVE' : 'LEETIFY',
-            note: data.faceitSource === 'faceit' ? 'Pobrano automatycznie (Faceit na żywo)' : 'Pobrano automatycznie (Leetify)',
-          }),
-        })
-        if (save.ok) {
-          saved++
-          const entry = await save.json()
-          setRankEntries((prev) => [...prev, entry])
-        }
-      }
-      setAutoFetch({
-        loading: false,
-        message: parts.length > 0 ? `Pobrano: ${parts.join(' · ')}${saved > 0 ? ' ✓' : ''}` : 'Profil znaleziony, brak danych o rangach',
-        error: null,
-      })
-    } catch {
-      setAutoFetch({ loading: false, message: null, error: 'Błąd sieci przy pobieraniu rangi' })
-    }
-  }
 
   const load = useCallback(async () => {
     try {
@@ -113,32 +39,6 @@ export function StudentRankClient() {
       setLoading(false)
     }
   }, [])
-
-  const addRank = async () => {
-    if (!newRank.rank.trim()) return
-    setSavingRank(true)
-    try {
-      const res = await fetch('/api/ranks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: newRank.mode,
-          rank: newRank.rank.trim(),
-          elo: newRank.elo ? Number(newRank.elo) : null,
-          note: newRank.note || null,
-        }),
-      })
-      if (res.ok) {
-        const entry = await res.json()
-        setRankEntries((prev) => [...prev, entry])
-        setNewRank({ mode: 'PREMIER', rank: '', elo: '', note: '' })
-      }
-    } catch {
-      /* ignore */
-    } finally {
-      setSavingRank(false)
-    }
-  }
 
   const deleteRank = async (id: string) => {
     try {
@@ -178,91 +78,17 @@ export function StudentRankClient() {
           subtitle="Każdy obejrzany i wdrożony film przybliża Cię do kolejnej rangi. Jak w grze — ale na serio."
         />
 
-      {/* Faceit ELO */}
-      <div className="mb-10">
-        <FaceitEloChart />
-      </div>
-
-      {/* Rank tracking — real in-game rank / ELO over time */}
-      <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="section-pill"><TrendingUp className="w-3.5 h-3.5" /> Twoja ranga w grze</span>
+        {/* Faceit ELO */}
+        <div className="mb-10">
+          <FaceitEloChart />
         </div>
-        <div className="glass-card border-glow rounded-3xl p-6 md:p-7 relative overflow-hidden">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Add entry form */}
-            <div className="lg:w-72 shrink-0">
-              <p className="text-sm font-semibold text-white mb-3">Zapisz swój postęp</p>
 
-              {/* Auto-fetch from gaming accounts */}
-              <div className="mb-4 rounded-2xl p-4 bg-white/[0.02] border border-[#a78bfa]/15">
-                <p className="text-xs font-semibold text-white/70 mb-2 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#c4b5fd]" /> Pobierz automatycznie
-                </p>
-                <button
-                  onClick={() => fetchFromGaming()}
-                  disabled={autoFetch.loading}
-                  className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold border border-[#a78bfa]/25 bg-[#a78bfa]/[0.06] text-white hover:border-[#a78bfa]/50 disabled:opacity-50 transition-all duration-200"
-                >
-                  {autoFetch.loading ? (
-                    <span className="inline-flex items-center justify-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Pobieranie…</span>
-                  ) : (
-                    <span className="inline-flex items-center justify-center gap-2"><TrendingUp className="w-3.5 h-3.5" /> Pobierz Premier + Faceit</span>
-                  )}
-                </button>
-                {autoFetch.message && <p className="mt-2 text-[11px] text-emerald-300/90">{autoFetch.message}</p>}
-                {autoFetch.error && <p className="mt-2 text-[11px] text-red-300/90">{autoFetch.error}</p>}
-                <p className="mt-2 text-[10px] text-white/35 leading-snug">
-                  Bez kluczy API — wystarczy podlinkować Steam w Ustawieniach → Gry i konta.
-                </p>
-              </div>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  {(['PREMIER', 'FACEIT'] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setNewRank((s) => ({ ...s, mode: m }))}
-                      className={cn(
-                        'px-3 py-2 rounded-xl text-xs font-semibold border transition-all duration-200',
-                        newRank.mode === m
-                          ? 'text-white border-[#a78bfa]/40 bg-[#a78bfa]/[0.1]'
-                          : 'text-white/50 border-white/[0.08] bg-white/[0.02] hover:text-white/80',
-                      )}
-                    >
-                      {m === 'PREMIER' ? 'Premier' : 'Faceit'}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  value={newRank.rank}
-                  onChange={(e) => setNewRank((s) => ({ ...s, rank: e.target.value }))}
-                  placeholder="Ranga / poziom (np. 15000 ELO, Lvl 7)"
-                  className="w-full rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#a78bfa]/40 transition-colors"
-                />
-                <input
-                  value={newRank.elo}
-                  onChange={(e) => setNewRank((s) => ({ ...s, elo: e.target.value }))}
-                  placeholder="ELO / liczba punktów (opcjonalnie)"
-                  inputMode="numeric"
-                  className="w-full rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#a78bfa]/40 transition-colors"
-                />
-                <input
-                  value={newRank.note}
-                  onChange={(e) => setNewRank((s) => ({ ...s, note: e.target.value }))}
-                  placeholder="Notatka (opcjonalnie)"
-                  className="w-full rounded-xl px-3.5 py-2.5 text-sm bg-white/[0.04] border border-white/[0.1] text-white placeholder:text-white/30 focus:outline-none focus:border-[#a78bfa]/40 transition-colors"
-                />
-                <button
-                  onClick={addRank}
-                  disabled={savingRank || !newRank.rank.trim()}
-                  className="btn-darey relative inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                >
-                  {savingRank ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                  Zapisz rangę
-                </button>
-              </div>
-            </div>
-
+        {/* Rank tracking — real in-game rank / ELO over time */}
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="section-pill"><TrendingUp className="w-3.5 h-3.5" /> Twoja ranga w grze</span>
+          </div>
+          <div className="glass-card border-glow rounded-3xl p-6 md:p-7 relative overflow-hidden">
             {/* Chart + history */}
             <div className="flex-1 min-w-0">
               {rankEntries.length >= 2 && rankEntries.some((e) => e.elo != null) ? (
@@ -303,7 +129,7 @@ export function StudentRankClient() {
                 <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] px-6 py-10 text-center">
                   <BarChart3 className="w-8 h-8 text-white/25 mx-auto mb-3" />
                   <p className="text-sm text-white/60 font-medium">Brak wpisów</p>
-                  <p className="text-xs text-white/40 mt-1">Zapisz swoją pierwszą rangę, aby śledzić realny postęp w grze.</p>
+                  <p className="text-xs text-white/40 mt-1">Rangi dodawane automatycznie z Faceit (live) i Leetify (po kliknięciu Pobierz rangę w Ustawieniach).</p>
                 </div>
               ) : (
                 <ul className="space-y-2">
@@ -353,8 +179,6 @@ export function StudentRankClient() {
             </div>
           </div>
         </div>
-      </div>
-
       </div>
     </StudentLayout>
   )
