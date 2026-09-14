@@ -34,12 +34,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Użytkownik z tym emailem już istnieje' }, { status: 400 })
     }
 
-    // Check for existing pending invite
+    // Check for existing pending invite — zwróć ISTNIEJĄCY link zamiast
+    // błędu, żeby trener mógł go skopiować ponownie (drugie kliknięcie
+    // nie wysyła duplikatu maila, tylko pokazuje ten sam link).
     const existingInvite = await prisma.studentInvite.findFirst({
       where: { coachId, email, usedAt: null, expiresAt: { gt: new Date() } }
     })
     if (existingInvite) {
-      return NextResponse.json({ error: 'Zaproszenie dla tego emaila zostało już wysłane i jest wciąż ważne' }, { status: 400 })
+      const inviteUrl = `${process.env.NEXTAUTH_URL}/register?invite=${existingInvite.token}`
+      return NextResponse.json({
+        ok: true,
+        message: 'Zaproszenie już istnieje — mail wysłano wcześniej, oto ten sam link',
+        inviteUrl,
+        emailSent: false,
+        alreadyExisted: true,
+      })
     }
 
     // Create invite token
