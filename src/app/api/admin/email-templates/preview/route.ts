@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin'
 import { renderEmail } from '@/lib/email-templates'
-import { SAMPLE_VARS, SAMPLE_BUTTON_URL } from '../test/route'
+import { SAMPLE_VARS, SAMPLE_BUTTON_URL } from '@/lib/email-test-samples'
 
 export const dynamic = 'force-dynamic'
 
