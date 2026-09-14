@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Users, Search, KeyRound, Loader2, Copy, Check, Gamepad2, TrendingUp, Eye, Download, ArrowLeftRight } from 'lucide-react'
+import { Users, Search, KeyRound, Loader2, Copy, Check, Gamepad2, TrendingUp, Eye, Download, ArrowLeftRight, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AdminUser {
@@ -185,6 +185,27 @@ export function AdminUsersClient() {
     }
   }
 
+  const impersonate = async (u: AdminUser) => {
+    if (u.role === 'ADMIN') {
+      setMsg({ ok: false, text: 'Nie można zalogować się jako inny admin.' })
+      return
+    }
+    setBusyId(u.id)
+    setMsg(null)
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}/impersonate`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Błąd generowania linku')
+      // Otwórz w nowej karcie
+      window.open(data.loginUrl, '_blank', 'noopener,noreferrer')
+      setMsg({ ok: true, text: `Link do logowania jako ${u.email} otwarty w nowej karcie.` })
+    } catch (e: any) {
+      setMsg({ ok: false, text: e.message || 'Błąd impersonacji' })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   return (
     <div className="pb-16">
       <div className="flex items-center gap-3 mb-1">
@@ -279,12 +300,12 @@ export function AdminUsersClient() {
                     <span className="hidden sm:inline">Podgląd</span>
                   </a>
                   <button
-                    onClick={() => toggleGaming(u)}
-                    title="Faceit / Steam ucznia"
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-sky-200 bg-sky-500/[0.08] border border-sky-500/20 hover:bg-sky-500/15"
+                    onClick={() => impersonate(u)}
+                    disabled={busyId === u.id}
+                    title="Zaloguj jako ten użytkownik (otwiera link w nowej karcie)"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-[#ff9a5c] bg-[#ff5500]/[0.08] border border-[#ff5500]/20 hover:bg-[#ff5500]/15 disabled:opacity-50"
                   >
-                    <Gamepad2 className="w-3.5 h-3.5" />
-                    Konta
+                    <User className="w-3.5 h-3.5" /> Zaloguj jako
                   </button>
                   <button
                     onClick={() => resetPassword(u)}
