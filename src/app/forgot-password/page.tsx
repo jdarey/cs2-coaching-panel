@@ -47,9 +47,8 @@ export default function ForgotPasswordPage() {
         {/* Brand */}
         <div className="text-center mb-10">
           <Link href="/login" className="inline-flex items-center gap-3 mb-8 group">
-            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
-              <GraduationCap className="w-7 h-7 text-white" strokeWidth={2.2} />
-              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10" aria-hidden="true" />
+            <div className="relative w-14 h-14 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/15 shadow-[0_0_40px_-8px_rgba(139,92,246,0.55)] transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_0_56px_-6px_rgba(139,92,246,0.8)]">
+              <GraduationCap className="w-7 h-7 text-white" strokeWidth={2} />
             </div>
           </Link>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest text-white/55 font-semibold mb-5">
