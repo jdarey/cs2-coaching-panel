@@ -36,7 +36,8 @@ export async function sendEmail({ to, subject, html, text }: SendEmailInput): Pr
   const client = resend()
   if (client) {
     try {
-      await client.emails.send({ from, to: [to], subject, html, text })
+      const res = await client.emails.send({ from, to: [to], subject, html, text })
+      console.log(`[mail:sent] via=resend to=${to} subject="${subject}" id=${(res as any)?.data?.id || (res as any)?.id || '?'}`)
       return { ok: true }
     } catch (error) {
       console.error('Email send error (resend):', error)
@@ -47,7 +48,8 @@ export async function sendEmail({ to, subject, html, text }: SendEmailInput): Pr
   const smtp = smtpTransport()
   if (smtp) {
     try {
-      await smtp.sendMail({ from, to, subject, html, text })
+      const info = await smtp.sendMail({ from, to, subject, html, text })
+      console.log(`[mail:sent] via=smtp to=${to} subject="${subject}" id=${(info as any)?.messageId || '?'}`)
       return { ok: true }
     } catch (error) {
       console.error('Email send error (smtp):', error)

@@ -43,12 +43,13 @@ export async function POST(request: NextRequest) {
       footerNote: 'Nie prosiłeś o reset? Zignoruj tę wiadomość — Twoje hasło zostaje bez zmian, a link sam wygaśnie.',
     })
 
-    await sendEmail({
+    const mailResult = await sendEmail({
       to: email,
       subject: 'Zresetuj hasło — CS2 Coaching',
       html,
       text: `Zresetuj hasło — CS2 Coaching\n\nCześć ${name}! Otrzymaliśmy prośbę o zresetowanie hasła.\nOtwórz ten link, aby ustawić nowe hasło (ważny 1 godzinę):\n${resetUrl}\n\nJeśli to nie Ty prosiłeś o zmianę hasła, zignoruj tę wiadomość.`,
     })
+    if (!mailResult.ok) console.error(`[mail:forgot-password] FAILED to=${email}`)
 
     return NextResponse.json({ ok: true })
   } catch (error) {
