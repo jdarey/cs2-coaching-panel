@@ -71,8 +71,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | 'system')) || 'system'
   )
   const [gaming, setGaming] = useState({
-    steam: user.steamVanity || user.steamId || '',
     faceit: user.faceitNickname || '',
+    steam: user.steamVanity || user.steamId || '',
   })
   const [gamingLoading, setGamingLoading] = useState(false)
   const [gamingResult, setGamingResult] = useState<{ ok: boolean; message: string } | null>(null)
@@ -532,13 +532,33 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     </div>
                     <div>
                       <h3 className="font-display font-semibold text-white">Konta gier</h3>
-                      <p className="text-sm text-white/45">Podłącz Steam — Twoja ranga i ELO będą pobierane automatycznie i trafiały na stronę rangi.</p>
+                      <p className="text-sm text-white/45">Wpisz nick Faceit — Twój live ELO i trajektoria będą odświeżane automatycznie co 30 sekund. Steam jest opcjonalny (do Premier ratingu i dem).</p>
                     </div>
                   </div>
 
                   <div className="mt-5 space-y-2">
+                    <label htmlFor="faceit" className="text-sm font-medium text-white/70">
+                      Nick Faceit (do live ELO i trajektorii)
+                    </label>
+                    <div className="relative">
+                      <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                      <input
+                        id="faceit"
+                        value={gaming.faceit}
+                        onChange={(e) => setGaming((s) => ({ ...s, faceit: e.target.value }))}
+                        placeholder="np. darey"
+                        className={inputBase}
+                      />
+                    </div>
+                    <p className="text-xs text-white/40">
+                      Twój live ELO i trajektoria na wykresie będą odświeżane co 30 sekund. 
+                      Nick musi być dokładny (wielkość liter nie ma znaczenia).
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
                     <label htmlFor="steam" className="text-sm font-medium text-white/70">
-                      Link do profilu Steam lub nickname Faceit
+                      Steam (opcjonalnie — do Premier ratingu i montażów)
                     </label>
                     <div className="relative">
                       <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
@@ -546,14 +566,12 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                         id="steam"
                         value={gaming.steam}
                         onChange={(e) => setGaming((s) => ({ ...s, steam: e.target.value }))}
-                        placeholder="np. https://steamcommunity.com/id/TwojNick albo nick z Faceit"
+                        placeholder="np. https://steamcommunity.com/id/TwojNick"
                         className={inputBase}
                       />
                     </div>
                     <p className="text-xs text-white/40">
-                      Wystarczy sam link — Twój Premier rating, Faceit ELO i poziom zostaną pobrane automatycznie.
-                      Bez żadnych kluczy API po Twojej stronie. Jeśli profil jest prywatny, ustaw go jako publiczny
-                      albo połącz z Leetify (leetify.com).
+                      Opcjonalnie. Potrzebne do automatycznego pobierania Premier ratingu i importu dem.
                     </p>
                   </div>
 
