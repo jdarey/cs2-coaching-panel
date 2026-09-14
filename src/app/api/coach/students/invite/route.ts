@@ -69,18 +69,18 @@ export async function POST(request: NextRequest) {
     const coachName = (session.user as any).name || 'Twój trener'
 
     const { html } = emailLayout({
-      preheader: `${coachName} zaprasza Cię do panelu CS2 Coaching`,
-      badge: '🎯 Zaproszenie',
-      title: `${coachName} zaprasza Cię do treningu`,
-      subtitle: 'Dołącz do panelu i zacznij robić postępy już dziś — filmy, sesje na żywo i plan pod Ciebie.',
+      preheader: `Kupiłeś coaching u ${coachName} — oto Twój dostęp do platformy`,
+      badge: '🎯 Twój dostęp',
+      title: `Dzięki za zakup coachingu! Oto Twój dostęp`,
+      subtitle: `Kupiłeś coaching u trenera ${coachName}. Ten link to Twoje wejście na platformę — załóż konto i zacznij trenować już dziś.`,
       bodyHtml: `
-        <p style="margin:0;">Cześć! Trener <strong style="color:#f4f6f7;">${coachName}</strong> dodał Cię do swojego panelu coachingowego CS2. Czekają tam na Ciebie:</p>
-        ${infoCard('Co dostajesz', ['🎬 Biblioteka filmów treningowych', '📅 Sesje 1:1 z trenerem i demo-review', '✅ Zadania i rutyny z kalendarzem', '📈 Śledzenie Faceit ELO na żywo'])}
+        <p style="margin:0;">Cześć! Trener <strong style="color:#f4f6f7;">${coachName}</strong> aktywował Ci dostęp do platformy CS2 Coaching. W środku czeka Twój wykupiony program:</p>
+        ${infoCard('Twój pakiet', ['🎬 Biblioteka filmów treningowych', '📅 Sesje 1:1 z trenerem i demo-review', '✅ Zadania i rutyny z kalendarzem', '📈 Śledzenie Faceit ELO na żywo', '💬 Bezpośredni kontakt z trenerem'])}
         <p style="margin:0;">Założenie konta zajmie Ci mniej niż minutę. Do zobaczenia na serwerze! 🔥</p>`,
-      button: { label: 'Utwórz konto i dołącz →', url: inviteUrl },
+      button: { label: 'Aktywuj dostęp →', url: inviteUrl },
       buttonNote: 'Link wygasa za 7 dni.',
     })
-    const text = `Cześć! ${coachName} zaprasza Cię do panelu CS2 Coaching.\n\nJako uczeń będziesz mieć dostęp do: biblioteki filmów treningowych, sesji z trenerem, zadań domowych, śledzenia rangi (Premier/Faceit ELO), komunikacji z trenerem.\n\nUtwórz konto i dołącz: ${inviteUrl}\n\nLink wygasa za 7 dni.`
+    const text = `Dzięki za zakup coachingu u ${coachName}!\n\nOto Twój dostęp do platformy CS2 Coaching: filmy treningowe, sesje z trenerem, zadania, śledzenie Faceit ELO.\n\nAktywuj dostęp: ${inviteUrl}\n\nLink wygasa za 7 dni.`
 
     const emailResult = await sendEmail({
       to: email,

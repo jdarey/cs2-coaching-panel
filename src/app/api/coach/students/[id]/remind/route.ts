@@ -48,9 +48,9 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   })
   const { html } = emailLayout({
     preheader: `${coachName} przypomina o treningu — ${pending.length} zadań czeka`,
-    badge: '💪 Czas na trening',
-    title: `Cześć${student.name ? ` ${student.name}` : ''}, trener o Tobie pamięta!`,
-    subtitle: `${coachName} sprawdził Twój plan i podrzuca rzeczy do nadrobienia. Mały krok dziś = duży skok ELO jutro.`,
+    badge: '💪 Twój coaching',
+    title: `Cześć${student.name ? ` ${student.name}` : ''}, Twój coaching czeka!`,
+    subtitle: `Trener ${coachName} sprawdził Twój wykupiony plan i podrzuca rzeczy do nadrobienia. Wykorzystaj coaching w 100% — mały krok dziś to duży skok ELO jutro.`,
     bodyHtml: pending.length
       ? infoCard('Twoje zadania', taskLines) + `<p style="margin:0;">Wejdź do panelu, odhacz je po kolei i patrz jak rośnie seria dni. Dasz radę! 🔥</p>`
       : `<p style="margin:0;">Dobra wiadomość: nic nie zalega! Zajrzyj do panelu po nową sesję treningową i trzymaj formę. 🚀</p>`,

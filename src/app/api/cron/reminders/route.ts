@@ -105,9 +105,9 @@ export async function GET(request: NextRequest) {
       try {
         const { html } = emailLayout({
           preheader: `Jutro mija termin: ${assignment.title}`,
-          badge: '📅 Jutro termin',
+          badge: '📅 Twój coaching',
           title: `Hej ${assignment.student.name || 'graczu'}, jutro termin!`,
-          subtitle: 'Jeszcze zdążysz — jedno zadanie dziś wieczorem i seria uratowana.',
+          subtitle: 'Wykorzystaj swój wykupiony coaching — jedno zadanie dziś wieczorem i seria uratowana.',
           bodyHtml: infoCard('Twoje zadanie', [
             `📝 <strong style="color:#f4f6f7;">${assignment.title}</strong>`,
             ...(assignment.video ? [`🎬 Film do obejrzenia: ${assignment.video.title}`] : []),
@@ -135,9 +135,9 @@ export async function GET(request: NextRequest) {
 
         const { html } = emailLayout({
           preheader: `${student.name || student.email} nie trenuje od ${days} dni`,
-          badge: '😴 Brak aktywności',
-          title: `${student.name || student.email} zniknął na ${days} dni`,
-          subtitle: 'Krótka wiadomość od trenera często wystarcza, żeby wrócił do gry.',
+          badge: '😴 Twój coaching czeka',
+          title: `${student.name || student.email} nie korzysta z coachingu od ${days} dni`,
+          subtitle: 'Wykupiony program sam się nie zrobi — krótka wiadomość od trenera często wystarcza, żeby wrócić do gry.',
           bodyHtml: infoCard('Uczeń', [
             `👤 <strong style="color:#f4f6f7;">${student.name || student.email}</strong>`,
             `📅 Ostatnia aktywność: ${lastActivity?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })}`,
