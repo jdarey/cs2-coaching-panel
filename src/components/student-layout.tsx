@@ -90,20 +90,16 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     const fetchProfile = () => {
       fetch('/api/user/profile')
         .then(r => r.ok ? r.json() : null)
-        .then(data => { 
-          console.log('[StudentLayout] Profile data:', data)
-          if (data?.faceitNickname) setFaceitNickname(data.faceitNickname) 
-        })
+        .then(data => { if (data?.faceitNickname) setFaceitNickname(data.faceitNickname) })
         .catch(() => {})
     }
     fetchElo()
     fetchProfile()
-    // ELO w sidebarze ucznia: od zalogowania do wylogowania co 30 s.
-    // Layout żyje przez całą sesję. Ukryta karta nie pyta (po powrocie
-    // i tak odświeża na focus) — ten sam UX, mniej transferu.
+    // ELO w sidebarze: odśwież przy wejściu + na focus.
+    // Fallback: co 15 min, gdy karta widoczna.
     const id = setInterval(() => {
       if (document.visibilityState === 'visible') fetchElo()
-    }, 30_000)
+    }, 900_000)
     const onFocus = () => fetchElo()
     window.addEventListener('focus', onFocus)
     return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }

@@ -119,26 +119,25 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
           nicknameRef.current = nick
         }
         if (!nick || cancelled) return
-        console.log('[FaceitEloChart] Fetching live ELO for:', nick)
         const r = await fetch(`/api/integrations/faceit?nickname=${encodeURIComponent(nick)}`, { cache: 'no-store' })
-        console.log('[FaceitEloChart] Response status:', r.status)
         if (!r.ok || cancelled) return
         const data = await r.json()
-        console.log('[FaceitEloChart] Response data:', data)
         if (typeof data?.elo === 'number' && !cancelled) {
           setLiveElo(data.elo)
           const lvl = typeof data?.skillLevel === 'number' ? data.skillLevel : levelFromElo(data.elo)
           setLiveLevel(lvl)
           maybeAutoSave(data.elo, lvl, history)
         }
-      } catch (e) {
-        console.error('[FaceitEloChart] Error:', e)
+      } catch {
+        /* Faceit limit/404 — wykres żyje z historii DB */
       }
     }
     fetchRanks()
-    // Wykres ELO: odświeżanie co 30 s + na focus (historia + 1x live Faceit).
-    // Live ELO ląduje w DB max. 1x na 6h, więc trajektoria rośnie sama.
-    const id = setInterval(fetchRanks, 30_000)
+    // ELO odświeża się przy wejściu na stronę + na focus.
+    // Fallback: co 15 min, gdy karta jest widoczna.
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchRanks()
+    }, 900_000)
     const onFocus = () => fetchRanks()
     window.addEventListener('focus', onFocus)
     return () => { cancelled = true; clearInterval(id); window.removeEventListener('focus', onFocus) }
