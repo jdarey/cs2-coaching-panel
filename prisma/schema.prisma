@@ -822,6 +822,16 @@ model AuditLog {
   @@index([createdAt])
 }
 
+// Feature Flags: przełączniki funkcjonalności (włącz/wyłącz bez deployu)
+model FeatureFlag {
+  key         String   @id // np. "chat_enabled", "auto_elo_refresh", "finance_module"
+  name        String   // nazwa do wyświetlenia
+  description String?  // opis
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // Coach-specific settings (fully customizable)
 model CoachSettings {
   id                String   @id @default(cuid())
