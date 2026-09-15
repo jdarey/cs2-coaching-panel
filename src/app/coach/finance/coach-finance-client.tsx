@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { Wallet, Plus, Trash2, Loader2, TrendingUp, TrendingDown, Scale, Info, ShieldCheck, ShieldAlert, Download, LayoutGrid } from 'lucide-react'
+import { Wallet, Plus, Trash2, Loader2, TrendingUp, TrendingDown, Scale, Info, ShieldCheck, ShieldAlert, Download, LayoutGrid, Pencil, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Entry {
@@ -65,6 +65,7 @@ export function CoachFinanceClient() {
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -87,7 +88,29 @@ export function CoachFinanceClient() {
     load()
   }, [load])
 
-  const add = async () => {
+  const resetForm = () => {
+    setEditingId(null)
+    setKind('INCOME')
+    setPerson('')
+    setTitle('')
+    setAmount('')
+    setDate(toDisplayDate(new Date()))
+    setNote('')
+  }
+
+  const startEdit = (e: Entry) => {
+    setEditingId(e.id)
+    setKind(e.kind)
+    setPerson(e.person)
+    setTitle(e.title)
+    setAmount(String((e.amount / 100).toFixed(2)).replace('.', ','))
+    setDate(toDisplayDate(new Date(e.date)))
+    setNote(e.note ?? '')
+    setMsg(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const save = async () => {
     const plnValue = Number(String(amount).replace(',', '.'))
     const isoDate = parseDisplayDate(date)
     if (!person.trim() || !title.trim() || !(plnValue > 0)) {
@@ -101,18 +124,16 @@ export function CoachFinanceClient() {
     setSaving(true)
     setMsg(null)
     try {
-      const res = await fetch('/api/coach/finance', {
-        method: 'POST',
+      const isEdit = !!editingId
+      const res = await fetch(isEdit ? `/api/coach/finance/${editingId}` : '/api/coach/finance', {
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kind, person: person.trim(), title: title.trim(), amountPln: plnValue, date: isoDate, note: note.trim() || null }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Błąd zapisu')
-      setPerson('')
-      setTitle('')
-      setAmount('')
-      setNote('')
-      setMsg({ ok: true, text: 'Zapisano.' })
+      resetForm()
+      setMsg({ ok: true, text: isEdit ? 'Zapisano zmiany.' : 'Zapisano.' })
       load()
     } catch (e: any) {
       setMsg({ ok: false, text: e.message || 'Błąd zapisu' })
@@ -125,7 +146,10 @@ export function CoachFinanceClient() {
     if (!confirm('Usunąć ten wpis?')) return
     try {
       const res = await fetch(`/api/coach/finance/${id}`, { method: 'DELETE' })
-      if (res.ok) load()
+      if (res.ok) {
+        if (editingId === id) resetForm()
+        load()
+      }
     } catch {
       /* ignore */
     }
@@ -211,9 +235,19 @@ export function CoachFinanceClient() {
         </div>
         <p className="text-xs text-white/40 mb-6">Od stycznia {yearSummary.year} wpadło łącznie: <b className="text-white/70">{pln(yearSummary.income)}</b> (wydatki: {pln(yearSummary.expense)})</p>
 
-        {/* Nowy wpis */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:p-6 mb-6">
-          <p className="text-sm font-semibold text-white mb-4">Nowy wpis</p>
+        {/* Nowy wpis / edycja */}
+        <div className={cn('rounded-2xl border p-4 sm:p-6 mb-6', editingId ? 'border-[#a78bfa]/40 bg-[#a78bfa]/[0.05]' : 'border-white/[0.07] bg-white/[0.02]')}>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold text-white">{editingId ? 'Edytuj wpis' : 'Nowy wpis'}</p>
+            {editingId && (
+              <button
+                onClick={resetForm}
+                className="inline-flex items-center gap-1.5 h-9 rounded-xl px-3 text-xs font-semibold text-white/60 bg-white/[0.04] border border-white/[0.08] hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" /> Anuluj edycję
+              </button>
+            )}
+          </div>
           {msg && (
             <div className={cn('mb-4 rounded-xl px-4 py-3 text-sm border', msg.ok ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200' : 'bg-red-500/10 border-red-500/25 text-red-200')}>
               {msg.text}
@@ -245,11 +279,11 @@ export function CoachFinanceClient() {
           </div>
           <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Notatka (opcjonalnie, np. forma płatności)" className="mt-3 w-full h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30" />
           <button
-            onClick={add}
+            onClick={save}
             disabled={saving}
             className="mt-4 inline-flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] disabled:opacity-50"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Zapisz wpis
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {editingId ? 'Zapisz zmiany' : 'Zapisz wpis'}
           </button>
         </div>
 
@@ -264,7 +298,7 @@ export function CoachFinanceClient() {
           ) : (
             <ul className="divide-y divide-white/[0.06]">
               {entries.map((e) => (
-                <li key={e.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02]">
+                <li key={e.id} className={cn('flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02]', editingId === e.id && 'bg-[#a78bfa]/[0.06]')}>
                   <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-lg text-base', e.kind === 'INCOME' ? 'bg-emerald-500/10' : 'bg-red-500/10')}>
                     {e.kind === 'INCOME' ? '💰' : '💸'}
                   </span>
@@ -278,6 +312,9 @@ export function CoachFinanceClient() {
                   <span className={cn('shrink-0 font-display font-bold tabular-nums', e.kind === 'INCOME' ? 'text-emerald-200' : 'text-red-200')}>
                     {e.kind === 'INCOME' ? '+' : '−'}{pln(e.amount)}
                   </span>
+                  <button onClick={() => startEdit(e)} title="Edytuj wpis" className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/35 hover:text-white hover:bg-white/[0.07]">
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   <button onClick={() => remove(e.id)} title="Usuń wpis" className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/35 hover:text-red-300 hover:bg-red-500/10">
                     <Trash2 className="w-4 h-4" />
                   </button>

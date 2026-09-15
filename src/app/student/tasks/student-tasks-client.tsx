@@ -660,140 +660,84 @@ export function StudentTasksClient() {
                                     const done = tp?.status === 'DONE'
                                     const isNext = !done && ti === firstPendingIdx
                                     const accents = [
-                                      { bar: '#a78bfa', soft: 'rgba(167,139,250,0.12)', glow: 'rgba(167,139,250,0.5)', iconBg: 'from-[#a78bfa] to-[#6d28d9]', label: 'FOCUS', icon: Target },
-                                      { bar: '#2dd4bf', soft: 'rgba(45,212,191,0.10)', glow: 'rgba(45,212,191,0.45)', iconBg: 'from-[#2dd4bf] to-[#0f766e]', label: 'AIM', icon: Crosshair },
-                                      { bar: '#fbbf24', soft: 'rgba(251,191,36,0.10)', glow: 'rgba(251,191,36,0.45)', iconBg: 'from-[#fbbf24] to-[#d97706]', label: 'SPEED', icon: Zap },
-                                      { bar: '#38bdf8', soft: 'rgba(56,189,248,0.10)', glow: 'rgba(56,189,248,0.45)', iconBg: 'from-[#38bdf8] to-[#1d4ed8]', label: 'TACTIC', icon: Layers },
-                                      { bar: '#f472b6', soft: 'rgba(244,114,182,0.10)', glow: 'rgba(244,114,182,0.45)', iconBg: 'from-[#f472b6] to-[#be185d]', label: 'CLUTCH', icon: Flame },
+                                      { bar: '#a78bfa', glow: 'rgba(167,139,250,0.5)', soft: 'rgba(167,139,250,0.10)' },
+                                      { bar: '#2dd4bf', glow: 'rgba(45,212,191,0.45)', soft: 'rgba(45,212,191,0.10)' },
+                                      { bar: '#fbbf24', glow: 'rgba(251,191,36,0.45)', soft: 'rgba(251,191,36,0.10)' },
+                                      { bar: '#38bdf8', glow: 'rgba(56,189,248,0.45)', soft: 'rgba(56,189,248,0.10)' },
+                                      { bar: '#f472b6', glow: 'rgba(244,114,182,0.45)', soft: 'rgba(244,114,182,0.10)' },
                                     ]
                                     const ac = accents[ti % accents.length]
-                                    const xp = (t.minutes ? t.minutes * 5 + 12 : 24)
-                                    const quickWin = (t.minutes || 10) <= 10
-                                    const hasMedia = !!(t.gifUrl || t.video?.thumbnail)
-                                    const typeIcon = t.video?.url ? Film : t.steamMapUrl ? MapPin : t.linkUrl ? Globe : t.gifUrl ? ImageIcon : ac.icon
-                                    const TypeIcon = typeIcon as any
+                                    const hasGif = !!t.gifUrl
                                     return (
                                       <div
                                         key={t.id}
                                         onClick={()=> { setSelectedTask(t); setSelectedAssignment(ra) }}
-                                        style={{ animationDelay: `${Math.min(ti * 70 + dayIdx*40, 420)}ms` }}
+                                        style={{ animationDelay: `${Math.min(ti * 60 + dayIdx*40, 400)}ms` }}
                                         className={cn(
-                                          'rise-in group/task relative flex gap-4 rounded-[22px] p-4 sm:p-[18px] border cursor-pointer overflow-hidden transition-all duration-300',
-                                          'hover:-translate-y-[3px] hover:scale-[1.006]',
-                                          isNext && !done ? 'ring-1 ring-[#a78bfa]/30 shadow-[0_16px_48px_-16px_rgba(139,92,246,0.5)]' : '',
+                                          'rise-in group/task relative flex items-center gap-4 rounded-[20px] p-4 border cursor-pointer overflow-hidden transition-all duration-300',
+                                          'hover:-translate-y-[2px] hover:scale-[1.005]',
+                                          isNext && !done ? 'ring-1 ring-[#a78bfa]/25 shadow-[0_12px_40px_-12px_rgba(139,92,246,0.45)]' : '',
                                           done
-                                            ? 'bg-gradient-to-br from-emerald-500/[0.08] via-emerald-500/[0.04] to-transparent border-emerald-500/20 shadow-[0_8px_32px_-12px_rgba(52,211,153,0.35)] opacity-[0.92] hover:opacity-100'
-                                            : isNext ? 'bg-gradient-to-br from-white/[0.06] via-[#a78bfa]/[0.06] to-white/[0.03] border-[#a78bfa]/30 backdrop-blur'
-                                            : 'bg-white/[0.035] border-white/[0.07] backdrop-blur hover:bg-white/[0.055] hover:border-white/[0.12] hover:shadow-[0_18px_48px_-16px_rgba(0,0,0,0.5)]',
+                                            ? 'bg-gradient-to-br from-emerald-500/[0.07] via-emerald-500/[0.03] to-transparent border-emerald-500/20 opacity-90 hover:opacity-100'
+                                            : isNext ? 'bg-gradient-to-br from-white/[0.055] via-[#a78bfa]/[0.05] to-white/[0.03] border-[#a78bfa]/25'
+                                            : 'bg-white/[0.04] border-white/[0.07] hover:bg-white/[0.06] hover:border-white/[0.12]',
                                         )}
                                       >
-                                        {/* NEXT glow border */}
-                                        {isNext && !done && <div className="pointer-events-none absolute inset-0 rounded-[22px] bg-gradient-to-r from-[#a78bfa]/0 via-[#a78bfa]/15 to-[#2dd4bf]/10 opacity-60 animate-[shimmer_2.8s_ease_infinite]" />}
-                                        {/* left accent bar */}
-                                        <span className="pointer-events-none absolute left-0 top-4 bottom-4 w-[4px] rounded-full transition-all duration-300 group-hover/task:top-3 group-hover/task:bottom-3" style={{ background: done ? '#10b981' : ac.bar, boxShadow: `0 0 18px ${done ? 'rgba(16,185,129,0.55)' : ac.glow}`, opacity: done ? 0.9 : 0.95 }} />
-                                        <span className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full blur-2xl opacity-0 group-hover/task:opacity-100 transition duration-500" style={{ background: ac.soft }} />
-
-                                        {/* NASTĘPNY badge */}
+                                        {/* left accent */}
+                                        <span className="pointer-events-none absolute left-0 top-3 bottom-3 w-[4px] rounded-full transition-all duration-300 group-hover/task:top-2 group-hover/task:bottom-2" style={{ background: done ? '#10b981' : ac.bar, boxShadow: `0 0 14px ${done ? 'rgba(16,185,129,0.5)' : ac.glow}`, opacity: done ? 0.9 : 0.9 }} />
+                                        <span className="pointer-events-none absolute -top-14 -right-14 h-32 w-32 rounded-full blur-2xl opacity-0 group-hover/task:opacity-100 transition duration-500" style={{ background: ac.soft }} />
                                         {isNext && !done && (
-                                          <span className="pointer-events-none absolute -top-px left-6 inline-flex items-center gap-1 rounded-b-xl bg-gradient-to-r from-[#a78bfa] to-[#6d28d9] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-lg">
-                                            <Sparkles className="w-3 h-3"/> Następny — zrób teraz
-                                          </span>
+                                          <span className="pointer-events-none absolute -top-px left-6 inline-flex items-center gap-1 rounded-b-lg bg-gradient-to-r from-[#a78bfa] to-[#6d28d9] px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white shadow">NASTĘPNY</span>
                                         )}
-                                        {/* xp + quick win */}
-                                        <span className={cn('pointer-events-none absolute top-3 right-3 hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black tracking-wide border', done ? 'bg-emerald-500/12 border-emerald-500/20 text-emerald-200' : 'bg-[#fbbf24]/12 border-[#fbbf24]/20 text-[#fde68a]')}>
-                                          <Star className="w-3 h-3" /> +{xp} XP
-                                        </span>
 
-                                        {/* SINGLE checkbox — absolutnie jedyny */}
+                                        {/* JEDYNE kółko */}
                                         <button
                                           onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}}
                                           disabled={togglingTask === t.id}
-                                          aria-label={done ? 'Cofnij zaliczenie' : 'Zalicz zadanie'}
-                                          className={cn('relative mt-1 shrink-0 grid place-items-center w-[46px] h-[46px] rounded-[14px] transition-all duration-300 active:scale-[0.92] cursor-pointer select-none',
+                                          aria-label={done ? 'Cofnij' : 'Zalicz'}
+                                          className={cn('relative shrink-0 grid place-items-center w-[44px] h-[44px] rounded-[13px] transition-all duration-200 active:scale-90 cursor-pointer select-none',
                                             done
-                                              ? 'bg-gradient-to-br from-[#34d399] to-[#059669] text-white ring-1 ring-white/20 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.65)]'
-                                              : isNext ? 'bg-white text-[#0a0a14] ring-1 ring-[#a78bfa]/30 shadow-[0_8px_24px_-8px_rgba(139,92,246,0.45)] hover:scale-105 hover:rotate-[-2deg]'
-                                              : 'bg-white/[0.06] text-white/35 border border-white/[0.10] hover:border-[#a78bfa]/40 hover:text-white hover:bg-[#a78bfa]/12 hover:shadow-[0_8px_24px_-8px_rgba(139,92,246,0.35)] hover:scale-105'
+                                              ? 'bg-gradient-to-br from-[#34d399] to-[#059669] text-white ring-1 ring-white/15 shadow-[0_6px_18px_-6px_rgba(16,185,129,0.6)]'
+                                              : isNext ? 'bg-white text-[#0a0a14] shadow-md hover:scale-[1.04]'
+                                              : 'bg-white/[0.07] text-white/40 border border-white/10 hover:bg-white hover:text-[#0a0a14] hover:border-white hover:scale-[1.04]'
                                           )}
                                         >
-                                          {togglingTask === t.id ? <Loader2 className="w-5 h-5 animate-spin" /> : done ? <Check className="w-6 h-6 animate-[pop-in_0.38s_cubic-bezier(0.22,1.4,0.36,1)]" strokeWidth={3.2} /> : isNext ? <Play className="w-5 h-5 ml-0.5 fill-[#0a0a14]" /> : <Circle className="w-5 h-5" />}
-                                          {done && <span className="pointer-events-none absolute inset-0 rounded-[14px] ring-1 ring-emerald-400/25 animate-[ping_1.15s_cubic-bezier(0,0,0.2,1)_1]" />}
+                                          {togglingTask === t.id ? <Loader2 className="w-5 h-5 animate-spin" /> : done ? <Check className="w-5 h-5" strokeWidth={3} /> : isNext ? <Play className="w-4 h-4 ml-0.5 fill-[#0a0a14]" /> : <Circle className="w-5 h-5" />}
+                                          {done && <span className="pointer-events-none absolute inset-0 rounded-[13px] ring-1 ring-emerald-400/30 animate-[ping_1s_cubic-bezier(0,0,0.2,1)_1]" />}
                                         </button>
 
-                                        {/* media / icon tile — wyróżniające się */}
-                                        <div className="hidden sm:flex shrink-0 flex-col items-center gap-2">
-                                          {hasMedia ? (
-                                            <div className={cn('relative w-[68px] h-[68px] rounded-2xl overflow-hidden border bg-black shadow-lg group-hover/task:scale-[1.02] transition', done ? 'border-emerald-500/20 grayscale-[0.25]' : 'border-white/10')}>
-                                              {t.gifUrl ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img decoding="async" src={t.gifUrl} alt={t.title} className="w-full h-full object-cover" loading="lazy" />
-                                              ) : t.video?.thumbnail ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img decoding="async" src={t.video.thumbnail!} alt={t.title} className="w-full h-full object-cover" />
-                                              ) : (
-                                                <div className="w-full h-full grid place-items-center bg-white/[0.06]"><Film className="w-6 h-6 text-white/30"/></div>
-                                              )}
-                                              <span className="absolute inset-0 ring-1 ring-white/10 rounded-2xl pointer-events-none" />
-                                              {!done && <span className="absolute bottom-1 left-1 right-1 inline-flex items-center justify-center gap-1 rounded-full bg-black/70 backdrop-blur px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white"><Play className="w-2.5 h-2.5 fill-white"/> podgląd</span>}
-                                            </div>
-                                          ) : (
-                                            <div className={cn('grid place-items-center w-[58px] h-[58px] rounded-2xl ring-1 shadow-md transition group-hover/task:scale-[1.04] group-hover/task:rotate-[-1deg]', `bg-gradient-to-br ${ac.iconBg} ring-white/15 text-white`)}>
-                                              <TypeIcon className="w-6 h-6 drop-shadow" />
-                                            </div>
-                                          )}
-                                          <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[8px] font-black tracking-[0.14em] border', done ? 'bg-white/[0.04] border-white/[0.06] text-white/30' : 'bg-white/[0.06] border-white/[0.08] text-white/40')}>{ac.label}</span>
+                                        {/* tytuł + minimal meta */}
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className={cn('text-[15px] font-bold leading-snug tracking-tight pr-2', done ? 'text-white/35 line-through decoration-white/15' : 'text-white')}>
+                                            {t.title}
+                                          </h4>
+                                          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                            {t.minutes && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-white/[0.06] border-white/[0.08] text-white/50')}><Clock className="w-3 h-3"/>{t.minutes} min</span>}
+                                            {t.video?.url && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-[#a78bfa]/10 border-[#a78bfa]/15 text-[#c4b5fd]')}><Film className="w-3 h-3"/>Wideo</span>}
+                                            {!done && !t.minutes && !t.video?.url && hasGif && <span className="text-[11px] text-white/30">GIF • kliknij by zobaczyć opis</span>}
+                                            {done && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300/70"><Check className="w-3 h-3"/>Zaliczone</span>}
+                                            {!done && <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/25">• kliknij by zobaczyć opis</span>}
+                                          </div>
                                         </div>
 
-                                        <div className="flex-1 min-w-0 pt-0.5">
-                                          <div className="flex items-start gap-2 flex-wrap">
-                                            <h4 className={cn('text-[14.5px] sm:text-[15.5px] font-black leading-tight tracking-tight', done ? 'text-white/40 line-through decoration-white/15' : 'text-white')}>
-                                              {t.title}
-                                            </h4>
-                                            {quickWin && !done && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/12 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-200"><Zap className="w-3 h-3"/> Szybki win</span>}
-                                            {done && <span className="inline-flex h-5 w-5 place-items-center rounded-full bg-emerald-500/15 text-emerald-300"><Check className="w-3 h-3" strokeWidth={3}/></span>}
+                                        {/* GIF — zawsze widoczny przy ćwiczeniu */}
+                                        {hasGif ? (
+                                          <div className={cn('relative shrink-0 w-[84px] h-[64px] sm:w-[96px] sm:h-[72px] rounded-xl overflow-hidden border bg-black shadow-md transition group-hover/task:scale-[1.02]', done ? 'border-white/5 opacity-70 grayscale-[0.2]' : 'border-white/10')}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img decoding="async" src={t.gifUrl!} alt={t.title} className="w-full h-full object-cover" loading="lazy" />
+                                            <span className="absolute inset-0 ring-1 ring-white/10 rounded-xl pointer-events-none" />
                                           </div>
-                                          {t.description ? (
-                                            <p className={cn('mt-1.5 text-[12.5px] leading-relaxed line-clamp-2 rounded-xl px-2.5 py-1.5 border', done ? 'bg-white/[0.03] border-white/[0.05] text-white/30' : 'bg-white/[0.04] border-white/[0.06] text-white/55 group-hover/task:text-white/70 group-hover/task:border-white/[0.08]')}>
-                                              {t.description.replace(/[*`#\[\]]/g,'').slice(0,140)}{t.description.length>140?'…':''}
-                                            </p>
-                                          ) : (
-                                            <p className={cn('mt-1.5 text-[11px] font-medium', done ? 'text-white/25' : 'text-white/30 italic')}>{done ? 'Zaliczone — super!' : isNext ? 'Kliknij START lub kółko by zaliczyć • pokaż co potrafisz!' : 'Otwórz by zobaczyć szczegóły i GIF'}</p>
-                                          )}
-                                          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                                            {t.minutes && <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/30' : isNext ? 'bg-[#fbbf24]/15 border-[#fbbf24]/25 text-[#fde68a] animate-pulse' : 'bg-white/[0.06] border-white/[0.08] text-white/60')}><Clock className="w-3 h-3" />{t.minutes} min</span>}
-                                            {t.video?.url && <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/30' : 'bg-[#a78bfa]/12 border-[#a78bfa]/20 text-[#ddd6fe]')}><Film className="w-3 h-3"/>Wideo</span>}
-                                            {t.steamMapUrl && <a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fda4af] hover:bg-[#f43f5e]/15 transition"><MapPin className="w-3 h-3" />Mapa</a>}
-                                            {t.linkUrl && <a href={t.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold bg-[#38bdf8]/10 border border-[#38bdf8]/20 text-[#7dd3fc] hover:bg-[#38bdf8]/15 transition"><Globe className="w-3 h-3" />Link</a>}
-                                            {!done && quickWin && <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300/80"><Star className="w-3 h-3 fill-emerald-300/30"/> Lekkie + szybkie</span>}
+                                        ) : t.video?.thumbnail ? (
+                                          <div className={cn('relative shrink-0 w-[84px] h-[64px] sm:w-[96px] sm:h-[72px] rounded-xl overflow-hidden border bg-black shadow-md', done ? 'border-white/5 opacity-60' : 'border-white/10')}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img decoding="async" src={t.video.thumbnail} alt={t.title} className="w-full h-full object-cover" />
+                                            <span className="absolute inset-0 grid place-items-center bg-black/25"><Play className="w-6 h-6 text-white fill-white/90"/></span>
                                           </div>
-                                          {/* mobile thumb */}
-                                          {hasMedia && (
-                                            <div className="sm:hidden mt-3 w-full h-28 rounded-xl overflow-hidden border border-white/10 bg-black relative">
-                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img decoding="async" src={t.gifUrl || t.video?.thumbnail || ''} alt={t.title} className="w-full h-full object-cover" />
-                                              <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] font-bold text-white"><Play className="w-3 h-3 fill-white"/> GIF</span>
-                                            </div>
-                                          )}
-                                        </div>
-
-                                        {/* RIGHT CTA — zachęcający */}
-                                        <div className="hidden sm:flex shrink-0 flex-col items-end justify-between gap-3 pt-1">
-                                          <span className={cn('inline-flex items-center justify-center h-6 min-w-[28px] rounded-full px-1.5 text-[10px] font-black tracking-widest border', done ? 'bg-emerald-500/12 border-emerald-500/20 text-emerald-200' : 'bg-white/[0.06] border-white/[0.08] text-white/35')}>#{String(ti+1).padStart(2,'0')}</span>
-                                          {done ? (
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] px-3 py-1.5 text-[11px] font-black text-white shadow"><Check className="w-3.5 h-3.5" strokeWidth={3}/> Zaliczone</span>
-                                          ) : (
-                                            <button onClick={(e)=>{e.stopPropagation(); setActiveTimer({ assignment: ra, task: t })}} className={cn('group/start inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12px] font-black text-white shadow-lg transition-all hover:scale-[1.04] active:scale-[0.97]', t.minutes ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow-[0_8px_20px_-8px_rgba(139,92,246,0.6)] hover:shadow-[0_10px_28px_-8px_rgba(139,92,246,0.7)]' : 'bg-white text-[#0a0a14] hover:bg-[#f5f3ff]')}>
-                                              {t.minutes ? <><Timer className="w-3.5 h-3.5 group-hover/start:rotate-12 transition"/> START</> : <><Play className="w-3.5 h-3.5 fill-white"/> ZRÓB</>} <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover/start:translate-x-0.5 transition" />
-                                            </button>
-                                          )}
-                                          <span className={cn('grid place-items-center h-7 w-7 rounded-xl border text-[11px] transition', done ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-white/[0.04] border-white/[0.06] text-white/20 group-hover/task:bg-white group-hover/task:text-[#0a0a14]')}>
-                                            <ArrowRight className="w-3.5 h-3.5" />
+                                        ) : (
+                                          <span className={cn('hidden sm:grid place-items-center shrink-0 w-[72px] h-[64px] rounded-xl border text-white/20', done ? 'bg-white/[0.02] border-white/[0.05]' : 'bg-white/[0.04] border-white/[0.07] group-hover/task:bg-white/[0.06]')}>
+                                            <ArrowRight className="w-5 h-5"/>
                                           </span>
-                                        </div>
-                                        {/* mobile CTA */}
-                                        <div className="sm:hidden absolute right-3 bottom-3">
-                                          {done ? <span className="inline-flex h-7 w-7 place-items-center rounded-full bg-emerald-500 text-white"><Check className="w-4 h-4" strokeWidth={3}/></span> : <span className="inline-flex h-7 w-7 place-items-center rounded-full bg-white text-[#0a0a14]"><ArrowRight className="w-4 h-4"/></span>}
-                                        </div>
+                                        )}
                                       </div>
                                     )
                                   })

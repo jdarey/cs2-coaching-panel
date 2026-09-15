@@ -11,6 +11,7 @@ export type AuditAction =
   | 'EMAIL_TEMPLATE_TEST_SENT'
   | 'FINANCE_ENTRY_CREATED'
   | 'FINANCE_ENTRY_DELETED'
+  | 'FINANCE_ENTRY_UPDATED'
   | 'FINANCE_EXPORT'
   | 'USERS_EXPORT'
   | 'BACKUP_CREATED'
@@ -88,6 +89,9 @@ export const audit = {
 
   financeEntryDeleted: (actorId: string, actorRole: string, entryId: string) =>
     auditLog('FINANCE_ENTRY_DELETED', { actorId, actorRole, targetId: entryId, targetType: 'FINANCE_ENTRY' }),
+
+  financeEntryUpdated: (actorId: string, actorRole: string, entryId: string) =>
+    auditLog('FINANCE_ENTRY_UPDATED', { actorId, actorRole, targetId: entryId, targetType: 'FINANCE_ENTRY' }),
 
   financeExport: (actorId: string, actorRole: string) =>
     auditLog('FINANCE_EXPORT', { actorId, actorRole }),
