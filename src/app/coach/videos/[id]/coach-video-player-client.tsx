@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, Film } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import dynamic from 'next/dynamic'
-const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { ProtectedEmbed } from '@/components/protected-embed'
 import { getYouTubeId } from '@/lib/utils'
 import { useSession } from 'next-auth/react'

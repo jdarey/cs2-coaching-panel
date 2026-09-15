@@ -52,7 +52,9 @@ ${preheader ? `<div style="display:none; max-height:0; overflow:hidden; opacity:
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; border-collapse:separate;">
   <tr><td style="background:linear-gradient(90deg, ${ACCENT} 0%, ${ACCENT_DARK} 55%, #2de5ca 135%); border-radius:22px 22px 0 0; font-size:0; line-height:0; height:5px;">&nbsp;</td></tr>
   <tr><td bgcolor="${BG}" style="background-color:${BG}; border-left:1px solid ${CARD_EDGE}; border-right:1px solid ${CARD_EDGE}; padding:36px 36px 0; text-align:center;">
-    <div style="display:inline-block; width:64px; height:64px; line-height:64px; border-radius:20px; background:linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%); text-align:center; font-family:Arial,Helvetica,sans-serif; font-size:30px; font-weight:800; color:#ffffff;">C</div>
+    <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr><td align="center" bgcolor="${ACCENT_DARK}" style="background-color:${ACCENT_DARK}; border-radius:20px; font-size:0; line-height:0;">
+      <img src="${LOGO_URL}" width="64" height="64" alt="CS2 Coaching" style="display:block; width:64px; height:64px; border:0; outline:none; text-decoration:none; border-radius:20px; background-color:${ACCENT_DARK}; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:14px; font-weight:bold;" />
+    </td></tr></table>
     <p style="margin:14px 0 0; font-size:10px; letter-spacing:5px; text-transform:uppercase; color:${FAINT}; font-weight:700;">CS2 Coaching</p>
   </td></tr>
   <tr><td bgcolor="${BG}" style="background-color:${BG}; border-left:1px solid ${CARD_EDGE}; border-right:1px solid ${CARD_EDGE}; padding:24px 36px 0;">
@@ -113,6 +115,9 @@ export function infoCard(title: string, lines: string[]): string {
 // Linki do stopki — ze zmiennych środowiskowych, żeby trener podmienił bez
 // grzebania w kodzie. SITE_URL ma sensowny domyślny (strona reklamowa).
 const SITE_URL = process.env.SITE_URL || 'https://dareycs2.vercel.app/'
+// Logo w mailu MUSI mieć absolutny URL (klienci poczty nie widzą plików
+// względnych). Plik leży w public/, więc jest serwowany spod adresu strony.
+const LOGO_URL = `${SITE_URL.replace(/\/$/, '')}/icon.png`
 const YOUTUBE_URL = process.env.YOUTUBE_URL || 'https://www.youtube.com/@DareyCS2'
 const DISCORD_URL = process.env.DISCORD_URL || ''
 const DISCORD_NAME = process.env.DISCORD_NAME || 'jdarey'

@@ -65,7 +65,7 @@ function levelFromElo(elo: number | null): number | null {
 }
 
 export function StudentLayout({ children }: { children: ReactNode }) {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const pathname = usePathname()
   const router = useRouter()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -134,6 +134,22 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     }
     router.push('/login')
     router.refresh()
+  }
+
+  // Świeże logowanie: sesja ładuje się chwilę — pokaż szkielet zamiast
+  // pustego ekranu (wyglądało jak „strona nie działa", np. Ścieżki).
+  if (status === 'loading') {
+    return (
+      <div className="relative min-h-screen bg-[#07060c] font-sans text-white overflow-x-clip grid place-items-center">
+        <AuroraBackground />
+        <div className="flex flex-col items-center gap-4 animate-pulse">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20">
+            <GraduationCap className="w-7 h-7 text-white" />
+          </span>
+          <p className="text-sm text-white/40">Ładowanie panelu…</p>
+        </div>
+      </div>
+    )
   }
 
   if ((user as any)?.role !== 'STUDENT') return null

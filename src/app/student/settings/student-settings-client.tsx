@@ -29,7 +29,6 @@ import {
 } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
-import { fetchAndSaveLiveElo } from '@/lib/live-elo'
 
 interface User {
   id: string
@@ -207,12 +206,30 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
     setIsLoading(true)
     setGamingResult(null)
     try {
+      const typedNick = gaming.faceit.trim()
+      let canonicalNick: string | null = null
+      let liveElo: number | null = null
+      let liveLevel: number | null = null
+      // 1) Walidacja nicka PRZED zapisem — Faceit rozróżnia wielkość liter
+      // (np. donk666 działa, a DONK666 daje 404), więc zły nick nie ląduje w bazie.
+      if (typedNick) {
+        const check = await fetch(`/api/integrations/faceit?nickname=${encodeURIComponent(typedNick)}`, { cache: 'no-store' })
+        const info = check.ok ? await check.json().catch(() => null) : null
+        if (!check.ok || typeof info?.elo !== 'number') {
+          setGamingResult({ ok: false, message: `Nie znaleziono gracza Faceit o nicku „${typedNick}". Przepisz go DOKŁADNIE jak na Faceit — wielkość liter ma znaczenie. Kont nie zapisano.` })
+          return
+        }
+        canonicalNick = info.nickname || typedNick
+        liveElo = info.elo
+        liveLevel = typeof info.skillLevel === 'number' ? info.skillLevel : null
+      }
+      // 2) Zapis (z kanoniczną wielkością liter pobraną z Faceit)
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           steamVanity: gaming.steam.trim() || null,
-          faceitNickname: gaming.faceit.trim() || null,
+          faceitNickname: canonicalNick,
         }),
       })
       const data = await res.json()
@@ -220,15 +237,23 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
         setGamingResult({ ok: false, message: data.error || 'Nie udało się zapisać' })
         return
       }
-      // Po zapisaniu nicka od razu sprawdzamy ELO (nie czekamy na wykres)
-      const nick = gaming.faceit.trim()
-      if (nick) {
-        const elo = await fetchAndSaveLiveElo(nick)
-        if (elo != null) {
-          setGamingResult({ ok: true, message: `Zapisano. Aktualne ELO: ${elo} — trajektoria na stronie rangi już je pokazuje.` })
-          return
-        }
-        setGamingResult({ ok: true, message: 'Zapisano konta. Nie udało się od razu pobrać ELO — sprawdź nick lub spróbuj „Pobierz rangę teraz".' })
+      // 3) Od razu dopisz punkt ELO — ranga i pasek do kolejnego poziomu
+      // aktualizują się bez czekania na crona ani wykres.
+      if (canonicalNick && liveElo != null) {
+        await fetch('/api/ranks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'FACEIT',
+            rank: `${liveElo} ELO`,
+            elo: liveElo,
+            source: 'FACEIT_LIVE',
+            note: 'Auto (Faceit na żywo)',
+          }),
+        }).catch(() => {})
+        window.dispatchEvent(new CustomEvent('ranks:updated'))
+        setGaming((s) => ({ ...s, faceit: canonicalNick as string }))
+        setGamingResult({ ok: true, message: `Zapisano. Aktualne ELO: ${liveElo}${liveLevel != null ? ` (poziom ${liveLevel})` : ''} — pasek do kolejnego poziomu czeka w zakładce Moja ranga.` })
         return
       }
       setGamingResult({ ok: true, message: 'Zapisano konta gier' })
@@ -544,7 +569,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                     </div>
                     <div>
                       <h3 className="font-display font-semibold text-white">Konta gier</h3>
-                      <p className="text-sm text-white/45">Wpisz nick Faceit — Twój live ELO i trajektoria będą odświeżane automatycznie co 30 sekund. Steam jest opcjonalny (do Premier ratingu i dem).</p>
+                      <p className="text-sm text-white/45">Wpisz nick Faceit — ELO sprawdzi się od razu po zapisie, a potem będzie odświeżane przy każdym wejściu na stronę. Steam jest opcjonalny (do Premier ratingu i dem).</p>
                     </div>
                   </div>
 
@@ -563,8 +588,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                       />
                     </div>
                     <p className="text-xs text-white/40">
-                      Twój live ELO i trajektoria na wykresie będą odświeżane co 30 sekund. 
-                      Nick musi być dokładny (wielkość liter nie ma znaczenia).
+                      Przepisz nick DOKŁADNIE jak na Faceit — wielkość liter ma znaczenie
+                      (zły nick nie zapisze się i zobaczysz błąd).
                     </p>
                   </div>
 

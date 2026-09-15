@@ -53,7 +53,7 @@ export function ProtectedEmbed({
 
   return (
     <div
-      className="relative w-full h-full bg-black overflow-hidden"
+      className="yt-force-dark relative w-full h-full bg-black overflow-hidden"
       onContextMenu={(e) => e.preventDefault()}
       // Never let the iframe be dragged out to a new tab, nor opened via
       // middle-click; block copying from the embed surface too.
