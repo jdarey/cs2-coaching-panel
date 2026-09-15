@@ -6,6 +6,7 @@ import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
+import { GifPreview } from '@/components/gif-preview'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { useSession } from 'next-auth/react'
 import {
@@ -557,17 +558,10 @@ export function StudentTasksClient() {
                                     <div className="flex-1 min-w-0">
                                       <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>
                                         <span className="relative inline-flex items-center gap-1">
-                                          {t.title}
-                                          {t.gifUrl && (
-                                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 -translate-x-2 group-hover:translate-x-0 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.97] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-xl overflow-hidden bg-[#0b0e14]/95 backdrop-blur-xl ring-1 ring-white/15 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8),0_0_24px_-6px_rgba(139,92,246,0.25)] w-48">
-                                            <span className="h-px w-full bg-gradient-to-r from-transparent via-[#a78bfa]/60 to-transparent" />
-                                            <span className="relative h-[108px] w-48 bg-black block overflow-hidden">
-                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                            </span>
-                                          </span>
-                                        </span>
+                                          {t.gifUrl ? (
+                                            <GifPreview gifUrl={t.gifUrl} title={t.title}>{t.title}</GifPreview>
+                                          ) : (
+                                            t.title
                                           )}
                                         </span>
                                       </p>

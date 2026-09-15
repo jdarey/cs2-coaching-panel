@@ -11,6 +11,7 @@ import {
   Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
+import { GifPreview } from '@/components/gif-preview'
 import { getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
@@ -947,20 +948,13 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white/70 shrink-0 mt-0.5">{idx+1}</span>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-semibold text-white/90 flex items-center gap-2">
-                                    <span className="relative inline-flex items-center gap-1">
-                                      {t.title}
-                                      {t.gifUrl && (
-                                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 -translate-x-2 group-hover:translate-x-0 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.97] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-xl overflow-hidden bg-[#0b0e14]/95 backdrop-blur-xl ring-1 ring-white/15 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8),0_0_24px_-6px_rgba(139,92,246,0.25)] w-48">
-                                            <span className="h-px w-full bg-gradient-to-r from-transparent via-[#a78bfa]/60 to-transparent" />
-                                            <span className="relative h-[108px] w-48 bg-black block overflow-hidden">
-                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                            </span>
-                                          </span>
-                                        </span>
-                                      )}
-                                    </span>
+                                      <span className="relative inline-flex items-center gap-1">
+                                        {t.gifUrl ? (
+                                          <GifPreview gifUrl={t.gifUrl} title={t.title}>{t.title}</GifPreview>
+                                        ) : (
+                                          t.title
+                                        )}
+                                      </span>
                                   </p>
                                   {t.description && <div className="mt-1 text-xs text-white/45 line-clamp-2 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}
                                   <div className="mt-2 flex flex-wrap items-center gap-2">
