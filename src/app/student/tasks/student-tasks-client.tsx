@@ -6,7 +6,7 @@ import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
-import { GifPreview } from '@/components/gif-preview'
+import { GifPreviewHost, gifRowHandlers } from '@/components/gif-preview'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { useSession } from 'next-auth/react'
 import {
@@ -394,6 +394,7 @@ export function StudentTasksClient() {
 
   return (
     <StudentLayout>
+      <GifPreviewHost />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-24 space-y-8">
         <PageHeader
           icon={ClipboardList}
@@ -550,19 +551,15 @@ export function StudentTasksClient() {
                                 const done = tp?.status === 'DONE'
                                 const accent = ['#a78bfa', '#2dd4bf', '#fbbf24', '#38bdf8', '#f472b6'][ti % 5]
                                 return (
-                                  <div key={t.id} onClick={()=> setSelectedTask(t)} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer overflow-hidden', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
+                                  <div key={t.id} onClick={()=> setSelectedTask(t)} {...gifRowHandlers(t)} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer overflow-hidden', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
                                     {!done && <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
                                     <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
                                       {togglingTask === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Circle className="w-3.5 h-3.5" />}
                                     </button>
                                     <div className="flex-1 min-w-0">
                                       <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>
-                                        <span className="relative inline-flex items-center gap-1">
-                                          {t.gifUrl ? (
-                                            <GifPreview gifUrl={t.gifUrl} title={t.title}>{t.title}</GifPreview>
-                                          ) : (
-                                            t.title
-                                          )}
+                                        <span className="relative inline-flex items-center gap-1" data-gif-title>
+                                          {t.title}
                                         </span>
                                       </p>
                                       <div className="mt-2 flex flex-wrap items-center gap-2">

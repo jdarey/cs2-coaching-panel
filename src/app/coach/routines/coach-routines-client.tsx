@@ -11,7 +11,7 @@ import {
   Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
-import { GifPreview } from '@/components/gif-preview'
+import { GifPreviewHost, gifRowHandlers } from '@/components/gif-preview'
 import { getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
@@ -323,6 +323,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
 
   return (
     <CoachLayout>
+      <GifPreviewHost />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
         <PageHeader
           icon={ListChecks}
@@ -944,16 +945,12 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           {dayTasks.map((t, idx) => {
                             const vid = t.videoId ? videos.find((v)=>v.id===t.videoId) : null
                             return (
-                              <div key={idx} onClick={() => setPreviewTask(t)} className="group flex items-start gap-3 rounded-2xl p-3.5 border bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03] transition-all duration-300 relative cursor-pointer">
+                              <div key={idx} onClick={() => setPreviewTask(t)} {...gifRowHandlers(t)} className="group flex items-start gap-3 rounded-2xl p-3.5 border bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03] transition-all duration-300 relative cursor-pointer">
                                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white/70 shrink-0 mt-0.5">{idx+1}</span>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-semibold text-white/90 flex items-center gap-2">
-                                      <span className="relative inline-flex items-center gap-1">
-                                        {t.gifUrl ? (
-                                          <GifPreview gifUrl={t.gifUrl} title={t.title}>{t.title}</GifPreview>
-                                        ) : (
-                                          t.title
-                                        )}
+                                      <span className="relative inline-flex items-center gap-1" data-gif-title>
+                                        {t.title}
                                       </span>
                                   </p>
                                   {t.description && <div className="mt-1 text-xs text-white/45 line-clamp-2 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}

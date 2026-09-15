@@ -34,7 +34,7 @@ import {
   Globe,
 } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
-import { GifPreview } from '@/components/gif-preview'
+import { GifPreviewHost, gifRowHandlers } from '@/components/gif-preview'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS, getYouTubeId } from '@/lib/utils'
@@ -443,6 +443,7 @@ export function CoachStudentDetailClient({
 
   return (
     <CoachLayout>
+      <GifPreviewHost />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Back */}
         <Link
@@ -1132,18 +1133,14 @@ export function CoachStudentDetailClient({
                             // znajdź video z globalnej listy
                             const video = t.videoId ? coachVideos.find((v:any)=>v.id===t.videoId) : null
                             return (
-                              <div key={t.id} onClick={() => setPreviewTask(t)} className={['group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]'].join(' ')}>
+                              <div key={t.id} onClick={() => setPreviewTask(t)} {...gifRowHandlers(t)} className={['group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]'].join(' ')}>
                                 <span className={['mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg text-xs font-bold', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1]'].join(' ')}>
                                   {done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <span>{t.order + 1}</span>}
                                 </span>
                                 <div className="flex-1 min-w-0">
                                   <p className={['text-sm font-semibold leading-snug flex items-center gap-2', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90'].join(' ')}>
-                                    <span className="relative inline-flex items-center gap-1">
-                                        {t.gifUrl ? (
-                                          <GifPreview gifUrl={t.gifUrl} title={t.title}>{t.title}</GifPreview>
-                                        ) : (
-                                          t.title
-                                        )}
+                                    <span className="relative inline-flex items-center gap-1" data-gif-title>
+                                        {t.title}
                                       </span>
                                   </p>
                                   {t.description && <p className="text-xs text-white/45 mt-1 line-clamp-2">{t.description}</p>}
