@@ -30,19 +30,25 @@ export function hideGifPreview() {
 
 // Helper do wiersza ćwiczenia: doklej {...gifRowHandlers(t)} do diva wiersza,
 // tytuł oznacz data-gif-title, a przycisk Start (jeśli jest) data-gif-start.
-// Dymek staje obok przycisku Start, a gdy go nie ma — obok tytułu.
+// Kotwica pozioma: długi tytuł (>45 znaków lub zawinięty w 2 linie) → obok
+// tytułu; krótki tytuł + Start → obok Start; inaczej obok tytułu.
+// Pion: zawsze środek CAŁEGO wiersza ćwiczenia.
 export function gifRowHandlers(t: { gifUrl: string | null; title: string }) {
   if (!t.gifUrl) return {}
   const gifUrl = t.gifUrl
   const title = t.title
   return {
     onMouseEnter: (e: MouseEvent<HTMLDivElement>) => {
-      const el =
-        e.currentTarget.querySelector('[data-gif-start]') ??
-        e.currentTarget.querySelector('[data-gif-title]') ??
-        e.currentTarget
-      const r = el.getBoundingClientRect()
-      showGifPreview(gifUrl, title, { right: r.right, top: r.top, height: r.height })
+      const row = e.currentTarget
+      const titleEl = row.querySelector('[data-gif-title]')
+      const startEl = row.querySelector('[data-gif-start]')
+      const titleRect = titleEl?.getBoundingClientRect()
+      const isLongTitle =
+        title.trim().length > 45 || (titleRect != null && titleRect.height > 28)
+      const anchor = (isLongTitle ? titleEl : (startEl ?? titleEl)) ?? row
+      const r = anchor.getBoundingClientRect()
+      const rowR = row.getBoundingClientRect()
+      showGifPreview(gifUrl, title, { right: r.right, top: rowR.top, height: rowR.height })
     },
     onMouseLeave: () => hideGifPreview(),
   }
