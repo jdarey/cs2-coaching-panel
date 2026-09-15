@@ -52,7 +52,7 @@ export function gifRowHandlers(t: { gifUrl: string | null; title: string }) {
     onMouseLeave: () => hideGifPreview(),
   }
 }
-}
+
 export function GifPreviewHost() {
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [state, setState] = useState<GifState | null>(null)
