@@ -1140,7 +1140,7 @@ export function CoachStudentDetailClient({
                                     <span className="relative inline-flex items-center gap-1">
                                       {t.title}
                                       {t.gifUrl && (
-                                        <span className="pointer-events-none absolute left-full ml-3 bottom-[-10px] hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
+                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
                                           <span className="flex flex-col rounded-xl overflow-hidden bg-black border border-white/10 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)] w-52">
                                             <span className="relative h-28 w-52 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
