@@ -825,7 +825,7 @@ export function StudentTasksClient() {
                         <c.icon className="w-5 h-5 text-[#a78bfa] mb-2"/>
                         <p className="text-sm font-semibold text-white">{c.title}</p>
                         <p className="text-xs text-white/45 mt-1">{c.desc}</p>
-                        <button onClick={() => { const r=routines[0]; if(r){ const t=r.routine.tasks[0]; if(t) setActiveTimer({assignment:r, task: { ...t, title: c.title, minutes: parseInt(c.title.match(/\d+/)?.[0]||'10') } as any}) } }} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#c4b5fd] hover:text-white">Start <Timer className="w-3.5 h-3.5"/></button>
+                        <button onClick={() => { const r=routines[0]; if(r){ const t=r.routine.tasks[0]; if(t) setActiveTimer({assignment:r, task: { ...t, id: '', title: c.title, minutes: parseInt(c.title.match(/\d+/)?.[0]||'10') } as any}) } }} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#c4b5fd] hover:text-white">Start <Timer className="w-3.5 h-3.5"/></button>
                       </div>
                     ))}
                   </div>
@@ -887,8 +887,11 @@ export function StudentTasksClient() {
 
         {activeTimer && (
           <PracticeTimer minutes={activeTimer.task.minutes ?? 10} taskTitle={activeTimer.task.title} onClose={() => setActiveTimer(null)} onComplete={(actualMinutes) => {
-              fetch('/api/practice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ minutes: actualMinutes, taskId: activeTimer.task.id, assignmentId: activeTimer.assignment.id }) }).catch(() => undefined)
-              toggleRoutineTask(activeTimer.assignment, activeTimer.task.id)
+              // Ćwiczenia dodatkowe (ad-hoc, puste id) logują minuty, ale NIE odhaczają losowego zadania z rutyny
+              const known = activeTimer.assignment.routine.tasks.some((t) => t.id === activeTimer.task.id)
+              fetch('/api/practice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ minutes: actualMinutes, taskId: known ? activeTimer.task.id : null, assignmentId: activeTimer.assignment.id }) }).catch(() => undefined)
+              if (known) toggleRoutineTask(activeTimer.assignment, activeTimer.task.id)
+              else setActiveTimer(null)
             }} />
         )}
 

@@ -53,6 +53,64 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user || (session.user as any).role !== 'COACH') {
+      return NextResponse.json({ error: 'Tylko trener może edytować uczniów' }, { status: 403 })
+    }
+
+    const { id } = await params
+    const userId = (session.user as any).id
+
+    const student = await prisma.user.findUnique({
+      where: { id },
+      select: { coachId: true },
+    })
+    if (!student || student.coachId !== userId) {
+      return NextResponse.json({ error: 'Uczeń nie znaleziony lub brak uprawnień' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    // Email jest identyfikatorem konta — niezmienny. Trener edytuje nazwę.
+    const name = typeof body?.name === 'string' ? body.name.trim().slice(0, 100) : undefined
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { name: name === '' ? null : name },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        createdAt: true,
+        coachId: true,
+        _count: { select: { sessionsAsStudent: true, videoProgress: true } },
+      },
+    })
+
+    const progress = await prisma.videoProgress.findMany({
+      where: { userId: id },
+      select: { status: true },
+    })
+    const progressStats = {
+      total: progress.length,
+      pending: progress.filter((p) => p.status === 'PENDING').length,
+      watching: progress.filter((p) => p.status === 'WATCHING').length,
+      watched: progress.filter((p) => p.status === 'WATCHED').length,
+      implemented: progress.filter((p) => p.status === 'IMPLEMENTED').length,
+    }
+
+    return NextResponse.json({ ...updated, progressStats })
+  } catch (error) {
+    console.error('Student PATCH error:', error)
+    return NextResponse.json({ error: 'Błąd edycji ucznia' }, { status: 500 })
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

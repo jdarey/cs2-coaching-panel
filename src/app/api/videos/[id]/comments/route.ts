@@ -10,15 +10,29 @@ const commentSchema = z.object({
   content: z.string().min(1).max(2000),
 })
 
+async function canAccessVideo(user: any, videoCoachId: string): Promise<boolean> {
+  if (user.role === 'COACH') return videoCoachId === user.id
+  if (user.role === 'STUDENT') {
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { coachId: true } })
+    return (dbUser?.coachId ?? null) === videoCoachId
+  }
+  return false
+}
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     return NextResponse.json({ error: 'Nie zalogowano' }, { status: 401 })
   }
 
-  const video = await prisma.video.findUnique({ where: { id: params.id }, select: { id: true } })
+  const video = await prisma.video.findUnique({ where: { id: params.id }, select: { id: true, coachId: true } })
   if (!video) {
     return NextResponse.json({ error: 'Nie znaleziono filmu' }, { status: 404 })
+  }
+
+  // Ten sam guard co w POST — tylko właściciel-trener i jego uczniowie.
+  if (!(await canAccessVideo(session.user, video.coachId))) {
+    return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
   }
 
   const comments = await prisma.videoComment.findMany({
@@ -50,17 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   // Only the owning coach or students of that coach can comment.
-  let studentCoachId: string | null = null
-  if (user.role === 'STUDENT') {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { coachId: true },
-    })
-    studentCoachId = dbUser?.coachId ?? null
-  }
-  const allowed =
-    user.role === 'COACH' ? video.coachId === user.id : user.role === 'STUDENT' && studentCoachId === video.coachId
-  if (!allowed) {
+  if (!(await canAccessVideo(user, video.coachId))) {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
   }
 

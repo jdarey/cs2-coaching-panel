@@ -98,9 +98,11 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
     progress.find((p) => p.videoId === videoId && p.sessionId === sessionId)
 
   const filteredSessions = sessions.filter((s) => {
+    const coachName = s.coach?.name ?? 'Trener'
+    const coachEmail = s.coach?.email ?? ''
     const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase()) ||
-      s.coach.name?.toLowerCase().includes(search.toLowerCase()) ||
-      s.coach.email.toLowerCase().includes(search.toLowerCase())
+      coachName.toLowerCase().includes(search.toLowerCase()) ||
+      coachEmail.toLowerCase().includes(search.toLowerCase())
     const matchesStatus = statusFilter === 'all' || s.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -244,9 +246,9 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                       <div className="relative shrink-0">
                         <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[#a78bfa]/45 to-[#8b5cf6]/25 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-500" />
                         <Avatar className="relative h-12 w-12 rounded-xl ring-1 ring-white/15">
-                          <AvatarImage src={session.coach.avatarUrl || ''} alt={session.coach.name || ''} />
+                          <AvatarImage src={session.coach?.avatarUrl || ''} alt={session.coach?.name || ''} />
                           <AvatarFallback className="rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white font-display font-semibold">
-                            {getInitials(session.coach.name || 'T')}
+                            {getInitials(session.coach?.name || 'T')}
                           </AvatarFallback>
                         </Avatar>
                       </div>
@@ -272,7 +274,7 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
                             {STATUS_LABELS[session.status] || session.status}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm text-white/45 truncate">{session.coach.name || session.coach.email}</p>
+                        <p className="mt-1 text-sm text-white/45 truncate">{session.coach?.name || session.coach?.email || 'Trener'}</p>
 
                         {/* Tags */}
                         {tagCount > 0 && (

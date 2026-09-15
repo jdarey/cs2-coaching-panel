@@ -92,7 +92,7 @@ export function CoachMatchesClient() {
       (m) =>
         m.student.name?.toLowerCase().includes(q) ||
         m.student.email.toLowerCase().includes(q) ||
-        m.map.toLowerCase().includes(q),
+        (m.map || '').toLowerCase().includes(q),
     )
   }, [matches, search])
 
@@ -233,7 +233,7 @@ export function CoachMatchesClient() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Link href={`/coach/students?q=${encodeURIComponent(m.student.email)}`} className="flex items-center gap-2 group min-w-0">
+                        <Link href={`/coach/students/${m.student.id}`} className="flex items-center gap-2 group min-w-0">
                           <Avatar className="h-6 w-6 rounded-lg ring-1 ring-white/15 shrink-0">
                             <AvatarImage src={m.student.avatarUrl || undefined} alt={m.student.name || m.student.email} />
                             <AvatarFallback className="rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white text-[10px] font-bold">
@@ -252,10 +252,10 @@ export function CoachMatchesClient() {
                         )}>
                           {win ? 'W' : m.result === 'LOSS' ? 'P' : 'R'}
                         </span>
-                        {m.eloChange !== 0 && (
-                          <span className={cn('inline-flex items-center gap-0.5 text-xs font-bold tabular-nums', m.eloChange > 0 ? 'text-[#34d399]' : 'text-red-300')}>
-                            {m.eloChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                            {m.eloChange > 0 ? '+' : ''}{m.eloChange} ELO
+                        {(m.eloChange ?? 0) !== 0 && (
+                          <span className={cn('inline-flex items-center gap-0.5 text-xs font-bold tabular-nums', (m.eloChange ?? 0) > 0 ? 'text-[#34d399]' : 'text-red-300')}>
+                            {(m.eloChange ?? 0) > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {(m.eloChange ?? 0) > 0 ? '+' : ''}{m.eloChange} ELO
                           </span>
                         )}
                         {m.source === 'FACEIT' && (
@@ -327,7 +327,7 @@ export function CoachMatchesClient() {
 
                       <div className="mt-2 flex items-center gap-2">
                         <Link
-                          href={`/student/matches/${m.id}`}
+                          href={`/coach/matches/${m.id}/demo-review`}
                           className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-white/55 hover:text-white glass hover:border-[#a78bfa]/30 transition"
                         >
                           <Sparkles className="w-3.5 h-3.5 text-[#c4b5fd]" /> Szczegóły meczu

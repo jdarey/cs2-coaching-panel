@@ -41,7 +41,12 @@ export async function GET(request: NextRequest) {
     const allStudentAssignments = await prisma.routineAssignment.findMany({ where: { studentId }, select: { id: true } })
     const allIds = allStudentAssignments.map(a=>a.id)
     const progressWhere: any = { assignmentId: { in: allIds.length ? allIds : ['__none__'] }, status: 'DONE', completedAt: { gte: from, not: null } }
-    if (assignmentId) progressWhere.assignmentId = assignmentId
+    if (assignmentId) {
+      // IDOR guard: cudzy assignmentId nie może nadpisać filtra własności
+      const own = await prisma.routineAssignment.findFirst({ where: { id: assignmentId, studentId }, select: { id: true } })
+      if (!own) return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
+      progressWhere.assignmentId = assignmentId
+    }
     else if (routineId) {
       const assigns = await prisma.routineAssignment.findMany({ where: { routineId, studentId }, select: { id: true } })
       progressWhere.assignmentId = { in: assigns.length ? assigns.map(a=>a.id) : ['__none__'] }

@@ -61,10 +61,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, name, password } = body
+    const email = String(body?.email || '').trim().toLowerCase()
+    const name = typeof body?.name === 'string' ? body.name.trim().slice(0, 100) : null
+    const password = String(body?.password || '')
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email i hasło są wymagane' }, { status: 400 })
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: 'Podaj poprawny email' }, { status: 400 })
+    }
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Hasło musi mieć min. 6 znaków' }, { status: 400 })
     }
 
     const userId = (session.user as any).id
@@ -73,26 +78,18 @@ export async function POST(request: NextRequest) {
     let student = await prisma.user.findUnique({ where: { email } })
 
     if (student) {
-      // User exists - link as student if not already linked
+      // Istniejące konto — NIGDY nie przejmuj po cichu (trasowałoby cudze
+      // konto, a nawet rolę). Właściciel konta dopina się sam przez zaproszenie.
       if (student.coachId === userId) {
         return NextResponse.json({ error: 'Uczeń już jest przypisany' }, { status: 400 })
       }
       if (student.coachId && student.coachId !== userId) {
         return NextResponse.json({ error: 'Uczeń należy do innego trenera' }, { status: 400 })
       }
-
-      student = await prisma.user.update({
-        where: { id: student.id },
-        data: { coachId: userId, role: 'STUDENT' },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          avatarUrl: true,
-          createdAt: true,
-          _count: { select: { sessionsAsStudent: true, videoProgress: true } },
-        },
-      }) as any
+      return NextResponse.json(
+        { error: 'Konto z tym emailem już istnieje — wyślij zaproszenie, uczeń dopnie się sam' },
+        { status: 409 },
+      )
     } else {
       // Create new student
       const passwordHash = await bcrypt.hash(password, 12)

@@ -8,9 +8,11 @@ export const maxDuration = 60
 // Nocna kolejka duration: uzupełnia po 20 najstarszych filmów bez czasu.
 // Trener nie musi klikać "Przeładuj" — cron (Vercel Cron) woła ten endpoint.
 // Chroni przed 504: limit 20 + CONCURRENCY 4 + timeouty w getVideoDuration.
+const CRON_SECRET = process.env.CRON_SECRET || ''
+
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

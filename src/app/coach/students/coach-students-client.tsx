@@ -82,6 +82,7 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
   const formatLastSeen = (lastActiveAt?: string | null) => {
     if (!lastActiveAt) return 'nigdy'
     const diff = now - new Date(lastActiveAt).getTime()
+    if (!Number.isFinite(diff)) return 'nigdy'
     if (diff < 5 * 60 * 1000) return 'teraz'
     const mins = Math.floor(diff / 60000)
     if (mins < 60) return `${mins} min temu`
@@ -160,10 +161,12 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
     setIsLoading(true)
 
     try {
-      const res = await fetch('/api/students', {
-        method: 'POST',
+      // Edycja istniejącego ucznia (tylko nazwa) vs tworzenie nowego konta
+      const isEdit = !!editingStudent
+      const res = await fetch(isEdit ? `/api/students/${editingStudent!.id}` : '/api/students', {
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(isEdit ? { name: formData.name } : formData),
       })
 
       const data = await res.json()
@@ -173,10 +176,15 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
         return
       }
 
-      setStudents((prev) => [data, ...prev])
+      if (isEdit) {
+        setStudents((prev) => prev.map((s) => (s.id === editingStudent!.id ? { ...s, name: data.name } : s)))
+        setEditingStudent(null)
+      } else {
+        setStudents((prev) => [data, ...prev])
+      }
       setDialogOpen(false)
       setFormData({ email: '', name: '', password: '' })
-      toast({ title: 'Sukces', description: 'Uczeń został dodany' })
+      toast({ title: 'Sukces', description: isEdit ? 'Zapisano zmiany' : 'Uczeń został dodany' })
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
     } finally {

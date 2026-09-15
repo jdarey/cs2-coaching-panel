@@ -77,7 +77,7 @@ export function StudentMatchesClient() {
       if (m.result === 'WIN') streak++
       else break
     }
-    const eloTotal = matches.reduce((acc, m) => acc + m.eloChange, 0)
+    const eloTotal = matches.reduce((acc, m) => acc + (m.eloChange ?? 0), 0)
     return { wins, losses, draws, total, wr, streak, eloTotal }
   }, [matches])
 
@@ -91,15 +91,16 @@ export function StudentMatchesClient() {
         setSyncMsg({ ok: false, text: data.error || 'Nie udało się zsynchronizować' })
         return
       }
-      if (data.created.length > 0) {
-        setMatches((prev) => [...data.created, ...prev])
+      const created = Array.isArray(data.created) ? data.created : []
+      if (created.length > 0) {
+        setMatches((prev) => [...created, ...prev])
       }
       setSyncMsg({
         ok: true,
         source: data.source || null,
         text:
-          data.created.length > 0
-            ? `Zaimportowano ${data.created.length} nowych meczów (${data.skipped} już było)`
+          created.length > 0
+            ? `Zaimportowano ${created.length} nowych meczów (${data.skipped} już było)`
             : `Brak nowych meczów — ${data.skipped} już zsynchronizowanych. Kliknij ponownie później.`,
       })
     } catch {

@@ -792,7 +792,7 @@ function Countdown({ target }: { target: string }) {
   }, [])
 
   const diff = new Date(target).getTime() - now
-  if (diff <= 0) return <span>Odbywa się dziś lub wkrótce</span>
+  if (!Number.isFinite(diff) || diff <= 0) return <span>Odbywa się dziś lub wkrótce</span>
   const days = Math.floor(diff / 86400000)
   const hours = Math.floor((diff % 86400000) / 3600000)
   const minutes = Math.floor((diff % 3600000) / 60000)
@@ -847,8 +847,8 @@ function EloChart({ entries }: { entries: RankEntry[] }) {
         </defs>
         <polygon points={area} fill="url(#eloArea)" />
         <polyline points={line} fill="none" stroke={up ? '#a78bfa' : '#f87171'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        {pts.map((p) => (
-          <circle key={p.label} cx={p.x} cy={p.y} r="2.5" fill={up ? '#c4b5fd' : '#f87171'} />
+        {pts.map((p, i) => (
+          <circle key={`${p.label}-${i}`} cx={p.x} cy={p.y} r="2.5" fill={up ? '#c4b5fd' : '#f87171'} />
         ))}
       </svg>
       <div className="flex justify-between mt-1 text-[10px] text-white/30 tabular-nums">

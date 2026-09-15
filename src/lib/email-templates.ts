@@ -70,7 +70,7 @@ export const TEMPLATE_DEFAULTS: Record<string, TemplateDefault> = {
     subject: '{{coachName}} przypomina o treningu — {{taskCount}} zadań czeka',
     preheader: '{{coachName}} przypomina o treningu — {{taskCount}} zadań czeka',
     badge: 'Twój coaching',
-    title: 'Cześć{{studentName}}, Twój coaching czeka!',
+    title: 'Cześć {{studentName}}, Twój coaching czeka!',
     subtitle: 'Trener {{coachName}} sprawdził Twój wykupiony plan i podrzuca rzeczy do nadrobienia. Wykorzystaj coaching w 100% — mały krok dziś to duży skok ELO jutro.',
     bodyHtml: '{{taskCardsHtml}}',
     buttonLabel: 'Otwórz panel ucznia →',

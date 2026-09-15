@@ -8,10 +8,12 @@ export const dynamic = 'force-dynamic'
 //  - students with steamVanity/steamId -> Leetify (Premier + Faceit) with
 //    Faceit legacy fallback by nickname
 //  - only creates a RankEntry when the ELO/rating CHANGED since the last one
+const CRON_SECRET = process.env.CRON_SECRET || ''
+
 export async function GET(request: Request) {
   // Verify cron secret (same convention as /api/cron/cleanup)
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

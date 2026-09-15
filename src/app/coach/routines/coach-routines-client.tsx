@@ -280,10 +280,11 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
         return
       }
       const student = students.find((s) => s.id === assignStudentId)
+      const fresh = { id: data.id, status: data.status, student: { id: student?.id ?? '', name: student?.name ?? null, email: student?.email ?? '' } }
       setRoutines((prev) =>
         prev.map((r) =>
           r.id === assigning.id
-            ? { ...r, assignments: [{ id: data.id, status: data.status, student: { id: student?.id ?? '', name: student?.name ?? null, email: student?.email ?? '' } }] }
+            ? { ...r, assignments: [...r.assignments.filter((a) => a.id !== fresh.id), fresh] }
             : r
         )
       )
