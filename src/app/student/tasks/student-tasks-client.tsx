@@ -39,9 +39,9 @@ import {
   ArrowRight,
   Play,
   Star,
-  TrendingUp,
   Wand2,
   Crosshair,
+  Maximize2,
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
 
@@ -486,29 +486,6 @@ export function StudentTasksClient() {
         {/* My routines - WOW SaaS edition */}
         {!loading && routines.length > 0 && (
           <section className="space-y-6">
-            <div className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-gradient-to-br from-[#0f0e1a]/80 via-[#0a0a14]/80 to-[#0f0e1a]/80 backdrop-blur-xl p-[1px]">
-              <div className="rounded-[27px] bg-gradient-to-br from-white/[0.04] via-transparent to-transparent">
-                <div className="flex items-center gap-4 px-6 py-5 sm:px-7">
-                  <div className="relative">
-                    <div className="absolute -inset-3 bg-gradient-to-br from-[#a78bfa]/20 to-[#2dd4bf]/20 rounded-full blur-xl" />
-                    <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)]">
-                      <Layers className="w-5 h-5 text-white" />
-                      <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-[#fbbf24] to-[#f97316] text-[10px] font-black text-white ring-2 ring-[#0a0a14] shadow">{routines.length}</span>
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-display text-[22px] font-black tracking-tight text-white flex items-center gap-2">Moje rutyny <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-gradient-to-br from-[#a78bfa]/20 to-[#2dd4bf]/20 border border-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#c4b5fd]"><Sparkles className="w-3 h-3"/> Program mastery</span></h2>
-                    <p className="text-[12.5px] leading-none text-white/45 mt-0.5 font-medium">Programy od trenera — każdy dzień to krok do wyższego ELO <span className="text-white/25 hidden sm:inline">• kliknij rutynę by rozwinąć zadania</span></p>
-                  </div>
-                  <div className="hidden lg:flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-300"><TrendingUp className="w-3.5 h-3.5"/> {routines.reduce((a,ra)=> a + (ra.progress||[]).filter((p:any)=>p.status==='DONE').length,0)} ukończonych</span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] px-3 py-1.5 text-xs font-semibold text-white/50"><Clock className="w-3.5 h-3.5"/> {routines.reduce((a,ra)=> a + (ra.routine.tasks||[]).length,0)} zadań łącznie</span>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#a78bfa]/30 to-transparent" />
-            </div>
-
             {routines.map((ra, i) => {
               const expanded = expandedRoutine === ra.id
               const doneCountR = (ra.progress || []).filter((p: any) => p.status === 'DONE').length
@@ -720,17 +697,19 @@ export function StudentTasksClient() {
                                           </div>
                                         </div>
 
-                                        {/* GIF — zawsze widoczny przy ćwiczeniu */}
+                                        {/* GIF — zawsze widoczny w całości (contain, większy) */}
                                         {hasGif ? (
-                                          <div className={cn('relative shrink-0 w-[84px] h-[64px] sm:w-[96px] sm:h-[72px] rounded-xl overflow-hidden border bg-black shadow-md transition group-hover/task:scale-[1.02]', done ? 'border-white/5 opacity-70 grayscale-[0.2]' : 'border-white/10')}>
+                                          <div className={cn('relative shrink-0 w-[128px] aspect-[4/3] sm:w-[176px] rounded-xl overflow-hidden border bg-black shadow-md transition group-hover/task:scale-[1.02] group-hover/task:border-[#a78bfa]/30', done ? 'border-white/5 opacity-70 grayscale-[0.2]' : 'border-white/10')}>
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img decoding="async" src={t.gifUrl!} alt={t.title} className="w-full h-full object-cover" loading="lazy" />
-                                            <span className="absolute inset-0 ring-1 ring-white/10 rounded-xl pointer-events-none" />
+                                            <img decoding="async" src={t.gifUrl!} alt={t.title} className="absolute inset-0 w-full h-full object-contain" loading="lazy" />
+                                            <span className="absolute inset-0 rounded-xl ring-1 ring-white/10 pointer-events-none" />
+                                            <span className="absolute bottom-1.5 left-1.5 inline-flex items-center rounded-md bg-black/70 backdrop-blur px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white/90 border border-white/10">GIF</span>
+                                            <span className="absolute bottom-1.5 right-1.5 hidden group-hover/task:grid h-6 w-6 place-items-center rounded-lg bg-white text-[#0a0a14] shadow"><Maximize2 className="w-3.5 h-3.5" /></span>
                                           </div>
                                         ) : t.video?.thumbnail ? (
-                                          <div className={cn('relative shrink-0 w-[84px] h-[64px] sm:w-[96px] sm:h-[72px] rounded-xl overflow-hidden border bg-black shadow-md', done ? 'border-white/5 opacity-60' : 'border-white/10')}>
+                                          <div className={cn('relative shrink-0 w-[128px] aspect-video sm:w-[176px] rounded-xl overflow-hidden border bg-black shadow-md self-center', done ? 'border-white/5 opacity-60' : 'border-white/10')}>
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img decoding="async" src={t.video.thumbnail} alt={t.title} className="w-full h-full object-cover" />
+                                            <img decoding="async" src={t.video.thumbnail} alt={t.title} className="absolute inset-0 w-full h-full object-cover" />
                                             <span className="absolute inset-0 grid place-items-center bg-black/25"><Play className="w-6 h-6 text-white fill-white/90"/></span>
                                           </div>
                                         ) : (
@@ -917,7 +896,7 @@ export function StudentTasksClient() {
           <div className="fixed inset-0 z-50 grid place-items-center p-4">
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} />
             <div className="glass-liquid relative w-full max-w-lg rounded-3xl overflow-hidden animate-rise-in max-h-[90vh] overflow-y-auto">
-              {selectedTask.gifUrl && <div className="h-48 bg-black shrink-0"><img decoding="async" src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-full object-cover" /></div>}
+              {selectedTask.gifUrl && <div className="bg-black shrink-0 grid place-items-center border-b border-white/[0.06]"><img decoding="async" src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-auto max-h-[340px] object-contain" /></div>}
               <div className="p-6">
                 <button onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
                 <h3 className="font-display text-xl font-bold text-white pr-8">{selectedTask.title}</h3>
