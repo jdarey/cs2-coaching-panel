@@ -29,14 +29,18 @@ export function hideGifPreview() {
 }
 
 // Helper do wiersza ćwiczenia: doklej {...gifRowHandlers(t)} do diva wiersza,
-// a tytuł oznacz data-gif-title. Podgląd wstaje po najechaniu na CAŁY wiersz.
+// tytuł oznacz data-gif-title, a przycisk Start (jeśli jest) data-gif-start.
+// Dymek staje obok przycisku Start, a gdy go nie ma — obok tytułu.
 export function gifRowHandlers(t: { gifUrl: string | null; title: string }) {
   if (!t.gifUrl) return {}
   const gifUrl = t.gifUrl
   const title = t.title
   return {
     onMouseEnter: (e: MouseEvent<HTMLDivElement>) => {
-      const el = e.currentTarget.querySelector('[data-gif-title]') ?? e.currentTarget
+      const el =
+        e.currentTarget.querySelector('[data-gif-start]') ??
+        e.currentTarget.querySelector('[data-gif-title]') ??
+        e.currentTarget
       const r = el.getBoundingClientRect()
       showGifPreview(gifUrl, title, { right: r.right, top: r.top, height: r.height })
     },
