@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
+import { fetchAndSaveLiveElo } from '@/lib/live-elo'
 
 interface User {
   id: string
@@ -217,6 +218,17 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
       const data = await res.json()
       if (!res.ok) {
         setGamingResult({ ok: false, message: data.error || 'Nie udało się zapisać' })
+        return
+      }
+      // Po zapisaniu nicka od razu sprawdzamy ELO (nie czekamy na wykres)
+      const nick = gaming.faceit.trim()
+      if (nick) {
+        const elo = await fetchAndSaveLiveElo(nick)
+        if (elo != null) {
+          setGamingResult({ ok: true, message: `Zapisano. Aktualne ELO: ${elo} — trajektoria na stronie rangi już je pokazuje.` })
+          return
+        }
+        setGamingResult({ ok: true, message: 'Zapisano konta. Nie udało się od razu pobrać ELO — sprawdź nick lub spróbuj „Pobierz rangę teraz".' })
         return
       }
       setGamingResult({ ok: true, message: 'Zapisano konta gier' })

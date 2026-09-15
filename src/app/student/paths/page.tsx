@@ -19,8 +19,16 @@ export default async function StudentPathsPage() {
     where: { id: user.id },
     select: { coachId: true },
   })
+  // Uczeń bez trenera: pokazujemy przyjazny pusty stan zamiast cichego
+  // przekierowania na dashboard (wyglądało jak "nie działa").
   if (!dbUser?.coachId) {
-    redirect('/student/dashboard')
+    return (
+      <StudentPathsClient
+        paths={[]}
+        summary={{ totalLessons: 0, doneLessons: 0, totalSeconds: 0, doneSeconds: 0, streak: 0 }}
+        noCoach
+      />
+    )
   }
 
   const paths = await prisma.trainingPath.findMany({

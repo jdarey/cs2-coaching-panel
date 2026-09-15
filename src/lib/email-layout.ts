@@ -52,12 +52,7 @@ ${preheader ? `<div style="display:none; max-height:0; overflow:hidden; opacity:
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; border-collapse:separate;">
   <tr><td style="background:linear-gradient(90deg, ${ACCENT} 0%, ${ACCENT_DARK} 55%, #2de5ca 135%); border-radius:22px 22px 0 0; font-size:0; line-height:0; height:5px;">&nbsp;</td></tr>
   <tr><td bgcolor="${BG}" style="background-color:${BG}; border-left:1px solid ${CARD_EDGE}; border-right:1px solid ${CARD_EDGE}; padding:36px 36px 0; text-align:center;">
-    <div style="display:inline-block; width:64px; height:64px; line-height:60px; border-radius:20px; background:linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%); box-shadow:0 12px 36px rgba(167,139,250,0.5), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 0 0 1px rgba(255,255,255,0.12); text-align:center;">
-      <!--[if !mso]><!-->
-      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></svg>
-      <!--<![endif]-->
-      <!--[if mso]><span style="font-size:28px; font-weight:800; color:#ffffff;">C</span><![endif]-->
-    </div>
+    <div style="display:inline-block; width:64px; height:64px; line-height:64px; border-radius:20px; background:linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%); text-align:center; font-family:Arial,Helvetica,sans-serif; font-size:30px; font-weight:800; color:#ffffff;">C</div>
     <p style="margin:14px 0 0; font-size:10px; letter-spacing:5px; text-transform:uppercase; color:${FAINT}; font-weight:700;">CS2 Coaching</p>
   </td></tr>
   <tr><td bgcolor="${BG}" style="background-color:${BG}; border-left:1px solid ${CARD_EDGE}; border-right:1px solid ${CARD_EDGE}; padding:24px 36px 0;">

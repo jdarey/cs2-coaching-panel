@@ -138,7 +138,7 @@ const fmtTotal = (sec: number) => {
   return `${h} h ${mins % 60} min`
 }
 
-export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary: Summary }) {
+export function StudentPathsClient({ paths, summary, noCoach = false }: { paths: Path[]; summary: Summary; noCoach?: boolean }) {
   // Auto-open the course that holds the next lesson — the learner lands on
   // the exact spot they should continue from, no hunting. A video that is
   // mid-watch with a saved position wins over the next pending lesson, so
@@ -197,6 +197,19 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
           subtitle="Kursy ułożone przez trenera — przechodź moduły po kolei i obserwuj postęp"
         />
 
+        {noCoach && (
+          <div className="rise-in mt-8 rounded-3xl glass-card p-8 md:p-10 text-center">
+            <GraduationCap className="w-10 h-10 text-white/20 mx-auto mb-3" />
+            <p className="font-display text-lg font-bold text-white">Nie masz jeszcze przypisanego trenera</p>
+            <p className="text-sm text-white/50 mt-2 max-w-md mx-auto">
+              Ścieżki treningowe układa Twój trener. Gdy tylko Cię przypisze, kursy pojawią się w tym miejscu.
+              W międzyczasie zajrzyj do filmów i zadań.
+            </p>
+          </div>
+        )}
+
+        {!noCoach && (
+        <>
         {/* ===== My progress strip ===== */}
         {summary.totalLessons > 0 && (
           <div className="rise-in mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4" style={{ animationDelay: '0.05s' }}>
@@ -582,6 +595,8 @@ export function StudentPathsClient({ paths, summary }: { paths: Path[]; summary:
             })
           )}
         </div>
+        </>
+        )}
       </div>
     </StudentLayout>
   )

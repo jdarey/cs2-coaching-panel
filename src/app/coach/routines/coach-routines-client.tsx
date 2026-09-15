@@ -919,14 +919,14 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                                     <span className="relative inline-flex items-center gap-1">
                                       {t.title}
                                       {t.gifUrl && (
-                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
+                                        <span className="pointer-events-none absolute bottom-full mb-3 left-0 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
                                           <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35)] w-64">
                                             <span className="relative h-36 w-64 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                               <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                             </span>
                                           </span>
-                                          <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#1a1628] border-l border-b border-white/10" />
+                                          <span className="absolute left-8 -bottom-1.5 w-3 h-3 rotate-45 bg-[#1a1628] border-r border-b border-white/10" />
                                         </span>
                                       )}
                                     </span>

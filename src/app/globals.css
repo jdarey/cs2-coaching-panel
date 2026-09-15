@@ -959,3 +959,18 @@
 .light .btn-darey .text-white\/80, .light .btn-primary-gradient .text-white\/80, .light .icon-tile .text-white\/80, .light [class*="bg-[#8b5cf6]"] .text-white\/80, .light [class*="bg-[#6d28d9]"] .text-white\/80, .light [class*="from-[#a78bfa]"] .text-white\/80, .light [class*="from-[#8b5cf6]"] .text-white\/80, .light [class*="from-[#34d399]"] .text-white\/80 { color: rgba(255, 255, 255, 0.80) !important; }
 .light .btn-darey .text-white\/90, .light .btn-primary-gradient .text-white\/90, .light .icon-tile .text-white\/90, .light [class*="bg-[#8b5cf6]"] .text-white\/90, .light [class*="bg-[#6d28d9]"] .text-white\/90, .light [class*="from-[#a78bfa]"] .text-white\/90, .light [class*="from-[#8b5cf6]"] .text-white\/90, .light [class*="from-[#34d399]"] .text-white\/90 { color: rgba(255, 255, 255, 0.90) !important; }
 .light .btn-darey .text-white, .light .btn-primary-gradient .text-white, .light .icon-tile .text-white, .light [class*="bg-[#8b5cf6]"] .text-white, .light [class*="bg-[#6d28d9]"] .text-white, .light [class*="from-[#a78bfa]"] .text-white, .light [class*="from-[#8b5cf6]"] .text-white, .light [class*="from-[#34d399]"] .text-white { color: #ffffff !important; }
+
+/* Odtwarzacz wideo jest zawsze ciemny — jasny motyw nie rusza jego kolorów
+   (inaczej białe napisy na czarnych kontrolkach robiły się ciemne = niewidoczne). */
+.light .yt-force-dark .text-white { color: #ffffff !important; }
+.light .yt-force-dark .text-white\/70 { color: rgba(255,255,255,0.70) !important; }
+.light .yt-force-dark .text-white\/40 { color: rgba(255,255,255,0.40) !important; }
+.light .yt-force-dark .text-white\/35 { color: rgba(255,255,255,0.35) !important; }
+.light .yt-force-dark .text-white\/30 { color: rgba(255,255,255,0.30) !important; }
+.light .yt-force-dark .text-\[\#a78bfa\] { color: #a78bfa !important; }
+.light .yt-force-dark .hover\:text-white:hover { color: #ffffff !important; }
+.light .yt-force-dark .hover\:text-\[\#a78bfa\]:hover { color: #a78bfa !important; }
+.light .yt-force-dark .hover\:bg-white\/10:hover { background-color: rgba(255,255,255,0.10) !important; }
+.light .yt-force-dark .bg-black\/60 { background-color: rgba(0,0,0,0.60) !important; }
+.light .yt-force-dark .bg-black\/40 { background-color: rgba(0,0,0,0.40) !important; }
+.light .yt-force-dark .bg-black\/35 { background-color: rgba(0,0,0,0.35) !important; }

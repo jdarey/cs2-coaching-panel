@@ -660,7 +660,7 @@ export function YoutubeCustomPlayer({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full bg-black overflow-hidden select-none"
+      className="yt-force-dark relative w-full h-full bg-black overflow-hidden select-none"
       onContextMenu={(e) => e.preventDefault()}
       // Never let the iframe be dragged out to a new tab (a drag off the
       // player opens the raw YouTube page), nor opened via middle-click.
