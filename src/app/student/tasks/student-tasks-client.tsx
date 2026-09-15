@@ -41,7 +41,6 @@ import {
   Star,
   Wand2,
   Crosshair,
-  Maximize2,
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
 
@@ -118,6 +117,28 @@ export function StudentTasksClient() {
   const [sleepDraft, setSleepDraft] = useState<number | null>(null)
   const [savingNote, setSavingNote] = useState(false)
   const [repeatingId, setRepeatingId] = useState<string | null>(null)
+  const [gifPreview, setGifPreview] = useState<{ src: string; title: string } | null>(null)
+  const gifPreviewRef = useRef<HTMLDivElement | null>(null)
+  const gifPreviewPos = useRef({ x: 0, y: 0 })
+
+  const placeGifPreview = (clientX: number, clientY: number) => {
+    const el = gifPreviewRef.current
+    if (!el) return
+    const W = 320, H = 280, GAP = 20
+    let x = clientX + GAP
+    let y = clientY - H / 2
+    if (x + W > window.innerWidth - 12) x = clientX - W - GAP
+    if (y + H > window.innerHeight - 12) y = window.innerHeight - H - 12
+    if (x < 12) x = 12
+    if (y < 12) y = 12
+    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`
+  }
+  const canHover = () =>
+    typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+
+  useEffect(() => {
+    if (gifPreview) placeGifPreview(gifPreviewPos.current.x, gifPreviewPos.current.y)
+  }, [gifPreview])
 
   const load = useCallback(async () => {
     try {
@@ -648,7 +669,10 @@ export function StudentTasksClient() {
                                     return (
                                       <div
                                         key={t.id}
-                                        onClick={()=> { setSelectedTask(t); setSelectedAssignment(ra) }}
+                                        onClick={()=> { setGifPreview(null); setSelectedTask(t); setSelectedAssignment(ra) }}
+                                        onMouseEnter={(e)=>{ if (t.gifUrl && canHover()) { gifPreviewPos.current = { x: e.clientX, y: e.clientY }; setGifPreview({ src: t.gifUrl, title: t.title }) } }}
+                                        onMouseMove={(e)=>{ if (gifPreviewRef.current) { gifPreviewPos.current = { x: e.clientX, y: e.clientY }; placeGifPreview(e.clientX, e.clientY) } }}
+                                        onMouseLeave={()=> setGifPreview(null)}
                                         style={{ animationDelay: `${Math.min(ti * 60 + dayIdx*40, 400)}ms` }}
                                         className={cn(
                                           'rise-in group/task relative flex items-center gap-4 rounded-[20px] p-4 border cursor-pointer overflow-hidden transition-all duration-300',
@@ -691,26 +715,25 @@ export function StudentTasksClient() {
                                           <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                                             {t.minutes && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-white/[0.06] border-white/[0.08] text-white/50')}><Clock className="w-3 h-3"/>{t.minutes} min</span>}
                                             {t.video?.url && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-[#a78bfa]/10 border-[#a78bfa]/15 text-[#c4b5fd]')}><Film className="w-3 h-3"/>Wideo</span>}
-                                            {!done && !t.minutes && !t.video?.url && hasGif && <span className="text-[11px] text-white/30">GIF • kliknij by zobaczyć opis</span>}
+                                            {!done && !t.minutes && !t.video?.url && hasGif && <span className="text-[11px] text-white/30">GIF • najedź by powiększyć</span>}
                                             {done && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300/70"><Check className="w-3 h-3"/>Zaliczone</span>}
                                             {!done && <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/25">• kliknij by zobaczyć opis</span>}
                                           </div>
                                         </div>
 
-                                        {/* GIF — zawsze widoczny w całości (contain, większy) */}
+                                        {/* GIF — kompaktowa miniaturka, duży podgląd po najechaniu */}
                                         {hasGif ? (
-                                          <div className={cn('relative shrink-0 w-[128px] aspect-[4/3] sm:w-[176px] rounded-xl overflow-hidden border bg-black shadow-md transition group-hover/task:scale-[1.02] group-hover/task:border-[#a78bfa]/30', done ? 'border-white/5 opacity-70 grayscale-[0.2]' : 'border-white/10')}>
+                                          <div className={cn('relative shrink-0 w-[72px] aspect-[4/3] sm:w-[92px] rounded-xl overflow-hidden border bg-black shadow-md transition group-hover/task:scale-[1.04] group-hover/task:border-[#a78bfa]/40 group-hover/task:shadow-[0_8px_24px_-8px_rgba(139,92,246,0.5)]', done ? 'border-white/5 opacity-70 grayscale-[0.2]' : 'border-white/10')}>
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img decoding="async" src={t.gifUrl!} alt={t.title} className="absolute inset-0 w-full h-full object-contain" loading="lazy" />
                                             <span className="absolute inset-0 rounded-xl ring-1 ring-white/10 pointer-events-none" />
-                                            <span className="absolute bottom-1.5 left-1.5 inline-flex items-center rounded-md bg-black/70 backdrop-blur px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white/90 border border-white/10">GIF</span>
-                                            <span className="absolute bottom-1.5 right-1.5 hidden group-hover/task:grid h-6 w-6 place-items-center rounded-lg bg-white text-[#0a0a14] shadow"><Maximize2 className="w-3.5 h-3.5" /></span>
+                                            <span className="absolute bottom-1 left-1 hidden sm:inline-flex items-center rounded bg-black/70 backdrop-blur px-1 py-px text-[8px] font-black uppercase tracking-widest text-white/90 border border-white/10">GIF</span>
                                           </div>
                                         ) : t.video?.thumbnail ? (
-                                          <div className={cn('relative shrink-0 w-[128px] aspect-video sm:w-[176px] rounded-xl overflow-hidden border bg-black shadow-md self-center', done ? 'border-white/5 opacity-60' : 'border-white/10')}>
+                                          <div className={cn('relative shrink-0 w-[72px] aspect-video sm:w-[92px] rounded-xl overflow-hidden border bg-black shadow-md self-center', done ? 'border-white/5 opacity-60' : 'border-white/10')}>
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img decoding="async" src={t.video.thumbnail} alt={t.title} className="absolute inset-0 w-full h-full object-cover" />
-                                            <span className="absolute inset-0 grid place-items-center bg-black/25"><Play className="w-6 h-6 text-white fill-white/90"/></span>
+                                            <span className="absolute inset-0 grid place-items-center bg-black/25"><Play className="w-5 h-5 text-white fill-white/90"/></span>
                                           </div>
                                         ) : (
                                           <span className={cn('hidden sm:grid place-items-center shrink-0 w-[72px] h-[64px] rounded-xl border text-white/20', done ? 'bg-white/[0.02] border-white/[0.05]' : 'bg-white/[0.04] border-white/[0.07] group-hover/task:bg-white/[0.06]')}>
@@ -888,6 +911,21 @@ export function StudentTasksClient() {
                 </div>
               </div>
               <button onClick={()=>setSelectedDay(null)} className="mt-3 w-full h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/80 hover:text-white text-sm font-semibold">Zamknij</button>
+            </div>
+          </div>
+        )}
+
+        {/* Pływający podgląd GIF-a za kursorem (tylko desktop z myszką) */}
+        {gifPreview && (
+          <div ref={gifPreviewRef} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[320px] animate-[pop-in_0.22s_cubic-bezier(0.22,1.4,0.36,1)]">
+            <div className="overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12]/95 backdrop-blur-xl shadow-[0_24px_64px_-16px_rgba(139,92,246,0.5),0_12px_32px_-12px_rgba(0,0,0,0.7)]">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.07]">
+                <Play className="w-3 h-3 shrink-0 text-[#a78bfa] fill-[#a78bfa]" />
+                <p className="flex-1 truncate text-xs font-bold text-white">{gifPreview.title}</p>
+                <span className="inline-flex items-center rounded bg-[#a78bfa]/15 border border-[#a78bfa]/20 px-1.5 py-px text-[9px] font-black uppercase tracking-widest text-[#c4b5fd]">GIF</span>
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={gifPreview.src} alt={gifPreview.title} className="w-full h-auto max-h-[230px] object-contain bg-black" />
             </div>
           </div>
         )}
