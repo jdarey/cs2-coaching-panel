@@ -27,8 +27,7 @@ const FACEIT_LEVEL_COLORS: Record<number, string> = {
 }
 
 // Progi CS2 aktualne 2025 (Faceit 2.0): 1:100-500, 2:501-750, 3:751-900, 4:901-1050, 5:1051-1200, 6:1201-1350, 7:1351-1530, 8:1531-1750, 9:1751-2000, 10:2001+
-function levelFromElo(elo: number | null): number | null {
-  if (elo == null) return null
+function levelFromElo(elo: number | null): number | null {  if (elo == null) return null
   if (elo <= 500) return 1
   if (elo <= 750) return 2
   if (elo <= 900) return 3
@@ -39,6 +38,21 @@ function levelFromElo(elo: number | null): number | null {
   if (elo <= 1750) return 8
   if (elo <= 2000) return 9
   return 10
+}
+
+// Dolna granica bieżącego poziomu i próg wejścia na kolejny.
+// Zwraca null gdy elo nieznane albo poziom 10 (maks).
+function nextLevelInfo(elo: number | null): { level: number; next: number; min: number; need: number; pct: number } | { max: true } | null {
+  const lvl = levelFromElo(elo)
+  if (elo == null || lvl == null) return null
+  if (lvl >= 10) return { max: true }
+  const MIN: Record<number, number> = { 1: 100, 2: 501, 3: 751, 4: 901, 5: 1051, 6: 1201, 7: 1351, 8: 1531, 9: 1751 }
+  const NEXT: Record<number, number> = { 1: 501, 2: 751, 3: 901, 4: 1051, 5: 1201, 6: 1351, 7: 1531, 8: 1751, 9: 2001 }
+  const min = MIN[lvl]
+  const next = NEXT[lvl]
+  const need = Math.max(0, next - elo)
+  const pct = Math.min(100, Math.max(0, ((elo - min) / Math.max(1, next - min)) * 100))
+  return { level: lvl, next, min, need, pct }
 }
 
 export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLevel, compact = false }: {
@@ -217,6 +231,45 @@ export function FaceitEloChart({ studentId, faceitNickname, faceitElo, faceitLev
           <p className="text-[11px] text-white/30">historii</p>
         </div>
       </div>
+
+      {/* Pasek postępu do kolejnego poziomu */}
+      {(() => {
+        const info = nextLevelInfo(currentElo)
+        if (!info) return null
+        if ('max' in info) {
+          return (
+            <div className="mb-4 rounded-2xl bg-gradient-to-r from-[#d50000]/15 to-[#ff5500]/10 border border-[#ff5500]/25 p-4 text-center">
+              <p className="text-sm font-bold text-white">Poziom 10 — maksimum! 🏆</p>
+              <p className="text-[11px] text-white/50 mt-0.5">Jesteś na szczycie drabiny Faceit</p>
+            </div>
+          )
+        }
+        const nextCol = FACEIT_LEVEL_COLORS[info.level + 1] ?? '#ff5500'
+        return (
+          <div className="mb-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4">
+            <div className="flex items-baseline justify-between gap-2 mb-2">
+              <p className="text-xs font-semibold text-white/70">
+                Do poziomu <span className="font-display font-bold text-white">{info.level + 1}</span>
+              </p>
+              <p className="text-xs tabular-nums">
+                <span className="font-bold text-white">{currentElo}</span>
+                <span className="text-white/35"> / {info.next} ELO</span>
+              </p>
+            </div>
+            <div className="h-2.5 rounded-full bg-white/[0.07] overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${info.pct}%`, background: `linear-gradient(90deg, ${FACEIT_LEVEL_COLORS[info.level] ?? '#ff5500'}, ${nextCol})`, boxShadow: `0 0 12px ${nextCol}66` }}
+              />
+            </div>
+            <p className="mt-1.5 text-[11px] text-white/45">
+              {info.need === 0
+                ? 'Zagraj mecz — awansujesz po aktualizacji Faceit'
+                : <>Brakuje <b className="text-white/80">{info.need} ELO</b> ({Math.round(info.pct)}%)</>}
+            </p>
+          </div>
+        )
+      })()}
 
       {/* Wykres - jak w pkawai/mxgic, ostatni słupek to zawsze live ELO z Faceit */}
       {loading ? (
