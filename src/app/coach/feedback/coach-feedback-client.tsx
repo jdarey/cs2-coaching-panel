@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
-import { MessageSquareHeart, Inbox, Loader2, Send, CheckCircle2, Star, Lightbulb, AlertTriangle, CalendarDays, MessageSquare } from 'lucide-react'
+import { MessageSquareHeart, Inbox, Loader2, Send, CheckCircle2, Star, Lightbulb, AlertTriangle, CalendarDays, MessageSquare, Trash2 } from 'lucide-react'
 
 type Feedback = {
   id: string
@@ -37,6 +37,7 @@ export function CoachFeedbackClient() {
   const [openId, setOpenId] = useState<string | null>(null)
   const [replyDraft, setReplyDraft] = useState<Record<string, string>>({})
   const [replyingId, setReplyingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -91,6 +92,22 @@ export function CoachFeedbackClient() {
       setError(e.message || 'Błąd zapisu')
     } finally {
       setReplyingId(null)
+    }
+  }
+
+  const removeFeedback = async (id: string) => {
+    setDeletingId(id)
+    try {
+      const res = await fetch(`/api/feedback/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Błąd usuwania')
+      }
+      setFeedback((prev) => prev.filter((x) => x.id !== id))
+    } catch (e: any) {
+      setError(e.message || 'Błąd usuwania')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -180,6 +197,18 @@ export function CoachFeedbackClient() {
                       {new Date(f.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Warsaw' })}
                     </p>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (confirm('Usunąć tę opinię?')) removeFeedback(f.id)
+                    }}
+                    disabled={deletingId === f.id}
+                    aria-label="Usuń opinię"
+                    title="Usuń opinię"
+                    className="shrink-0 grid place-items-center w-8 h-8 rounded-lg text-white/25 hover:text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                  >
+                    {deletingId === f.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  </button>
                 </button>
 
                 {open && (

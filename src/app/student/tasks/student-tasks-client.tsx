@@ -544,11 +544,13 @@ export function StudentTasksClient() {
                               <span className="text-[11px] text-white/40">{dayDone}/{dayTasks.length} zrobione</span>
                             </div>
                             <div className="space-y-2">
-                              {dayTasks.map((t) => {
+                              {dayTasks.map((t, ti) => {
                                 const tp = ra.progress.find((p) => p.taskId === t.id)
                                 const done = tp?.status === 'DONE'
+                                const accent = ['#a78bfa', '#2dd4bf', '#fbbf24', '#38bdf8', '#f472b6'][ti % 5]
                                 return (
-                                  <div key={t.id} onClick={()=> setSelectedTask(t)} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
+                                  <div key={t.id} onClick={()=> setSelectedTask(t)} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer overflow-hidden', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
+                                    {!done && <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
                                     <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
                                       {togglingTask === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Circle className="w-3.5 h-3.5" />}
                                     </button>

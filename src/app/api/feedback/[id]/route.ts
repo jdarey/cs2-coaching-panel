@@ -67,7 +67,10 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: 'Opinia nie znaleziona' }, { status: 404 })
     }
-    if (existing.studentId !== user.id) {
+    // Usunąć może autor-uczeń albo trener-adresat
+    const isOwner = existing.studentId === user.id
+    const isCoach = user.role === 'COACH' && existing.coachId === user.id
+    if (!isOwner && !isCoach) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
 

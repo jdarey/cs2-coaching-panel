@@ -50,6 +50,16 @@ interface Video {
   thumbnail: string | null
 }
 
+// Kolorystyka kart ćwiczeń — rotowana po indeksie, żeby lista nie była
+// monotonna: pasek akcentu + gradient numeru + poświata w kolorze.
+const TASK_ACCENTS = [
+  { bar: '#a78bfa', from: '#a78bfa', to: '#6d28d9', soft: 'rgba(139,92,246,0.10)' },
+  { bar: '#2dd4bf', from: '#2dd4bf', to: '#0f766e', soft: 'rgba(45,212,191,0.08)' },
+  { bar: '#fbbf24', from: '#fbbf24', to: '#b45309', soft: 'rgba(251,191,36,0.08)' },
+  { bar: '#38bdf8', from: '#38bdf8', to: '#1d4ed8', soft: 'rgba(56,189,248,0.08)' },
+  { bar: '#f472b6', from: '#f472b6', to: '#be185d', soft: 'rgba(244,114,182,0.08)' },
+]
+
 interface ExercisePreset {
   id: string
   title: string
@@ -613,16 +623,37 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
 
                   <div className="space-y-4 max-h-[45vh] overflow-y-auto pr-2 -mr-2">
                   {tasks.map((t, i) => (
-                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("rounded-2xl bg-white/[0.02] border p-5 space-y-4 transition shadow-sm", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30 scale-[0.98]" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.06] hover:border-white/[0.10] hover:bg-white/[0.03]")}>
-                      <div className="flex items-center gap-1.5">
+                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("relative overflow-hidden rounded-2xl bg-white/[0.02] border p-5 pl-6 space-y-4 transition shadow-sm", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30 scale-[0.98]" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.06] hover:border-white/[0.10] hover:bg-white/[0.03]")}>
+                      {/* Kolorowy pasek akcentu + poświata (rotowane po indeksie) */}
+                      <span className="pointer-events-none absolute inset-y-0 left-0 w-1" style={{ background: TASK_ACCENTS[i % TASK_ACCENTS.length].bar }} aria-hidden />
+                      <span className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl" style={{ background: TASK_ACCENTS[i % TASK_ACCENTS.length].soft }} aria-hidden />
+                      <div className="flex items-center gap-1.5 relative">
                         <div className="flex flex-col gap-1 shrink-0">
                           <button type="button" onClick={()=>moveTask(i,-1)} disabled={i===0 || isLoading} className="grid h-6 w-7 place-items-center rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-white disabled:opacity-20 transition"><ChevronUp className="w-3 h-3"/></button>
                           <button type="button" onClick={()=>moveTask(i,1)} disabled={i===tasks.length-1 || isLoading} className="grid h-6 w-7 place-items-center rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-white disabled:opacity-20 transition"><ChevronDown className="w-3 h-3"/></button>
                         </div>
                         <button type="button" draggable onDragStart={(e)=>{e.stopPropagation(); handleDragStart(i)}} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/30 hover:text-white hover:bg-[#a78bfa]/15 hover:border-[#a78bfa]/30 cursor-grab active:cursor-grabbing touch-manipulation transition" title="Przytrzymaj i przeciągnij" aria-label="Przeciągnij by zmienić kolejność"><GripVertical className="w-5 h-5" /></button>
-                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#a78bfa]/15 text-[#c4b5fd] text-xs font-bold">
+                        <span
+                          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold text-white shadow-lg"
+                          style={{ background: `linear-gradient(135deg, ${TASK_ACCENTS[i % TASK_ACCENTS.length].from}, ${TASK_ACCENTS[i % TASK_ACCENTS.length].to})` }}
+                        >
                           {i + 1}
                         </span>
+                        {[
+                          t.minutes ? { icon: Clock, label: `${t.minutes} min`, color: '#fbbf24' } : null,
+                          t.videoId ? { icon: Film, label: 'Film', color: '#c4b5fd' } : null,
+                          t.gifUrl ? { icon: Image, label: 'GIF', color: '#2dd4bf' } : null,
+                          t.steamMapUrl ? { icon: MapPin, label: 'Mapa', color: '#fda4af' } : null,
+                          t.linkUrl ? { icon: Globe, label: 'Link', color: '#7dd3fc' } : null,
+                        ].filter(Boolean).map((chip: any, ci) => (
+                          <span
+                            key={ci}
+                            className="hidden md:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1"
+                            style={{ color: chip.color, background: `${chip.color}14`, borderColor: `${chip.color}35` }}
+                          >
+                            <chip.icon className="w-3 h-3" />{chip.label}
+                          </span>
+                        ))}
                         <input
                           value={t.title}
                           onChange={(e) => updateTask(i, { title: e.target.value })}
