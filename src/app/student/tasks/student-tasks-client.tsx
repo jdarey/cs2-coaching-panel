@@ -6,7 +6,6 @@ import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
-import { GifPreviewHost, gifRowHandlers } from '@/components/gif-preview'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { useSession } from 'next-auth/react'
 import {
@@ -394,7 +393,6 @@ export function StudentTasksClient() {
 
   return (
     <StudentLayout>
-      <GifPreviewHost />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-24 space-y-8">
         <PageHeader
           icon={ClipboardList}
@@ -551,15 +549,28 @@ export function StudentTasksClient() {
                                 const done = tp?.status === 'DONE'
                                 const accent = ['#a78bfa', '#2dd4bf', '#fbbf24', '#38bdf8', '#f472b6'][ti % 5]
                                 return (
-                                  <div key={t.id} onClick={()=> setSelectedTask(t)} {...gifRowHandlers(t)} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer overflow-hidden', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
+                                  <div key={t.id} onClick={()=> setSelectedTask(t)} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
+                                    {!done && <span className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-full" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
                                     {!done && <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
                                     <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
                                       {togglingTask === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Circle className="w-3.5 h-3.5" />}
                                     </button>
                                     <div className="flex-1 min-w-0">
                                       <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>
-                                        <span className="relative inline-flex items-center gap-1" data-gif-title>
+                                        <span className="relative inline-flex items-center gap-1">
                                           {t.title}
+                                          {t.gifUrl && (
+                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
+                                          <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35),0_8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] w-64">
+                                            <span className="relative h-36 w-64 bg-black block overflow-hidden">
+                                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
+                                              <span className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
+                                            </span>
+                                          </span>
+                                          <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#1a1628] border-l border-b border-white/10 shadow-[-2px_2px_8px_rgba(0,0,0,0.3)]" />
+                                        </span>
+                                          )}
                                         </span>
                                       </p>
                                       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -567,7 +578,7 @@ export function StudentTasksClient() {
                                         {t.video?.url && <span className="inline-flex items-center gap-1 text-[11px] text-[#c4b5fd]"><Film className="w-3 h-3"/>Film</span>}
                                         {t.steamMapUrl && <span onClick={e=>e.stopPropagation()}><a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25 hover:bg-[#f43f5e]/[0.16] hover:border-[#f43f5e]/40 transition-all"><MapPin className="w-3.5 h-3.5" />Mapa</a></span>}
                                         {t.linkUrl && <span onClick={e=>e.stopPropagation()}><a href={t.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 hover:bg-[#a78bfa]/[0.16] hover:border-[#a78bfa]/30 transition-all"><Globe className="w-3.5 h-3.5" />Link</a></span>}
-                                        {t.minutes && !done && <button data-gif-start onClick={(e)=>{e.stopPropagation(); setActiveTimer({ assignment: ra, task: t })}} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 hover:bg-[#a78bfa]/[0.18] hover:border-[#a78bfa]/40 transition-all group/timer"><Timer className="w-3.5 h-3.5 transition-transform group-hover/timer:rotate-12" />Start</button>}
+                                        {t.minutes && !done && <button onClick={(e)=>{e.stopPropagation(); setActiveTimer({ assignment: ra, task: t })}} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 hover:bg-[#a78bfa]/[0.18] hover:border-[#a78bfa]/40 transition-all group/timer"><Timer className="w-3.5 h-3.5 transition-transform group-hover/timer:rotate-12" />Start</button>}
                                         {t.minutes && done && <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/70"><Check className="w-3 h-3" />Odhaczone</span>}
                                       </div>
                                     </div>
