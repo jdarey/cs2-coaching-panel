@@ -540,18 +540,48 @@ export function StudentTasksClient() {
                         const dayDone = dayTasks.filter((t) => ra.progress.find((p) => p.taskId === t.id)?.status === 'DONE').length
                         return (
                           <div key={d} className="py-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-[11px] font-bold uppercase tracking-widest text-[#c4b5fd]">Dzień {d}</p>
-                              <span className="text-[11px] text-white/40">{dayDone}/{dayTasks.length} zrobione</span>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-[#c4b5fd] to-[#2dd4bf]">Dzień {d}</p>
+                              <span className="text-[11px] tabular-nums text-white/40">{dayDone}/{dayTasks.length} zrobione</span>
                             </div>
-                            <div className="space-y-2">
+                            <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden mb-3">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf] transition-all duration-700"
+                                style={{ width: `${dayTasks.length ? Math.round((dayDone / dayTasks.length) * 100) : 0}%` }}
+                              />
+                            </div>
+                            <div className="space-y-2.5">
                               {dayTasks.map((t, ti) => {
                                 const tp = ra.progress.find((p) => p.taskId === t.id)
                                 const done = tp?.status === 'DONE'
                                 const accent = ['#a78bfa', '#2dd4bf', '#fbbf24', '#38bdf8', '#f472b6'][ti % 5]
                                 return (
-                                  <div key={t.id} onClick={()=> { setSelectedTask(t); setSelectedAssignment(ra) }} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
-                                    {!done && <span className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-full" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
+                                  <div
+                                    key={t.id}
+                                    onClick={()=> { setSelectedTask(t); setSelectedAssignment(ra) }}
+                                    style={{ animationDelay: `${Math.min(ti * 70, 350)}ms` }}
+                                    className={cn(
+                                      'rise-in group flex items-start gap-3.5 rounded-2xl p-4 pl-5 border transition-all duration-300 relative cursor-pointer overflow-visible',
+                                      'hover:-translate-y-[3px]',
+                                      done
+                                        ? 'bg-emerald-500/[0.07] border-emerald-500/25 shadow-[0_0_32px_-12px_rgba(52,211,153,0.5)]'
+                                        : 'bg-white/[0.025] border-white/[0.07] hover:border-[#a78bfa]/35 hover:bg-[#a78bfa]/[0.04] hover:shadow-[0_18px_44px_-16px_rgba(139,92,246,0.45)]',
+                                    )}
+                                  >
+                                    {/* Kolorowy pasek + dolna linia postępu */}
+                                    {!done && <span className="pointer-events-none absolute inset-y-3 left-0 w-[3px] rounded-full transition-all duration-300 group-hover:inset-y-2 group-hover:shadow-[0_0_12px_1px_rgba(139,92,246,0.4)]" style={{ background: `linear-gradient(180deg, ${accent}, transparent)`, opacity: 0.8 }} aria-hidden />}
+                                    <span
+                                      className={cn('pointer-events-none absolute bottom-0 left-5 right-5 h-[2px] rounded-full overflow-hidden transition-opacity duration-500', done ? 'opacity-100' : 'opacity-0 group-hover:opacity-60')}
+                                      aria-hidden
+                                    >
+                                      <span
+                                        className={cn('block h-full rounded-full transition-all duration-700', done ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]')}
+                                        style={{ width: done ? '100%' : '35%' }}
+                                      />
+                                    </span>
+                                    <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300 active:scale-90', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25 shadow-[0_0_20px_-4px_rgba(52,211,153,0.7)]' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/50 hover:text-[#c4b5fd] hover:shadow-[0_0_16px_-4px_rgba(139,92,246,0.6)] hover:scale-105')}>
+                                      {togglingTask === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : done ? <Check className="w-4 h-4 animate-[pop-in_0.3s_ease-out]" strokeWidth={3} /> : <Circle className="w-4 h-4" />}
+                                    </button>
                                     {!done && <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
                                     <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
                                       {togglingTask === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Circle className="w-3.5 h-3.5" />}
