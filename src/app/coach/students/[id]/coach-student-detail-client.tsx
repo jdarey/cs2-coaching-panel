@@ -1148,7 +1148,6 @@ export function CoachStudentDetailClient({
                                               <span className="absolute inset-0 ring-1 ring-white/10 pointer-events-none" />
                                             </span>
                                           </span>
-                                          <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 bg-[#1a1628] border-l border-b border-white/10 shadow-[-2px_2px_8px_rgba(0,0,0,0.3)]" />
                                         </span>
                                         )}
                                       </span>
