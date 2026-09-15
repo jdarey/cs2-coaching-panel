@@ -1140,15 +1140,17 @@ export function CoachStudentDetailClient({
                                     <span className="relative inline-flex items-center gap-1">
                                       {t.title}
                                       {t.gifUrl && (
-                                        <span className="pointer-events-none absolute bottom-full mb-3 left-0 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35),0_8px_32px_-8px_rgba(0,0,0,0.6)] w-64">
-                                            <span className="relative h-36 w-64 bg-black block overflow-hidden">
+                                        <span className="pointer-events-none absolute left-full ml-3 bottom-[-10px] hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
+                                          <span className="flex flex-col rounded-2xl overflow-hidden bg-[#0b0d14]/95 backdrop-blur-xl border border-[#a78bfa]/30 shadow-[0_16px_48px_-12px_rgba(139,92,246,0.5)] w-56">
+                                            <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c4b5fd] border-b border-white/[0.06]">
+                                              Demo
+                                            </span>
+                                            <span className="relative h-32 w-56 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                               <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                              <span className="absolute inset-0 ring-1 ring-white/10 pointer-events-none" />
                                             </span>
                                           </span>
-                                          <span className="absolute left-8 -bottom-1.5 w-3 h-3 rotate-45 bg-[#1a1628] border-r border-b border-white/10 shadow-[2px_2px_8px_rgba(0,0,0,0.3)]" />
+                                          <span className="absolute left-[-5px] bottom-4 w-2.5 h-2.5 rotate-45 bg-[#0b0d14] border-l border-b border-[#a78bfa]/30" />
                                         </span>
                                       )}
                                     </span>
