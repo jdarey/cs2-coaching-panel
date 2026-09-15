@@ -34,6 +34,14 @@ import {
   History,
   Image as ImageIcon,
   X,
+  Layers,
+  Zap,
+  ArrowRight,
+  Play,
+  Star,
+  TrendingUp,
+  Wand2,
+  Crosshair,
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
 
@@ -475,15 +483,30 @@ export function StudentTasksClient() {
           )}
         </section>
 
-        {/* My routines - separate */}
+        {/* My routines - WOW SaaS edition */}
         {!loading && routines.length > 0 && (
-          <section className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20">
-                <ListChecks className="w-4 h-4 text-white" />
-              </span>
-              <h2 className="font-display text-xl font-bold text-gradient-violet">Moje rutyny</h2>
-              <span className="text-xs text-white/40 font-medium">Programy od trenera rozłożone na dni</span>
+          <section className="space-y-6">
+            <div className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-gradient-to-br from-[#0f0e1a]/80 via-[#0a0a14]/80 to-[#0f0e1a]/80 backdrop-blur-xl p-[1px]">
+              <div className="rounded-[27px] bg-gradient-to-br from-white/[0.04] via-transparent to-transparent">
+                <div className="flex items-center gap-4 px-6 py-5 sm:px-7">
+                  <div className="relative">
+                    <div className="absolute -inset-3 bg-gradient-to-br from-[#a78bfa]/20 to-[#2dd4bf]/20 rounded-full blur-xl" />
+                    <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/20 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)]">
+                      <Layers className="w-5 h-5 text-white" />
+                      <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-[#fbbf24] to-[#f97316] text-[10px] font-black text-white ring-2 ring-[#0a0a14] shadow">{routines.length}</span>
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-display text-[22px] font-black tracking-tight text-white flex items-center gap-2">Moje rutyny <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-gradient-to-br from-[#a78bfa]/20 to-[#2dd4bf]/20 border border-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#c4b5fd]"><Sparkles className="w-3 h-3"/> Program mastery</span></h2>
+                    <p className="text-[12.5px] leading-none text-white/45 mt-0.5 font-medium">Programy od trenera — każdy dzień to krok do wyższego ELO <span className="text-white/25 hidden sm:inline">• kliknij rutynę by rozwinąć zadania</span></p>
+                  </div>
+                  <div className="hidden lg:flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-300"><TrendingUp className="w-3.5 h-3.5"/> {routines.reduce((a,ra)=> a + (ra.progress||[]).filter((p:any)=>p.status==='DONE').length,0)} ukończonych</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] px-3 py-1.5 text-xs font-semibold text-white/50"><Clock className="w-3.5 h-3.5"/> {routines.reduce((a,ra)=> a + (ra.routine.tasks||[]).length,0)} zadań łącznie</span>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#a78bfa]/30 to-transparent" />
             </div>
 
             {routines.map((ra, i) => {
@@ -493,134 +516,306 @@ export function StudentTasksClient() {
               const pct = totalCount > 0 ? Math.round((doneCountR / totalCount) * 100) : 0
               const completed = ra.status === 'COMPLETED'
               const days = Array.from(new Set((ra.routine.tasks || []).map((t: any) => t.day))).sort((a: number, b: number) => a - b)
+              const totalMins = (ra.routine.tasks||[]).reduce((a:number,t:any)=>a+(t.minutes||0),0)
 
               return (
-                <div key={ra.id} className="glass-liquid rise-in spotlight-card rounded-3xl overflow-hidden transition-all duration-300" style={{ animationDelay: `${i * 70}ms` }} onMouseMove={spotlightHandler}>
-                  <button onClick={() => setExpandedRoutine(expanded ? null : ra.id)} className="w-full flex items-center gap-4 p-5 text-left group">
-                    <div className={cn('relative shrink-0 grid place-items-center w-11 h-11 rounded-2xl ring-1 transition-all duration-300', completed ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] ring-white/25 shadow-[0_6px_20px_-6px_rgba(52,211,153,0.5)]' : 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-white/25 shadow-[0_6px_20px_-6px_rgba(139,92,246,0.5)]')}>
-                      {completed ? <Trophy className="w-5 h-5 text-white" /> : <ListChecks className="w-5 h-5 text-white" />}
+                <div key={ra.id} className={cn('group/routine relative overflow-hidden rounded-[28px] border bg-[#0c0c14]/70 backdrop-blur-xl transition-all duration-500 rise-in', expanded ? 'border-[#a78bfa]/30 shadow-[0_20px_80px_-20px_rgba(139,92,246,0.4),0_8px_32px_-12px_rgba(0,0,0,0.5)] scale-[1.005]' : 'border-white/[0.07] hover:border-white/[0.12] hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] hover:-translate-y-1', completed ? 'ring-1 ring-emerald-500/20' : '')} style={{ animationDelay: `${i * 90}ms` }} onMouseMove={spotlightHandler}>
+                  {/* animated gradient border when expanded */}
+                  {expanded && <div className="pointer-events-none absolute inset-0 rounded-[28px] p-px bg-gradient-to-br from-[#a78bfa]/40 via-[#2dd4bf]/20 to-transparent opacity-60" style={{ WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude', padding: '1px' }} />}
+                  {/* subtle mesh glow */}
+                  <div className={cn('pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full blur-[60px] transition-opacity duration-700', expanded ? 'opacity-100 bg-gradient-to-br from-[#a78bfa]/15 to-[#2dd4bf]/10' : 'opacity-0 group-hover/routine:opacity-60 bg-gradient-to-br from-[#a78bfa]/10 to-transparent')} />
+                  <div className="pointer-events-none absolute inset-0 bg-grid-fine opacity-[0.03]" />
+                  
+                  <button onClick={() => setExpandedRoutine(expanded ? null : ra.id)} className="relative w-full flex items-center gap-4 sm:gap-5 p-5 sm:p-6 text-left">
+                    {/* icon + circular progress */}
+                    <div className="relative shrink-0">
+                      <div className={cn('relative grid place-items-center w-[56px] h-[56px] rounded-[18px] ring-1 transition-all duration-500', completed ? 'bg-gradient-to-br from-[#34d399] to-[#0d9488] ring-emerald-400/30 shadow-[0_10px_30px_-10px_rgba(52,211,153,0.6)]' : 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/20 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)] group-hover/routine:shadow-[0_14px_40px_-10px_rgba(139,92,246,0.7)] group-hover/routine:scale-[1.02]')}>
+                        {completed ? <Trophy className="w-6 h-6 text-white drop-shadow" /> : <Zap className="w-6 h-6 text-white drop-shadow" />}
+                        {!completed && pct>0 && pct<100 && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#22c55e] ring-2 ring-[#0c0c14] animate-pulse" />}
+                      </div>
+                      {/* circular pct ring */}
+                      <svg className="pointer-events-none absolute -inset-1.5 h-[68px] w-[68px] -rotate-90" viewBox="0 0 68 68">
+                        <circle cx="34" cy="34" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                        <circle cx="34" cy="34" r="30" fill="none" stroke={completed ? "#10b981" : "url(#grad-"+ra.id+")"} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${2*Math.PI*30}`} strokeDashoffset={`${2*Math.PI*30*(1-pct/100)}`} className="transition-all duration-1000 ease-out" style={{ filter: 'drop-shadow(0 0 6px rgba(139,92,246,0.4))' }} />
+                        <defs>
+                          <linearGradient id={"grad-"+ra.id} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#a78bfa" />
+                            <stop offset="100%" stopColor="#2dd4bf" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={cn('font-display text-lg font-bold leading-snug', completed ? 'text-emerald-200' : 'text-white')}>{ra.routine.title}</h3>
-                        {completed && <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-2 py-0.5"><Trophy className="w-3 h-3" /> Ukończona</span>}
-                        {ra.routine.recurring && !completed && <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] bg-[#a78bfa]/10 border border-[#a78bfa]/25 rounded-full px-2 py-0.5"><Repeat className="w-3 h-3" /> Codziennie</span>}
-                        {ra.endsAt && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/50 bg-white/[0.04] border border-white/[0.08] rounded-full px-2 py-0.5"><Calendar className="w-3 h-3" /> do {formatDate(ra.endsAt)}</span>}
+                        <h3 className={cn('font-display text-[17px] sm:text-[19px] font-black tracking-tight leading-tight', completed ? 'text-emerald-100' : 'text-white group-hover/routine:text-white')}>{ra.routine.title}</h3>
+                        {completed ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200 shadow-[0_0_20px_-6px_rgba(16,185,129,0.5)]"><Star className="w-3 h-3 fill-emerald-300"/> Ukończona</span>
+                        ) : (
+                          <>
+                            {ra.routine.recurring && <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#e9d5ff]"><Repeat className="w-3 h-3" /> Codziennie</span>}
+                            <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border', pct===100 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : pct>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.04] border-white/[0.07] text-white/50')}>{pct}%</span>
+                          </>
+                        )}
+                        {ra.endsAt && <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-white/[0.04] border border-white/[0.07] px-2.5 py-1 text-[11px] font-semibold text-white/50"><Calendar className="w-3 h-3" /> do {formatDate(ra.endsAt)}</span>}
                       </div>
-                      <div className="mt-2 flex items-center gap-3">
-                        <div className="flex-1 max-w-[220px] h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
-                          <div className={cn('h-full rounded-full transition-all duration-700', completed ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${pct}%` }} />
+
+                      {/* stats pills + progress bar */}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/70"><Layers className="w-3 h-3 text-[#a78bfa]"/>{days.length} {days.length===1?'dzień':'dni'}</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/70"><ListChecks className="w-3 h-3 text-[#2dd4bf]"/>{totalCount} zadań</span>
+                        {totalMins>0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/60"><Clock className="w-3 h-3 text-[#fbbf24]"/>~{totalMins} min</span>}
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-white/40 ml-1"><span className={cn('h-1.5 w-1.5 rounded-full', pct===100?'bg-emerald-400': pct>60?'bg-[#a78bfa]':'bg-white/30')}/> {doneCountR}/{totalCount}</span>
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-3">
+                        <div className="flex-1 max-w-[340px] h-[6px] rounded-full bg-white/[0.06] overflow-hidden p-[2px]">
+                          <div className="relative h-full rounded-full overflow-hidden" style={{ width: '100%' }}>
+                            <div className={cn('absolute inset-0 rounded-full transition-all duration-1000 ease-out', completed ? 'bg-gradient-to-r from-[#34d399] via-[#10b981] to-[#059669]' : 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf]')} style={{ width: `${pct}%` }}>
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-[shimmer_2s_ease-in-out_infinite]" style={{ backgroundSize: '200% 100%' }} />
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-xs font-semibold text-white/60">{doneCountR}/{totalCount} zadań</span>
-                        <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Calendar className="w-3 h-3" />{days.length} {days.length === 1 ? 'dzień' : 'dni'}</span>
+                        <span className={cn('text-xs font-black tabular-nums tracking-wide', completed ? 'text-emerald-300' : 'text-white/60')}>{pct}%</span>
                       </div>
+
                       {completed && ra.routine.recurring && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full px-2.5 py-1">
-                          <Clock className="w-3 h-3"/> Reset za {(() => { const ms = new Date(new Date(tick).setHours(24,0,0,0)).getTime() - tick; const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`})()} • jutro
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-[11px] font-bold text-amber-200">
+                          <Clock className="w-3.5 h-3.5"/> Reset za {(() => { const ms = new Date(new Date(tick).setHours(24,0,0,0)).getTime() - tick; const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`})()} <span className="text-amber-300/60">• jutro</span>
                         </div>
                       )}
                     </div>
-                    <ChevronDown className={cn('w-5 h-5 shrink-0 text-white/35 transition-transform duration-300', expanded && 'rotate-180')} />
+
+                    <div className="hidden sm:flex flex-col items-center gap-2 shrink-0">
+                      <div className={cn('grid place-items-center h-11 w-11 rounded-2xl border transition-all duration-300', expanded ? 'bg-white text-[#0a0a14] border-white rotate-180 shadow-lg' : 'bg-white/[0.06] text-white/60 border-white/[0.08] group-hover/routine:bg-white group-hover/routine:text-[#0a0a14] group-hover/routine:border-white')}>
+                        <ChevronDown className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/25">{expanded ? 'Zwiń' : 'Rozwiń'}</span>
+                    </div>
+                    <ChevronDown className={cn('sm:hidden w-5 h-5 shrink-0 text-white/30 transition-transform duration-300', expanded && 'rotate-180')} />
                   </button>
-                  {completed && (
-                    <div className="px-5 pb-3 flex justify-center">
-                      <button onClick={(e)=>{e.stopPropagation(); handleRepeat(ra.id)}} disabled={repeatingId===ra.id} className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/70 hover:text-white hover:border-[#a78bfa]/30 hover:bg-white/[0.08] transition">
-                        {repeatingId===ra.id ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <RotateCcw className="w-3.5 h-3.5"/>} Powtórz rutynę
+
+                  {completed && !expanded && (
+                    <div className="px-6 pb-5 flex justify-center">
+                      <button onClick={(e)=>{e.stopPropagation(); handleRepeat(ra.id)}} disabled={repeatingId===ra.id} className="group/btn relative overflow-hidden inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] px-5 py-2.5 text-xs font-black text-white shadow-[0_8px_24px_-8px_rgba(139,92,246,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all">
+                        <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent opacity-0 group-hover/btn:opacity-100 transition" />
+                        {repeatingId===ra.id ? <Loader2 className="w-3.5 h-3.5 animate-spin relative"/> : <RotateCcw className="w-3.5 h-3.5 relative"/>} <span className="relative">Powtórz rutynę</span>
                       </button>
                     </div>
                   )}
 
-                  {expanded && (
-                    <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
+                  {/* EXPANDED CONTENT */}
+                  <div className={cn('grid transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]', expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0')}>
+                    <div className="overflow-hidden">
+                      <div className="border-t border-white/[0.06] bg-gradient-to-b from-white/[0.02] via-transparent to-transparent">
                       {ra.routine.description && (
-                        <div className="my-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-sm text-white/60 leading-relaxed" dangerouslySetInnerHTML={{__html: mdToHtml(ra.routine.description)}} />
+                        <div className="mx-6 mt-5 p-4 rounded-2xl bg-gradient-to-br from-[#a78bfa]/[0.06] via-[#8b5cf6]/[0.03] to-transparent border border-[#a78bfa]/10 text-sm leading-relaxed text-white/70">
+                          <div className="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#c4b5fd]"><Wand2 className="w-3 h-3"/> O rutynie</div>
+                          <div dangerouslySetInnerHTML={{__html: mdToHtml(ra.routine.description)}} />
+                        </div>
                       )}
-                      {days.map((d) => {
-                        const dayTasks = ra.routine.tasks.filter((t) => t.day === d)
-                        const dayDone = dayTasks.filter((t) => ra.progress.find((p) => p.taskId === t.id)?.status === 'DONE').length
-                        return (
-                          <div key={d} className="py-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-[#c4b5fd] to-[#2dd4bf]">Dzień {d}</p>
-                              <span className="text-[11px] tabular-nums text-white/40">{dayDone}/{dayTasks.length} zrobione</span>
-                            </div>
-                            <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden mb-3">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf] transition-all duration-700"
-                                style={{ width: `${dayTasks.length ? Math.round((dayDone / dayTasks.length) * 100) : 0}%` }}
-                              />
-                            </div>
-                            <div className="space-y-2.5">
-                              {dayTasks.map((t, ti) => {
-                                const tp = ra.progress.find((p) => p.taskId === t.id)
-                                const done = tp?.status === 'DONE'
-                                const accent = ['#a78bfa', '#2dd4bf', '#fbbf24', '#38bdf8', '#f472b6'][ti % 5]
-                                return (
-                                  <div
-                                    key={t.id}
-                                    onClick={()=> { setSelectedTask(t); setSelectedAssignment(ra) }}
-                                    style={{ animationDelay: `${Math.min(ti * 70, 350)}ms` }}
-                                    className={cn(
-                                      'rise-in group flex items-start gap-3.5 rounded-2xl p-4 pl-5 border transition-all duration-300 relative cursor-pointer overflow-visible',
-                                      'hover:-translate-y-[3px]',
-                                      done
-                                        ? 'bg-emerald-500/[0.07] border-emerald-500/25 shadow-[0_0_32px_-12px_rgba(52,211,153,0.5)]'
-                                        : 'bg-white/[0.025] border-white/[0.07] hover:border-[#a78bfa]/35 hover:bg-[#a78bfa]/[0.04] hover:shadow-[0_18px_44px_-16px_rgba(139,92,246,0.45)]',
-                                    )}
-                                  >
-                                    {/* Kolorowy pasek + dolna linia postępu */}
-                                    {!done && <span className="pointer-events-none absolute inset-y-3 left-0 w-[3px] rounded-full transition-all duration-300 group-hover:inset-y-2 group-hover:shadow-[0_0_12px_1px_rgba(139,92,246,0.4)]" style={{ background: `linear-gradient(180deg, ${accent}, transparent)`, opacity: 0.8 }} aria-hidden />}
-                                    <span
-                                      className={cn('pointer-events-none absolute bottom-0 left-5 right-5 h-[2px] rounded-full overflow-hidden transition-opacity duration-500', done ? 'opacity-100' : 'opacity-0 group-hover:opacity-60')}
-                                      aria-hidden
-                                    >
-                                      <span
-                                        className={cn('block h-full rounded-full transition-all duration-700', done ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]')}
-                                        style={{ width: done ? '100%' : '35%' }}
-                                      />
+
+                      {/* timeline */}
+                      <div className="px-5 sm:px-6 pb-6 pt-2">
+                        <div className="relative">
+                          {/* vertical connector */}
+                          <div className="absolute left-[18px] top-6 bottom-6 w-px bg-gradient-to-b from-[#a78bfa]/30 via-[#a78bfa]/15 to-transparent hidden sm:block" />
+                          <div className="space-y-8">
+                          {days.map((d, dayIdx) => {
+                            const dayTasks = ra.routine.tasks.filter((t) => t.day === d)
+                            const dayDone = dayTasks.filter((t) => ra.progress.find((p) => p.taskId === t.id)?.status === 'DONE').length
+                            const dayPct = dayTasks.length ? Math.round((dayDone / dayTasks.length) * 100) : 0
+                            const isDayDone = dayDone === dayTasks.length && dayTasks.length>0
+                            return (
+                              <div key={d} className="relative" style={{ animationDelay: `${dayIdx*80}ms` }}>
+                                {/* day header */}
+                                <div className="flex items-center gap-3 mb-4 sm:pl-10">
+                                  <span className={cn('hidden sm:grid place-items-center absolute left-0 w-9 h-9 rounded-xl ring-1 text-xs font-black shadow-lg', isDayDone ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-emerald-400/20' : dayPct>0 ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white ring-white/15' : 'bg-white/[0.06] text-white/40 ring-white/10')}>
+                                    {isDayDone ? <Check className="w-4 h-4" strokeWidth={3}/> : d}
+                                  </span>
+                                  <div className="flex items-center gap-3 flex-wrap">
+                                    <span className={cn('inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] border', isDayDone ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' : 'bg-gradient-to-br from-[#a78bfa]/15 to-[#2dd4bf]/10 border-[#a78bfa]/20 text-[#e9d5ff]')}>
+                                      <span className={cn('h-1.5 w-1.5 rounded-full', isDayDone ? 'bg-emerald-400' : 'bg-[#a78bfa] animate-pulse')}/> Dzień {String(d).padStart(2,'0')}
                                     </span>
-                                    <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300 active:scale-90', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25 shadow-[0_0_20px_-4px_rgba(52,211,153,0.7)]' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/50 hover:text-[#c4b5fd] hover:shadow-[0_0_16px_-4px_rgba(139,92,246,0.6)] hover:scale-105')}>
-                                      {togglingTask === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : done ? <Check className="w-4 h-4 animate-[pop-in_0.3s_ease-out]" strokeWidth={3} /> : <Circle className="w-4 h-4" />}
-                                    </button>
-                                    {!done && <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
-                                    <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
-                                      {togglingTask === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Circle className="w-3.5 h-3.5" />}
-                                    </button>
-                                    <div className="flex-1 min-w-0">
-                                      <p className={cn('text-sm font-semibold leading-snug flex items-center gap-2', done ? 'text-white/50 line-through decoration-white/30' : 'text-white/90')}>
-                                        <span className="relative inline-flex items-center gap-1">
-                                          {t.title}
-                                          {t.gifUrl && (
-                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-[40%] hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35),0_8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] w-64">
-                                            <span className="relative h-36 w-64 bg-black block overflow-hidden">
-                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                              <span className="absolute inset-0 ring-1 ring-white/10 rounded-t-2xl pointer-events-none" />
-                                            </span>
-                                          </span>
-                                        </span>
-                                          )}
-                                        </span>
-                                      </p>
-                                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Clock className="w-3 h-3" />~{t.minutes} min</span>}
-                                        {t.video?.url && <span className="inline-flex items-center gap-1 text-[11px] text-[#c4b5fd]"><Film className="w-3 h-3"/>Film</span>}
-                                        {t.steamMapUrl && <span onClick={e=>e.stopPropagation()}><a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25 hover:bg-[#f43f5e]/[0.16] hover:border-[#f43f5e]/40 transition-all"><MapPin className="w-3.5 h-3.5" />Mapa</a></span>}
-                                        {t.linkUrl && <span onClick={e=>e.stopPropagation()}><a href={t.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 hover:bg-[#a78bfa]/[0.16] hover:border-[#a78bfa]/30 transition-all"><Globe className="w-3.5 h-3.5" />Link</a></span>}
-                                        {t.minutes && !done && <button onClick={(e)=>{e.stopPropagation(); setActiveTimer({ assignment: ra, task: t })}} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.1] border border-[#a78bfa]/25 hover:bg-[#a78bfa]/[0.18] hover:border-[#a78bfa]/40 transition-all group/timer"><Timer className="w-3.5 h-3.5 transition-transform group-hover/timer:rotate-12" />Start</button>}
-                                        {t.minutes && done && <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/70"><Check className="w-3 h-3" />Odhaczone</span>}
-                                      </div>
-                                    </div>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] px-2.5 py-1 text-[11px] font-bold text-white/50"><Clock className="w-3 h-3"/>{dayTasks.reduce((a,t:any)=>a+(t.minutes||0),0)} min</span>
+                                    <span className={cn('text-xs font-bold tabular-nums', isDayDone ? 'text-emerald-300' : 'text-white/50')}>{dayDone}/{dayTasks.length}</span>
                                   </div>
-                                )
-                              })}
-                            </div>
+                                  <div className="ml-auto hidden sm:flex items-center gap-2">
+                                    <div className="h-1.5 w-24 rounded-full bg-white/[0.06] overflow-hidden">
+                                      <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]')} style={{ width: `${dayPct}%` }} />
+                                    </div>
+                                    <span className={cn('text-[11px] font-black tabular-nums min-w-[36px] text-right', isDayDone ? 'text-emerald-300' : 'text-white/40')}>{dayPct}%</span>
+                                  </div>
+                                </div>
+                                {/* mobile progress */}
+                                <div className="sm:hidden h-1 rounded-full bg-white/[0.06] overflow-hidden mb-4 ml-1">
+                                  <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${dayPct}%` }} />
+                                </div>
+
+                                <div className="space-y-3 sm:pl-10">
+                                  {(() => {
+                                    const firstPendingIdx = dayTasks.findIndex(t => (ra.progress.find(p=>p.taskId===t.id)?.status !== 'DONE'))
+                                    return dayTasks.map((t, ti) => {
+                                    const tp = ra.progress.find((p) => p.taskId === t.id)
+                                    const done = tp?.status === 'DONE'
+                                    const isNext = !done && ti === firstPendingIdx
+                                    const accents = [
+                                      { bar: '#a78bfa', soft: 'rgba(167,139,250,0.12)', glow: 'rgba(167,139,250,0.5)', iconBg: 'from-[#a78bfa] to-[#6d28d9]', label: 'FOCUS', icon: Target },
+                                      { bar: '#2dd4bf', soft: 'rgba(45,212,191,0.10)', glow: 'rgba(45,212,191,0.45)', iconBg: 'from-[#2dd4bf] to-[#0f766e]', label: 'AIM', icon: Crosshair },
+                                      { bar: '#fbbf24', soft: 'rgba(251,191,36,0.10)', glow: 'rgba(251,191,36,0.45)', iconBg: 'from-[#fbbf24] to-[#d97706]', label: 'SPEED', icon: Zap },
+                                      { bar: '#38bdf8', soft: 'rgba(56,189,248,0.10)', glow: 'rgba(56,189,248,0.45)', iconBg: 'from-[#38bdf8] to-[#1d4ed8]', label: 'TACTIC', icon: Layers },
+                                      { bar: '#f472b6', soft: 'rgba(244,114,182,0.10)', glow: 'rgba(244,114,182,0.45)', iconBg: 'from-[#f472b6] to-[#be185d]', label: 'CLUTCH', icon: Flame },
+                                    ]
+                                    const ac = accents[ti % accents.length]
+                                    const xp = (t.minutes ? t.minutes * 5 + 12 : 24)
+                                    const quickWin = (t.minutes || 10) <= 10
+                                    const hasMedia = !!(t.gifUrl || t.video?.thumbnail)
+                                    const typeIcon = t.video?.url ? Film : t.steamMapUrl ? MapPin : t.linkUrl ? Globe : t.gifUrl ? ImageIcon : ac.icon
+                                    const TypeIcon = typeIcon as any
+                                    return (
+                                      <div
+                                        key={t.id}
+                                        onClick={()=> { setSelectedTask(t); setSelectedAssignment(ra) }}
+                                        style={{ animationDelay: `${Math.min(ti * 70 + dayIdx*40, 420)}ms` }}
+                                        className={cn(
+                                          'rise-in group/task relative flex gap-4 rounded-[22px] p-4 sm:p-[18px] border cursor-pointer overflow-hidden transition-all duration-300',
+                                          'hover:-translate-y-[3px] hover:scale-[1.006]',
+                                          isNext && !done ? 'ring-1 ring-[#a78bfa]/30 shadow-[0_16px_48px_-16px_rgba(139,92,246,0.5)]' : '',
+                                          done
+                                            ? 'bg-gradient-to-br from-emerald-500/[0.08] via-emerald-500/[0.04] to-transparent border-emerald-500/20 shadow-[0_8px_32px_-12px_rgba(52,211,153,0.35)] opacity-[0.92] hover:opacity-100'
+                                            : isNext ? 'bg-gradient-to-br from-white/[0.06] via-[#a78bfa]/[0.06] to-white/[0.03] border-[#a78bfa]/30 backdrop-blur'
+                                            : 'bg-white/[0.035] border-white/[0.07] backdrop-blur hover:bg-white/[0.055] hover:border-white/[0.12] hover:shadow-[0_18px_48px_-16px_rgba(0,0,0,0.5)]',
+                                        )}
+                                      >
+                                        {/* NEXT glow border */}
+                                        {isNext && !done && <div className="pointer-events-none absolute inset-0 rounded-[22px] bg-gradient-to-r from-[#a78bfa]/0 via-[#a78bfa]/15 to-[#2dd4bf]/10 opacity-60 animate-[shimmer_2.8s_ease_infinite]" />}
+                                        {/* left accent bar */}
+                                        <span className="pointer-events-none absolute left-0 top-4 bottom-4 w-[4px] rounded-full transition-all duration-300 group-hover/task:top-3 group-hover/task:bottom-3" style={{ background: done ? '#10b981' : ac.bar, boxShadow: `0 0 18px ${done ? 'rgba(16,185,129,0.55)' : ac.glow}`, opacity: done ? 0.9 : 0.95 }} />
+                                        <span className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full blur-2xl opacity-0 group-hover/task:opacity-100 transition duration-500" style={{ background: ac.soft }} />
+
+                                        {/* NASTĘPNY badge */}
+                                        {isNext && !done && (
+                                          <span className="pointer-events-none absolute -top-px left-6 inline-flex items-center gap-1 rounded-b-xl bg-gradient-to-r from-[#a78bfa] to-[#6d28d9] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-lg">
+                                            <Sparkles className="w-3 h-3"/> Następny — zrób teraz
+                                          </span>
+                                        )}
+                                        {/* xp + quick win */}
+                                        <span className={cn('pointer-events-none absolute top-3 right-3 hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black tracking-wide border', done ? 'bg-emerald-500/12 border-emerald-500/20 text-emerald-200' : 'bg-[#fbbf24]/12 border-[#fbbf24]/20 text-[#fde68a]')}>
+                                          <Star className="w-3 h-3" /> +{xp} XP
+                                        </span>
+
+                                        {/* SINGLE checkbox — absolutnie jedyny */}
+                                        <button
+                                          onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}}
+                                          disabled={togglingTask === t.id}
+                                          aria-label={done ? 'Cofnij zaliczenie' : 'Zalicz zadanie'}
+                                          className={cn('relative mt-1 shrink-0 grid place-items-center w-[46px] h-[46px] rounded-[14px] transition-all duration-300 active:scale-[0.92] cursor-pointer select-none',
+                                            done
+                                              ? 'bg-gradient-to-br from-[#34d399] to-[#059669] text-white ring-1 ring-white/20 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.65)]'
+                                              : isNext ? 'bg-white text-[#0a0a14] ring-1 ring-[#a78bfa]/30 shadow-[0_8px_24px_-8px_rgba(139,92,246,0.45)] hover:scale-105 hover:rotate-[-2deg]'
+                                              : 'bg-white/[0.06] text-white/35 border border-white/[0.10] hover:border-[#a78bfa]/40 hover:text-white hover:bg-[#a78bfa]/12 hover:shadow-[0_8px_24px_-8px_rgba(139,92,246,0.35)] hover:scale-105'
+                                          )}
+                                        >
+                                          {togglingTask === t.id ? <Loader2 className="w-5 h-5 animate-spin" /> : done ? <Check className="w-6 h-6 animate-[pop-in_0.38s_cubic-bezier(0.22,1.4,0.36,1)]" strokeWidth={3.2} /> : isNext ? <Play className="w-5 h-5 ml-0.5 fill-[#0a0a14]" /> : <Circle className="w-5 h-5" />}
+                                          {done && <span className="pointer-events-none absolute inset-0 rounded-[14px] ring-1 ring-emerald-400/25 animate-[ping_1.15s_cubic-bezier(0,0,0.2,1)_1]" />}
+                                        </button>
+
+                                        {/* media / icon tile — wyróżniające się */}
+                                        <div className="hidden sm:flex shrink-0 flex-col items-center gap-2">
+                                          {hasMedia ? (
+                                            <div className={cn('relative w-[68px] h-[68px] rounded-2xl overflow-hidden border bg-black shadow-lg group-hover/task:scale-[1.02] transition', done ? 'border-emerald-500/20 grayscale-[0.25]' : 'border-white/10')}>
+                                              {t.gifUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img decoding="async" src={t.gifUrl} alt={t.title} className="w-full h-full object-cover" loading="lazy" />
+                                              ) : t.video?.thumbnail ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img decoding="async" src={t.video.thumbnail!} alt={t.title} className="w-full h-full object-cover" />
+                                              ) : (
+                                                <div className="w-full h-full grid place-items-center bg-white/[0.06]"><Film className="w-6 h-6 text-white/30"/></div>
+                                              )}
+                                              <span className="absolute inset-0 ring-1 ring-white/10 rounded-2xl pointer-events-none" />
+                                              {!done && <span className="absolute bottom-1 left-1 right-1 inline-flex items-center justify-center gap-1 rounded-full bg-black/70 backdrop-blur px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white"><Play className="w-2.5 h-2.5 fill-white"/> podgląd</span>}
+                                            </div>
+                                          ) : (
+                                            <div className={cn('grid place-items-center w-[58px] h-[58px] rounded-2xl ring-1 shadow-md transition group-hover/task:scale-[1.04] group-hover/task:rotate-[-1deg]', `bg-gradient-to-br ${ac.iconBg} ring-white/15 text-white`)}>
+                                              <TypeIcon className="w-6 h-6 drop-shadow" />
+                                            </div>
+                                          )}
+                                          <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[8px] font-black tracking-[0.14em] border', done ? 'bg-white/[0.04] border-white/[0.06] text-white/30' : 'bg-white/[0.06] border-white/[0.08] text-white/40')}>{ac.label}</span>
+                                        </div>
+
+                                        <div className="flex-1 min-w-0 pt-0.5">
+                                          <div className="flex items-start gap-2 flex-wrap">
+                                            <h4 className={cn('text-[14.5px] sm:text-[15.5px] font-black leading-tight tracking-tight', done ? 'text-white/40 line-through decoration-white/15' : 'text-white')}>
+                                              {t.title}
+                                            </h4>
+                                            {quickWin && !done && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/12 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-200"><Zap className="w-3 h-3"/> Szybki win</span>}
+                                            {done && <span className="inline-flex h-5 w-5 place-items-center rounded-full bg-emerald-500/15 text-emerald-300"><Check className="w-3 h-3" strokeWidth={3}/></span>}
+                                          </div>
+                                          {t.description ? (
+                                            <p className={cn('mt-1.5 text-[12.5px] leading-relaxed line-clamp-2 rounded-xl px-2.5 py-1.5 border', done ? 'bg-white/[0.03] border-white/[0.05] text-white/30' : 'bg-white/[0.04] border-white/[0.06] text-white/55 group-hover/task:text-white/70 group-hover/task:border-white/[0.08]')}>
+                                              {t.description.replace(/[*`#\[\]]/g,'').slice(0,140)}{t.description.length>140?'…':''}
+                                            </p>
+                                          ) : (
+                                            <p className={cn('mt-1.5 text-[11px] font-medium', done ? 'text-white/25' : 'text-white/30 italic')}>{done ? 'Zaliczone — super!' : isNext ? 'Kliknij START lub kółko by zaliczyć • pokaż co potrafisz!' : 'Otwórz by zobaczyć szczegóły i GIF'}</p>
+                                          )}
+                                          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                            {t.minutes && <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/30' : isNext ? 'bg-[#fbbf24]/15 border-[#fbbf24]/25 text-[#fde68a] animate-pulse' : 'bg-white/[0.06] border-white/[0.08] text-white/60')}><Clock className="w-3 h-3" />{t.minutes} min</span>}
+                                            {t.video?.url && <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/30' : 'bg-[#a78bfa]/12 border-[#a78bfa]/20 text-[#ddd6fe]')}><Film className="w-3 h-3"/>Wideo</span>}
+                                            {t.steamMapUrl && <a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fda4af] hover:bg-[#f43f5e]/15 transition"><MapPin className="w-3 h-3" />Mapa</a>}
+                                            {t.linkUrl && <a href={t.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold bg-[#38bdf8]/10 border border-[#38bdf8]/20 text-[#7dd3fc] hover:bg-[#38bdf8]/15 transition"><Globe className="w-3 h-3" />Link</a>}
+                                            {!done && quickWin && <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300/80"><Star className="w-3 h-3 fill-emerald-300/30"/> Lekkie + szybkie</span>}
+                                          </div>
+                                          {/* mobile thumb */}
+                                          {hasMedia && (
+                                            <div className="sm:hidden mt-3 w-full h-28 rounded-xl overflow-hidden border border-white/10 bg-black relative">
+                                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                                              <img decoding="async" src={t.gifUrl || t.video?.thumbnail || ''} alt={t.title} className="w-full h-full object-cover" />
+                                              <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] font-bold text-white"><Play className="w-3 h-3 fill-white"/> GIF</span>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* RIGHT CTA — zachęcający */}
+                                        <div className="hidden sm:flex shrink-0 flex-col items-end justify-between gap-3 pt-1">
+                                          <span className={cn('inline-flex items-center justify-center h-6 min-w-[28px] rounded-full px-1.5 text-[10px] font-black tracking-widest border', done ? 'bg-emerald-500/12 border-emerald-500/20 text-emerald-200' : 'bg-white/[0.06] border-white/[0.08] text-white/35')}>#{String(ti+1).padStart(2,'0')}</span>
+                                          {done ? (
+                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] px-3 py-1.5 text-[11px] font-black text-white shadow"><Check className="w-3.5 h-3.5" strokeWidth={3}/> Zaliczone</span>
+                                          ) : (
+                                            <button onClick={(e)=>{e.stopPropagation(); setActiveTimer({ assignment: ra, task: t })}} className={cn('group/start inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12px] font-black text-white shadow-lg transition-all hover:scale-[1.04] active:scale-[0.97]', t.minutes ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow-[0_8px_20px_-8px_rgba(139,92,246,0.6)] hover:shadow-[0_10px_28px_-8px_rgba(139,92,246,0.7)]' : 'bg-white text-[#0a0a14] hover:bg-[#f5f3ff]')}>
+                                              {t.minutes ? <><Timer className="w-3.5 h-3.5 group-hover/start:rotate-12 transition"/> START</> : <><Play className="w-3.5 h-3.5 fill-white"/> ZRÓB</>} <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover/start:translate-x-0.5 transition" />
+                                            </button>
+                                          )}
+                                          <span className={cn('grid place-items-center h-7 w-7 rounded-xl border text-[11px] transition', done ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-white/[0.04] border-white/[0.06] text-white/20 group-hover/task:bg-white group-hover/task:text-[#0a0a14]')}>
+                                            <ArrowRight className="w-3.5 h-3.5" />
+                                          </span>
+                                        </div>
+                                        {/* mobile CTA */}
+                                        <div className="sm:hidden absolute right-3 bottom-3">
+                                          {done ? <span className="inline-flex h-7 w-7 place-items-center rounded-full bg-emerald-500 text-white"><Check className="w-4 h-4" strokeWidth={3}/></span> : <span className="inline-flex h-7 w-7 place-items-center rounded-full bg-white text-[#0a0a14]"><ArrowRight className="w-4 h-4"/></span>}
+                                        </div>
+                                      </div>
+                                    )
+                                  })
+                                  })()}
+                                </div>
+                              </div>
+                            )
+                          })}
                           </div>
-                        )
-                      })}
+                        </div>
+
+                        {completed && (
+                          <div className="mt-6 flex justify-center">
+                            <button onClick={()=>handleRepeat(ra.id)} disabled={repeatingId===ra.id} className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] border border-white/[0.08] px-5 py-2.5 text-xs font-bold text-white/70 hover:text-white hover:border-[#a78bfa]/30 hover:bg-white/[0.08] transition">
+                              {repeatingId===ra.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <RotateCcw className="w-4 h-4"/>} Powtórz rutynę od nowa
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               )
             })}
