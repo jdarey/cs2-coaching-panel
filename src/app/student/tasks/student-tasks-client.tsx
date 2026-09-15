@@ -104,6 +104,7 @@ export function StudentTasksClient() {
   const [loadingOverall, setLoadingOverall] = useState(true)
   const [selectedDay, setSelectedDay] = useState<{ date: string; entry: any } | null>(null)
   const [selectedTask, setSelectedTask] = useState<RoutineAssignment['routine']['tasks'][number] | null>(null)
+  const [selectedAssignment, setSelectedAssignment] = useState<RoutineAssignment | null>(null)
   const [dayNotes, setDayNotes] = useState<Record<string,{content:string, sleep?:number|null}>>({})
   const [noteDraft, setNoteDraft] = useState("")
   const [sleepDraft, setSleepDraft] = useState<number | null>(null)
@@ -549,7 +550,7 @@ export function StudentTasksClient() {
                                 const done = tp?.status === 'DONE'
                                 const accent = ['#a78bfa', '#2dd4bf', '#fbbf24', '#38bdf8', '#f472b6'][ti % 5]
                                 return (
-                                  <div key={t.id} onClick={()=> setSelectedTask(t)} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
+                                  <div key={t.id} onClick={()=> { setSelectedTask(t); setSelectedAssignment(ra) }} className={cn('group flex items-start gap-3 rounded-2xl p-3.5 pl-4 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]')}>
                                     {!done && <span className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-full" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
                                     {!done && <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: accent, opacity: 0.7 }} aria-hidden />}
                                     <button onClick={(e)=>{e.stopPropagation(); toggleRoutineTask(ra, t.id)}} disabled={togglingTask === t.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg transition-all duration-300', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
@@ -745,11 +746,11 @@ export function StudentTasksClient() {
 
         {selectedTask && (
           <div className="fixed inset-0 z-50 grid place-items-center p-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>setSelectedTask(null)} />
+                <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} />
             <div className="glass-liquid relative w-full max-w-lg rounded-3xl overflow-hidden animate-rise-in max-h-[90vh] overflow-y-auto">
               {selectedTask.gifUrl && <div className="h-48 bg-black shrink-0"><img decoding="async" src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-full object-cover" /></div>}
               <div className="p-6">
-                <button onClick={()=>setSelectedTask(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
+                <button onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
                 <h3 className="font-display text-xl font-bold text-white pr-8">{selectedTask.title}</h3>
                 {selectedTask.description && <div className="text-sm text-white/70 mt-2 leading-relaxed prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(selectedTask.description)}} />}
                 {selectedTask.video?.url && (
@@ -772,7 +773,15 @@ export function StudentTasksClient() {
                   {selectedTask.video?.url && !getYouTubeId(selectedTask.video.url) && <a href={selectedTask.video.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#c4b5fd] hover:text-white"><Film className="w-3.5 h-3.5"/>{selectedTask.video.title}</a>}
                   {selectedTask.steamMapUrl && <a href={selectedTask.steamMapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fda4af]"><MapPin className="w-3.5 h-3.5"/>Mapa Steam</a>}
                 </div>
-                <button onClick={()=>setSelectedTask(null)} className="mt-6 w-full h-11 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-white font-semibold hover:bg-white/[0.1]">Zamknij</button>
+                {selectedTask.minutes && selectedAssignment && (
+                  <button
+                    onClick={() => { setActiveTimer({ assignment: selectedAssignment, task: selectedTask }); setSelectedTask(null); setSelectedAssignment(null) }}
+                    className="mt-3 w-full h-12 rounded-2xl text-sm font-bold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] hover:opacity-90 transition inline-flex items-center justify-center gap-2 shadow-[0_8px_28px_-8px_rgba(139,92,246,0.6)]"
+                  >
+                    <Timer className="w-4 h-4" /> Start — {selectedTask.minutes} min treningu
+                  </button>
+                )}
+                <button onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} className="mt-6 w-full h-11 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-white font-semibold hover:bg-white/[0.1]">Zamknij</button>
               </div>
             </div>
           </div>
