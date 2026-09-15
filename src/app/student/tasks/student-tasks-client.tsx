@@ -559,7 +559,7 @@ export function StudentTasksClient() {
                                         <span className="relative inline-flex items-center gap-1">
                                           {t.title}
                                           {t.gifUrl && (
-                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-[75%] translate-x-2 group-hover:translate-x-0 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.97] group-hover:scale-100 z-30">
+                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 translate-x-2 group-hover:translate-x-0 hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.97] group-hover:scale-100 z-30">
                                           <span className="flex flex-col rounded-xl overflow-hidden bg-[#0b0e14]/95 backdrop-blur-xl ring-1 ring-white/15 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8),0_0_24px_-6px_rgba(139,92,246,0.25)] w-48">
                                             <span className="h-px w-full bg-gradient-to-r from-transparent via-[#a78bfa]/60 to-transparent" />
                                             <span className="relative h-[108px] w-48 bg-black block overflow-hidden">
