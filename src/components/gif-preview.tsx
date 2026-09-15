@@ -6,8 +6,8 @@ import { createPortal } from 'react-dom'
 const W = 192
 const H = 112
 const GAP = 12
-// Podgląd celowo trochę niżej niż środek tytułu — nie wchodzi na przyciski powyżej
-const DROP_Y = 30
+// Podgląd minimalnie poniżej środka tytułu
+const DROP_Y = 10
 
 interface GifState {
   gifUrl: string
