@@ -1141,16 +1141,16 @@ export function CoachStudentDetailClient({
                                       {t.title}
                                       {t.gifUrl && (
                                         <span className="pointer-events-none absolute left-full ml-3 bottom-[-10px] hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-2xl overflow-hidden bg-[#0b0d14]/95 backdrop-blur-xl border border-[#a78bfa]/30 shadow-[0_16px_48px_-12px_rgba(139,92,246,0.5)] w-56">
-                                            <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c4b5fd] border-b border-white/[0.06]">
-                                              Demo
+                                          <span className="flex flex-col rounded-xl overflow-hidden bg-[#0d0f16]/95 backdrop-blur-xl border border-white/10 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)] w-52">
+                                            <span className="flex items-center gap-1.5 px-3 py-1.5 border-b border-white/[0.06]">
+                                              <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa]" />
+                                              <span className="text-[10px] font-semibold tracking-wider text-white/50 uppercase">Demo</span>
                                             </span>
-                                            <span className="relative h-32 w-56 bg-black block overflow-hidden">
+                                            <span className="relative h-28 w-52 bg-black block overflow-hidden">
                                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                               <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
                                             </span>
                                           </span>
-                                          <span className="absolute left-[-5px] bottom-4 w-2.5 h-2.5 rotate-45 bg-[#0b0d14] border-l border-b border-[#a78bfa]/30" />
                                         </span>
                                       )}
                                     </span>
