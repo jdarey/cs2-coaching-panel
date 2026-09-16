@@ -335,10 +335,10 @@ export function CoachFinanceClient() {
           <p className="flex items-center gap-2 text-sm font-bold text-white mb-3"><Info className="w-4 h-4 text-[#c4b5fd]" /> Ściąga: podatek bez działalności (uczeń, bez firmy)</p>
           <ul className="space-y-2.5 text-sm text-white/65 leading-relaxed">
             <li><b className="text-white/85">Małe kwoty, nieregularnie → działalność nierejestrowana.</b> Bez ZUS, bez rejestracji — warunek: przychód w miesiącu do 75% minimalnego wynagrodzenia (kwota rośnie co roku, sprawdź aktualną). Raz w roku rozliczasz się w PIT-36.</li>
-            <li><b className="text-white/85">Regularnie / powyżej limitu → firma (JDG).</b> Na start ulga: 6 mies. bez składek społecznych + 2 lata preferencyjnych („mały ZUS").</li>
+            <li><b className="text-white/85">Regularnie / powyżej limitu → firma (JDG).</b> Na start ulga: 6 mies. bez składek społecznych + 2 lata preferencyjnych („mały ZUS”).</li>
             <li><b className="text-white/85">Masz mniej niż 26 lat → ulga dla młodych.</b> Do ok. 85,5 tys. zł rocznie zero PIT — ale uwaga: działa dla etatu/zlecenia, <b className="text-white/85">nie</b> dla własnej działalności.</li>
             <li><b className="text-white/85">Zapisuj każdy wpływ — to robisz tutaj.</b> Ewidencja to podstawa: kto, ile, kiedy. Przy kontroli skarbowej pokazujesz ten rejestr.</li>
-            <li><b className="text-white/85">Kasa od uczniów „do ręki" też się liczy.</b> Nie ma znaczenia, czy przelew, BLIK czy gotówka — przychód to przychód.</li>
+            <li><b className="text-white/85">Kasa od uczniów „do ręki” też się liczy.</b> Nie ma znaczenia, czy przelew, BLIK czy gotówka — przychód to przychód.</li>
           </ul>
           <p className="mt-4 text-xs text-white/35">To ogólne informacje, nie porada podatkowa. Przed pierwszym rozliczeniem potwierdź swoją sytuację z księgową albo w urzędzie skarbowym (porada na start bywa darmowa).</p>
         </div>

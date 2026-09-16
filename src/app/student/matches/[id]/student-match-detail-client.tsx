@@ -432,7 +432,7 @@ export function StudentMatchDetailClient() {
               ))}
               {me?.trade_kills_attempts != null && (
                 <div className="flex items-center justify-between rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-2.5">
-                  <span className="text-sm text-white/60">Skuteczność trade'y</span>
+                  <span className="text-sm text-white/60">Skuteczność trade’y</span>
                   <span className={cn('text-sm font-bold tabular-nums', (me.trade_kills_succeed ?? 0) >= (me.trade_kills_attempts ?? 1) / 2 ? 'text-[#34d399]' : 'text-red-300')}>
                     {((me.trade_kills_succeed ?? 0) / Math.max(1, me.trade_kills_attempts ?? 1) * 100).toFixed(0)}%
                   </span>

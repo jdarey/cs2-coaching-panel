@@ -255,7 +255,7 @@ export function StudentMatchesClient() {
               <div className="glass-liquid rounded-3xl py-16 px-6 text-center">
                 <Swords className="w-12 h-12 mx-auto mb-4 text-white/25" />
                 <p className="text-white/55">Nie masz jeszcze zsynchronizowanych meczów.</p>
-                <p className="text-sm text-white/35 mt-1">Kliknij „Synchronizuj z Faceitem" — ostatnie mecze z pełnymi statystykami pojawią się automatycznie.</p>
+                <p className="text-sm text-white/35 mt-1">Kliknij „Synchronizuj z Faceitem” — ostatnie mecze z pełnymi statystykami pojawią się automatycznie.</p>
                 <Link href="/student/settings" className="inline-flex items-center gap-1.5 mt-3 text-xs text-[#c4b5fd] hover:text-white transition-colors">
                   <Calendar className="w-3.5 h-3.5" /> Ustaw Steam ID w ustawieniach
                 </Link>

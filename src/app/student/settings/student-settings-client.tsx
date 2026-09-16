@@ -690,7 +690,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                         Gdy trener napisze do Ciebie wiadomość, dostajesz maila automatycznie — nie musisz nic włączać.
                       </p>
                       <p className="text-xs text-white/35 mt-2">
-                        Przypomnienia o sesjach i nowych filmach znajdziesz na dashboardzie (sekcja „Twój tydzień") oraz w powiadomieniach w panelu.
+                        Przypomnienia o sesjach i nowych filmach znajdziesz na dashboardzie (sekcja „Twój tydzień”) oraz w powiadomieniach w panelu.
                       </p>
                     </div>
                   </div>
