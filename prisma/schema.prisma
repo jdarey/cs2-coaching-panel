@@ -39,6 +39,12 @@ model User {
   steamVanity   String?   // steam vanity URL name
   faceitNickname String?
   lastActiveAt  DateTime?
+  // Bezpieczeństwo logowania: lockout po 5 złych hasłach + unieważnianie
+  // sesji po zmianie hasła (porównanie passwordChangedAt ze znacznikiem
+  // sesji; stare sesje bez znacznika mają pwc=0 i padają przy 1. zmianie).
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  passwordChangedAt   DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

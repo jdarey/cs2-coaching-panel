@@ -21,5 +21,9 @@ declare module 'next-auth/jwt' {
     id: string
     role: string
     avatarUrl: string | null
+    /** Znacznik zmiany hasła w sekundach (unieważnianie starych sesji). */
+    pwc: number
+    /** ID admina przy sesji z podszywania (impersonate). */
+    impersonatedBy?: string
   }
 }

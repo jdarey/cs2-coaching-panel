@@ -52,10 +52,43 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials')
         }
 
+        // Lockout: 5 złych haseł → 15 minut blokady (liczone per konto,
+        // nie per IP — atak rozproszony i tak łapie rate-limit w middleware).
+        if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
+          throw new Error('Zbyt wiele prób logowania — spróbuj ponownie za 15 minut')
+        }
+
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash)
 
         if (!isValid) {
-          throw new Error('Invalid credentials')
+          const attempts = (user.failedLoginAttempts ?? 0) + 1
+          try {
+            if (attempts >= 5) {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { failedLoginAttempts: 0, lockedUntil: new Date(Date.now() + 15 * 60 * 1000) },
+              })
+            } else {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { failedLoginAttempts: attempts },
+              })
+            }
+          } catch {
+            /* licznik best-effort — nie blokuj logowania przy awarii DB */
+          }
+          throw new Error(
+            attempts >= 5
+              ? 'Zbyt wiele prób logowania — spróbuj ponownie za 15 minut'
+              : 'Invalid credentials',
+          )
+        }
+
+        // Udane logowanie czyści licznik i ewentualną blokadę.
+        if ((user.failedLoginAttempts ?? 0) > 0 || user.lockedUntil) {
+          await prisma.user
+            .update({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } })
+            .catch(() => {})
         }
 
         // Bootstrap admina: email z ADMIN_EMAIL dostaje trwałą rolę ADMIN w
@@ -75,6 +108,11 @@ export const authOptions: NextAuthOptions = {
           role,
           avatarUrl: user.avatarUrl,
           remember: (credentials as any).remember !== 'false',
+          // Znacznik zmiany hasła (sekundy) — session() unieważnia sesje
+          // wystawione PRZED ostatnią zmianą hasła.
+          passwordChangedAt: user.passwordChangedAt
+            ? Math.floor(user.passwordChangedAt.getTime() / 1000)
+            : 0,
         } as any
       },
     }),
@@ -103,6 +141,10 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.role = (user as any).role
         token.remember = (user as any).remember ?? true
+        // pwc przepisujemy TYLKO przy logowaniu. Przy odświeżaniu (sliding
+        // expiry) encode() resetuje iat, więc iat nie nadaje się do wykrywania
+        // zmiany hasła — stary znacznik musi zostać w tokenie.
+        token.pwc = (user as any).passwordChangedAt ?? 0
         // dynamic expiry: 30d if remember, 1d if not
         const maxAge = token.remember === false ? 24 * 60 * 60 : 30 * 24 * 60 * 60
         token.exp = Math.floor(Date.now() / 1000) + maxAge
@@ -123,12 +165,23 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { name: true, avatarUrl: true },
+          select: { name: true, avatarUrl: true, passwordChangedAt: true },
         })
-        if (dbUser) {
-          session.user.name = dbUser.name
-          session.user.avatarUrl = dbUser.avatarUrl
+        if (!dbUser) {
+          // Konto usunięte po wystawieniu sesji — wymuś wylogowanie zamiast
+          // serwować widmo starej sesji.
+          return { ...session, user: undefined } as any
         }
+        const dbPwc = dbUser.passwordChangedAt
+          ? Math.floor(dbUser.passwordChangedAt.getTime() / 1000)
+          : 0
+        if (dbPwc > ((token as any).pwc ?? 0)) {
+          // Hasło zmieniono PO wystawieniu tej sesji (reset, zmiana, admin)
+          // — stara sesja (np. skradziona) przestaje działać.
+          return { ...session, user: undefined } as any
+        }
+        session.user.name = dbUser.name
+        session.user.avatarUrl = dbUser.avatarUrl
       }
       return session
     },

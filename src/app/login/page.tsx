@@ -71,8 +71,12 @@ function LoginForm() {
       })
 
       if (res?.error) {
-        setFormError('Nieprawidłowy email lub hasło')
-        toast({ title: 'Błąd logowania', description: 'Nieprawidłowy email lub hasło', variant: 'destructive' })
+        // Blokada konta ma własny komunikat (res.error niesie tekst z authorize).
+        // Cała reszta to generyczne "nieprawidłowe dane" (bez enumeracji kont).
+        const locked = res.error.includes('Zbyt wiele prób')
+        const msg = locked ? 'Zbyt wiele prób logowania — spróbuj ponownie za 15 minut' : 'Nieprawidłowy email lub hasło'
+        setFormError(msg)
+        toast({ title: 'Błąd logowania', description: msg, variant: 'destructive' })
       } else {
         // Premium SaaS transition: full-screen overlay plays a short animated
         // sequence, then RedirectOverlay navigates to the dashboard.

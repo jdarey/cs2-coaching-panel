@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
 
     await prisma.user.update({
       where: { id: userId },
-      data: { passwordHash },
+      // passwordChangedAt unieważnia wszystkie inne sesje (kradzież sesji).
+      data: { passwordHash, passwordChangedAt: new Date() },
     })
 
     return NextResponse.json({ ok: true })

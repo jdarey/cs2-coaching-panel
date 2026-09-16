@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       targetId: true,
       expiresAt: true,
       usedAt: true,
-      target: { select: { id: true, role: true } },
+      target: { select: { id: true, role: true, passwordChangedAt: true } },
     },
   })
   if (!record || record.usedAt || record.expiresAt.getTime() < Date.now()) {
@@ -51,6 +51,8 @@ export async function GET(request: NextRequest) {
   if (!secret) return fail('invalid_token')
 
   // Sesja JWT w formacie NextAuth (ten sam kształt co jwt() w auth.ts).
+  // pwc = aktualny znacznik zmiany hasła, inaczej session() zabiłby sesję
+  // od razu (target zmieniał hasło po starcie apki).
   const jwt = await encode({
     secret,
     maxAge: SESSION_MAX_AGE,
@@ -59,6 +61,9 @@ export async function GET(request: NextRequest) {
       role: record.target.role,
       remember: true,
       impersonatedBy: record.adminId,
+      pwc: record.target.passwordChangedAt
+        ? Math.floor(record.target.passwordChangedAt.getTime() / 1000)
+        : 0,
     } as any,
   })
 
