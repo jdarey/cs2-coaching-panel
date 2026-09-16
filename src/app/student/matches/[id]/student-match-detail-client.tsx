@@ -169,7 +169,8 @@ export function StudentMatchDetailClient() {
         return
       }
       setData(json)
-      setCoachNotes(json.match?.coachNotes || [])
+      const rawNotes = json.match?.coachNotes
+      setCoachNotes(Array.isArray(rawNotes) ? rawNotes : rawNotes && typeof rawNotes === 'object' ? Object.values(rawNotes) : [])
       setCoachVerdict(json.match?.coachVerdict || '')
     } catch {
       setError('Wystąpił błąd serwera')
@@ -249,11 +250,11 @@ export function StudentMatchDetailClient() {
   const draw = match.result === 'DRAW'
   const me = details?.myStats
   const players = details?.players || []
-  const myTeam = me?.team
-  const myPlayers = players.filter((p) => p.team === myTeam)
-  const enemyPlayers = players.filter((p) => p.team !== myTeam && p.team != null)
-  const myScore = details?.teamScores.find((t) => t.teamNumber === myTeam)?.score
-  const enemyScore = details?.teamScores.find((t) => t.teamNumber !== myTeam)?.score
+  const myTeam = me?.team ?? null
+  const myPlayers = myTeam != null ? players.filter((p) => p.team === myTeam) : []
+  const enemyPlayers = myTeam != null ? players.filter((p) => p.team !== myTeam && p.team != null) : []
+  const myScore = myTeam != null ? details?.teamScores.find((t) => t.teamNumber === myTeam)?.score : undefined
+  const enemyScore = myTeam != null ? details?.teamScores.find((t) => t.teamNumber !== myTeam)?.score : undefined
 
   const pct = (v: number | undefined | null) => (v == null ? null : (v * 100).toFixed(1) + '%')
 
