@@ -118,77 +118,33 @@ export function StudentTasksClient() {
   const [savingNote, setSavingNote] = useState(false)
   const [repeatingId, setRepeatingId] = useState<string | null>(null)
   const [gifPreview, setGifPreview] = useState<{ src: string; title: string } | null>(null)
-  const [gifClosing, setGifClosing] = useState(false)
   const gifPreviewRef = useRef<HTMLDivElement | null>(null)
-  const gifTarget = useRef({ x: 0, y: 0 })
-  const gifCur = useRef({ x: 0, y: 0 })
-  const gifRaf = useRef<number | null>(null)
-  const gifOpen = useRef(false)
-  const gifCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const canHover = () =>
     typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
 
-  // Butter-smooth follower: goni kursor z lerpem + delikatny tilt od prędkości
-  const gifLoop = () => {
+  // Zero animacji: podgląd pojawia się i znika natychmiast, pozycja
+  // ustawiana wprost (bez pętli rAF / lerpu / tiltu) — sama transformata GPU.
+  const placeGifPreview = (cx: number, cy: number) => {
     const el = gifPreviewRef.current
-    if (!el || !gifOpen.current) { gifRaf.current = null; return }
-    const c = gifCur.current, t = gifTarget.current
-    const nx = c.x + (t.x - c.x) * 0.14
-    const ny = c.y + (t.y - c.y) * 0.14
-    const vx = nx - c.x
-    gifCur.current = { x: nx, y: ny }
+    if (!el) return
     const W = 344, H = 320, GAP = 26
-    let x = nx + GAP, y = ny - H / 2
-    if (x + W > window.innerWidth - 12) x = nx - W - GAP
+    let x = cx + GAP, y = cy - H / 2
+    if (x + W > window.innerWidth - 12) x = cx - W - GAP
     if (y + H > window.innerHeight - 12) y = window.innerHeight - H - 12
     if (x < 12) x = 12
     if (y < 12) y = 12
-    const rot = Math.max(-5, Math.min(5, vx * 0.9))
-    el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${rot.toFixed(2)}deg)`
-    gifRaf.current = requestAnimationFrame(gifLoop)
-  }
-  const startGifLoop = () => {
-    if (gifRaf.current === null) gifRaf.current = requestAnimationFrame(gifLoop)
+    el.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`
   }
   const openGifPreview = (src: string, title: string, cx: number, cy: number) => {
-    if (gifCloseTimer.current) { clearTimeout(gifCloseTimer.current); gifCloseTimer.current = null }
-    const fresh = !gifOpen.current
-    gifTarget.current = { x: cx, y: cy }
-    if (fresh) gifCur.current = { x: cx, y: cy }
-    gifOpen.current = true
-    setGifClosing(false)
     setGifPreview({ src, title })
+    requestAnimationFrame(() => placeGifPreview(cx, cy))
   }
-  const closeGifPreview = () => {
-    if (gifCloseTimer.current) clearTimeout(gifCloseTimer.current)
-    if (!gifOpen.current) return
-    // Freeze pozycji + szybkie czyste wyjście (150ms), bez mrugania przy
-    // przechodzeniu między wierszami (open anuluje timer i cofa exit).
-    gifOpen.current = false
-    if (gifRaf.current) { cancelAnimationFrame(gifRaf.current); gifRaf.current = null }
-    setGifClosing(true)
-    gifCloseTimer.current = setTimeout(() => {
-      setGifPreview(null)
-      setGifClosing(false)
-    }, 120)
+  const moveGifPreview = (cx: number, cy: number) => {
+    if (gifPreviewRef.current) placeGifPreview(cx, cy)
   }
-  const killGifPreview = () => {
-    if (gifCloseTimer.current) { clearTimeout(gifCloseTimer.current); gifCloseTimer.current = null }
-    gifOpen.current = false
-    if (gifRaf.current) { cancelAnimationFrame(gifRaf.current); gifRaf.current = null }
-    setGifClosing(false)
-    setGifPreview(null)
-  }
-
-  useEffect(() => {
-    if (gifPreview) startGifLoop()
-  }, [gifPreview])
-
-  useEffect(() => () => {
-    if (gifRaf.current) cancelAnimationFrame(gifRaf.current)
-    if (gifCloseTimer.current) clearTimeout(gifCloseTimer.current)
-  }, [])
+  const closeGifPreview = () => setGifPreview(null)
+  const killGifPreview = () => setGifPreview(null)
 
   const load = useCallback(async () => {
     try {
@@ -482,7 +438,7 @@ export function StudentTasksClient() {
         />
 
         <section className="grid gap-4 sm:grid-cols-3">
-          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '0ms' }} onMouseMove={spotlightHandler}>
+          <div className="glass-liquid spotlight-card rounded-3xl p-5 relative overflow-hidden" onMouseMove={spotlightHandler}>
             <div className="flex items-center gap-3">
               <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#fbbf24] to-[#f97316] ring-1 ring-white/20">
                 <ClipboardList className="w-5 h-5 text-white" />
@@ -493,7 +449,7 @@ export function StudentTasksClient() {
               </div>
             </div>
           </div>
-          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '80ms' }} onMouseMove={spotlightHandler}>
+          <div className="glass-liquid spotlight-card rounded-3xl p-5 relative overflow-hidden" onMouseMove={spotlightHandler}>
             <div className="flex items-center gap-3">
               <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] ring-1 ring-white/20">
                 <Target className="w-5 h-5 text-white" />
@@ -504,7 +460,7 @@ export function StudentTasksClient() {
               </div>
             </div>
           </div>
-          <div className="glass-liquid rise-in spotlight-card rounded-3xl p-5 relative overflow-hidden" style={{ animationDelay: '160ms' }} onMouseMove={spotlightHandler}>
+          <div className="glass-liquid spotlight-card rounded-3xl p-5 relative overflow-hidden" onMouseMove={spotlightHandler}>
             <div className="flex items-center gap-3">
               <div className="relative w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-[#34d399] to-[#10b981] ring-1 ring-white/20">
                 <CheckCircle2 className="w-5 h-5 text-white" />
@@ -567,7 +523,7 @@ export function StudentTasksClient() {
               const totalMins = (ra.routine.tasks||[]).reduce((a:number,t:any)=>a+(t.minutes||0),0)
 
               return (
-                <div key={ra.id} className={cn('group/routine relative overflow-hidden rounded-[28px] border bg-[#0c0c14]/70 backdrop-blur-xl transition-all duration-500 rise-in', expanded ? 'border-[#a78bfa]/30 shadow-[0_20px_80px_-20px_rgba(139,92,246,0.4),0_8px_32px_-12px_rgba(0,0,0,0.5)] scale-[1.005]' : 'border-white/[0.07] hover:border-white/[0.12] hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] hover:-translate-y-1', completed ? 'ring-1 ring-[#a78bfa]/25' : '')} style={{ animationDelay: `${i * 90}ms` }} onMouseMove={spotlightHandler}>
+                <div key={ra.id} className={cn('group/routine relative overflow-hidden rounded-[28px] border bg-[#0c0c14] transition-[border-color,box-shadow,transform] duration-300', expanded ? 'border-[#a78bfa]/30 shadow-[0_20px_80px_-20px_rgba(139,92,246,0.4),0_8px_32px_-12px_rgba(0,0,0,0.5)] scale-[1.005]' : 'border-white/[0.07] hover:border-white/[0.12] hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] hover:-translate-y-1', completed ? 'ring-1 ring-[#a78bfa]/25' : '')} onMouseMove={spotlightHandler}>
                   {/* animated gradient border when expanded */}
                   {expanded && <div className="pointer-events-none absolute inset-0 rounded-[28px] p-px bg-gradient-to-br from-[#a78bfa]/40 via-[#2dd4bf]/20 to-transparent opacity-60" style={{ WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude', padding: '1px' }} />}
                   {/* subtle mesh glow */}
@@ -579,7 +535,7 @@ export function StudentTasksClient() {
                     <div className="relative shrink-0">
                       <div className={cn('relative grid place-items-center w-[56px] h-[56px] rounded-[18px] ring-1 transition-all duration-500', completed ? 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/25 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.7)]' : 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/20 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)] group-hover/routine:shadow-[0_14px_40px_-10px_rgba(139,92,246,0.7)] group-hover/routine:scale-[1.02]')}>
                         {completed ? <Trophy className="w-6 h-6 text-white drop-shadow" /> : <Zap className="w-6 h-6 text-white drop-shadow" />}
-                        {!completed && pct>0 && pct<100 && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#22c55e] ring-2 ring-[#0c0c14] animate-pulse" />}
+                        {!completed && pct>0 && pct<100 && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#22c55e] ring-2 ring-[#0c0c14]" />}
                       </div>
                       {/* circular pct ring */}
                       <svg className="pointer-events-none absolute -inset-1.5 h-[68px] w-[68px] -rotate-90" viewBox="0 0 68 68">
@@ -619,9 +575,7 @@ export function StudentTasksClient() {
                       <div className="mt-3 flex items-center gap-3">
                         <div className="flex-1 max-w-[340px] h-[6px] rounded-full bg-white/[0.06] overflow-hidden p-[2px]">
                           <div className="relative h-full rounded-full overflow-hidden" style={{ width: '100%' }}>
-                            <div className={cn('absolute inset-0 rounded-full transition-all duration-1000 ease-out', completed ? 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf]')} style={{ width: `${pct}%` }}>
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-[shimmer_2s_ease-in-out_infinite]" style={{ backgroundSize: '200% 100%' }} />
-                            </div>
+                            <div className={cn('absolute inset-0 rounded-full transition-all duration-1000 ease-out', completed ? 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf]')} style={{ width: `${pct}%` }} />
                           </div>
                         </div>
                         <span className={cn('text-xs font-black tabular-nums tracking-wide', completed ? 'text-[#c4b5fd]' : 'text-white/60')}>{pct}%</span>
@@ -675,7 +629,7 @@ export function StudentTasksClient() {
                             const dayPct = dayTasks.length ? Math.round((dayDone / dayTasks.length) * 100) : 0
                             const isDayDone = dayDone === dayTasks.length && dayTasks.length>0
                             return (
-                              <div key={d} className="relative" style={{ animationDelay: `${dayIdx*80}ms` }}>
+                              <div key={d} className="relative">
                                 {/* day header */}
                                 <div className="flex items-center gap-3 mb-4 sm:pl-10">
                                     <span className={cn('hidden sm:grid place-items-center absolute left-0 w-9 h-9 rounded-xl ring-1 text-xs font-black shadow-lg', isDayDone ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white ring-[#a78bfa]/30 shadow-[0_6px_18px_-6px_rgba(139,92,246,0.6)]' : dayPct>0 ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white ring-white/15' : 'bg-white/[0.06] text-white/40 ring-white/10')}>
@@ -683,7 +637,7 @@ export function StudentTasksClient() {
                                   </span>
                                   <div className="flex items-center gap-3 flex-wrap">
                                       <span className={cn('inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] border', isDayDone ? 'bg-[#a78bfa]/10 border-[#a78bfa]/25 text-[#c4b5fd]' : 'bg-gradient-to-br from-[#a78bfa]/15 to-[#2dd4bf]/10 border-[#a78bfa]/20 text-[#e9d5ff]')}>
-                                        <span className={cn('h-1.5 w-1.5 rounded-full', isDayDone ? 'bg-[#a78bfa]' : 'bg-[#a78bfa] animate-pulse')}/> Dzień {String(d).padStart(2,'0')}
+                                        <span className="h-1.5 w-1.5 rounded-full bg-[#a78bfa]"/> Dzień {String(d).padStart(2,'0')}
                                     </span>
                                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] px-2.5 py-1 text-[11px] font-bold text-white/50"><Clock className="w-3 h-3"/>{dayTasks.reduce((a,t:any)=>a+(t.minutes||0),0)} min</span>
                                       <span className={cn('text-xs font-bold tabular-nums', isDayDone ? 'text-[#c4b5fd]' : 'text-white/50')}>{dayDone}/{dayTasks.length}</span>
@@ -721,11 +675,10 @@ export function StudentTasksClient() {
                                         key={t.id}
                                         onClick={()=> { killGifPreview(); setSelectedTask(t); setSelectedAssignment(ra) }}
                                         onMouseEnter={(e)=>{ if (t.gifUrl && canHover()) openGifPreview(t.gifUrl, t.title, e.clientX, e.clientY) }}
-                                        onMouseMove={(e)=>{ gifTarget.current = { x: e.clientX, y: e.clientY } }}
+                                        onMouseMove={(e)=>{ moveGifPreview(e.clientX, e.clientY) }}
                                         onMouseLeave={closeGifPreview}
-                                        style={{ animationDelay: `${Math.min(ti * 60 + dayIdx*40, 400)}ms` }}
                                         className={cn(
-                                          'rise-in group/task relative flex items-center gap-4 rounded-[20px] p-4 border cursor-pointer overflow-hidden transition-all duration-300',
+                                          'group/task relative flex items-center gap-4 rounded-[20px] p-4 border cursor-pointer overflow-hidden transition-[border-color,background-color,box-shadow,transform] duration-300',
                                           'hover:-translate-y-[2px] hover:scale-[1.005]',
                                           isNext && !done ? 'ring-1 ring-[#a78bfa]/25 shadow-[0_12px_40px_-12px_rgba(139,92,246,0.45)]' : '',
                                           done
@@ -754,7 +707,7 @@ export function StudentTasksClient() {
                                           )}
                                         >
                                           {togglingTask === t.id ? <Loader2 className="w-5 h-5 animate-spin" /> : done ? <Check className="w-5 h-5" strokeWidth={3} /> : isNext ? <Play className="w-4 h-4 ml-0.5 fill-[#0a0a14]" /> : <Circle className="w-5 h-5" />}
-                                          {done && <span className="pointer-events-none absolute inset-0 rounded-[13px] ring-1 ring-[#a78bfa]/40 animate-[ping_1s_cubic-bezier(0,0,0.2,1)_1]" />}
+                                          {done && <span className="pointer-events-none absolute inset-0 rounded-[13px] ring-1 ring-[#a78bfa]/40" />}
                                         </button>
 
                                         {/* tytuł + minimal meta */}
@@ -873,7 +826,7 @@ export function StudentTasksClient() {
               const overdue = isOverdue(a)
               const done = a.status === 'DONE'
               return (
-                <li key={a.id} className={cn('glass-liquid rise-in spotlight-card group relative rounded-3xl p-5 overflow-hidden transition-all duration-300', done && 'opacity-75')} style={{ animationDelay: `${i * 60}ms` }} onMouseMove={spotlightHandler}>
+                <li key={a.id} className={cn('glass-liquid spotlight-card group relative rounded-3xl p-5 overflow-hidden transition-[border-color,background-color,box-shadow,opacity] duration-300', done && 'opacity-75')} onMouseMove={spotlightHandler}>
                   <div className="flex items-start gap-4">
                     <button onClick={() => toggle(a)} disabled={togglingId === a.id} aria-label={done ? 'Oznacz jako niezrobione' : 'Oznacz jako zrobione'} className={cn('relative mt-0.5 shrink-0 grid place-items-center w-8 h-8 rounded-xl transition-all duration-300', done ? 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white ring-1 ring-white/25 shadow-[0_6px_20px_-6px_rgba(45,229,202,0.6)]' : 'bg-white/[0.04] text-white/35 border border-white/[0.1] hover:border-[#a78bfa]/40 hover:text-[#c4b5fd]')}>
                       {togglingId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : done ? <Check className="w-4 h-4" strokeWidth={3} /> : <Circle className="w-4 h-4" />}
@@ -911,7 +864,7 @@ export function StudentTasksClient() {
         {selectedDay && (
           <div className="fixed inset-0 z-50 grid place-items-center p-4">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>setSelectedDay(null)} />
-            <div className="glass-liquid relative w-full max-w-sm rounded-3xl p-6 animate-rise-in">
+            <div className="glass-liquid relative w-full max-w-sm rounded-3xl p-6">
               <button onClick={()=>setSelectedDay(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5"><X className="w-4 h-4"/></button>
               <div className="flex items-center gap-2"><p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-bold">{selectedDay.date}</p><button onClick={async ()=>{ if(confirm(`Zresetować dzień ${selectedDay.date}?`)){ await fetch('/api/calendar/reset-day',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({date:selectedDay.date})}); load(); loadOverallHistory(); setSelectedDay(null) } }} className="ml-auto inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/40 hover:text-red-300 hover:border-red-500/20 hover:bg-red-500/10 opacity-60 hover:opacity-100 transition"><RotateCcw className="w-3 h-3"/> Resetuj dzień</button></div>
               <h3 className="font-display text-lg font-bold text-white mt-1">{selectedDay.entry.full ? '✓ Pełny trening' : selectedDay.entry.count>0 ? '• Za mało — niepełny' : 'Brak treningu'}</h3>
@@ -953,19 +906,19 @@ export function StudentTasksClient() {
           </div>
         )}
 
-        {/* Pływający podgląd GIF-a — goni kursor z lerpem (tylko desktop z myszką) */}
+        {/* Podgląd GIF-a — statyczny, bez animacji (tylko desktop z myszką) */}
         {gifPreview && (
           <div ref={gifPreviewRef} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[344px] will-change-transform">
             <div className="relative">
               <div className="absolute -inset-2 rounded-[20px] bg-gradient-to-br from-[#a78bfa]/25 via-[#2dd4bf]/10 to-transparent blur-xl" />
-              <div className={cn('yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12] shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)]', gifClosing ? 'gif-exit' : 'gif-enter')}>
+              <div className="yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12] shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)]">
                 <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-[#a78bfa]/[0.08] to-transparent border-b border-white/[0.07]">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow"><Play className="w-3 h-3 text-white fill-white" /></span>
                   <p className="flex-1 truncate text-[13px] font-bold text-white">{gifPreview.title}</p>
                   <span className="inline-flex items-center rounded-md bg-[#a78bfa]/15 border border-[#a78bfa]/25 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#c4b5fd]">GIF</span>
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={gifPreview.src} alt={gifPreview.title} className="w-full h-auto max-h-[240px] object-contain bg-black" />
+                <img src={gifPreview.src} alt={gifPreview.title} loading="lazy" decoding="async" className="w-full h-auto max-h-[240px] object-contain bg-black" />
                 <div className="flex items-center justify-between px-3.5 py-2 border-t border-white/[0.07] bg-white/[0.02]">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/30">Podgląd demo</span>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#c4b5fd]">kliknij po szczegóły <ArrowRight className="w-3 h-3" /></span>
@@ -978,8 +931,8 @@ export function StudentTasksClient() {
         {selectedTask && (
           <div className="fixed inset-0 z-50 grid place-items-center p-4">
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} />
-            <div className="glass-liquid relative w-full max-w-lg rounded-3xl overflow-hidden animate-rise-in max-h-[90vh] overflow-y-auto">
-              {selectedTask.gifUrl && <div className="bg-black shrink-0 grid place-items-center border-b border-white/[0.06]"><img decoding="async" src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-auto max-h-[340px] object-contain" /></div>}
+            <div className="glass-liquid relative w-full max-w-lg rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
+              {selectedTask.gifUrl && <div className="bg-black shrink-0 grid place-items-center border-b border-white/[0.06]"><img decoding="async" loading="lazy" src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-auto max-h-[340px] object-contain" /></div>}
               <div className="p-6">
                 <button onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} className="yt-force-dark absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
                 <h3 className="font-display text-xl font-bold text-white pr-8">{selectedTask.title}</h3>

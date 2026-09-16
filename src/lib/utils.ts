@@ -10,11 +10,26 @@ export function cn(...inputs: ClassValue[]) {
  * Mouse-follow spotlight: feed the cursor position into --mx/--my CSS vars
  * used by the .spotlight-card glow. Attach as onMouseMove on any element
  * that carries the `spotlight-card` class.
+ * Zdarzenia myszy lecą częściej niż klatki — koalescujemy zapis do jednego
+ * na klatkę (rAF) na element, żeby nie wymuszać przeliczeń stylu pod rząd.
  */
+const spotlightQueued = new WeakMap<HTMLElement, { x: number; y: number }>()
 export function spotlightHandler(e: MouseEvent<HTMLElement>) {
-  const r = e.currentTarget.getBoundingClientRect()
-  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+  const el = e.currentTarget
+  const r = el.getBoundingClientRect()
+  const pending = spotlightQueued.get(el)
+  if (pending) {
+    pending.x = e.clientX - r.left
+    pending.y = e.clientY - r.top
+    return
+  }
+  const pos = { x: e.clientX - r.left, y: e.clientY - r.top }
+  spotlightQueued.set(el, pos)
+  requestAnimationFrame(() => {
+    spotlightQueued.delete(el)
+    el.style.setProperty('--mx', `${pos.x}px`)
+    el.style.setProperty('--my', `${pos.y}px`)
+  })
 }
 
 export { formatDate, formatDateTime, formatTime, formatDuration, formatTotalDuration, parseDurationString, mdToHtml } from './format'
