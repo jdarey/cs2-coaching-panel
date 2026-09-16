@@ -171,7 +171,7 @@ export function StudentTasksClient() {
     gifCloseTimer.current = setTimeout(() => {
       setGifPreview(null)
       setGifClosing(false)
-    }, 150)
+    }, 120)
   }
   const killGifPreview = () => {
     if (gifCloseTimer.current) { clearTimeout(gifCloseTimer.current); gifCloseTimer.current = null }
@@ -958,7 +958,7 @@ export function StudentTasksClient() {
           <div ref={gifPreviewRef} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[344px] will-change-transform">
             <div className="relative">
               <div className="absolute -inset-2 rounded-[20px] bg-gradient-to-br from-[#a78bfa]/25 via-[#2dd4bf]/10 to-transparent blur-xl" />
-              <div className={cn('yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12]/95 backdrop-blur-xl shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)]', gifClosing ? 'gif-exit' : 'gif-enter')}>
+              <div className={cn('yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12] shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)]', gifClosing ? 'gif-exit' : 'gif-enter')}>
                 <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-[#a78bfa]/[0.08] to-transparent border-b border-white/[0.07]">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow"><Play className="w-3 h-3 text-white fill-white" /></span>
                   <p className="flex-1 truncate text-[13px] font-bold text-white">{gifPreview.title}</p>
