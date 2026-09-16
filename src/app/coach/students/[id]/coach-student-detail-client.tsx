@@ -38,7 +38,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS, getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
-const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 const FaceitEloChart = dynamic(() => import('@/components/faceit-elo-chart').then(m => m.FaceitEloChart), { ssr: false, loading: () => <div className="rounded-3xl p-6 text-center text-white/30 text-sm">Ładowanie ELO…</div> })
 
 interface StudentDetail {
@@ -1185,7 +1185,7 @@ export function CoachStudentDetailClient({
           <div className="fixed inset-0 z-[60] grid place-items-center p-4">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={() => setPreviewTask(null)} />
             <div className="glass-liquid relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl flex flex-col">
-              <button onClick={() => setPreviewTask(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white z-10"><X className="w-4 h-4" /></button>
+              <button onClick={() => setPreviewTask(null)} className="yt-force-dark absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white z-10"><X className="w-4 h-4" /></button>
               <div className="p-6 border-b border-white/[0.06]">
                 <h3 className="font-display text-xl font-bold text-white pr-8">{previewTask.title}</h3>
                 {previewTask.description && <p className="text-sm text-white/60 mt-2 leading-relaxed">{previewTask.description}</p>}
@@ -1213,7 +1213,7 @@ export function CoachStudentDetailClient({
                   }
                   if (vid) {
                     return (
-                      <div className="rounded-2xl overflow-hidden bg-black border border-white/[0.08] p-6 text-center">
+                      <div className="yt-force-dark rounded-2xl overflow-hidden bg-black border border-white/[0.08] p-6 text-center">
                         <Film className="w-8 h-8 text-white/30 mx-auto mb-2" />
                         <p className="text-sm text-white/60">{(vid as any).title}</p>
                         <a href={(vid as any).url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-[#a78bfa]/20 text-[#c4b5fd]">Otwórz film</a>

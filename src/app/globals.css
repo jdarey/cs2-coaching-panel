@@ -975,6 +975,37 @@
 .light .btn-darey .text-white\/90, .light .btn-primary-gradient .text-white\/90, .light .icon-tile .text-white\/90, .light [class*="bg-[#8b5cf6]"] .text-white\/90, .light [class*="bg-[#6d28d9]"] .text-white\/90, .light [class*="from-[#a78bfa]"] .text-white\/90, .light [class*="from-[#8b5cf6]"] .text-white\/90, .light [class*="from-[#34d399]"] .text-white\/90 { color: rgba(255, 255, 255, 0.90) !important; }
 .light .btn-darey .text-white, .light .btn-primary-gradient .text-white, .light .icon-tile .text-white, .light [class*="bg-[#8b5cf6]"] .text-white, .light [class*="bg-[#6d28d9]"] .text-white, .light [class*="from-[#a78bfa]"] .text-white, .light [class*="from-[#8b5cf6]"] .text-white, .light [class*="from-[#34d399]"] .text-white { color: #ffffff !important; }
 
+/* Jasne teksty akcentowe (tailwind 100-300 + jasne hexy) na białych kartach
+   w light mode są nieczytelne (np. emerald-300 na białym ~1.6:1) — mapujemy
+   je na ciemniejsze odpowiedniki tej samej barwy. */
+.light .text-emerald-100, .light .text-emerald-200 { color: #047857 !important; }
+.light .text-emerald-300 { color: #059669 !important; }
+.light .text-red-200 { color: #b91c1c !important; }
+.light .text-red-300 { color: #dc2626 !important; }
+.light .text-amber-200 { color: #b45309 !important; }
+.light .text-amber-300 { color: #d97706 !important; }
+.light .text-sky-200, .light .text-sky-300 { color: #0284c7 !important; }
+.light .text-blue-200, .light .text-blue-300 { color: #2563eb !important; }
+.light .text-pink-200, .light .text-pink-300 { color: #db2777 !important; }
+.light .text-purple-200, .light .text-purple-300 { color: #9333ea !important; }
+.light .text-fuchsia-300 { color: #c026d3 !important; }
+.light .text-teal-200, .light .text-teal-300 { color: #0d9488 !important; }
+.light .text-orange-200, .light .text-orange-300 { color: #ea580c !important; }
+.light .text-\[\#34d399\] { color: #059669 !important; }
+.light .text-\[\#fbbf24\] { color: #b45309 !important; }
+.light .text-\[\#8FA3FF\] { color: #6366f1 !important; }
+.light .text-\[\#8cffef\] { color: #0d9488 !important; }
+.light .text-\[\#e9d5ff\] { color: #7c3aed !important; }
+.light .text-\[\#ff9a5c\] { color: #ea580c !important; }
+
+/* hover:text-white na jasnym tle w light dawałby biały-na-białym — hover
+   przyciemnia zamiast rozjaśniać. Ciemne wyspy (yt-force-dark) zachowują biel. */
+.light [class*="hover:text-white"]:hover { color: rgba(13, 17, 23, 0.9) !important; }
+.light .group:hover [class*="group-hover:text-white"] { color: rgba(13, 17, 23, 0.9) !important; }
+.light .group:hover [class*="group-hover:text-[#f4f6f7]"] { color: rgba(13, 17, 23, 0.8) !important; }
+/* hover-rozjaśnienia (białe tła) na jasnych kartach znikały — hover przyciemnia. */
+.light [class*="hover:bg-white"]:hover { background-color: rgba(13, 17, 23, 0.06) !important; }
+
 /* Odtwarzacz wideo i nakładki na miniaturkach są zawsze ciemne — jasny
    motyw nie rusza ich kolorów (inaczej białe napisy na czarnych kontrolkach
    robiły się ciemne = niewidoczne). */
@@ -982,16 +1013,31 @@
 .light .yt-force-dark .text-white\/90 { color: rgba(255,255,255,0.90) !important; }
 .light .yt-force-dark .text-white\/85 { color: rgba(255,255,255,0.85) !important; }
 .light .yt-force-dark .text-white\/80 { color: rgba(255,255,255,0.80) !important; }
+.light .yt-force-dark .text-white\/75 { color: rgba(255,255,255,0.75) !important; }
 .light .yt-force-dark .text-white\/70 { color: rgba(255,255,255,0.70) !important; }
+.light .yt-force-dark .text-white\/65 { color: rgba(255,255,255,0.65) !important; }
 .light .yt-force-dark .text-white\/60 { color: rgba(255,255,255,0.60) !important; }
+.light .yt-force-dark .text-white\/55 { color: rgba(255,255,255,0.55) !important; }
+.light .yt-force-dark .text-white\/50 { color: rgba(255,255,255,0.50) !important; }
 .light .yt-force-dark .text-white\/45 { color: rgba(255,255,255,0.45) !important; }
 .light .yt-force-dark .text-white\/40 { color: rgba(255,255,255,0.40) !important; }
 .light .yt-force-dark .text-white\/35 { color: rgba(255,255,255,0.35) !important; }
 .light .yt-force-dark .text-white\/30 { color: rgba(255,255,255,0.30) !important; }
+.light .yt-force-dark .text-amber-200 { color: #fde68a !important; }
+.light .yt-force-dark .text-amber-300 { color: #fcd34d !important; }
+.light .yt-force-dark .text-emerald-100, .light .yt-force-dark .text-emerald-200 { color: #a7f3d0 !important; }
+.light .yt-force-dark .text-emerald-300 { color: #6ee7b7 !important; }
 .light .yt-force-dark .text-\[\#a78bfa\] { color: #a78bfa !important; }
+.light .yt-force-dark .text-\[\#c4b5fd\] { color: #c4b5fd !important; }
 .light .yt-force-dark .hover\:text-white:hover { color: #ffffff !important; }
 .light .yt-force-dark .hover\:text-\[\#a78bfa\]:hover { color: #a78bfa !important; }
 .light .yt-force-dark .hover\:bg-white\/10:hover { background-color: rgba(255,255,255,0.10) !important; }
+.light .yt-force-dark [class*="hover:text-white"]:hover { color: #ffffff !important; }
+.light .yt-force-dark .group:hover [class*="group-hover:text-white"] { color: #ffffff !important; }
+.light .yt-force-dark [class*="hover:bg-white"]:hover { background-color: rgba(255, 255, 255, 0.10) !important; }
+.light .yt-force-dark .bg-black\/92 { background-color: rgba(0,0,0,0.92) !important; }
+.light .yt-force-dark .bg-black\/90 { background-color: rgba(0,0,0,0.90) !important; }
+.light .yt-force-dark .bg-black\/85 { background-color: rgba(0,0,0,0.85) !important; }
 .light .yt-force-dark .bg-black\/60 { background-color: rgba(0,0,0,0.60) !important; }
 .light .yt-force-dark .bg-black\/55 { background-color: rgba(0,0,0,0.55) !important; }
 .light .yt-force-dark .bg-black\/50 { background-color: rgba(0,0,0,0.50) !important; }

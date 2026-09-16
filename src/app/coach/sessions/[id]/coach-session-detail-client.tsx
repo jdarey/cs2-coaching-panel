@@ -16,7 +16,7 @@ import {
 } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import dynamic from 'next/dynamic'
-const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { ProtectedEmbed } from '@/components/protected-embed'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'

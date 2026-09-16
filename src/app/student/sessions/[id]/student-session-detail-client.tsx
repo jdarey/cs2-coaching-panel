@@ -16,7 +16,7 @@ import {
 import { isCoachRole } from '@/lib/roles'
 import { StudentLayout } from '@/components/student-layout'
 import dynamic from 'next/dynamic'
-const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { ProtectedEmbed } from '@/components/protected-embed'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
@@ -616,7 +616,7 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute bottom-2 right-2">
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-white bg-black/55 backdrop-blur border border-white/10">
+                          <span className="yt-force-dark inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-white bg-black/55 backdrop-blur border border-white/10">
                             <Clock className="w-3 h-3" />
                             {formatDuration(video.duration)}
                           </span>

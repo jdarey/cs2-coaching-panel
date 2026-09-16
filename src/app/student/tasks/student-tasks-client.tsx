@@ -6,7 +6,7 @@ import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
-const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
+const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { useSession } from 'next-auth/react'
 import {
   ClipboardList,
@@ -945,7 +945,7 @@ export function StudentTasksClient() {
           <div ref={gifPreviewRef} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[344px] will-change-transform">
             <div className="relative">
               <div className="absolute -inset-2 rounded-[20px] bg-gradient-to-br from-[#a78bfa]/25 via-[#2dd4bf]/10 to-transparent blur-xl" />
-              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12]/95 backdrop-blur-xl shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)] animate-[pop-in_0.25s_cubic-bezier(0.22,1.4,0.36,1)]">
+              <div className="yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12]/95 backdrop-blur-xl shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)] animate-[pop-in_0.25s_cubic-bezier(0.22,1.4,0.36,1)]">
                 <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-[#a78bfa]/[0.08] to-transparent border-b border-white/[0.07]">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow"><Play className="w-3 h-3 text-white fill-white" /></span>
                   <p className="flex-1 truncate text-[13px] font-bold text-white">{gifPreview.title}</p>
@@ -968,7 +968,7 @@ export function StudentTasksClient() {
             <div className="glass-liquid relative w-full max-w-lg rounded-3xl overflow-hidden animate-rise-in max-h-[90vh] overflow-y-auto">
               {selectedTask.gifUrl && <div className="bg-black shrink-0 grid place-items-center border-b border-white/[0.06]"><img decoding="async" src={selectedTask.gifUrl} alt={selectedTask.title} className="w-full h-auto max-h-[340px] object-contain" /></div>}
               <div className="p-6">
-                <button onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
+                <button onClick={()=>{ setSelectedTask(null); setSelectedAssignment(null) }} className="yt-force-dark absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/70 hover:text-white"><X className="w-4 h-4"/></button>
                 <h3 className="font-display text-xl font-bold text-white pr-8">{selectedTask.title}</h3>
                 {selectedTask.description && <div className="text-sm text-white/70 mt-2 leading-relaxed prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(selectedTask.description)}} />}
                 {selectedTask.video?.url && (
