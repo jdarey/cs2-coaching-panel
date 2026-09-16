@@ -165,7 +165,7 @@ export function AdminMonitoringClient() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {data.checks.map((check) => (
-                  <tr key={check.name} className="hover:bg-white/3">
+                  <tr key={check.name} className="hover:bg-white/[0.03]">
                     <td className="px-4 py-3">
                       <p className="font-medium text-white">{check.name}</p>
                     </td>

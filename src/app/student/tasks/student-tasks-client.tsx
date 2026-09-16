@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
+import { mdToHtml } from '@/lib/format'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { useSession } from 'next-auth/react'
@@ -56,28 +57,6 @@ interface Assignment {
   video?: { id: string; title: string; url: string; thumbnail: string | null } | null
 }
 
-function mdToHtml(md: string): string {
-  if (!md) return ''
-  let html = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#c4b5fd] underline hover:text-white">$1</a>')
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
-  html = html.replace(/\*([^*]+)\*/g, '<em class="italic text-white/90">$1</em>')
-  html = html.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-xs">$1</code>')
-  const lines = html.split('\n')
-  let out='', inList=false
-  for (const line of lines) {
-    if (/^\s*[-•]\s+/.test(line)) {
-      if (!inList) { out += '<ul class="list-disc list-inside space-y-1 my-2 marker:text-[#a78bfa]">'; inList=true }
-      out += `<li>${line.replace(/^\s*[-•]\s+/, '')}</li>`
-    } else {
-      if (inList) { out += '</ul>'; inList=false }
-      if (line.trim()==='') out+=''
-      else out += `<p class="my-1 leading-relaxed">${line}</p>`
-    }
-  }
-  if (inList) out += '</ul>'
-  return out
-}
 function toLocalDate(d: Date): string { return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Warsaw' }) }
 
 interface RoutineAssignment {

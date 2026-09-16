@@ -887,6 +887,28 @@
    LIGHT THEME — html.light overrides (settings → Wygląd)
    ============================================================ */
 .light body { background-color: #f4f5f7 !important; color: rgb(13, 17, 23) !important; }
+/* Komponenty shadcn/ui (dialog, dropdown, select, toast, tabs, button, input...)
+   stoją na zmiennych --popover/--secondary/--muted/--accent. Bez tego w light
+   mode dropdowny/toasty były CIEMNE (czarne tło + czarny tekst) — niektóre
+   dosłownie nieczytelne. Sufiks /60 dodatkowo tłumi tło modali. */
+.light {
+  --background: 220 14% 96%;
+  --foreground: 220 14% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 14% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 14% 8%;
+  --secondary: 220 14% 94%;
+  --secondary-foreground: 220 14% 12%;
+  --muted: 220 14% 94%;
+  --muted-foreground: 220 9% 42%;
+  --accent: 220 14% 92%;
+  --accent-foreground: 220 14% 10%;
+  --border: 220 10% 88%;
+  --input: 220 10% 88%;
+  /* Natywne kontrolki (scrollbary, selecty, input date/color) na jasno */
+  color-scheme: light;
+}
 .light {
   --sidebar-bg: #ffffff;
   --sidebar-border: rgba(13, 17, 23, 0.08);
@@ -916,6 +938,24 @@
 .light .bg-\[\#101316\] { background-color: #f8f9fa !important; }
 .light .bg-\[\#06070d\] { background-color: #eef0f3 !important; }
 .light .bg-\[\#0a0a12\] { background-color: #eef0f3 !important; }
+/* Ciemne wyspy inline z kart (routine card #0c0c14, dzienne paski #14161c,
+   modale #0a0a14 itd.) — bez tego były czarnymi plamami na białych kartach. */
+.light .bg-\[\#0c0c14\] { background-color: #ffffff !important; }
+.light .bg-\[\#0a0a14\] { background-color: #ffffff !important; }
+.light .bg-\[\#05060a\] { background-color: #f4f5f7 !important; }
+.light .bg-\[\#14161c\] { background-color: #f8f9fa !important; }
+.light .bg-\[\#14121c\] { background-color: #f8f9fa !important; }
+.light .bg-\[\#0c0e13\]\/95 { background-color: rgba(255, 255, 255, 0.92) !important; }
+.light .from-\[\#0a0c0e\]\/95 { --tw-gradient-from: rgba(255, 255, 255, 0.92) !important; }
+.light .from-\[\#0c0f1a\] { --tw-gradient-from: #f8f9fa !important; }
+.light .from-\[\#1a1c28\] { --tw-gradient-from: #eef0f3 !important; }
+/* Ringi obrysowujące ciemne karty — muszą iść w kolor karty (jasny), inaczej
+   widać ciemną obwódkę wokół białej karty. */
+.light .ring-\[\#0c0c14\] { --tw-ring-color: #ffffff !important; }
+.light .ring-\[\#0a0c0e\] { --tw-ring-color: #ffffff !important; }
+.light .ring-\[\#0a0b14\] { --tw-ring-color: #ffffff !important; }
+.light .ring-\[\#0b0d12\] { --tw-ring-color: #ffffff !important; }
+.light .ring-\[\#0f0f12\] { --tw-ring-color: #ffffff !important; }
 .light .text-white { color: rgba(13, 17, 23, 1) !important; }
 .light .text-\[\#f4f6f7\] { color: rgb(13, 17, 23) !important; }
 .light .text-\[\#f4f6f7\]\/\[0\.9\] { color: rgba(13, 17, 23, 0.9) !important; }
@@ -963,17 +1003,25 @@
 .light .border-white\/\[0.12\] { border-color: rgba(13, 17, 23, 0.1) !important; }
 .light .border-white\/\[0.15\] { border-color: rgba(13, 17, 23, 0.12) !important; }
 .light .border-white\/\[0.1\] { border-color: rgba(13, 17, 23, 0.08) !important; }
-.light .ring-white\/5 { --tw-ring-color: rgba(13, 17, 23, 0.50) !important; }
+/* Plain-alpha utilities (white/5..white/80 bez []) — najczęstsze klasy kart
+   i obramowań; bez tego hover i separatory zostawały białe na białym. */
+.light .bg-white\/5 { background-color: rgba(13, 17, 23, 0.04) !important; }
+.light .bg-white\/10 { background-color: rgba(13, 17, 23, 0.06) !important; }
+.light .bg-white\/15 { background-color: rgba(13, 17, 23, 0.08) !important; }
+.light .bg-white\/20 { background-color: rgba(13, 17, 23, 0.12) !important; }
+.light .bg-white\/25 { background-color: rgba(13, 17, 23, 0.16) !important; }
+.light .bg-white\/30 { background-color: rgba(13, 17, 23, 0.22) !important; }
+.light .border-white\/5 { border-color: rgba(13, 17, 23, 0.06) !important; }
+.light .border-white\/10 { border-color: rgba(13, 17, 23, 0.09) !important; }
+.light .border-white\/15 { border-color: rgba(13, 17, 23, 0.13) !important; }
+.light .border-white\/20 { border-color: rgba(13, 17, 23, 0.16) !important; }
+.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(13, 17, 23, 0.07) !important; }
+.light .ring-white\/5 { --tw-ring-color: rgba(13, 17, 23, 0.08) !important; }
 .light .ring-white\/10 { --tw-ring-color: rgba(13, 17, 23, 0.10) !important; }
 .light .ring-white\/15 { --tw-ring-color: rgba(13, 17, 23, 0.15) !important; }
 .light .ring-white\/20 { --tw-ring-color: rgba(13, 17, 23, 0.20) !important; }
 .light .ring-white\/25 { --tw-ring-color: rgba(13, 17, 23, 0.25) !important; }
 .light .ring-white\/30 { --tw-ring-color: rgba(13, 17, 23, 0.30) !important; }
-.light .ring-white\/0.05 { --tw-ring-color: rgba(13, 17, 23, 0.5) !important; }
-.light .ring-white\/0.06 { --tw-ring-color: rgba(13, 17, 23, 0.6) !important; }
-.light .ring-white\/0.08 { --tw-ring-color: rgba(13, 17, 23, 0.8) !important; }
-.light .ring-white\/0.10 { --tw-ring-color: rgba(13, 17, 23, 0.10) !important; }
-.light .ring-white\/0.12 { --tw-ring-color: rgba(13, 17, 23, 0.12) !important; }
 .light .text-\[\#c4b5fd\] { color: #7c3aed !important; }
 .light .text-\[\#a78bfa\] { color: #8b5cf6 !important; }
 .light .border-\[\#a78bfa\]\/40 { border-color: rgba(139, 92, 246, 0.4) !important; }
@@ -1031,14 +1079,69 @@
 .light .text-\[\#8cffef\] { color: #0d9488 !important; }
 .light .text-\[\#e9d5ff\] { color: #7c3aed !important; }
 .light .text-\[\#ff9a5c\] { color: #ea580c !important; }
+.light .text-\[\#2dd4bf\] { color: #0d9488 !important; }
+
+/* Kolory "danych" (statusy/metryki spoza palety brandowej) — jasne odcienie
+   sky/emerald/orange są nieczytelne na białym; mapujemy na czytelne. */
+.light .text-\[\#38bdf8\] { color: #0284c7 !important; }
+.light .text-\[\#7dd3fc\] { color: #0369a1 !important; }
+.light .text-\[\#4ade80\] { color: #16a34a !important; }
+.light .text-\[\#ff9a5c\] { color: #ea580c !important; }
+.light .text-\[\#ff9a5c\]\/80 { color: rgba(234, 88, 12, 0.85) !important; }
+
+/* Ciemne gradienty podglądów wideo / avatarów — jaśniejsze odpowiedniki */
+.light .to-\[\#070810\] { --tw-gradient-to: #e8eaed !important; }
+.light .to-\[\#0f1118\] { --tw-gradient-to: #e2e5ea !important; }
+.light .to-\[\#1a1628\]\/95 { --tw-gradient-to: rgba(244, 245, 247, 0.95) !important; }
+.light .via-\[\#141222\]\/95 { --tw-gradient-stops: var(--tw-gradient-from), rgba(238, 240, 243, 0.95) var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+
+/* ===== Markdown (mdToHtml) — klasy inline w treściach =====
+   Renderer osadza klasy Tailwind bezpośrednio w HTML-u; w light mode
+   pełna biel jest nieczytelna na białych kartach — przemapujemy. */
+.light .md-body { color: rgba(13, 17, 23, 0.8) !important; }
+.light .md-body strong { color: rgb(13, 17, 23) !important; }
+.light .md-body em { color: rgba(13, 17, 23, 0.85) !important; }
+.light .md-body a { color: #7c3aed !important; }
+.light .md-body a:hover { color: #6d28d9 !important; }
+.light .md-body code { background: rgba(13, 17, 23, 0.06) !important; border-color: rgba(13, 17, 23, 0.1) !important; color: rgb(13, 17, 23) !important; }
+.light .md-body h3, .light .md-body h4, .light .md-body h5 { color: rgb(13, 17, 23) !important; }
+.light .md-body ul, .light .md-body ol { color: rgba(13, 17, 23, 0.8) !important; }
+.light .md-body li span { color: rgba(13, 17, 23, 0.8) !important; }
+.light .md-body hr { background: rgba(13, 17, 23, 0.12) !important; }
+.light .md-body blockquote { color: rgba(13, 17, 23, 0.65) !important; border-color: #a78bfa !important; }
+.light .md-body [class*="text-white/45"] { color: rgba(13, 17, 23, 0.45) !important; }
+.light .md-body [class*="text-white/70"] { color: rgba(13, 17, 23, 0.65) !important; }
+.light .md-body [class*="text-white/80"] { color: rgba(13, 17, 23, 0.8) !important; }
+.light .md-body [class*="border-white/25"] { border-color: rgba(13, 17, 23, 0.3) !important; }
+.light .md-body [class*="bg-[#a78bfa]/25"] { background: rgba(139, 92, 246, 0.18) !important; }
+
+/* Teksty f4f6f7 z niestandardowymi krokami alfa (sidebar/topbar) */
+.light .text-\[\#f4f6f7\]\/\[0\.7\] { color: rgba(13, 17, 23, 0.7) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.6\] { color: rgba(13, 17, 23, 0.6) !important; }
+.light .text-\[\#f4f6f7\]\/\[0\.35\] { color: rgba(13, 17, 23, 0.35) !important; }
+/* Placeholdery (text-white/25..40) na jasnych polach muszą być ciemne —
+   inaczej "znikały" na białym tle inputów. */
+.light .placeholder\:text-white\/25::placeholder,
+.light .placeholder\:text-white\/30::placeholder,
+.light .placeholder\:text-white\/35::placeholder,
+.light .placeholder\:text-white\/40::placeholder { color: rgba(13, 17, 23, 0.38) !important; }
 
 /* hover:text-white na jasnym tle w light dawałby biały-na-białym — hover
    przyciemnia zamiast rozjaśniać. Ciemne wyspy (yt-force-dark) zachowują biel. */
 .light [class*="hover:text-white"]:hover { color: rgba(13, 17, 23, 0.9) !important; }
 .light .group:hover [class*="group-hover:text-white"] { color: rgba(13, 17, 23, 0.9) !important; }
 .light .group:hover [class*="group-hover:text-[#f4f6f7]"] { color: rgba(13, 17, 23, 0.8) !important; }
+/* Hover-zgaszenia (hover:text-white/70..90) na jasnym tle rozjaśniały i tak
+   już jasny tekst — odwracamy: przyciemniamy. */
+.light [class*="hover:text-white/"]:hover { color: rgba(13, 17, 23, 0.95) !important; }
 /* hover-rozjaśnienia (białe tła) na jasnych kartach znikały — hover przyciemnia. */
 .light [class*="hover:bg-white"]:hover { background-color: rgba(13, 17, 23, 0.06) !important; }
+.light .group:hover [class*="group-hover:bg-white"] { background-color: rgba(13, 17, 23, 0.08) !important; }
+.light [class*="hover:border-white"]:hover { border-color: rgba(13, 17, 23, 0.2) !important; }
+.light .group:hover [class*="group-hover:border-white"] { border-color: rgba(13, 17, 23, 0.2) !important; }
+
+/* Gradient via-[#8b5cf6] — bez tego zanikał (via nie było przemapowane). */
+.light .via-\[\#8b5cf6\] { --tw-gradient-to: rgb(124 58 237 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), #7c3aed var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
 
 /* Odtwarzacz wideo i nakładki na miniaturkach są zawsze ciemne — jasny
    motyw nie rusza ich kolorów (inaczej białe napisy na czarnych kontrolkach

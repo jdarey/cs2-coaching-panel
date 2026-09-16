@@ -24,6 +24,8 @@ const TOKEN_ROLE: Record<string, Role> = {
   '0d6b5f': 'darker',
   '8cffef': 'light',
   '2fb6a2': 'dark',
+  '2dd4bf': 'base',
+  e9d5ff: 'light',
 }
 
 function hexToHsl(hex: string): [number, number, number] | null {
@@ -90,13 +92,15 @@ addCombos('accent', 'a78bfa', SOLID)
 addCombos('bg', '14b8a6', SOLID)
 addCombos('bg', '2de5ca', [...SOLID, '0.04', '0.05', '0.07', '0.08', '10', '15', '20'])
 addCombos('bg', '6d28d9', ['10', '20'])
-addCombos('bg', '8b5cf6', [...SOLID, '10', '12', '15', '20', '25'])
+addCombos('bg', '8b5cf6', [...SOLID, '10', '12', '15', '20', '25', '30'])
 addCombos('bg', 'a78bfa', [...SOLID, '0.04', '0.06', '0.08', '0.1', '0.12', '10', '15', '20', '40'])
 addCombos('bg', 'c4b5fd', [...SOLID, '10', '15'])
 addCombos('border', '2de5ca', ['20', '25', '30', '40'])
 addCombos('border', '8b5cf6', ['30'])
 addCombos('border', 'a78bfa', [...SOLID, '15', '20', '25', '30', '40', '50'])
 addCombos('border', 'c4b5fd', ['20', '25'])
+addCombos('border', '8b5cf6', ['30', '40'])
+addCombos('border', '2de5ca', ['10', '15', '20'])
 addCombos('border-r', '8b5cf6', SOLID)
 addCombos('border-t', 'a78bfa', SOLID)
 addCombos('decoration', '2de5ca', ['40'])
@@ -106,12 +110,16 @@ addCombos('from', 'a78bfa', [...SOLID, '0.07', '0.16', '10', '15', '20', '25', '
 addCombos('from', 'c4b5fd', SOLID)
 addCombos('ring', '8b5cf6', ['30'])
 addCombos('ring', 'a78bfa', [...SOLID, '20', '25', '30', '40'])
+addCombos('ring', '2de5ca', ['20'])
 addCombos('text', '2de5ca', [...SOLID, '80'])
 addCombos('text', '6d28d9', SOLID)
 addCombos('text', '8b5cf6', SOLID)
 addCombos('text', '8cffef', [...SOLID, '70', '80'])
 addCombos('text', 'a78bfa', [...SOLID, '50', '60', '70', '80', '90'])
 addCombos('text', 'c4b5fd', [...SOLID, '70', '80'])
+addCombos('text', 'e9d5ff', SOLID)
+addCombos('text', '2dd4bf', SOLID)
+addCombos('via', '8b5cf6', SOLID)
 addCombos('to', '147a6b', SOLID)
 addCombos('to', '6d28d9', [...SOLID, '0.04', '10', '20', '25', '5'])
 addCombos('to', '7c3aed', SOLID)
@@ -127,7 +135,9 @@ addCombos('border', 'a78bfa', ['30', '40', '60'], ['focus:'])
 addCombos('ring', '8b5cf6', ['25', '30', '40'], ['focus:'])
 addCombos('text', 'c4b5fd', SOLID, ['group-focus-within:'])
 addCombos('bg', 'a78bfa', ['30', '5'], ['group-hover:'])
+addCombos('bg', 'a78bfa', ['15'], ['group-hover/task:'])
 addCombos('border', 'a78bfa', ['25'], ['group-hover:'])
+addCombos('border', 'a78bfa', ['30'], ['group-hover/task:'])
 addCombos('text', '8cffef', SOLID, ['group-hover:'])
 addCombos('text', 'c4b5fd', SOLID, ['group-hover:'])
 addCombos('bg', '2de5ca', ['0.06', '0.08', '0.12', '0.14', '10'], ['hover:'])
@@ -170,6 +180,7 @@ const SHADOWS: ShadowRule[] = [
   ['', 'shadow-[0_8px_32px_-8px_rgba(45,229,202,0.55)]', '0 8px 32px -8px', 0.55],
   ['focus:', 'focus:shadow-[0_0_0_3px_rgba(139,92,246,0.12)]', '0 0 0 3px', 0.12],
   ['group-hover:', 'group-hover:shadow-[0_0_56px_-6px_rgba(139,92,246,0.8)]', '0 0 56px -6px', 0.8],
+  ['group-hover/routine:', 'group-hover/routine:shadow-[0_14px_40px_-10px_rgba(139,92,246,0.7)]', '0 14px 40px -10px', 0.7],
   ['hover:', 'hover:shadow-[0_16px_48px_-12px_rgba(139,92,246,0.8)]', '0 16px 48px -12px', 0.8],
   ['hover:', 'hover:shadow-[0_18px_56px_-20px_rgba(139,92,246,0.35)]', '0 18px 56px -20px', 0.35],
   ['hover:', 'hover:shadow-[0_20px_60px_-20px_rgba(139,92,246,0.35)]', '0 20px 60px -20px', 0.35],
@@ -186,6 +197,8 @@ const UTIL_PROP: Record<string, string> = {
   ring: '--tw-ring-color',
   text: 'color',
   to: '--tw-gradient-to',
+  // via jako stops — ustawiamy pośredni stop gradientu na wybrany kolor
+  via: '--tw-gradient-stops',
 }
 
 function alphaOf(op: string): number {
@@ -203,6 +216,8 @@ function scopeSelector(pre: string, token: string): string {
     case 'disabled:': return `${tok}:disabled`
     case 'active:': return `${tok}:active`
     case 'group-hover:': return `.group:hover ${tok}`
+    case 'group-hover/routine:': return `.group\\/routine:hover ${tok}`
+    case 'group-hover/task:': return `.group\\/task:hover ${tok}`
     case 'group-focus-within:': return `.group:focus-within ${tok}`
     case 'marker:': return `${tok}::marker`
     default: return tok
@@ -260,7 +275,13 @@ export function applyPrimaryColor(hex: string) {
     const prop = UTIL_PROP[util]
     if (!prop) continue
     const token = `${pre}${util}-[#${srcHex}]${op ? `/${op}` : ''}`
-    css.push(`${scopeSelector(pre, token)}{${prop}:${roleVal(role, alphaOf(op))} !important;}`)
+    if (util === 'via') {
+      // via jest częścią --tw-gradient-stops — nadpisujemy pełny łańcuch stopów,
+      // zachowując from/to (i pozycję 50% jak w Tailwindzie)
+      css.push(`${scopeSelector(pre, token)}{--tw-gradient-stops:var(--tw-gradient-from), ${roleVal(role, alphaOf(op))} var(--tw-gradient-via-position), var(--tw-gradient-to) !important;}`)
+    } else {
+      css.push(`${scopeSelector(pre, token)}{${prop}:${roleVal(role, alphaOf(op))} !important;}`)
+    }
   }
 
   // 2) Cienie glow — geometria zostaje, kolor idzie w wybrany

@@ -21,6 +21,20 @@ export function applyStoredTheme() {
   }
 }
 
+// Tryb "system" ma na bieżąco podążać za przełącznikiem OS (bez reloadu).
+export function useSystemThemeSync() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => {
+      const saved = localStorage.getItem('theme')
+      if (!saved || saved === 'system') applyStoredTheme()
+    }
+    mq.addEventListener?.('change', onChange)
+    return () => mq.removeEventListener?.('change', onChange)
+  }, [])
+}
+
 function PresenceManager() {
   const { data: session, status } = useSession()
   usePresenceHeartbeat(status === 'authenticated' && !!session?.user)
@@ -47,6 +61,8 @@ function reloadOnceForChunk(): boolean {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  useSystemThemeSync()
+
   useEffect(() => {
     applyStoredTheme()
     // primary color per user

@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { mdToHtml as sharedMdToHtml } from '@/lib/format'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { useToast } from '@/hooks/use-toast'
@@ -11,6 +12,7 @@ import {
   Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { useGifPreview, GifPreviewCard, canHoverFine } from '@/components/gif-preview'
 import { getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
@@ -26,6 +28,8 @@ interface RoutineTask {
   linkUrl: string | null
   day: number
   minutes: number | null
+  /** Stabilny klucz React — nowo dodane taski nie mają jeszcze id z DB */
+  clientKey?: string
 }
 
 interface Routine {
@@ -89,30 +93,11 @@ const emptyTask = (day = 1): RoutineTask => ({
   linkUrl: null,
   day,
   minutes: null,
+  clientKey: `k${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
 })
 
-function mdToHtml(md: string): string {
-  if (!md) return ''
-  let html = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#c4b5fd] underline hover:text-white">$1</a>')
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
-  html = html.replace(/\*([^*]+)\*/g, '<em class="italic text-white/90">$1</em>')
-  html = html.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-xs">$1</code>')
-  const lines = html.split('\n')
-  let out = '', inList = false
-  for (const line of lines) {
-    if (/^\s*[-•]\s+/.test(line)) {
-      if (!inList) { out += '<ul class="list-disc list-inside space-y-1 my-2 marker:text-[#a78bfa]">'; inList = true }
-      out += `<li>${line.replace(/^\s*[-•]\s+/, '')}</li>`
-    } else {
-      if (inList) { out += '</ul>'; inList = false }
-      if (line.trim()==='') out += ''
-      else out += `<p class="my-1 leading-relaxed">${line}</p>`
-    }
-  }
-  if (inList) out += '</ul>'
-  return out
-}
+// renderer markdown wspólny z widokiem ucznia (src/lib/format.ts)
+const mdToHtml = (md: string) => sharedMdToHtml(md)
 
 export function CoachRoutinesClient({ initialRoutines, initialStudents, initialVideos, initialExercisePresets }: CoachRoutinesClientProps) {
   const [routines, setRoutines] = useState<Routine[]>(initialRoutines)
@@ -145,7 +130,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const gif = useGifPreview()
 
   const addPresetToTasks = (p: ExercisePreset) => {
-    setTasks(prev=> [...prev, { title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, linkUrl: p.linkUrl, day: 1, minutes: p.minutes }])
+    setTasks(prev=> [...prev, { ...emptyTask(1), title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, linkUrl: p.linkUrl, minutes: p.minutes }])
     toast({ title: 'Dodano', description: `"${p.title}" dodane do rutyny` })
   }
 
@@ -187,16 +172,6 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
       if (!res.ok) { toast({ title: 'Błąd', description: data.error, variant: 'destructive' }); return }
       toast({ title: 'Zapisano', description: `"${t.title}" zapisane jako preset` })
     } catch { toast({ title: 'Błąd', variant: 'destructive' }) }
-  }
-  const wrapSelection = (id: string, before: string, after: string, placeholder: string, setter: (v:string)=>void, current: string | null) => {
-    const el = document.getElementById(id) as HTMLTextAreaElement | null
-    const val = current || ''
-    if (!el) { setter(val ? val + '\n' + before + placeholder + after : before + placeholder + after); return }
-    const s = el.selectionStart, e = el.selectionEnd
-    const sel = el.value.substring(s, e) || placeholder
-    const nv = el.value.substring(0, s) + before + sel + after + el.value.substring(e)
-    setter(nv)
-    setTimeout(()=>{ el.focus(); el.setSelectionRange(s+before.length, s+before.length+sel.length)},0)
   }
 
   // zamknięcie modala podglądu rutyny — kill() zamiast close(): wiersz może
@@ -330,7 +305,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const openEditDialog = (r: Routine) => {
     setEditing(r)
     setFormData({ title: r.title, description: r.description || '', recurring: r.recurring })
-    setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t, gifUrl: t.gifUrl || null, steamMapUrl: t.steamMapUrl || null, linkUrl: t.linkUrl || null })) : [emptyTask(1)])
+    setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t, gifUrl: t.gifUrl || null, steamMapUrl: t.steamMapUrl || null, linkUrl: t.linkUrl || null, clientKey: t.clientKey || t.id || `k${Date.now()}_${Math.random().toString(36).slice(2, 8)}` })) : [emptyTask(1)])
     setOpenTaskIdx(null)
     setDialogOpen(true)
   }
@@ -600,26 +575,16 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
 
                 <div className="space-y-1.5">
                   <label htmlFor="r-desc" className="text-xs font-medium text-white/55">
-                    Opis (opcjonalnie) — wspiera **pogrubienie**, *kursywę*, `kod`, [link](url), - lista
+                    Opis (opcjonalnie) — formatuj jak chcesz: nagłówki, listy, checklisty, cytaty, linki
                   </label>
-                  <div className="flex gap-1">
-                    <button type="button" onClick={()=>wrapSelection('r-desc','**','**','pogrubienie', v=>setFormData(p=>({...p, description:v})), formData.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white hover:bg-white/[0.1]">B</button>
-                    <button type="button" onClick={()=>wrapSelection('r-desc','*','*','kursywa', v=>setFormData(p=>({...p, description:v})), formData.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs italic text-white hover:bg-white/[0.1]">I</button>
-                    <button type="button" onClick={()=>wrapSelection('r-desc','- ','','lista', v=>setFormData(p=>({...p, description:v})), formData.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-white hover:bg-white/[0.1]">•</button>
-                    <button type="button" onClick={()=>wrapSelection('r-desc','[','](https://)', 'tekst', v=>setFormData(p=>({...p, description:v})), formData.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-white hover:bg-white/[0.1]">Link</button>
-                    <button type="button" onClick={()=>wrapSelection('r-desc','`','`','kod', v=>setFormData(p=>({...p, description:v})), formData.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-white hover:bg-white/[0.1]">`</button>
-                  </div>
-                  <textarea
+                  <MarkdownEditor
                     id="r-desc"
-                    placeholder="Cel tej rutyny i czego uczeń się nauczy... **pogrubienie** *kursywa* - lista [link](https://)"
                     value={formData.description}
-                    onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-                    maxLength={2000}
+                    onChange={(v) => setFormData((p) => ({ ...p, description: v }))}
+                    placeholder="Cel rutyny i czego uczeń się nauczy...&#10;&#10;# Cel&#10;- co ćwiczymy&#10;- [ ] pierwsza sesja z uczniem&#10;&#10;Więcej: [link](https://)"
                     disabled={isLoading}
-                    rows={3}
-                    className="w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition resize-none"
+                    maxLength={2000}
                   />
-                  {formData.description && <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-white/80" dangerouslySetInnerHTML={{__html: mdToHtml(formData.description)}} />}
                 </div>
 
                 {/* Recurring toggle */}
@@ -662,7 +627,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   {tasks.map((t, i) => {
                     const expanded = openTaskIdx === i
                     return (
-                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("relative overflow-hidden rounded-2xl bg-white/[0.02] border transition shadow-sm", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30 scale-[0.98]" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.06] hover:border-white/[0.10] hover:bg-white/[0.03]", expanded ? "p-5 pl-6 space-y-4" : "p-3.5 pl-6")}>
+                    <div key={t.clientKey || t.id || i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("relative overflow-hidden rounded-2xl bg-white/[0.02] border transition shadow-sm", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30 scale-[0.98]" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.06] hover:border-white/[0.10] hover:bg-white/[0.03]", expanded ? "p-5 pl-6 space-y-4" : "p-3.5 pl-6")}>
                       {/* Kolorowy pasek akcentu + poświata (rotowane po indeksie) */}
                       <span className="pointer-events-none absolute inset-y-0 left-0 w-1" style={{ background: TASK_ACCENTS[i % TASK_ACCENTS.length].bar }} aria-hidden />
                       <span className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl" style={{ background: TASK_ACCENTS[i % TASK_ACCENTS.length].soft }} aria-hidden />
@@ -735,15 +700,17 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                       {expanded && (
                       <>
                       <div>
-                        <label className="text-[11px] font-medium text-white/45 flex items-center gap-1"><FileText className="w-3 h-3"/>Opis ćwiczenia — **pogrubienie** *kursywa* `kod` [link]</label>
-                        <div className="flex gap-1 mt-1">
-                          <button type="button" onClick={()=>wrapSelection(`task-desc-${i}`,'**','**','pogrubienie', v=>updateTask(i,{description:v}), t.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white hover:bg-white/[0.1]">B</button>
-                          <button type="button" onClick={()=>wrapSelection(`task-desc-${i}`,'*','*','kursywa', v=>updateTask(i,{description:v}), t.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs italic text-white hover:bg-white/[0.1]">I</button>
-                          <button type="button" onClick={()=>wrapSelection(`task-desc-${i}`,'- ','','lista', v=>updateTask(i,{description:v}), t.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-white hover:bg-white/[0.1]">•</button>
-                          <button type="button" onClick={()=>wrapSelection(`task-desc-${i}`,'[','](https://)','tekst', v=>updateTask(i,{description:v}), t.description)} className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-white hover:bg-white/[0.1]">Link</button>
-                        </div>
-                        <textarea id={`task-desc-${i}`} value={t.description ?? ''} onChange={(e)=> updateTask(i, { description: e.target.value || null })} placeholder="Opisz na czym skupić się w tym ćwiczeniu... **pogrubienie** - lista" rows={2} disabled={isLoading} className="mt-1 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition resize-none" />
-                        {t.description && <div className="mt-2 p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-white/80 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}
+                        <label htmlFor={`task-desc-${i}`} className="text-[11px] font-medium text-white/45 flex items-center gap-1"><FileText className="w-3 h-3"/>Opis ćwiczenia — formatuj swobodnie: nagłówki, listy, checklisty, linki</label>
+                        <MarkdownEditor
+                          id={`task-desc-${i}`}
+                          value={t.description ?? ''}
+                          onChange={(v) => updateTask(i, { description: v || null })}
+                          placeholder="Na czym skupić się w tym ćwiczeniu...&#10;&#10;### Technika&#10;- ustaw celownik na wysokości głowy&#10;- [ ] 3 serie po 10 min&#10;&#10;Zobacz: [link](https://)"
+                          disabled={isLoading}
+                          maxLength={1000}
+                          minRows={4}
+                          maxRows={18}
+                        />
                       </div>
 
                       {/* Materiały: wszystkie pola opcjonalne w siatce 2-kolumnowej */}
