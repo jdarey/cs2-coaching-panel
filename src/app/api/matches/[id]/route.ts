@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,7 @@ async function getOwnedMatch(id: string, userId: string, role: string) {
   const match = await prisma.matchLog.findUnique({ where: { id } })
   if (!match) return null
   if (role === 'STUDENT' && match.studentId !== userId) return null
-  if (role === 'COACH') {
+  if (isCoachRole(role)) {
     const student = await prisma.user.findFirst({
       where: { id: match.studentId, coachId: userId },
       select: { id: true },
@@ -57,11 +58,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     // Coach review fields are coach-only: students may not fake a review
     let data: any = { ...validated }
-    if (role !== 'COACH') {
+    if (!isCoachRole(role)) {
       delete data.coachNotes
       delete data.coachVerdict
     }
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const isReview = 'coachNotes' in data || 'coachVerdict' in data
       if (isReview) {
         data.coachReviewedAt = new Date()

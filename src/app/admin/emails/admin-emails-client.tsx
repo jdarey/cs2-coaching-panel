@@ -134,8 +134,10 @@ export function AdminEmailsClient() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Błąd zapisu')
+      // Podmień zapisany szablon lokalnie, żeby `draft === active` i flaga
+      // "niezapisane zmiany" zgasła (load() tego nie robi — activeKey bez zmian).
+      setTemplates((prev) => prev.map((t) => (t.key === draft.key ? { ...t, ...draft } : t)))
       setMsg({ ok: true, text: 'Zapisano. Nowe maile pójdą z tą treścią.' })
-      load()
     } catch (e: any) {
       setMsg({ ok: false, text: e.message || 'Błąd zapisu' })
     } finally {

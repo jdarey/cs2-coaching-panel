@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ async function getOwnedGoal(id: string, userId: string, role: string) {
   const goal = await prisma.goal.findUnique({ where: { id } })
   if (!goal) return null
   if (role === 'STUDENT' && goal.studentId !== userId) return null
-  if (role === 'COACH') {
+  if (isCoachRole(role)) {
     const student = await prisma.user.findFirst({
       where: { id: goal.studentId, coachId: userId },
       select: { id: true },

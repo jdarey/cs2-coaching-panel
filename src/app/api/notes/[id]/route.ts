@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export async function PATCH(
 
     // students cannot make private
     const role = (session.user as any).role
-    const isPrivate = role === 'COACH' && typeof parsed.isPrivate === 'boolean' ? parsed.isPrivate : note.isPrivate
+    const isPrivate = isCoachRole(role) && typeof parsed.isPrivate === 'boolean' ? parsed.isPrivate : note.isPrivate
 
     const updated = await prisma.sessionNote.update({
       where: { id: params.id },

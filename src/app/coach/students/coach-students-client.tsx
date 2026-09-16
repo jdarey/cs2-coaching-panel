@@ -631,11 +631,11 @@ export function CoachStudentsClient({ initialStudents }: CoachStudentsClientProp
                       id="password"
                       name="password"
                       type="password"
-                      placeholder="minimum 6 znaków"
+                      placeholder="minimum 8 znaków"
                       value={formData.password}
                       onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
                       required
-                      minLength={6}
+                      minLength={8}
                       disabled={isLoading}
                       className="h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] ring-1 ring-white/15 pl-11 pr-4 text-sm text-white placeholder:text-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8b5cf6]/25 focus-visible:border-[#a78bfa]/40 transition-all duration-300"
                     />

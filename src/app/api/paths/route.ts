@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Nie zalogowano' }, { status: 401 })
   }
 
-  let coachId: string | null = user.role === 'COACH' ? user.id : null
+  let coachId: string | null = isCoachRole(user.role) ? user.id : null
   if (user.role === 'STUDENT') {
     const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { coachId: true } })
     coachId = dbUser?.coachId ?? null
@@ -42,7 +43,7 @@ export async function GET() {
   }
 
   const paths = await prisma.trainingPath.findMany({
-    where: user.role === 'COACH' ? { coachId } : { coachId, isActive: true },
+    where: isCoachRole(user.role) ? { coachId } : { coachId, isActive: true },
     orderBy: { createdAt: 'desc' },
     include: {
       modules: {
@@ -70,7 +71,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
-  if (!user?.id || user.role !== 'COACH') {
+  if (!user?.id || !isCoachRole(user.role)) {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
   }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const months = parseInt(searchParams.get('months') || '12')
 
     let studentId = userId
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const target = searchParams.get('studentId')
       if (target) {
         const s = await prisma.user.findFirst({ where: { id: target, coachId: userId }, select: { id: true } })

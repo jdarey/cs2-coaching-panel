@@ -13,6 +13,7 @@ import {
   getYouTubeId,
   getVideoEmbedUrl,
 } from '@/lib/utils'
+import { isCoachRole } from '@/lib/roles'
 import { StudentLayout } from '@/components/student-layout'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
@@ -781,12 +782,12 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                           <span
                             className={cn(
                               'inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-medium border',
-                              note.user.role === 'COACH'
+                              isCoachRole(note.user.role)
                                 ? 'text-[#c4b5fd] bg-[#c4b5fd]/10 border-[#c4b5fd]/25'
                                 : 'text-white/55 bg-white/[0.04] border-white/[0.08]',
                             )}
                           >
-                            {note.user.role === 'COACH' ? 'Trener' : 'Ty'}
+                            {isCoachRole(note.user.role) ? 'Trener' : 'Ty'}
                           </span>
                           <span className="text-[11px] text-white/40">{formatDateTime(note.createdAt)}</span>
                         </div>

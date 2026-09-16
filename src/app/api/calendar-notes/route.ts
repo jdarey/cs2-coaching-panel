@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 export const dynamic = 'force-dynamic'
 const schema = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), content: z.string().min(1).max(2000), sleep: z.number().int().min(1).max(10).optional().nullable() })
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   const studentId = searchParams.get('studentId')
   // coach can query student notes
   let targetId = userId
-  if ((session.user as any).role==='COACH' && studentId) {
+  if (isCoachRole((session.user as any).role) && studentId) {
     const s = await prisma.user.findFirst({where:{id:studentId, coachId:userId}, select:{id:true}})
     if (!s) return NextResponse.json({error:'Brak uprawnień'},{status:403})
     targetId = studentId

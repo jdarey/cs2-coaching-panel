@@ -49,6 +49,7 @@ export function AdminFeatureFlagsClient() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
   const [newFlag, setNewFlag] = useState({ key: '', name: '', description: '', enabled: true })
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -78,12 +79,30 @@ export function AdminFeatureFlagsClient() {
     setSaving(key)
     setMsg(null)
     try {
-      const res = await fetch('/api/admin/feature-flags', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, enabled }),
-      })
-      const data = await res.json()
+      const put = async () =>
+        fetch('/api/admin/feature-flags', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, enabled }),
+        })
+      let res = await put()
+      let data = await res.json()
+      // Flaga-widmo (tylko lokalny DEFAULT, brak w DB) → najpierw utwórz, potem przełącz.
+      if (!res.ok && res.status === 404) {
+        const def = DEFAULT_FLAGS.find((d) => d.key === key)
+        const seed = await fetch('/api/admin/feature-flags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            def
+              ? { key: def.key, name: def.name, description: def.description, enabled: def.enabled }
+              : { key, name: key, description: '', enabled: !enabled },
+          ),
+        })
+        if (!seed.ok) throw new Error((await seed.json().catch(() => ({}))).error || 'Błąd zapisu')
+        res = await put()
+        data = await res.json()
+      }
       if (!res.ok) throw new Error(data.error || 'Błąd zapisu')
       setFlags((prev) => ({ ...prev, [key]: { ...prev[key], enabled: data.flag.enabled, updatedAt: data.flag.updatedAt } }))
       setMsg({ ok: true, text: `${data.flag.name} ${enabled ? 'włączone' : 'wyłączone'}.` })
@@ -107,11 +126,11 @@ export function AdminFeatureFlagsClient() {
     }
   }
 
-  const createFlag = async () => {
+  const createFlag = async (): Promise<boolean> => {
     const { key, name, description, enabled } = newFlag
-    if (!key || !name) { setMsg({ ok: false, text: 'Klucz i nazwa są wymagane.' }); return }
-    if (!/^[a-z0-9_]+$/.test(key)) { setMsg({ ok: false, text: 'Klucz: tylko małe litery, cyfry, podkreślenia.' }); return }
-    if (flags[key]) { setMsg({ ok: false, text: 'Flaga o tym kluczu już istnieje.' }); return }
+    if (!key || !name) { setMsg({ ok: false, text: 'Klucz i nazwa są wymagane.' }); return false }
+    if (!/^[a-z0-9_]+$/.test(key)) { setMsg({ ok: false, text: 'Klucz: tylko małe litery, cyfry, podkreślenia.' }); return false }
+    if (flags[key]) { setMsg({ ok: false, text: 'Flaga o tym kluczu już istnieje.' }); return false }
     setCreating(true)
     setMsg(null)
     try {
@@ -125,8 +144,10 @@ export function AdminFeatureFlagsClient() {
       setFlags((prev) => ({ ...prev, [data.flag.key]: data.flag }))
       setNewFlag({ key: '', name: '', description: '', enabled: true })
       setMsg({ ok: true, text: `Flaga "${name}" utworzona.` })
+      return true
     } catch (e: any) {
       setMsg({ ok: false, text: e.message || 'Błąd tworzenia' })
+      return false
     } finally {
       setCreating(false)
     }
@@ -159,12 +180,56 @@ export function AdminFeatureFlagsClient() {
           </div>
         </div>
         <button
-          onClick={() => setNewFlag({ key: '', name: '', description: '', enabled: true })}
+          onClick={() => {
+            setNewFlag({ key: '', name: '', description: '', enabled: true })
+            setShowCreate((v) => !v)
+          }}
           className="inline-flex items-center gap-2 h-11 rounded-xl px-4 text-sm font-semibold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9]"
         >
           <Plus className="w-4 h-4" /> Nowa flaga
         </button>
       </div>
+
+      {showCreate && (
+        <div className="mb-6 rounded-2xl border border-[#a78bfa]/25 bg-[#a78bfa]/[0.05] p-4 sm:p-5">
+          <p className="text-sm font-semibold text-white mb-3">Nowa flaga</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input
+              value={newFlag.key}
+              onChange={(e) => setNewFlag((s) => ({ ...s, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
+              placeholder="klucz (małe litery, cyfry, _)"
+              className="h-10 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/25 font-mono"
+            />
+            <input
+              value={newFlag.name}
+              onChange={(e) => setNewFlag((s) => ({ ...s, name: e.target.value }))}
+              placeholder="Nazwa do wyświetlenia"
+              className="h-10 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/25"
+            />
+          </div>
+          <input
+            value={newFlag.description}
+            onChange={(e) => setNewFlag((s) => ({ ...s, description: e.target.value }))}
+            placeholder="Opis (opcjonalnie)"
+            className="mt-3 w-full h-10 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/25"
+          />
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={async () => { if (await createFlag()) setShowCreate(false) }}
+              disabled={creating}
+              className="inline-flex items-center gap-2 h-10 rounded-xl px-4 text-sm font-semibold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] disabled:opacity-50"
+            >
+              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Utwórz flagę
+            </button>
+            <button
+              onClick={() => setShowCreate(false)}
+              className="inline-flex items-center h-10 rounded-xl px-4 text-sm text-white/60 hover:text-white bg-white/[0.04] border border-white/[0.08]"
+            >
+              Anuluj
+            </button>
+          </div>
+        </div>
+      )}
 
       {msg && (
         <div className={cn('mb-6 rounded-xl px-4 py-3 text-sm border', msg.ok ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200' : 'bg-red-500/10 border-red-500/25 text-red-200')}>
@@ -187,7 +252,6 @@ export function AdminFeatureFlagsClient() {
                     return <Icon className={cn('w-5 h-5', flag.enabled ? 'text-[#c4b5fd]' : 'text-white/30')} />
                   })()}
                 </div>
-                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
                     <p className="font-display font-semibold text-white truncate">{flag.name}</p>
@@ -202,12 +266,15 @@ export function AdminFeatureFlagsClient() {
                   <button
                     onClick={() => toggleFlag(flag.key)}
                     disabled={saving === flag.key}
+                    role="switch"
+                    aria-checked={flag.enabled}
+                    aria-label={`Przełącz: ${flag.name}`}
                     className={cn(
-                      'relative inline-flex h-7 w-12 items-center rounded-full transition-colors',
-                      flag.enabled ? 'bg-[#a78bfa] after:translate-x-full' : 'bg-white/10 after:translate-x-0'
+                      'relative inline-flex h-7 w-12 items-center rounded-full transition-colors px-0.5',
+                      flag.enabled ? 'justify-end bg-[#a78bfa]' : 'justify-start bg-white/10'
                     )}
                   >
-                    <span className={cn('absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white transition-transform', flag.enabled ? 'after:translate-x-full' : '')} />
+                    <span className="h-6 w-6 rounded-full bg-white shadow" />
                   </button>
                   <button
                     onClick={() => deleteFlag(flag.key)}
@@ -219,6 +286,7 @@ export function AdminFeatureFlagsClient() {
                   </button>
                 </div>
               </div>
+            </div>
             )
           )}
         </div>

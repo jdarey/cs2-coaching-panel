@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CoachStudentsClient } from './coach-students-client'
+import { isCoachRole } from '@/lib/roles'
 
 export const metadata = {
   title: 'Uczniowie',
@@ -11,7 +12,7 @@ export const metadata = {
 export default async function CoachStudentsPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user || (session.user as any).role !== 'COACH') {
+  if (!session?.user || !isCoachRole((session.user as any).role)) {
     redirect('/login')
   }
 

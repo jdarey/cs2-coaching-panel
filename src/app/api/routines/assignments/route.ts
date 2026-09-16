@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   const user = session.user as any
   const studentId = new URL(request.url).searchParams.get('studentId') || user.id
 
-  if (user.role === 'COACH') {
+  if (isCoachRole(user.role)) {
     if (studentId !== user.id) {
       const s = await prisma.user.findFirst({ where: { id: studentId, coachId: user.id }, select: { id: true } })
       if (!s) return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
@@ -44,7 +45,7 @@ export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const user = session.user as any
-  if (user.role !== 'COACH') return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
+  if (!isCoachRole(user.role)) return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
   const assignmentId = new URL(request.url).searchParams.get('assignmentId')
   if (!assignmentId) return NextResponse.json({ error: 'Brak id' }, { status: 400 })
   const assignment = await prisma.routineAssignment.findFirst({ where: { id: assignmentId, coachId: user.id } })

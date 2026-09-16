@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,7 @@ export async function PATCH(
     const role = user.role
 
     // Coach może zawsze, student tylko jeśli należy do tego samego coacha
-    if (role !== 'COACH') {
+    if (!isCoachRole(role)) {
       const student = await prisma.user.findUnique({ where: { id: userId }, select: { coachId: true } })
       if (!student?.coachId || student.coachId !== video.coachId) {
         return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })

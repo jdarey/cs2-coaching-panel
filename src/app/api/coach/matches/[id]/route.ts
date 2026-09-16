@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +38,7 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -77,7 +78,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

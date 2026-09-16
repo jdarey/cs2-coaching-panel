@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { videoSchema, videoUpdateSchema } from '@/lib/validations'
 import { getVideoThumbnail } from '@/lib/utils'
 import { getVideoDuration } from '@/lib/video-duration'
+import { isCoachRole } from '@/lib/roles'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     let where: any = { isActive: true }
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       where.coachId = userId
     } else {
       // Students see videos from their coach
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może dodawać filmy' }, { status: 403 })
     }
 

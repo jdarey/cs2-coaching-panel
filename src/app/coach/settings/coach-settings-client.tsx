@@ -64,6 +64,9 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
     'profile'
   )
   const [isLoading, setIsLoading] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletePhrase, setDeletePhrase] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
   const [formData, setFormData] = useState({
     name: user.name || '',
     email: user.email,
@@ -176,8 +179,8 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
       return
     }
 
-    if (formData.newPassword.length < 6) {
-      toast({ title: 'Błąd', description: 'Nowe hasło musi mieć minimum 6 znaków', variant: 'destructive' })
+    if (formData.newPassword.length < 8) {
+      toast({ title: 'Błąd', description: 'Nowe hasło musi mieć minimum 8 znaków', variant: 'destructive' })
       return
     }
 
@@ -490,7 +493,7 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                           setFormData((prev) => ({ ...prev, [f.id]: e.target.value }))
                         }
                         required
-                        minLength={f.id === 'newPassword' ? 6 : undefined}
+                        minLength={f.id === 'newPassword' ? 8 : undefined}
                         className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white placeholder:text-white/35 outline-none focus:ring-2 focus:ring-[#8b5cf6]/25 focus:border-[#a78bfa]/40 transition"
                       />
                     </div>
@@ -523,23 +526,64 @@ export function CoachSettingsClient({ initialUser, initialSettings }: CoachSetti
                     <p className="text-sm text-white/50 mt-0.5">
                       Nieodwracalne akcje. Trwale usunę swoje konto, uczniów, sesje i wszystkie dane.
                     </p>
+                    {showDeleteConfirm && (
+                      <div className="mt-4 space-y-2.5 rounded-xl bg-black/30 border border-red-500/20 p-4">
+                        <p className="text-xs text-white/60">
+                          Aby potwierdzić, wpisz <span className="font-black text-red-200">USUŃ KONTO</span> i podaj aktualne hasło:
+                        </p>
+                        <input
+                          value={deletePhrase}
+                          onChange={(e) => setDeletePhrase(e.target.value)}
+                          placeholder="USUŃ KONTO"
+                          className="w-full h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] px-3.5 text-sm outline-none focus:border-red-500/50 placeholder:text-white/25"
+                        />
+                        <input
+                          type="password"
+                          value={deletePassword}
+                          onChange={(e) => setDeletePassword(e.target.value)}
+                          placeholder="Aktualne hasło"
+                          className="w-full h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] px-3.5 text-sm outline-none focus:border-red-500/50 placeholder:text-white/25"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              const res = await fetch('/api/user/account', {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ confirm: deletePhrase.trim(), password: deletePassword }),
+                              })
+                              if (!res.ok) {
+                                const data = await res.json().catch(() => ({}))
+                                toast({ title: 'Błąd', description: data.error || 'Nie udało się usunąć konta', variant: 'destructive' })
+                                return
+                              }
+                              await signOut({ callbackUrl: '/login' })
+                            }}
+                            disabled={isLoading || deletePhrase.trim() !== 'USUŃ KONTO' || !deletePassword}
+                            className="inline-flex items-center gap-2 rounded-xl px-4 h-10 text-sm font-bold text-white bg-red-500/25 border border-red-500/40 hover:bg-red-500/35 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Tak, usuń moje konto
+                          </button>
+                          <button
+                            onClick={() => { setShowDeleteConfirm(false); setDeletePhrase(''); setDeletePassword('') }}
+                            className="inline-flex items-center rounded-xl px-4 h-10 text-sm font-medium text-white/60 hover:text-white bg-white/[0.04] border border-white/[0.08] transition"
+                          >
+                            Anuluj
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={async () => {
-                      if (!confirm('Czy na pewno chcesz trwale usunąć swoje konto? Ta akcja jest nieodwracalna.')) return
-                      const res = await fetch('/api/user/account', { method: 'DELETE' })
-                      if (!res.ok) {
-                        const data = await res.json().catch(() => ({}))
-                        toast({ title: 'Błąd', description: data.error || 'Nie udało się usunąć konta', variant: 'destructive' })
-                        return
-                      }
-                      await signOut({ callbackUrl: '/login' })
-                    }}
-                    className="inline-flex items-center gap-2 rounded-xl px-4 h-10 text-sm font-medium text-red-200 border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 transition"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Usuń konto
-                  </button>
+                  {!showDeleteConfirm && (
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="inline-flex items-center gap-2 rounded-xl px-4 h-10 text-sm font-medium text-red-200 border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 transition shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Usuń konto
+                    </button>
+                  )}
                 </div>
               </div>
             </section>

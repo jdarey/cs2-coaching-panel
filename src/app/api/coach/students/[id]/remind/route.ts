@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
 import { renderEmail } from '@/lib/email-templates'
 import { infoCard } from '@/lib/email-layout'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ const APP_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || 'https://cs2-
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
-  if (!user?.id || user.role !== 'COACH') {
+  if (!user?.id || !isCoachRole(user.role)) {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
   }
 

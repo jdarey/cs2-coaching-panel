@@ -20,20 +20,24 @@ interface HealthResponse {
 export function AdminMonitoringClient() {
   const [data, setData] = useState<HealthResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [autoRefresh, setAutoRefresh] = useState(false)
 
-  const load = async () => {
-    setLoading(true)
+  const load = async (silent = false) => {
+    if (silent) setRefreshing(true)
+    else setLoading(true)
+    setError(null)
     try {
       const res = await fetch('/api/admin/health')
-      if (res.ok) {
-        const data = await res.json()
-        setData(data)
-      }
-    } catch {
-      /* ignore */
+      if (!res.ok) throw new Error(`Health API: ${res.status}`)
+      const data = await res.json()
+      setData(data)
+    } catch (e: any) {
+      setError(e.message || 'Nie udało się pobrać statusu')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -43,7 +47,7 @@ export function AdminMonitoringClient() {
 
   useEffect(() => {
     if (!autoRefresh) return
-    const interval = setInterval(load, 60_000) // co minutę
+    const interval = setInterval(() => load(true), 60_000) // co minutę, cicho (bez migania tabeli)
     return () => clearInterval(interval)
   }, [autoRefresh])
 
@@ -107,7 +111,7 @@ export function AdminMonitoringClient() {
             disabled={loading}
             className="inline-flex items-center gap-2 h-11 rounded-xl px-4 text-sm font-semibold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {loading || refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             Odśwież
           </button>
         </div>
@@ -130,13 +134,18 @@ export function AdminMonitoringClient() {
                   {data.overall.charAt(0).toUpperCase() + data.overall.slice(1)}
                 </span>
               </p>
-              <p className="text-sm text-white/50">Ostatnia kontrola: {formatTime(data.checks[0]?.lastChecked || new Date().toISOString())}</p>
+              <p className="text-sm text-white/50">Ostatnia kontrola: {data.checks.length > 0 ? formatTime(data.checks[0].lastChecked) : '—'}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Checks table */}
+      {error && !data && (
+        <div className="mb-6 rounded-xl px-4 py-3 text-sm border bg-red-500/10 border-red-500/25 text-red-200">
+          {error}
+        </div>
+      )}
       <div className="rounded-2xl border border-white/[0.07] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16 text-white/40 text-sm">

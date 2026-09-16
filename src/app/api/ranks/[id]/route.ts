@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +24,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     // Student can delete own; coach can delete their students' entries
     const isOwn = entry.studentId === userId
     let isCoachOf = false
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const student = await prisma.user.findFirst({
         where: { id: entry.studentId, coachId: userId },
       })

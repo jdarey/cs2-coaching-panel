@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,8 @@ const commentSchema = z.object({
 })
 
 async function canAccessVideo(user: any, videoCoachId: string): Promise<boolean> {
-  if (user.role === 'COACH') return videoCoachId === user.id
+  if (user.role === 'ADMIN') return true
+  if (isCoachRole(user.role)) return videoCoachId === user.id
   if (user.role === 'STUDENT') {
     const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { coachId: true } })
     return (dbUser?.coachId ?? null) === videoCoachId

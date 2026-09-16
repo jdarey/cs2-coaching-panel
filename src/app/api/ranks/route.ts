@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { publishToUsers } from '@/lib/realtime'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     let where: any = {}
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const myStudents = await prisma.user.findMany({
         where: { coachId: userId },
         select: { id: true },
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Coach can log entries for their own students; student logs their own
     let studentId = userId
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const targetId = body.studentId
       if (!targetId) {
         return NextResponse.json({ error: 'studentId wymagany' }, { status: 400 })

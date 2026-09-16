@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { fetchBestFaceitElo, resolveStudentSteamId } from '@/lib/gaming'
 import { CoachStudentDetailClient } from './coach-student-detail-client'
+import { isCoachRole } from '@/lib/roles'
 
 export const metadata = {
   title: 'Profil ucznia',
@@ -12,7 +13,7 @@ export const metadata = {
 export default async function CoachStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user || (session.user as any).role !== 'COACH') {
+  if (!session?.user || !isCoachRole((session.user as any).role)) {
     redirect('/login')
   }
 

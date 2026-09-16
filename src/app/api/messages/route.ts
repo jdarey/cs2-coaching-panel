@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/mail'
 import { renderEmail } from '@/lib/email-templates'
 import { sendDiscordNotification } from '@/lib/discord'
 import { publishToUsers } from '@/lib/realtime'
+import { isCoachRole } from '@/lib/roles'
 
 // Validate that two users are allowed to talk: a coach with their own student
 // (either direction), and only in that relationship.
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Conversation list
-    if (user.role === 'COACH') {
+    if (isCoachRole(user.role)) {
       const students = await prisma.user.findMany({
         where: { coachId: user.id },
         select: { id: true, name: true, email: true, avatarUrl: true },
@@ -176,9 +177,9 @@ export async function POST(request: NextRequest) {
         prisma.user.findUnique({ where: { id: receiverId }, select: { email: true, name: true, role: true, coachId: true } }),
       ])
       if (receiver?.email) {
-        const senderName = sender?.name || (user.role === 'COACH' ? 'Twój trener' : 'Twój uczeń')
+        const senderName = sender?.name || (isCoachRole(user.role) ? 'Twój trener' : 'Twój uczeń')
         const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3000}`
-        const link = user.role === 'COACH' ? `${baseUrl}/student/messages` : `${baseUrl}/coach/messages`
+        const link = isCoachRole(user.role) ? `${baseUrl}/student/messages` : `${baseUrl}/coach/messages`
 
         const safeContent = message.content.replace(/</g, '&lt;').replace(/\n/g, '<br/>')
         // Treść z szablonu (edytowalna w /admin/emails, klucz new-message)

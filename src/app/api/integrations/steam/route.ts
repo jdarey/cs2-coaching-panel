@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { parseSteamIdentifier, resolveSteamVanity } from '@/lib/gaming'
+import { isCoachRole } from '@/lib/roles'
+import { decryptSecret } from '@/lib/crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +49,7 @@ export async function GET(request: NextRequest) {
     // Try the coach's Steam API key for the richer profile (name/avatar). Keyless
     // XML page also exposes steamID64 + personaname, so this is best-effort only.
     let settings: { steamApiKey: string | null } | null = null
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       settings = await prisma.coachSettings.findUnique({
         where: { coachId: userId },
         select: { steamApiKey: true },
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
       settings = (student as any)?.coach?.coachSettings ?? null
     }
 
-    const apiKey = settings?.steamApiKey || process.env.STEAM_API_KEY || null
+    const apiKey = decryptSecret(settings?.steamApiKey) || process.env.STEAM_API_KEY || null
 
     if (apiKey) {
       const url = `${STEAM_API}/ISteamUser/GetPlayerSummaries/v2/?key=${encodeURIComponent(apiKey)}&steamids=${steamId}`

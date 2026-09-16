@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    if ((session.user as any).role !== 'COACH') {
+    if (!isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
 

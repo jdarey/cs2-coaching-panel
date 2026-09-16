@@ -6,13 +6,14 @@ import { sendEmail } from '@/lib/mail'
 import { renderEmail } from '@/lib/email-templates'
 import { infoCard } from '@/lib/email-layout'
 import crypto from 'crypto'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

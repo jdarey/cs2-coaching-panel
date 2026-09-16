@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 // Reads the session from cookies — never prerender this route statically.
 export const dynamic = 'force-dynamic'
@@ -17,7 +18,7 @@ export async function GET() {
 
     const [messages, feedback] = await Promise.all([
       prisma.message.count({ where: { receiverId: user.id, readAt: null } }),
-      user.role === 'COACH'
+      isCoachRole(user.role)
         ? prisma.feedback.count({ where: { coachId: user.id, status: 'NEW' } })
         : Promise.resolve(0),
     ])

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     // Access control
-    if (role === 'COACH' && existing.coachId !== userId) {
+    if (isCoachRole(role) && existing.coachId !== userId) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
     if (role === 'STUDENT' && existing.studentId !== userId) {
@@ -93,7 +94,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     }
 
     // Coach can delete their own assignments; students cannot
-    if (role !== 'COACH' || existing.coachId !== userId) {
+    if (!isCoachRole(role) || existing.coachId !== userId) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
 

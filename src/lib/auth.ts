@@ -58,15 +58,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials')
         }
 
-        // Konto właściciela (admin) wygląda i działa jak zwykły trener —
-        // dostęp do /admin nadaje sam email (lib/admin.ts), nie rola.
-        // Normalizacja: gdyby rola była ADMIN (np. po wcześniejszej wersji),
-        // wracamy do COACH, żeby panele trenera działały normalnie.
+        // Bootstrap admina: email z ADMIN_EMAIL dostaje trwałą rolę ADMIN w
+        // bazie (działa niezależnie od zmiennej przy kolejnych logowaniach).
+        // Konta z rolą ADMIN przechodzą wszędzie tam, gdzie COACH.
         let role = user.role
-        const adminEmail = (process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com')
-        if (user.email.trim().toLowerCase() === adminEmail && user.role !== 'COACH') {
-          role = 'COACH' as any
-          await prisma.user.update({ where: { id: user.id }, data: { role: 'COACH' as any } }).catch(() => {})
+        const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() || ''
+        if (adminEmail && user.email.trim().toLowerCase() === adminEmail && user.role !== 'ADMIN') {
+          role = 'ADMIN' as any
+          await prisma.user.update({ where: { id: user.id }, data: { role: 'ADMIN' as any } }).catch(() => {})
         }
 
         return {

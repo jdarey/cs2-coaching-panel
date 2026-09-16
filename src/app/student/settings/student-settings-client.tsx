@@ -168,8 +168,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
       return
     }
 
-    if (formData.newPassword.length < 6) {
-      toast({ title: 'Błąd', description: 'Nowe hasło musi mieć minimum 6 znaków', variant: 'destructive' })
+    if (formData.newPassword.length < 8) {
+      toast({ title: 'Błąd', description: 'Nowe hasło musi mieć minimum 8 znaków', variant: 'destructive' })
       return
     }
 
@@ -523,8 +523,8 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
                         value={formData.newPassword}
                         onChange={(e) => setFormData((prev) => ({ ...prev, newPassword: e.target.value }))}
                         required
-                        minLength={6}
-                        placeholder="Min. 6 znaków"
+                        minLength={8}
+                        placeholder="Min. 8 znaków"
                         className={inputBase}
                       />
                     </div>

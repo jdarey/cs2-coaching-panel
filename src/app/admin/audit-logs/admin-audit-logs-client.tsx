@@ -110,18 +110,23 @@ export function AdminAuditLogsClient() {
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35" />
-            <input
+            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35 pointer-events-none" />
+            <select
               value={filters.action}
               onChange={(e) => handleFilterChange('action', e.target.value)}
-              placeholder="Filtruj po akcji…"
-              className="w-full h-11 rounded-xl bg-black/30 border border-white/[0.08] pl-10 pr-4 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30"
-            />
+              className="w-full h-11 rounded-xl bg-black/30 border border-white/[0.08] pl-10 pr-4 text-sm outline-none focus:border-[#a78bfa]/50 text-white/80 [color-scheme:dark]"
+            >
+              <option value="">Wszystkie akcje</option>
+              {actions.map((a) => (
+                <option key={a} value={a}>{formatAction(a)}</option>
+              ))}
+            </select>
           </div>
           <input
             value={filters.actorId}
             onChange={(e) => handleFilterChange('actorId', e.target.value)}
-            placeholder="ID aktora (email)"
+            placeholder="ID aktora (cuid, nie email)"
+            title="Wklej ID użytkownika (cuid) — filtrowanie po emailu nie jest wspierane"
             className="h-11 rounded-xl bg-black/30 border border-white/[0.08] px-3.5 text-sm outline-none focus:border-[#a78bfa]/50 placeholder:text-white/30"
           />
           <input
@@ -168,8 +173,8 @@ export function AdminAuditLogsClient() {
                       {formatAction(log.action)}
                     </span>
                     <p className="text-sm font-semibold text-white flex-1 min-w-0 truncate">
-                      {log.actor.name || log.actor.email}
-                      <span className="text-white/40 ml-2">({log.actor.email})</span>
+                      {log.actor?.name || log.actor?.email || log.actorId}
+                      <span className="text-white/40 ml-2">({log.actor?.email || log.actorId})</span>
                     </p>
                     {log.targetId && (
                       <span className="text-xs text-white/35 font-mono bg-white/[0.03] px-2 py-0.5 rounded">{log.targetType}: {log.targetId}</span>

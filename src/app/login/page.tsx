@@ -27,13 +27,24 @@ function LoginForm() {
   // component can be executed on the server (Suspense fallback path), where
   // `window` does not exist — accessing it there crashed the whole /login
   // request (and the dev server) with ReferenceError.
-  const callbackUrl = (() => {
+  // Open-redirect guard: akceptujemy TYLKO ścieżki względne z tej samej
+  // domeny. Absolutne URL-e, //evil.com i backslashe lądują na '/'.
+  const callbackPath = (() => {
     if (typeof window === 'undefined') return '/'
     const raw = searchParams.get('callbackUrl')
-    return raw
-      ? (raw.startsWith('http') ? raw : new URL(raw, window.location.origin).toString())
-      : window.location.origin + '/'
+    if (!raw) return '/'
+    try {
+      const parsed = new URL(raw, window.location.origin)
+      if (parsed.origin !== window.location.origin) return '/'
+      if (!parsed.pathname.startsWith('/')) return '/'
+      return parsed.pathname + parsed.search + parsed.hash
+    } catch {
+      return '/'
+    }
   })()
+  // next-auth/react parsuje odpowiedź przez `new URL(data.url)` — musi być
+  // absolutny i tej samej domeny, inaczej cały login pada z generycznym błędem.
+  const callbackUrl = typeof window === 'undefined' ? '/' : window.location.origin + callbackPath
   const urlError = searchParams.get('error')
   const registered = searchParams.get('registered')
 
@@ -79,9 +90,9 @@ function LoginForm() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-14 font-sans text-white overflow-hidden">
       <RedirectOverlay
-        to={callbackUrl}
+        to={callbackPath}
         visible={redirecting}
-        label={callbackUrl === '/' ? 'Otwieramy Twój dashboard' : 'Otwieramy żądaną stronę'}
+        label={callbackPath === '/' ? 'Otwieramy Twój dashboard' : 'Otwieramy żądaną stronę'}
         stages={['Uwierzytelnianie', 'Weryfikacja sesji', 'Przygotowanie panelu', 'Prawie gotowe']}
       />
       <AuroraBackground variant="auth" intensity={0.9} />
@@ -227,7 +238,7 @@ function LoginForm() {
               <span className="absolute inline-flex h-full w-full rounded-full bg-[#34d399] opacity-60 animate-ping" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#34d399]" />
             </span>
-            Wszystkie systemy działają · dane szyfrowane end-to-end
+            Wszystkie systemy działają · połączenie szyfrowane TLS
           </span>
         </p>
       </div>

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check access
-    if (role === 'COACH' && sessionRecord.coachId !== userId) {
+    if (isCoachRole(role) && sessionRecord.coachId !== userId) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
     if (role === 'STUDENT' && sessionRecord.studentId !== userId) {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check access
-    if (role === 'COACH' && sessionRecord.coachId !== userId) {
+    if (isCoachRole(role) && sessionRecord.coachId !== userId) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
     if (role === 'STUDENT' && sessionRecord.studentId !== userId) {
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Students can't create private notes
-    const isPrivate = role === 'COACH' ? validated.isPrivate : false
+    const isPrivate = isCoachRole(role) ? validated.isPrivate : false
 
     const note = await prisma.sessionNote.create({
       data: {

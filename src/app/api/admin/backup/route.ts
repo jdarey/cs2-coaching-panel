@@ -450,7 +450,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    await audit.backupRestored('admin', 'admin', `restored-${Date.now()}.json`)
+    await audit.backupRestored(admin.id, admin.role, `restored-${Date.now()}.json`)
 
     return NextResponse.json({ ok: true, message: 'Baza przywrócona pomyślnie' })
   } catch (e: any) {

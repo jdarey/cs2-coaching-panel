@@ -8,8 +8,9 @@ import { renderEmail } from '@/lib/email-templates'
 export const dynamic = 'force-dynamic'
 
 // Admin klika "Resetuj hasło": tworzymy token (ważny 1h) i wysyłamy maila
-// tym samym szablonem co zwykły reset. Zwracamy też link — gdyby mail nie
-// doszedł (limity), admin wyśle go ręcznie (Discord/SMS).
+// tym samym szablonem co zwykły reset. Surowy link zwracamy TYLKO gdy mail
+// nie doszedł (limity) — inaczej token lądowałby w logach/proxy przy
+// każdym resecie. Klient pokazuje link do ręcznego skopiowania.
 export async function POST(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdmin()
@@ -36,5 +37,9 @@ export async function POST(_request: NextRequest, { params }: { params: { id: st
   )
   const mailResult = await sendEmail({ to: user.email, subject, html, text })
 
-  return NextResponse.json({ ok: true, emailSent: mailResult.ok, resetUrl })
+  return NextResponse.json({
+    ok: true,
+    emailSent: mailResult.ok,
+    ...(mailResult.ok ? {} : { resetUrl }),
+  })
 }

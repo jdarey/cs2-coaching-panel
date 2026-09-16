@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sessionUpdateSchema, sessionTagSchema, sessionVideoSchema } from '@/lib/validations'
+import { isCoachRole } from '@/lib/roles'
 
 export async function GET(
   request: NextRequest,
@@ -37,7 +38,7 @@ export async function GET(
     }
 
     // Check access
-    if (role === 'COACH' && existingSession.coachId !== userId) {
+    if (isCoachRole(role) && existingSession.coachId !== userId) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
     if (role === 'STUDENT' && existingSession.studentId !== userId) {
@@ -65,7 +66,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może edytować sesje' }, { status: 403 })
     }
 
@@ -146,7 +147,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może usuwać sesje' }, { status: 403 })
     }
 

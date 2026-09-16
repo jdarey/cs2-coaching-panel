@@ -14,9 +14,7 @@ import {
   ShieldCheck, MessageSquare, MessageSquareHeart, ListChecks, Timer, Swords, Megaphone, GraduationCap, Zap, Crown, Wallet,
 } from 'lucide-react'
 
-// Email właściciela — to samo co ADMIN_EMAIL na serwerze (lib/admin.ts).
-// NEXT_PUBLIC_*, żeby było widoczne w przeglądarce; fallback hardcoded.
-const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com')
+import { isAdminUser, isCoachRole } from '@/lib/roles'
 
 type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback' }
 
@@ -69,7 +67,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
     router.refresh()
   }
 
-  if ((user as any)?.role !== 'COACH') return null
+  if (!isCoachRole((user as any)?.role)) return null
 
   return (
     <div className="relative min-h-screen bg-[#07060c] font-sans text-white overflow-x-clip">
@@ -200,8 +198,8 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                   </li>
                 </ul>
               </div>
-              {/* Panel admina — tylko właściciel (ADMIN_EMAIL) */}
-              {(user as any)?.email?.trim().toLowerCase() === ADMIN_EMAIL && (
+              {/* Panel admina — rola ADMIN lub email z ADMIN_EMAIL */}
+              {isAdminUser({ role: (user as any)?.role, email: (user as any)?.email }) && (
                 <div className="mb-2">
                   <p className="px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold">Administracja</p>
                   <ul className="space-y-0.5">

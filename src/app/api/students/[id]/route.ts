@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export async function GET(
   _request: NextRequest,
@@ -9,7 +10,7 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może przeglądać uczniów' }, { status: 403 })
     }
 
@@ -59,7 +60,7 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może edytować uczniów' }, { status: 403 })
     }
 
@@ -117,7 +118,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może usuwać uczniów' }, { status: 403 })
     }
 

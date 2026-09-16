@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getYouTubeId, getVideoThumbnail } from '@/lib/utils'
 import { getVideoDuration } from '@/lib/video-duration'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +35,7 @@ async function fetchTitleFromUrl(url: string): Promise<string | null> {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
-  if (!user?.id || user.role !== 'COACH') {
+  if (!user?.id || !isCoachRole(user.role)) {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
   }
 

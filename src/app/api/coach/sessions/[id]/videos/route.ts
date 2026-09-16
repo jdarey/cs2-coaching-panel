@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getYouTubeId, getVideoThumbnail } from '@/lib/utils'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 // Same include shape the coach session detail page passes to the client,
 // so the client can replace its local session state with the response.
@@ -58,7 +59,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może przypisywać filmy' }, { status: 403 })
     }
 
@@ -150,7 +151,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może usuwać filmy z sesji' }, { status: 403 })
     }
 

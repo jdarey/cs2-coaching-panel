@@ -8,6 +8,7 @@ import { StudentLayout } from '@/components/student-layout'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDateTime } from '@/lib/utils'
+import { isCoachRole } from '@/lib/roles'
 import {
   ArrowLeft, Loader2, Swords, Trophy, Crosshair, TrendingUp, TrendingDown, Minus,
   Bot, Crown, Target, Timer, Shield, Flame, AlertTriangle, Sparkles, ChevronDown, ChevronUp, ExternalLink,
@@ -131,7 +132,7 @@ export function StudentMatchDetailClient() {
   const params = useParams<{ id: string }>()
   const matchId = params.id
   const { data: session } = useSession()
-  const isCoach = (session?.user as any)?.role === 'COACH'
+  const isCoach = isCoachRole((session?.user as any)?.role)
   const Layout = isCoach ? CoachLayout : StudentLayout
   const backHref = isCoach ? '/coach/matches' : '/student/matches'
   const [data, setData] = useState<DetailData | null>(null)

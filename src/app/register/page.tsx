@@ -66,7 +66,7 @@ function RegisterForm() {
         return ''
       case 'password':
         if (!value) return 'Hasło jest wymagane'
-        if (value.length < 6) return 'Hasło musi mieć minimum 6 znaków'
+        if (value.length < 8) return 'Hasło musi mieć minimum 8 znaków'
         return ''
       case 'confirmPassword':
         if (value !== formData.password) return 'Hasła nie są identyczne'

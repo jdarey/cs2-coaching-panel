@@ -308,6 +308,14 @@ export function AdminUsersClient() {
                     <User className="w-3.5 h-3.5" /> Zaloguj jako
                   </button>
                   <button
+                    onClick={() => toggleGaming(u)}
+                    title="Edycja kont gier i trenera (Faceit / Steam)"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-sky-300 bg-sky-500/[0.08] border border-sky-500/20 hover:bg-sky-500/15"
+                  >
+                    <Gamepad2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Konta</span>
+                  </button>
+                  <button
                     onClick={() => resetPassword(u)}
                     disabled={busyId === u.id}
                     title="Wyślij link resetujący hasło"

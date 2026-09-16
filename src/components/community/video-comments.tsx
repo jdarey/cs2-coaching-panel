@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { MessageCircle, Send, Loader2, ShieldCheck } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
+import { isCoachRole } from '@/lib/roles'
 
 interface Comment {
   id: string
@@ -118,7 +119,7 @@ export function VideoComments({ videoId, myRole }: { videoId: string; myRole: 's
             </p>
           ) : (
             comments.map((c) => {
-              const isCoach = c.author.role === 'COACH'
+              const isCoach = isCoachRole(c.author.role)
               return (
                 <div key={c.id} className={`rounded-2xl p-4 border ${isCoach ? 'border-[#2de5ca]/25 bg-[#2de5ca]/[0.05]' : 'bg-white/[0.03] border-white/[0.06]'}`}>
                   <div className="flex items-center gap-2">

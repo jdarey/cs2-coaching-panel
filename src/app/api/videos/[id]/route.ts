@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { videoUpdateSchema } from '@/lib/validations'
 import { getVideoThumbnail } from '@/lib/utils'
+import { isCoachRole } from '@/lib/roles'
 
 export async function PUT(
   request: NextRequest,
@@ -11,7 +12,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może edytować filmy' }, { status: 403 })
     }
 
@@ -69,7 +70,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może usuwać filmy' }, { status: 403 })
     }
 

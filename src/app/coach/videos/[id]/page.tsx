@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getYouTubeId, getVideoEmbedUrl } from '@/lib/utils'
 import { CoachVideoPlayerClient } from './coach-video-player-client'
+import { isCoachRole } from '@/lib/roles'
 
 export const metadata = {
   title: 'Podgląd filmu',
@@ -11,7 +12,7 @@ export const metadata = {
 
 export default async function CoachVideoPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
-  if (!session?.user || (session.user as any).role !== 'COACH') redirect('/login')
+  if (!session?.user || !isCoachRole((session.user as any).role)) redirect('/login')
   const { id } = await params
   const userId = (session.user as any).id
   const video = await prisma.video.findFirst({

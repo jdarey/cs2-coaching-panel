@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Rutyna nie znaleziona' }, { status: 404 })
     }
     // Coach must own it; student must have it assigned
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       if (routine.coachId !== userId) {
         return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
       }
@@ -76,7 +77,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    if ((session.user as any).role !== 'COACH') {
+    if (!isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
 
@@ -166,7 +167,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    if ((session.user as any).role !== 'COACH') {
+    if (!isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
 

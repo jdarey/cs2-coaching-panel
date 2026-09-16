@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendDiscordNotification } from '@/lib/discord'
+import { isCoachRole } from '@/lib/roles'
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
     }
 
-    if (user.role === 'COACH') {
+    if (isCoachRole(user.role)) {
       const feedback = await prisma.feedback.findMany({
         where: { coachId: user.id },
         include: {

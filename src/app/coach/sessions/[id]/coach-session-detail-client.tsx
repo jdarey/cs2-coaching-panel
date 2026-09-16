@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { isCoachRole } from '@/lib/roles'
 import {
   formatDate,
   formatDateTime,
@@ -913,12 +914,12 @@ export function CoachSessionDetailClient({ initialSession, initialProgress }: Co
                               <span
                                 className={cn(
                                   'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border',
-                                  note.user.role === 'COACH'
+                                  isCoachRole(note.user.role)
                                     ? 'bg-[#a78bfa]/10 text-[#c4b5fd] border-[#a78bfa]/25'
                                     : 'bg-blue-400/10 text-blue-300 border-blue-400/25'
                                 )}
                               >
-                                {note.user.role === 'COACH' ? 'Trener' : 'Uczeń'}
+                                {isCoachRole(note.user.role) ? 'Trener' : 'Uczeń'}
                               </span>
                               {note.isPrivate && (
                                 <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border bg-pink-400/10 text-pink-300 border-pink-400/25">

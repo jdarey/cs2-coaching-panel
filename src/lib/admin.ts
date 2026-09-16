@@ -1,21 +1,12 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { ADMIN_EMAIL, isAdminEmail, isAdminUser } from '@/lib/roles'
 
-// Jedyny admin. Zmiana wymaga też zmiany w authorize() (auth.ts),
-// który nadaje rolę ADMIN przy logowaniu.
-export const ADMIN_EMAIL =
-  process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com'
-
-export function isAdminEmail(email: string | null | undefined): boolean {
-  return !!email && email.trim().toLowerCase() === ADMIN_EMAIL
-}
+// Re-exporty dla kompatybilności — kanoniczne definicje żyją w lib/roles.ts.
+export { ADMIN_EMAIL, isAdminEmail }
 
 export function isAdmin(user: { role?: string; email?: string | null } | null | undefined): boolean {
-  if (!user) return false
-  if (user.role === 'ADMIN') return true
-  // Pas awaryjny: nawet gdyby rola w bazie była inna, właścicielski email
-  // zawsze przechodzi (chroni przed przypadkowym odebraniem sobie dostępu).
-  return isAdminEmail(user.email)
+  return isAdminUser(user)
 }
 
 export interface AdminUser {

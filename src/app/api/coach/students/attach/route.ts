@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,7 @@ const schema = z.object({ studentId: z.string().min(1) })
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!session?.user || !isCoachRole((session.user as any).role)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const coachId = (session.user as any).id
     const body = await request.json()
     const { studentId } = schema.parse(body)

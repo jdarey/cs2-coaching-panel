@@ -3,11 +3,12 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { isCoachRole } from '@/lib/roles'
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może zarządzać uczniami' }, { status: 403 })
     }
 
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może dodawać uczniów' }, { status: 403 })
     }
 
@@ -68,8 +69,8 @@ export async function POST(request: NextRequest) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Podaj poprawny email' }, { status: 400 })
     }
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Hasło musi mieć min. 6 znaków' }, { status: 400 })
+    if (password.length < 8) {
+      return NextResponse.json({ error: 'Hasło musi mieć min. 8 znaków' }, { status: 400 })
     }
 
     const userId = (session.user as any).id

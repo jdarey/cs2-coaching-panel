@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // Students log their own sessions; coaches can log for their students too
     let studentId = userId
-    if ((session.user as any).role === 'COACH' && body.studentId) {
+    if (isCoachRole((session.user as any).role) && body.studentId) {
       const student = await prisma.user.findFirst({
         where: { id: body.studentId, coachId: userId },
         select: { id: true },
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
 
     // Coach can query a specific student's practice
     let studentId = userId
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const target = searchParams.get('studentId')
       if (target) {
         const student = await prisma.user.findFirst({

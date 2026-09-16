@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const role = (session.user as any).role
     const { searchParams } = new URL(request.url)
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const studentId = searchParams.get('studentId')
       if (!studentId) {
         return NextResponse.json({ error: 'Podaj studentId' }, { status: 400 })
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     let studentId = userId
     let coachId: string | null = null
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       if (!body.studentId) {
         return NextResponse.json({ error: 'Podaj studentId' }, { status: 400 })
       }

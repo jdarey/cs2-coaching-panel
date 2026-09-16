@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { fetchFaceitLegacy } from '@/lib/gaming'
+import { isCoachRole } from '@/lib/roles'
+import { decryptSecret } from '@/lib/crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +15,7 @@ async function getFaceitApiKey(userId: string, role: string): Promise<string | n
   if (envKey) return envKey
 
   let settings: { faceitApiKey: string | null } | null = null
-  if (role === 'COACH') {
+  if (isCoachRole(role)) {
     settings = await prisma.coachSettings.findUnique({
       where: { coachId: userId },
       select: { faceitApiKey: true },
@@ -25,7 +27,7 @@ async function getFaceitApiKey(userId: string, role: string): Promise<string | n
     })
     settings = (student as any)?.coach?.coachSettings ?? null
   }
-  return settings?.faceitApiKey || null
+  return decryptSecret(settings?.faceitApiKey) || null
 }
 
 // Keyless first (Faceit legacy endpoint), Open API as an optional upgrade.

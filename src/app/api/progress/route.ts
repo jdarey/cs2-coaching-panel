@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { videoProgressSchema } from '@/lib/validations'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     let where: any = {}
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       // Coach can see progress of their students
       const studentIds = await prisma.user.findMany({
         where: { coachId: userId },
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       }
 
       const role = (session.user as any).role
-      if (role === 'COACH' && sessionRecord.coachId !== userId) {
+      if (isCoachRole(role) && sessionRecord.coachId !== userId) {
         return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
       }
       if (role === 'STUDENT' && sessionRecord.studentId !== userId) {

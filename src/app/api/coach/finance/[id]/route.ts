@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +32,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   try {
     const session = await getServerSession(authOptions)
     const user = session?.user as any
-    if (!user?.id || user.role !== 'COACH') {
+    if (!user?.id || !isCoachRole(user.role)) {
       return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
     }
 
@@ -71,7 +72,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   try {
     const session = await getServerSession(authOptions)
     const user = session?.user as any
-    if (!user?.id || user.role !== 'COACH') {
+    if (!user?.id || !isCoachRole(user.role)) {
       return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
     }
 

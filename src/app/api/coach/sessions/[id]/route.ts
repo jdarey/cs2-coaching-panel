@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sessionUpdateSchema } from '@/lib/validations'
+import { isCoachRole } from '@/lib/roles'
 
 const sessionInclude = {
   tags: { include: { tag: true }, orderBy: { order: 'asc' } },
@@ -25,7 +26,7 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może edytować sesje' }, { status: 403 })
     }
 

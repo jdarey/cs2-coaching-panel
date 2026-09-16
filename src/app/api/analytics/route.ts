@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const studentId = searchParams.get('studentId')
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       // Coach analytics - overview of all students or specific student
       let where: any = { coachId: userId }
       if (studentId) where.id = studentId

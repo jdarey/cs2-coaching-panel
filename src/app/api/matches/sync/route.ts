@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { syncStudentMatches } from '@/lib/matches'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
     const role = (session.user as any).role
 
     let studentId = userId
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       const body = await request.json().catch(() => ({}))
       if (!body.studentId) {
         return NextResponse.json({ error: 'Podaj studentId' }, { status: 400 })

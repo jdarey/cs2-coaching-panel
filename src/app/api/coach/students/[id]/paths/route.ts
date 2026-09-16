@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
-  if (!session?.user || (session.user as any).role !== 'COACH') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session?.user || !isCoachRole((session.user as any).role)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { id: studentId } = await params
   const coachId = (session.user as any).id
   const student = await prisma.user.findFirst({ where: { id: studentId, coachId }, select: { id: true, coachId: true } })

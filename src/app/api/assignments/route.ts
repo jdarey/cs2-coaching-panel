@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     let where: any = {}
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       // Coach sees assignments for their own students (optionally one student)
       const myStudents = await prisma.user.findMany({
         where: { coachId: userId },
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    if ((session.user as any).role !== 'COACH') {
+    if (!isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }
 

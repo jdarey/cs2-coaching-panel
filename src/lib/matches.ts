@@ -17,6 +17,7 @@ import {
   type LeetifyMatch,
 } from '@/lib/gaming'
 import { analyzeMatch, matchVerdict, recordSkillSnapshot, toPercent, type LeetifyProfileLike } from '@/lib/ai-coach'
+import { decryptSecret } from '@/lib/crypto'
 
 /** True when a stored match must be removed because it wasn't synced from the current Steam account. */
 export function shouldPurgeMatch(
@@ -121,7 +122,7 @@ export async function syncStudentMatches(studentId: string): Promise<StudentMatc
       where: { coachId: student.coachId },
       select: { faceitApiKey: true },
     })
-    faceitKey = settings?.faceitApiKey || null
+    faceitKey = decryptSecret(settings?.faceitApiKey) || null
   }
 
   let matches: LeetifyMatch[] = []

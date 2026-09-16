@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { tagSchema, tagUpdateSchema } from '@/lib/validations'
+import { isCoachRole } from '@/lib/roles'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     // Students see global tags only (or tags from their coach)
     let where: any = {}
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       where = {
         OR: [{ coachId: userId }, { isGlobal: true }],
       }
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener może tworzyć tagi' }, { status: 403 })
     }
 

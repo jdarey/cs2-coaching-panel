@@ -4,10 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { passwordSchema as newPasswordSchema } from '@/lib/validations'
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, 'Obecne hasło jest wymagane'),
-  newPassword: z.string().min(6, 'Nowe hasło musi mieć minimum 6 znaków'),
+  newPassword: newPasswordSchema,
 })
 
 export async function PUT(request: NextRequest) {

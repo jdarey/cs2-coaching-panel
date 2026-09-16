@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,7 @@ export async function GET() {
   // The session token only carries id + role — load coachId from the DB so
   // students see exactly their own coach's announcements.
   let coachId: string | null = null
-  if (user.role === 'COACH') {
+  if (isCoachRole(user.role)) {
     coachId = user.id
   } else if (user.role === 'STUDENT') {
     const dbUser = await prisma.user.findUnique({
@@ -55,7 +56,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
-  if (!user?.id || user.role !== 'COACH') {
+  if (!user?.id || !isCoachRole(user.role)) {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
   }
 

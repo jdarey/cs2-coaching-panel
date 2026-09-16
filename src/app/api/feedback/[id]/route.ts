@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export async function PATCH(
   request: NextRequest,
@@ -22,7 +23,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Opinia nie znaleziona' }, { status: 404 })
     }
 
-    if (user.role === 'COACH') {
+    if (isCoachRole(user.role)) {
       if (existing.coachId !== user.id) {
         return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
       }
@@ -69,7 +70,7 @@ export async function DELETE(
     }
     // Usunąć może autor-uczeń albo trener-adresat
     const isOwner = existing.studentId === user.id
-    const isCoach = user.role === 'COACH' && existing.coachId === user.id
+    const isCoach = isCoachRole(user.role) && existing.coachId === user.id
     if (!isOwner && !isCoach) {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
     }

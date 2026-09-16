@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
     const role = (session.user as any).role
     const { searchParams } = new URL(request.url)
 
-    if (role === 'COACH') {
+    if (isCoachRole(role)) {
       // Coach: all students' matches, optionally filtered by student
       const studentId = searchParams.get('studentId')
       const myStudents = await prisma.user.findMany({

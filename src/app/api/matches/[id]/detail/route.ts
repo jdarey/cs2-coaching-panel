@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { fetchFaceitMatchDetails, fetchLeetifyMatchDetails } from '@/lib/gaming'
+import { isCoachRole } from '@/lib/roles'
+import { decryptSecret } from '@/lib/crypto'
 
 // Resolve the Faceit API key: env first, then the coach's stored settings.
 async function getFaceitApiKey(coachId: string | null | undefined): Promise<string | null> {
@@ -12,7 +14,7 @@ async function getFaceitApiKey(coachId: string | null | undefined): Promise<stri
     where: { coachId },
     select: { faceitApiKey: true },
   })
-  return settings?.faceitApiKey || null
+  return decryptSecret(settings?.faceitApiKey) || null
 }
 
 export const dynamic = 'force-dynamic'
@@ -36,7 +38,7 @@ async function getOwnedMatch(id: string, userId: string, role: string) {
   })
   if (!match) return null
   if (role === 'STUDENT' && match.studentId !== userId) return null
-  if (role === 'COACH') {
+  if (isCoachRole(role)) {
     const student = await prisma.user.findFirst({
       where: { id: match.studentId, coachId: userId },
       select: { id: true },

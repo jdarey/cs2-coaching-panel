@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { decryptSecret } from '@/lib/crypto'
 
 // Discord webhook notifications for the coach. The webhook URL and the
 // notificationDiscord toggle live in CoachSettings (settings page). This
@@ -26,11 +27,12 @@ export async function sendDiscordNotification({
       select: { notificationDiscord: true, discordWebhook: true },
     })
 
-    if (!settings?.notificationDiscord || !settings.discordWebhook) {
+    const webhook = decryptSecret(settings?.discordWebhook)
+    if (!settings?.notificationDiscord || !webhook) {
       return
     }
 
-    await fetch(settings.discordWebhook, {
+    await fetch(webhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

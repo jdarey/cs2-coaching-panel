@@ -97,6 +97,10 @@ model User {
   // Password reset tokens
   passwordResetTokens PasswordResetToken[]
 
+  // Admin impersonation (as admin / as target)
+  impersonationsGranted ImpersonationToken[] @relation("ImpersonationAsAdmin")
+  impersonationsReceived ImpersonationToken[] @relation("ImpersonationAsTarget")
+
   // Coach private notes on students
   coachNotes    CoachStudentNote[] @relation("CoachNotesAsCoach")
   studentCoachNotes CoachStudentNote[] @relation("CoachNotesAsStudent")
@@ -266,6 +270,24 @@ model SessionTemplateVideo {
 
   @@index([templateId])
   @@index([videoId])
+}
+
+// One-time admin impersonation tokens (hashed at rest, single-use).
+model ImpersonationToken {
+  id        String    @id @default(cuid())
+  adminId   String
+  targetId  String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  admin  User @relation("ImpersonationAsAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  target User @relation("ImpersonationAsTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([targetId])
+  @@index([expiresAt])
 }
 
 // One-time password reset tokens (hashed at rest).

@@ -1,6 +1,14 @@
 import { z } from 'zod'
 
 // Auth
+// Jedno źródło zasad dla NOWYCH haseł (rejestracja, reset, zmiana,
+// zakładanie konta przez trenera). Login celowo łagodniejszy — bcrypt
+// i tak weryfikuje, a nie odrzucamy nikogo z hasłem sprzed zaostrzenia.
+export const passwordSchema = z
+  .string()
+  .min(8, 'Hasło musi mieć minimum 8 znaków')
+  .max(128, 'Hasło jest za długie (max 128 znaków)')
+
 export const loginSchema = z.object({
   email: z.string().email('Nieprawidłowy email'),
   password: z.string().min(6, 'Hasło musi mieć minimum 6 znaków'),
@@ -10,6 +18,7 @@ export const registerSchema = loginSchema.extend({
   name: z.string().min(2, 'Imię musi mieć minimum 2 znaki').optional(),
   role: z.enum(['COACH', 'STUDENT']),
   inviteToken: z.string().optional(),
+  password: passwordSchema,
 })
 
 // Tags

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { isCoachRole } from '@/lib/roles'
+import { decryptSecret } from '@/lib/crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,18 +31,18 @@ export async function POST(request: NextRequest) {
     } else {
       // Fall back to the saved key
       key = process.env.FACEIT_API_KEY || null
-      if (!key && role === 'COACH') {
+      if (!key && isCoachRole(role)) {
         const settings = await prisma.coachSettings.findUnique({
           where: { coachId: userId },
           select: { faceitApiKey: true },
         })
-        key = settings?.faceitApiKey || null
+        key = decryptSecret(settings?.faceitApiKey) || null
       } else if (!key) {
         const student = await prisma.user.findUnique({
           where: { id: userId },
           select: { coach: { select: { coachSettings: { select: { faceitApiKey: true } } } } },
         })
-        key = (student as any)?.coach?.coachSettings?.faceitApiKey || null
+        key = decryptSecret((student as any)?.coach?.coachSettings?.faceitApiKey) || null
       }
     }
 

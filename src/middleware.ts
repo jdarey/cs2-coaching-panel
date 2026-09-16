@@ -1,25 +1,33 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { isAdminUser, isCoachRole } from '@/lib/roles'
+import { checkRateLimit, type RateKind } from '@/lib/ratelimit'
 
-// Rate limiting store (in production use Redis/Upstash)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
+function tooMany(kind: RateKind) {
+  return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
+    status: 429,
+    headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+  })
+}
 
-function rateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now()
-  const record = rateLimitStore.get(key)
-
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs })
-    return true
+// Ścieżki wrażliwe: zaproszenia, eksporty, backup, heartbeat, integracje
+// zewnętrzne — wspólny, ostrzejszy kubełek niż zwykłe API.
+function sensitiveKind(pathname: string): RateKind | null {
+  if (pathname === '/api/auth/forgot-password' || pathname === '/api/auth/reset-password') return 'forgot'
+  if (
+    pathname.startsWith('/api/coach/students/invite') ||
+    pathname.startsWith('/api/admin/backup') ||
+    pathname.startsWith('/api/admin/users/export') ||
+    pathname.startsWith('/api/coach/finance/export') ||
+    pathname.startsWith('/api/presence/heartbeat') ||
+    pathname.startsWith('/api/integrations/') ||
+    pathname.startsWith('/api/videos/duration') ||
+    pathname.startsWith('/api/videos/backfill')
+  ) {
+    return 'sensitive'
   }
-
-  if (record.count >= limit) {
-    return false
-  }
-
-  record.count++
-  return true
+  return null
 }
 
 export async function middleware(request: NextRequest) {
@@ -91,26 +99,14 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPath = pathname.startsWith('/api/auth/') || pathname === '/login' || pathname === '/register'
 
-  if (isAuthPath && !isDev && clientIp) {
-    const key = `auth:${clientIp}`
-
-    if (!rateLimit(key, 10, 60 * 1000)) { // 10 requests per minute
-      return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
-        status: 429,
-        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
-      })
-    }
-  }
-
-  // Rate limiting for API endpoints
-  if (pathname.startsWith('/api/') && !isDev && clientIp) {
-    const key = `api:${clientIp}`
-
-    if (!rateLimit(key, 100, 60 * 1000)) { // 100 requests per minute
-      return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
-        status: 429,
-        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
-      })
+  if (!isDev && clientIp) {
+    const sensitive = sensitiveKind(pathname)
+    if (sensitive) {
+      if (!(await checkRateLimit(sensitive, clientIp)).ok) return tooMany(sensitive)
+    } else if (isAuthPath) {
+      if (!(await checkRateLimit('auth', clientIp)).ok) return tooMany('auth')
+    } else if (pathname.startsWith('/api/')) {
+      if (!(await checkRateLimit('api', clientIp)).ok) return tooMany('api')
     }
   }
 
@@ -128,14 +124,13 @@ export async function middleware(request: NextRequest) {
   if (token && isProtected) {
     const role = (token as any).role
     const email = (token as any).email as string | undefined
-    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'jdarey032@gmail.com'
-    // Admin to konto trenera z dodatkowymi prawami: widzi zwykły panel
+    // Admin (rola ADMIN lub email z ADMIN_EMAIL) widzi zwykły panel
     // trenera, a do /admin przechodzi przyciskiem w menu bocznym.
-    const isAdmin = role === 'ADMIN' || (!!email && email.trim().toLowerCase() === adminEmail)
+    const isAdmin = isAdminUser({ role, email })
     if (pathname.startsWith('/admin') && !isAdmin) {
-      return NextResponse.redirect(new URL(role === 'COACH' ? '/coach/dashboard' : '/student/dashboard', request.url))
+      return NextResponse.redirect(new URL(isCoachRole(role) ? '/coach/dashboard' : '/student/dashboard', request.url))
     }
-    if (pathname.startsWith('/coach') && role !== 'COACH' && !isAdmin) {
+    if (pathname.startsWith('/coach') && !isCoachRole(role) && !isAdmin) {
       return NextResponse.redirect(new URL('/student/dashboard', request.url))
     }
     if (pathname.startsWith('/student') && role !== 'STUDENT' && !isAdmin) {

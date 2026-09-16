@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { taxStatus, UNREGISTERED_MONTHLY_LIMIT_PLN, TAX_YEAR } from '@/lib/finance-tax'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,7 @@ async function coachId() {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
   if (!user?.id) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
-  if (user.role !== 'COACH') return { error: NextResponse.json({ error: 'Brak dostępu' }, { status: 403 }) }
+  if (!isCoachRole(user.role)) return { error: NextResponse.json({ error: 'Brak dostępu' }, { status: 403 }) }
   return { id: user.id as string }
 }
 

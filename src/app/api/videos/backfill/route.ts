@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getVideoDuration } from '@/lib/video-duration'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -10,7 +11,7 @@ export const maxDuration = 30
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user as any).role !== 'COACH') {
+    if (!session?.user || !isCoachRole((session.user as any).role)) {
       return NextResponse.json({ error: 'Tylko trener' }, { status: 403 })
     }
     const userId = (session.user as any).id

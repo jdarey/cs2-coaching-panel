@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { computeStreak, startOfDay } from '@/lib/community'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +15,7 @@ export async function GET() {
   }
 
   // Session token only carries id + role — load coachId from the DB.
-  let coachId: string | null = user.role === 'COACH' ? user.id : null
+  let coachId: string | null = isCoachRole(user.role) ? user.id : null
   if (user.role === 'STUDENT') {
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ const noteSchema = z.object({
 async function getCoachAndStudent(studentId: string) {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
-  if (!user?.id || user.role !== 'COACH') return null
+  if (!user?.id || !isCoachRole(user.role)) return null
   const student = await prisma.user.findFirst({
     where: { id: studentId, role: 'STUDENT', coachId: user.id },
     select: { id: true, email: true, name: true },
