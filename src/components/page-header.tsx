@@ -18,12 +18,12 @@ export function PageHeader({ icon: Icon, label, title, subtitle, children }: Pag
     <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0a0c0e] animate-rise-in">
       {/* Ambient glow + hairline */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.035] to-transparent" />
-      <div className="pointer-events-none absolute -top-24 right-24 h-56 w-56 rounded-full bg-[#8b5cf6]/15 blur-3xl animate-float-slow" />
+      <div className="pointer-events-none absolute -top-24 right-24 h-56 w-56 rounded-full bg-[#8b5cf6]/15 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#a78bfa]/50 to-transparent" />
 
       <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 px-5 sm:px-7 py-6">
         <div className="flex items-start gap-4 min-w-0">
-          <div className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/25 animate-pulse-ring shadow-[0_0_32px_-8px_rgba(139,92,246,0.55)]">
+          <div className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/25 shadow-[0_0_32px_-8px_rgba(139,92,246,0.55)]">
             <Icon className="h-5 w-5 text-white" strokeWidth={2.2} />
             <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
           </div>

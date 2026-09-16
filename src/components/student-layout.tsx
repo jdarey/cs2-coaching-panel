@@ -159,11 +159,11 @@ export function StudentLayout({ children }: { children: ReactNode }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-white focus:text-black focus:text-sm focus:font-semibold">Przejdź do treści</a>
       <AuroraBackground />
 
-      {/* Ambient floating orbs — premium depth */}
+      {/* Ambient orbs — static (frozen drift animations: sustained GPU cost) */}
       <div className="pointer-events-none fixed inset-0 -z-[5] overflow-hidden" aria-hidden>
-        <div className="absolute top-1/4 -left-24 h-80 w-80 rounded-full bg-[#6d28d9]/20 blur-[100px] animate-float-slow" />
-        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#a78bfa]/10 blur-[110px] animate-float-reverse" />
-        <div className="absolute top-2/3 left-1/3 h-72 w-72 rounded-full bg-[#8b5cf6]/12 blur-[90px] animate-float" />
+        <div className="absolute top-1/4 -left-24 h-80 w-80 rounded-full bg-[#6d28d9]/20 blur-[100px]" />
+        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#a78bfa]/10 blur-[110px]" />
+        <div className="absolute top-2/3 left-1/3 h-72 w-72 rounded-full bg-[#8b5cf6]/12 blur-[90px]" />
       </div>
 
       {/* Mobile overlay */}
@@ -196,7 +196,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                 className="flex items-center gap-3 group"
                 onClick={() => setMobileSidebarOpen(false)}
               >
-                <div className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] animate-pulse-ring shadow-[0_0_24px_-6px_rgba(139,92,246,0.5)] transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
+                <div className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow-[0_0_24px_-6px_rgba(139,92,246,0.5)] transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
                   <GraduationCap className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
                 </div>

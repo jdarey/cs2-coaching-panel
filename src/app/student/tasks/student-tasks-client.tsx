@@ -117,31 +117,43 @@ export function StudentTasksClient() {
   const [sleepDraft, setSleepDraft] = useState<number | null>(null)
   const [savingNote, setSavingNote] = useState(false)
   const [repeatingId, setRepeatingId] = useState<string | null>(null)
-  const [gifPreview, setGifPreview] = useState<{ src: string; title: string } | null>(null)
+  const [gifPreview, setGifPreview] = useState<{ src: string; title: string; x: number; y: number } | null>(null)
   const gifPreviewRef = useRef<HTMLDivElement | null>(null)
 
   const canHover = () =>
     typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
 
-  // Zero animacji: podgląd pojawia się i znika natychmiast, pozycja
-  // ustawiana wprost (bez pętli rAF / lerpu / tiltu) — sama transformata GPU.
-  const placeGifPreview = (cx: number, cy: number) => {
-    const el = gifPreviewRef.current
-    if (!el) return
-    const W = 344, H = 320, GAP = 26
-    let x = cx + GAP, y = cy - H / 2
-    if (x + W > window.innerWidth - 12) x = cx - W - GAP
-    if (y + H > window.innerHeight - 12) y = window.innerHeight - H - 12
+  // Zero animacji: podgląd pokazuje się i znika natychmiast. Pozycja liczona
+  // SYNCHRONICZNIE w handlerze i trafia do stanu — pierwszy paint jest od razu
+  // dobry (wcześniej karta przez klatkę migała w lewym górnym rogu, bo
+  // pozycja ustawiana była dopiero w rAF po mount).
+  const clampGifPos = (cx: number, cy: number, w: number, h: number) => {
+    const GAP = 26
+    let x = cx + GAP, y = cy - h / 2
+    if (x + w > window.innerWidth - 12) x = cx - w - GAP
+    if (y + h > window.innerHeight - 12) y = window.innerHeight - h - 12
     if (x < 12) x = 12
     if (y < 12) y = 12
-    el.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`
+    return { x: Math.round(x), y: Math.round(y) }
+  }
+  const writeGifPos = (x: number, y: number) => {
+    gifPreviewRef.current?.style.setProperty('transform', `translate3d(${x}px, ${y}px, 0)`)
   }
   const openGifPreview = (src: string, title: string, cx: number, cy: number) => {
-    setGifPreview({ src, title })
-    requestAnimationFrame(() => placeGifPreview(cx, cy))
+    const pos = clampGifPos(cx, cy, 344, 320)
+    setGifPreview({ src, title, ...pos })
+    // Jednorazowa korekta po mount prawdziwymi wymiarami karty.
+    requestAnimationFrame(() => {
+      const el = gifPreviewRef.current
+      if (!el) return
+      const fixed = clampGifPos(cx, cy, el.offsetWidth || 344, el.offsetHeight || 320)
+      writeGifPos(fixed.x, fixed.y)
+    })
   }
   const moveGifPreview = (cx: number, cy: number) => {
-    if (gifPreviewRef.current) placeGifPreview(cx, cy)
+    if (!gifPreviewRef.current) return
+    const pos = clampGifPos(cx, cy, 344, 320)
+    writeGifPos(pos.x, pos.y)
   }
   const closeGifPreview = () => setGifPreview(null)
   const killGifPreview = () => setGifPreview(null)
@@ -908,7 +920,7 @@ export function StudentTasksClient() {
 
         {/* Podgląd GIF-a — statyczny, bez animacji (tylko desktop z myszką) */}
         {gifPreview && (
-          <div ref={gifPreviewRef} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[344px] will-change-transform">
+          <div ref={gifPreviewRef} style={{ transform: `translate3d(${gifPreview.x}px, ${gifPreview.y}px, 0)` }} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[344px] will-change-transform">
             <div className="relative">
               <div className="absolute -inset-2 rounded-[20px] bg-gradient-to-br from-[#a78bfa]/25 via-[#2dd4bf]/10 to-transparent blur-xl" />
               <div className="yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12] shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)]">
