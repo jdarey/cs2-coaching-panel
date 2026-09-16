@@ -812,6 +812,18 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
+  /* ===== GIF preview — mega smooth SaaS enter/exit (zero overshoot) ===== */
+  .gif-enter { animation: gif-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .gif-exit { animation: gif-out 0.15s cubic-bezier(0.4, 0, 0.2, 1) both; }
+  @keyframes gif-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.94); filter: blur(6px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  }
+  @keyframes gif-out {
+    from { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    to { opacity: 0; transform: translateY(6px) scale(0.96); filter: blur(4px); }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-aurora, .animate-aurora-slow, .animate-aurora-reverse,
     .animate-rise-in, .rise-in, .animate-fade-up, .marquee-track, .live-dot::after,
@@ -819,7 +831,8 @@
     .animate-pop-in, .animate-pulse-ring::before, .animate-pulse-ring::after,
     .animate-gradient-shift, .animate-grid-drift, .animate-twinkle,
     .animate-shimmer::after, .animate-border-flow::before, .particle,
-    .animate-comet, .animate-letter, .animate-btn-gradient, .animate-icon-bounce {
+    .animate-comet, .animate-letter, .animate-btn-gradient, .animate-icon-bounce,
+    .gif-enter, .gif-exit {
       animation: none !important;
     }
     .animate-letter { opacity: 1; }

@@ -118,6 +118,7 @@ export function StudentTasksClient() {
   const [savingNote, setSavingNote] = useState(false)
   const [repeatingId, setRepeatingId] = useState<string | null>(null)
   const [gifPreview, setGifPreview] = useState<{ src: string; title: string } | null>(null)
+  const [gifClosing, setGifClosing] = useState(false)
   const gifPreviewRef = useRef<HTMLDivElement | null>(null)
   const gifTarget = useRef({ x: 0, y: 0 })
   const gifCur = useRef({ x: 0, y: 0 })
@@ -156,16 +157,28 @@ export function StudentTasksClient() {
     gifTarget.current = { x: cx, y: cy }
     if (fresh) gifCur.current = { x: cx, y: cy }
     gifOpen.current = true
+    setGifClosing(false)
     setGifPreview({ src, title })
   }
   const closeGifPreview = () => {
     if (gifCloseTimer.current) clearTimeout(gifCloseTimer.current)
-    // mikro-opóźnienie = płynne przejście między wierszami bez mrugania
+    if (!gifOpen.current) return
+    // Freeze pozycji + szybkie czyste wyjście (150ms), bez mrugania przy
+    // przechodzeniu między wierszami (open anuluje timer i cofa exit).
+    gifOpen.current = false
+    if (gifRaf.current) { cancelAnimationFrame(gifRaf.current); gifRaf.current = null }
+    setGifClosing(true)
     gifCloseTimer.current = setTimeout(() => {
-      gifOpen.current = false
-      if (gifRaf.current) { cancelAnimationFrame(gifRaf.current); gifRaf.current = null }
       setGifPreview(null)
-    }, 80)
+      setGifClosing(false)
+    }, 150)
+  }
+  const killGifPreview = () => {
+    if (gifCloseTimer.current) { clearTimeout(gifCloseTimer.current); gifCloseTimer.current = null }
+    gifOpen.current = false
+    if (gifRaf.current) { cancelAnimationFrame(gifRaf.current); gifRaf.current = null }
+    setGifClosing(false)
+    setGifPreview(null)
   }
 
   useEffect(() => {
@@ -554,7 +567,7 @@ export function StudentTasksClient() {
               const totalMins = (ra.routine.tasks||[]).reduce((a:number,t:any)=>a+(t.minutes||0),0)
 
               return (
-                <div key={ra.id} className={cn('group/routine relative overflow-hidden rounded-[28px] border bg-[#0c0c14]/70 backdrop-blur-xl transition-all duration-500 rise-in', expanded ? 'border-[#a78bfa]/30 shadow-[0_20px_80px_-20px_rgba(139,92,246,0.4),0_8px_32px_-12px_rgba(0,0,0,0.5)] scale-[1.005]' : 'border-white/[0.07] hover:border-white/[0.12] hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] hover:-translate-y-1', completed ? 'ring-1 ring-emerald-500/20' : '')} style={{ animationDelay: `${i * 90}ms` }} onMouseMove={spotlightHandler}>
+                <div key={ra.id} className={cn('group/routine relative overflow-hidden rounded-[28px] border bg-[#0c0c14]/70 backdrop-blur-xl transition-all duration-500 rise-in', expanded ? 'border-[#a78bfa]/30 shadow-[0_20px_80px_-20px_rgba(139,92,246,0.4),0_8px_32px_-12px_rgba(0,0,0,0.5)] scale-[1.005]' : 'border-white/[0.07] hover:border-white/[0.12] hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] hover:-translate-y-1', completed ? 'ring-1 ring-[#a78bfa]/25' : '')} style={{ animationDelay: `${i * 90}ms` }} onMouseMove={spotlightHandler}>
                   {/* animated gradient border when expanded */}
                   {expanded && <div className="pointer-events-none absolute inset-0 rounded-[28px] p-px bg-gradient-to-br from-[#a78bfa]/40 via-[#2dd4bf]/20 to-transparent opacity-60" style={{ WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude', padding: '1px' }} />}
                   {/* subtle mesh glow */}
@@ -564,14 +577,14 @@ export function StudentTasksClient() {
                   <button onClick={() => setExpandedRoutine(expanded ? null : ra.id)} className="relative w-full flex items-center gap-4 sm:gap-5 p-5 sm:p-6 text-left">
                     {/* icon + circular progress */}
                     <div className="relative shrink-0">
-                      <div className={cn('relative grid place-items-center w-[56px] h-[56px] rounded-[18px] ring-1 transition-all duration-500', completed ? 'bg-gradient-to-br from-[#34d399] to-[#0d9488] ring-emerald-400/30 shadow-[0_10px_30px_-10px_rgba(52,211,153,0.6)]' : 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/20 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)] group-hover/routine:shadow-[0_14px_40px_-10px_rgba(139,92,246,0.7)] group-hover/routine:scale-[1.02]')}>
+                      <div className={cn('relative grid place-items-center w-[56px] h-[56px] rounded-[18px] ring-1 transition-all duration-500', completed ? 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/25 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.7)]' : 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/20 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)] group-hover/routine:shadow-[0_14px_40px_-10px_rgba(139,92,246,0.7)] group-hover/routine:scale-[1.02]')}>
                         {completed ? <Trophy className="w-6 h-6 text-white drop-shadow" /> : <Zap className="w-6 h-6 text-white drop-shadow" />}
                         {!completed && pct>0 && pct<100 && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#22c55e] ring-2 ring-[#0c0c14] animate-pulse" />}
                       </div>
                       {/* circular pct ring */}
                       <svg className="pointer-events-none absolute -inset-1.5 h-[68px] w-[68px] -rotate-90" viewBox="0 0 68 68">
                         <circle cx="34" cy="34" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-                        <circle cx="34" cy="34" r="30" fill="none" stroke={completed ? "#10b981" : "url(#grad-"+ra.id+")"} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${2*Math.PI*30}`} strokeDashoffset={`${2*Math.PI*30*(1-pct/100)}`} className="transition-all duration-1000 ease-out" style={{ filter: 'drop-shadow(0 0 6px rgba(139,92,246,0.4))' }} />
+                        <circle cx="34" cy="34" r="30" fill="none" stroke={completed ? "#a78bfa" : "url(#grad-"+ra.id+")"} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${2*Math.PI*30}`} strokeDashoffset={`${2*Math.PI*30*(1-pct/100)}`} className="transition-all duration-1000 ease-out" style={{ filter: 'drop-shadow(0 0 6px rgba(139,92,246,0.4))' }} />
                         <defs>
                           <linearGradient id={"grad-"+ra.id} x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stopColor="#a78bfa" />
@@ -583,13 +596,13 @@ export function StudentTasksClient() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={cn('font-display text-[17px] sm:text-[19px] font-black tracking-tight leading-tight', completed ? 'text-emerald-100' : 'text-white group-hover/routine:text-white')}>{ra.routine.title}</h3>
+                        <h3 className={cn('font-display text-[17px] sm:text-[19px] font-black tracking-tight leading-tight', completed ? 'text-white' : 'text-white group-hover/routine:text-white')}>{ra.routine.title}</h3>
                         {completed ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200 shadow-[0_0_20px_-6px_rgba(16,185,129,0.5)]"><Star className="w-3 h-3 fill-emerald-300"/> Ukończona</span>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#a78bfa]/15 border border-[#a78bfa]/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#e9d5ff] shadow-[0_0_20px_-6px_rgba(139,92,246,0.5)]"><Star className="w-3 h-3 fill-[#c4b5fd]"/> Ukończona</span>
                         ) : (
                           <>
                             {ra.routine.recurring && <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/20 border border-[#a78bfa]/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#e9d5ff]"><Repeat className="w-3 h-3" /> Codziennie</span>}
-                            <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border', pct===100 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : pct>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.04] border-white/[0.07] text-white/50')}>{pct}%</span>
+                            <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border', pct===100 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/25 text-[#c4b5fd]' : pct>0 ? 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd]' : 'bg-white/[0.04] border-white/[0.07] text-white/50')}>{pct}%</span>
                           </>
                         )}
                         {ra.endsAt && <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-white/[0.04] border border-white/[0.07] px-2.5 py-1 text-[11px] font-semibold text-white/50"><Calendar className="w-3 h-3" /> do {formatDate(ra.endsAt)}</span>}
@@ -600,18 +613,18 @@ export function StudentTasksClient() {
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/70"><Layers className="w-3 h-3 text-[#a78bfa]"/>{days.length} {days.length===1?'dzień':'dni'}</span>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/70"><ListChecks className="w-3 h-3 text-[#2dd4bf]"/>{totalCount} zadań</span>
                         {totalMins>0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/60"><Clock className="w-3 h-3 text-[#fbbf24]"/>~{totalMins} min</span>}
-                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-white/40 ml-1"><span className={cn('h-1.5 w-1.5 rounded-full', pct===100?'bg-emerald-400': pct>60?'bg-[#a78bfa]':'bg-white/30')}/> {doneCountR}/{totalCount}</span>
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-white/40 ml-1"><span className={cn('h-1.5 w-1.5 rounded-full', pct===100?'bg-[#a78bfa]': pct>60?'bg-[#a78bfa]':'bg-white/30')}/> {doneCountR}/{totalCount}</span>
                       </div>
 
                       <div className="mt-3 flex items-center gap-3">
                         <div className="flex-1 max-w-[340px] h-[6px] rounded-full bg-white/[0.06] overflow-hidden p-[2px]">
                           <div className="relative h-full rounded-full overflow-hidden" style={{ width: '100%' }}>
-                            <div className={cn('absolute inset-0 rounded-full transition-all duration-1000 ease-out', completed ? 'bg-gradient-to-r from-[#34d399] via-[#10b981] to-[#059669]' : 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf]')} style={{ width: `${pct}%` }}>
+                            <div className={cn('absolute inset-0 rounded-full transition-all duration-1000 ease-out', completed ? 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf]')} style={{ width: `${pct}%` }}>
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-[shimmer_2s_ease-in-out_infinite]" style={{ backgroundSize: '200% 100%' }} />
                             </div>
                           </div>
                         </div>
-                        <span className={cn('text-xs font-black tabular-nums tracking-wide', completed ? 'text-emerald-300' : 'text-white/60')}>{pct}%</span>
+                        <span className={cn('text-xs font-black tabular-nums tracking-wide', completed ? 'text-[#c4b5fd]' : 'text-white/60')}>{pct}%</span>
                       </div>
 
                       {completed && ra.routine.recurring && (
@@ -665,26 +678,26 @@ export function StudentTasksClient() {
                               <div key={d} className="relative" style={{ animationDelay: `${dayIdx*80}ms` }}>
                                 {/* day header */}
                                 <div className="flex items-center gap-3 mb-4 sm:pl-10">
-                                  <span className={cn('hidden sm:grid place-items-center absolute left-0 w-9 h-9 rounded-xl ring-1 text-xs font-black shadow-lg', isDayDone ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-emerald-400/20' : dayPct>0 ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white ring-white/15' : 'bg-white/[0.06] text-white/40 ring-white/10')}>
+                                    <span className={cn('hidden sm:grid place-items-center absolute left-0 w-9 h-9 rounded-xl ring-1 text-xs font-black shadow-lg', isDayDone ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white ring-[#a78bfa]/30 shadow-[0_6px_18px_-6px_rgba(139,92,246,0.6)]' : dayPct>0 ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white ring-white/15' : 'bg-white/[0.06] text-white/40 ring-white/10')}>
                                     {isDayDone ? <Check className="w-4 h-4" strokeWidth={3}/> : d}
                                   </span>
                                   <div className="flex items-center gap-3 flex-wrap">
-                                    <span className={cn('inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] border', isDayDone ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' : 'bg-gradient-to-br from-[#a78bfa]/15 to-[#2dd4bf]/10 border-[#a78bfa]/20 text-[#e9d5ff]')}>
-                                      <span className={cn('h-1.5 w-1.5 rounded-full', isDayDone ? 'bg-emerald-400' : 'bg-[#a78bfa] animate-pulse')}/> Dzień {String(d).padStart(2,'0')}
+                                      <span className={cn('inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] border', isDayDone ? 'bg-[#a78bfa]/10 border-[#a78bfa]/25 text-[#c4b5fd]' : 'bg-gradient-to-br from-[#a78bfa]/15 to-[#2dd4bf]/10 border-[#a78bfa]/20 text-[#e9d5ff]')}>
+                                        <span className={cn('h-1.5 w-1.5 rounded-full', isDayDone ? 'bg-[#a78bfa]' : 'bg-[#a78bfa] animate-pulse')}/> Dzień {String(d).padStart(2,'0')}
                                     </span>
                                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] px-2.5 py-1 text-[11px] font-bold text-white/50"><Clock className="w-3 h-3"/>{dayTasks.reduce((a,t:any)=>a+(t.minutes||0),0)} min</span>
-                                    <span className={cn('text-xs font-bold tabular-nums', isDayDone ? 'text-emerald-300' : 'text-white/50')}>{dayDone}/{dayTasks.length}</span>
+                                      <span className={cn('text-xs font-bold tabular-nums', isDayDone ? 'text-[#c4b5fd]' : 'text-white/50')}>{dayDone}/{dayTasks.length}</span>
                                   </div>
                                   <div className="ml-auto hidden sm:flex items-center gap-2">
                                     <div className="h-1.5 w-24 rounded-full bg-white/[0.06] overflow-hidden">
-                                      <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]')} style={{ width: `${dayPct}%` }} />
+                                      <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#a78bfa] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]')} style={{ width: `${dayPct}%` }} />
                                     </div>
-                                    <span className={cn('text-[11px] font-black tabular-nums min-w-[36px] text-right', isDayDone ? 'text-emerald-300' : 'text-white/40')}>{dayPct}%</span>
+                                      <span className={cn('text-[11px] font-black tabular-nums min-w-[36px] text-right', isDayDone ? 'text-[#c4b5fd]' : 'text-white/40')}>{dayPct}%</span>
                                   </div>
                                 </div>
                                 {/* mobile progress */}
                                 <div className="sm:hidden h-1 rounded-full bg-white/[0.06] overflow-hidden mb-4 ml-1">
-                                  <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#34d399] to-[#10b981]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${dayPct}%` }} />
+                                  <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#a78bfa] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${dayPct}%` }} />
                                 </div>
 
                                 <div className="space-y-3 sm:pl-10">
@@ -706,7 +719,7 @@ export function StudentTasksClient() {
                                     return (
                                       <div
                                         key={t.id}
-                                        onClick={()=> { setGifPreview(null); setSelectedTask(t); setSelectedAssignment(ra) }}
+                                        onClick={()=> { killGifPreview(); setSelectedTask(t); setSelectedAssignment(ra) }}
                                         onMouseEnter={(e)=>{ if (t.gifUrl && canHover()) openGifPreview(t.gifUrl, t.title, e.clientX, e.clientY) }}
                                         onMouseMove={(e)=>{ gifTarget.current = { x: e.clientX, y: e.clientY } }}
                                         onMouseLeave={closeGifPreview}
@@ -716,13 +729,13 @@ export function StudentTasksClient() {
                                           'hover:-translate-y-[2px] hover:scale-[1.005]',
                                           isNext && !done ? 'ring-1 ring-[#a78bfa]/25 shadow-[0_12px_40px_-12px_rgba(139,92,246,0.45)]' : '',
                                           done
-                                            ? 'bg-gradient-to-br from-emerald-500/[0.07] via-emerald-500/[0.03] to-transparent border-emerald-500/20 opacity-90 hover:opacity-100'
+                                            ? 'bg-gradient-to-br from-[#a78bfa]/[0.09] via-[#8b5cf6]/[0.04] to-transparent border-[#a78bfa]/25 opacity-95 hover:opacity-100 shadow-[0_8px_32px_-12px_rgba(139,92,246,0.35)]'
                                             : isNext ? 'bg-gradient-to-br from-white/[0.055] via-[#a78bfa]/[0.05] to-white/[0.03] border-[#a78bfa]/25'
                                             : 'bg-white/[0.04] border-white/[0.07] hover:bg-white/[0.06] hover:border-white/[0.12]',
                                         )}
                                       >
                                         {/* left accent */}
-                                        <span className="pointer-events-none absolute left-0 top-3 bottom-3 w-[4px] rounded-full transition-all duration-300 group-hover/task:top-2 group-hover/task:bottom-2" style={{ background: done ? '#10b981' : ac.bar, boxShadow: `0 0 14px ${done ? 'rgba(16,185,129,0.5)' : ac.glow}`, opacity: done ? 0.9 : 0.9 }} />
+                                        <span className="pointer-events-none absolute left-0 top-3 bottom-3 w-[4px] rounded-full transition-all duration-300 group-hover/task:top-2 group-hover/task:bottom-2" style={{ background: done ? '#a78bfa' : ac.bar, boxShadow: `0 0 14px ${done ? 'rgba(139,92,246,0.55)' : ac.glow}`, opacity: done ? 0.9 : 0.9 }} />
                                         <span className="pointer-events-none absolute -top-14 -right-14 h-32 w-32 rounded-full blur-2xl opacity-0 group-hover/task:opacity-100 transition duration-500" style={{ background: ac.soft }} />
                                         {isNext && !done && (
                                           <span className="pointer-events-none absolute -top-px left-6 inline-flex items-center gap-1 rounded-b-lg bg-gradient-to-r from-[#a78bfa] to-[#6d28d9] px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white shadow">NASTĘPNY</span>
@@ -735,13 +748,13 @@ export function StudentTasksClient() {
                                           aria-label={done ? 'Cofnij' : 'Zalicz'}
                                           className={cn('relative shrink-0 grid place-items-center w-[44px] h-[44px] rounded-[13px] transition-all duration-200 active:scale-90 cursor-pointer select-none',
                                             done
-                                              ? 'bg-gradient-to-br from-[#34d399] to-[#059669] text-white ring-1 ring-white/15 shadow-[0_6px_18px_-6px_rgba(16,185,129,0.6)]'
+                                              ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white ring-1 ring-white/25 shadow-[0_6px_18px_-6px_rgba(139,92,246,0.7)]'
                                               : isNext ? 'bg-white text-[#0a0a14] shadow-md hover:scale-[1.04]'
                                               : 'bg-white/[0.07] text-white/40 border border-white/10 hover:bg-white hover:text-[#0a0a14] hover:border-white hover:scale-[1.04]'
                                           )}
                                         >
                                           {togglingTask === t.id ? <Loader2 className="w-5 h-5 animate-spin" /> : done ? <Check className="w-5 h-5" strokeWidth={3} /> : isNext ? <Play className="w-4 h-4 ml-0.5 fill-[#0a0a14]" /> : <Circle className="w-5 h-5" />}
-                                          {done && <span className="pointer-events-none absolute inset-0 rounded-[13px] ring-1 ring-emerald-400/30 animate-[ping_1s_cubic-bezier(0,0,0.2,1)_1]" />}
+                                          {done && <span className="pointer-events-none absolute inset-0 rounded-[13px] ring-1 ring-[#a78bfa]/40 animate-[ping_1s_cubic-bezier(0,0,0.2,1)_1]" />}
                                         </button>
 
                                         {/* tytuł + minimal meta */}
@@ -753,13 +766,13 @@ export function StudentTasksClient() {
                                             {t.minutes && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-white/[0.06] border-white/[0.08] text-white/50')}><Clock className="w-3 h-3"/>{t.minutes} min</span>}
                                             {t.video?.url && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-[#a78bfa]/10 border-[#a78bfa]/15 text-[#c4b5fd]')}><Film className="w-3 h-3"/>Wideo</span>}
                                             {hasGif && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd] group-hover/task:bg-[#a78bfa]/15 group-hover/task:border-[#a78bfa]/30 transition')}><ImageIcon className="w-3 h-3"/>GIF</span>}
-                                            {done && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300/70"><Check className="w-3 h-3"/>Zaliczone</span>}
+                                            {done && <span className="inline-flex items-center gap-1 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 px-2 py-0.5 text-[11px] font-semibold text-[#c4b5fd]"><Check className="w-3 h-3"/>Zaliczone</span>}
                                             {!done && <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/25">• kliknij by zobaczyć opis</span>}
                                           </div>
                                         </div>
 
                                         {/* strzałka — podgląd GIF-a wyskakuje za kursorem */}
-                                        <span className={cn('hidden sm:grid place-items-center shrink-0 h-9 w-9 rounded-xl border transition-all duration-300', done ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-white/[0.04] border-white/[0.06] text-white/20 group-hover/task:bg-white group-hover/task:text-[#0a0a14] group-hover/task:border-white group-hover/task:scale-105')}>
+                                        <span className={cn('hidden sm:grid place-items-center shrink-0 h-9 w-9 rounded-xl border transition-all duration-300', done ? 'bg-[#a78bfa]/10 border-[#a78bfa]/25 text-[#c4b5fd]' : 'bg-white/[0.04] border-white/[0.06] text-white/20 group-hover/task:bg-white group-hover/task:text-[#0a0a14] group-hover/task:border-white group-hover/task:scale-105')}>
                                           <ArrowRight className="w-4 h-4" />
                                         </span>
                                       </div>
@@ -945,7 +958,7 @@ export function StudentTasksClient() {
           <div ref={gifPreviewRef} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[344px] will-change-transform">
             <div className="relative">
               <div className="absolute -inset-2 rounded-[20px] bg-gradient-to-br from-[#a78bfa]/25 via-[#2dd4bf]/10 to-transparent blur-xl" />
-              <div className="yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12]/95 backdrop-blur-xl shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)] animate-[pop-in_0.25s_cubic-bezier(0.22,1.4,0.36,1)]">
+              <div className={cn('yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12]/95 backdrop-blur-xl shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)]', gifClosing ? 'gif-exit' : 'gif-enter')}>
                 <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-[#a78bfa]/[0.08] to-transparent border-b border-white/[0.07]">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow"><Play className="w-3 h-3 text-white fill-white" /></span>
                   <p className="flex-1 truncate text-[13px] font-bold text-white">{gifPreview.title}</p>
