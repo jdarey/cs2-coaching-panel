@@ -75,12 +75,11 @@ jobs:
       - name: Generate Prisma Client
         run: npm run db:generate
 
+      # Build NIE może touchować bazy: npm run build robi "prisma db push",
+      # który wymaga żywej bazy. W CI wystarczy sam next build (schema jest
+      # sprawdzana przez db:generate, a migracje robi deploy/docelowe env).
       - name: Build application
-        run: npm run build
-        env:
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx next build
 
   deploy-preview:
     name: Deploy Preview
