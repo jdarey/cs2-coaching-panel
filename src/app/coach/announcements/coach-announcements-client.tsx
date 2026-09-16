@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Megaphone, Plus, Pin, Trash2, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
+import { Megaphone, Plus, Pin, Trash2, Loader2, CheckCircle2, Sparkles, Pencil } from 'lucide-react'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
 import { formatDate } from '@/lib/utils'
@@ -20,6 +20,7 @@ export function CoachAnnouncementsClient() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ title: '', content: '', pinned: false })
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,6 +94,47 @@ export function CoachAnnouncementsClient() {
     }
   }
 
+  const startEdit = (a: Announcement) => {
+    setForm({ title: a.title, content: a.content, pinned: a.pinned })
+    setEditingId(a.id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setForm({ title: '', content: '', pinned: false })
+    setError(null)
+  }
+
+  const saveEdit = async () => {
+    if (!editingId) return
+    if (!form.title.trim() || !form.content.trim()) {
+      setError('Podaj tytuł i treść ogłoszenia')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/announcements/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: form.title, content: form.content }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data.error || 'Nie udało się zapisać')
+        return
+      }
+      setAnnouncements((prev) => prev.map((x) => (x.id === editingId ? data.announcement : x)))
+      toast({ title: 'Zapisano', description: 'Ogłoszenie zaktualizowane' })
+      cancelEdit()
+    } catch {
+      setError('Błąd sieci')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <CoachLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -107,7 +149,7 @@ export function CoachAnnouncementsClient() {
         <div className="glass-card rise-in relative rounded-3xl p-6 md:p-7 mt-6 overflow-hidden">
           <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#a78bfa]/10 blur-3xl pointer-events-none" />
           <p className="relative z-10 text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Plus className="w-4 h-4 text-[#c4b5fd]" /> Nowe ogłoszenie
+            {editingId ? <Pencil className="w-4 h-4 text-[#c4b5fd]" /> : <Plus className="w-4 h-4 text-[#c4b5fd]" />} {editingId ? 'Edytuj ogłoszenie' : 'Nowe ogłoszenie'}
           </p>
           <div className="relative z-10 space-y-3">
             <input
@@ -133,15 +175,26 @@ export function CoachAnnouncementsClient() {
               <Pin className="w-4 h-4 text-[#c4b5fd]" /> Przypnij na górze
             </label>
             {error && <p className="text-xs text-red-300">{error}</p>}
-            <button
-              onClick={create}
-              disabled={saving}
-              className="relative inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white btn-darey overflow-hidden disabled:opacity-60"
-            >
-              <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
-              Opublikuj ogłoszenie
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={editingId ? saveEdit : create}
+                disabled={saving}
+                className="relative inline-flex items-center gap-2 rounded-xl px-6 h-11 text-sm font-semibold text-white btn-darey overflow-hidden disabled:opacity-60"
+              >
+                <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? <Pencil className="w-4 h-4" /> : <Megaphone className="w-4 h-4" />}
+                {editingId ? 'Zapisz zmiany' : 'Opublikuj ogłoszenie'}
+              </button>
+              {editingId && (
+                <button
+                  onClick={cancelEdit}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-xl px-5 h-11 text-sm font-medium text-white/65 hover:text-white glass-liquid transition disabled:opacity-60"
+                >
+                  Anuluj
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -173,6 +226,13 @@ export function CoachAnnouncementsClient() {
                     <h3 className="font-display text-lg font-bold truncate">{a.title}</h3>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => startEdit(a)}
+                      title="Edytuj"
+                      className="grid place-items-center w-9 h-9 rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-[#a78bfa]/10 hover:border-[#a78bfa]/30 transition-all"
+                    >
+                      <Pencil className="w-4 h-4 text-white/40 hover:text-[#c4b5fd]" />
+                    </button>
                     <button
                       onClick={() => togglePin(a)}
                       title={a.pinned ? 'Odepnij' : 'Przypnij'}

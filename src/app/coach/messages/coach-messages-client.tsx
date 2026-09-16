@@ -57,12 +57,35 @@ export function CoachMessagesClient() {
   }, [loadConversations])
 
   // Deep-link support: /coach/messages?student=<id> opens that conversation.
+  // Działa też dla ucznia bez historii (stub z /api/students) — inaczej przycisk
+  // "Napisz wiadomość" w profilu ucznia otwierał pustą listę.
   useEffect(() => {
-    if (activeId || conversations.length === 0) return
+    if (activeId) return
     const sid = new URLSearchParams(window.location.search).get('student')
-    if (sid && conversations.some((c) => c.id === sid)) {
+    if (!sid) return
+    if (conversations.some((c) => c.id === sid)) {
       setActiveId(sid)
+      return
     }
+    if (conversations.length === 0) return // poczekaj na listę
+    ;(async () => {
+      try {
+        const res = await fetch('/api/students')
+        if (!res.ok) return
+        const data = await res.json()
+        const list = Array.isArray(data) ? data : data.students ?? []
+        const s = list.find((x: any) => x.id === sid)
+        if (!s) return
+        setConversations((prev) =>
+          prev.some((c) => c.id === sid)
+            ? prev
+            : [...prev, { id: s.id, name: s.name ?? null, email: s.email ?? null, avatarUrl: s.avatarUrl ?? null, lastMessage: null, unread: 0 }],
+        )
+        setActiveId(sid)
+      } catch {
+        /* ignore */
+      }
+    })()
   }, [conversations, activeId])
 
   useEffect(() => {

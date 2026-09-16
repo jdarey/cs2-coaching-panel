@@ -43,8 +43,8 @@ interface CoachTagsClientProps {
 }
 
 const DEFAULT_COLORS = [
-  '#8b5cf6', '#a78bfa', '#a78bfa', '#ec4899',
-  '#fbbf24', '#a78bfa', '#34d399', '#c4b5fd',
+  '#8b5cf6', '#a78bfa', '#2dd4bf', '#ec4899',
+  '#fbbf24', '#38bdf8', '#34d399', '#c4b5fd',
   '#f97316', '#6366f1',
 ]
 
@@ -292,20 +292,24 @@ export function CoachTagsClient({ initialTags }: CoachTagsClientProps) {
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => openEditDialog(tag)}
-                        className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#a78bfa]/25 transition"
-                        aria-label="Edytuj"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(tag.id)}
-                        className="grid h-9 w-9 place-items-center rounded-xl text-red-300/70 hover:text-red-200 transition border border-red-500/15 hover:border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
-                        aria-label="Usuń"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {!tag.isGlobal && (
+                        <>
+                          <button
+                            onClick={() => openEditDialog(tag)}
+                            className="grid h-9 w-9 place-items-center rounded-xl glass-liquid text-white/65 hover:text-white hover:border-[#a78bfa]/25 transition"
+                            aria-label="Edytuj"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(tag.id)}
+                            className="grid h-9 w-9 place-items-center rounded-xl text-red-300/70 hover:text-red-200 transition border border-red-500/15 hover:border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+                            aria-label="Usuń"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 

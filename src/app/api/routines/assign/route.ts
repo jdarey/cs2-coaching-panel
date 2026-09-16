@@ -83,3 +83,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Błąd przypisywania rutyny' }, { status: 500 })
   }
 }
+
+// DELETE ?assignmentId= — odpięcie rutyny od ucznia (postęp kaskadowo).
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!isCoachRole((session.user as any).role)) {
+      return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
+    }
+    const userId = (session.user as any).id
+    const assignmentId = new URL(request.url).searchParams.get('assignmentId')
+    if (!assignmentId) {
+      return NextResponse.json({ error: 'Brak assignmentId' }, { status: 400 })
+    }
+    const assignment = await prisma.routineAssignment.findFirst({
+      where: { id: assignmentId, coachId: userId },
+      select: { id: true },
+    })
+    if (!assignment) {
+      return NextResponse.json({ error: 'Nie znaleziono przypisania' }, { status: 404 })
+    }
+    await prisma.routineTaskProgress.deleteMany({ where: { assignmentId } })
+    await prisma.routineAssignment.delete({ where: { id: assignmentId } })
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('Routine assign DELETE error:', error)
+    return NextResponse.json({ error: 'Błąd usuwania przypisania' }, { status: 500 })
+  }
+}

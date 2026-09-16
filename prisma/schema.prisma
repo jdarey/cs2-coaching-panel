@@ -272,6 +272,17 @@ model SessionTemplateVideo {
   @@index([videoId])
 }
 
+// Cron reminders dedup — żeby codzienne odpalenie nie spamowało tymi
+// samymi mailami. Jeden wiersz na wysyłkę; okno czasowe sprawdzane w kodzie.
+model ReminderLog {
+  id       String   @id @default(cuid())
+  type     String   // OVERDUE | DUE_TOMORROW | INACTIVE
+  targetId String   // assignmentId albo studentId
+  sentAt   DateTime @default(now())
+
+  @@index([type, targetId, sentAt])
+}
+
 // One-time admin impersonation tokens (hashed at rest, single-use).
 model ImpersonationToken {
   id        String    @id @default(cuid())

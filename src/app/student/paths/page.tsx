@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { StudentPathsClient } from './student-paths-client'
+import { getStreak } from '@/lib/gamification'
 
 export const metadata = {
   title: 'Ścieżki treningowe',
@@ -66,20 +67,8 @@ export default async function StudentPathsPage() {
     }
   }
 
-  // Consecutive-day streak ending today or yesterday (student still active).
-  const days = Array.from(watchedDays).sort().reverse()
-  let streak = 0
-  const cursor = new Date()
-  for (let i = 0; i < days.length; i++) {
-    const d = new Date(days[i] + 'T00:00:00')
-    const diff = Math.round((cursor.getTime() - d.getTime()) / 86400000)
-    if (diff === streak || diff === streak + 1) {
-      if (diff === streak + 1) cursor.setDate(cursor.getDate() - 1)
-      streak++
-    } else {
-      break
-    }
-  }
+  // Seria w Europe/Warsaw (wspólny helper — serwer działa w UTC).
+  const streak = getStreak(Array.from(watchedDays))
 
   let totalLessons = 0
   let doneLessons = 0

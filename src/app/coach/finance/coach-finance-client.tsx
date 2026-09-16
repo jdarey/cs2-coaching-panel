@@ -191,7 +191,8 @@ export function CoachFinanceClient() {
               <LayoutGrid className="w-4 h-4" /> {viewAll ? 'Całość' : 'Wgląd na całość'}
             </button>
             <a
-              href="/api/coach/finance/export"
+              href={viewAll ? '/api/coach/finance/export?all=1' : `/api/coach/finance/export?month=${month}`}
+              title={viewAll ? 'Eksport całej historii' : `Eksport miesiąca ${month}`}
               className="inline-flex items-center gap-2 h-11 rounded-xl px-4 text-sm font-semibold text-white/80 bg-white/[0.05] border border-white/[0.1] hover:bg-white/[0.09]"
             >
               <Download className="w-4 h-4" /> Eksport CSV
@@ -305,7 +306,12 @@ export function CoachFinanceClient() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{e.title} <span className="font-normal text-white/40">· {e.person}</span></p>
                     <p className="text-xs text-white/35">
-                      {new Date(e.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', timeZone: 'Europe/Warsaw' })}
+                      {(() => {
+                        const d = new Date(e.date)
+                        return Number.isFinite(d.getTime())
+                          ? d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', timeZone: 'Europe/Warsaw' })
+                          : '—'
+                      })()}
                       {e.note ? ` · ${e.note}` : ''}
                     </p>
                   </div>

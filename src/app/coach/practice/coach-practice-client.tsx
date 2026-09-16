@@ -206,7 +206,7 @@ export function CoachPracticeClient({ rows, stats }: CoachPracticeClientProps) {
                         style={{ animationDelay: `${i * 40}ms` }}
                       >
                         <td className="px-4 py-3.5">
-                          <Link href={`/coach/students?q=${encodeURIComponent(r.email)}`} className="flex items-center gap-3 group min-w-0">
+                          <Link href={`/coach/students/${r.id}`} className="flex items-center gap-3 group min-w-0">
                             <Avatar className="h-9 w-9 shrink-0 rounded-lg ring-1 ring-white/15">
                               <AvatarImage src={r.avatarUrl || undefined} alt={r.name || r.email} />
                               <AvatarFallback className="rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6] text-white font-semibold text-sm">

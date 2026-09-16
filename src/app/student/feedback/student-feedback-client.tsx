@@ -91,11 +91,16 @@ export function StudentFeedbackClient() {
   }
 
   const remove = async (id: string) => {
+    if (!confirm('Usunąć tę opinię?')) return
     try {
-      await fetch(`/api/feedback/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/feedback/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        setError('Nie udało się usunąć opinii')
+        return
+      }
       setFeedback((prev) => prev.filter((f) => f.id !== id))
     } catch {
-      /* ignore */
+      setError('Błąd sieci przy usuwaniu opinii')
     }
   }
 

@@ -74,7 +74,7 @@ const STATUS_META: Record<string, { color: string; icon: typeof Clock; dot: stri
 
 export function StudentVideosClient({ initialSessions, initialProgress }: StudentVideosClientProps) {
   const [sessions] = useState<Session[]>(initialSessions)
-  const [progress] = useState<Progress[]>(initialProgress)
+  const [progress, setProgress] = useState<Progress[]>(initialProgress)
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'watching' | 'watched' | 'implemented'>('all')
   const [search, setSearch] = useState('')
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
@@ -125,6 +125,26 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
       }
 
       toast({ title: 'Zapisano', description: 'Postęp zaktualizowany' })
+      // Od razu podmień wpis w stanie, żeby lista nie wymagała przeładowania
+      setProgress((prev) => {
+        const idx = prev.findIndex((p) => p.videoId === videoId && (p.sessionId ?? null) === (sessionId ?? null))
+        const saved = data.progress ?? data
+        const entry: Progress = {
+          id: saved.id ?? (idx >= 0 ? prev[idx].id : `${videoId}:${sessionId ?? ''}`),
+          videoId,
+          sessionId: sessionId ?? null,
+          status,
+          progress: progressValue,
+          note: note ?? null,
+          watchedAt: saved.watchedAt ?? (status === 'WATCHED' || status === 'IMPLEMENTED' ? new Date().toISOString() : null),
+        }
+        if (idx >= 0) {
+          const next = [...prev]
+          next[idx] = entry
+          return next
+        }
+        return [...prev, entry]
+      })
       setVideoProgressDialog(null)
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
@@ -135,9 +155,10 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '—'
-    const h = Math.floor(seconds / 3600)
-    const mins = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
+    const total = Math.floor(seconds)
+    const h = Math.floor(total / 3600)
+    const mins = Math.floor((total % 3600) / 60)
+    const secs = total % 60
     if (h > 0) return `${h}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }

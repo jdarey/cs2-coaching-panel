@@ -202,7 +202,10 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const cleanTasks = tasks.filter((t) => t.title.trim())
-    if (!formData.title.trim() || cleanTasks.length === 0) return
+    if (!formData.title.trim() || cleanTasks.length === 0) {
+      toast({ title: 'Uzupełnij formularz', description: 'Nazwa rutyny i min. jedno ćwiczenie z tytułem są wymagane', variant: 'destructive' })
+      return
+    }
 
     setIsLoading(true)
     try {
@@ -662,6 +665,22 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           disabled={isLoading}
                           className="h-10 flex-1 min-w-0 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                         />
+                        <label className="shrink-0 flex items-center gap-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08] pl-2.5 pr-1.5 h-10" title="Dzień rutyny, do którego należy ćwiczenie">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Dzień</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={60}
+                            value={t.day}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value)
+                              updateTask(i, { day: Number.isFinite(v) ? Math.min(60, Math.max(1, v)) : 1 })
+                            }}
+                            disabled={isLoading}
+                            aria-label="Dzień rutyny"
+                            className="w-12 bg-transparent text-sm font-bold text-white text-center outline-none"
+                          />
+                        </label>
                         <button type="button" onClick={()=>saveTaskAsPreset(t)} disabled={isLoading} className="hidden sm:grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#c4b5fd] hover:text-white hover:bg-[#a78bfa]/15 border border-transparent hover:border-[#a78bfa]/20 transition" title="Zapisz jako preset" aria-label="Zapisz jako preset"><BookmarkPlus className="w-4 h-4" /></button>
                         <button
                           type="button"
@@ -692,7 +711,11 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                             min={1}
                             max={600}
                             value={t.minutes ?? ''}
-                            onChange={(e) => updateTask(i, { minutes: e.target.value ? Math.max(1, parseInt(e.target.value)) : null })}
+                            onChange={(e) => {
+                              if (!e.target.value) { updateTask(i, { minutes: null }); return }
+                              const v = parseInt(e.target.value)
+                              updateTask(i, { minutes: Number.isFinite(v) ? Math.min(600, Math.max(1, v)) : null })
+                            }}
                             disabled={isLoading}
                             placeholder="—"
                             className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"

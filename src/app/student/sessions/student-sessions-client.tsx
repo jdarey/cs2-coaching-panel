@@ -89,7 +89,7 @@ const FILTER_OPTIONS = [
 
 export function StudentSessionsClient({ initialSessions, initialProgress }: StudentSessionsClientProps) {
   const [sessions] = useState<Session[]>(initialSessions)
-  const [progress] = useState<Progress[]>(initialProgress)
+  const [progress, setProgress] = useState<Progress[]>(initialProgress)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const { toast } = useToast()
@@ -123,6 +123,25 @@ export function StudentSessionsClient({ initialSessions, initialProgress }: Stud
       }
 
       toast({ title: 'Zapisano', description: 'Postęp zaktualizowany' })
+      setProgress((prev) => {
+        const idx = prev.findIndex((p) => p.videoId === videoId && (p.sessionId ?? null) === (sessionId ?? null))
+        const saved = (data as any).progress ?? data
+        const entry: Progress = {
+          id: saved.id ?? (idx >= 0 ? prev[idx].id : `${videoId}:${sessionId ?? ''}`),
+          videoId,
+          sessionId: sessionId ?? null,
+          status,
+          progress: progressValue,
+          note: note ?? null,
+          watchedAt: saved.watchedAt ?? (status === 'WATCHED' || status === 'IMPLEMENTED' ? new Date().toISOString() : null),
+        }
+        if (idx >= 0) {
+          const next = [...prev]
+          next[idx] = entry
+          return next
+        }
+        return [...prev, entry]
+      })
     } catch {
       toast({ title: 'Błąd', description: 'Wystąpił błąd serwera', variant: 'destructive' })
     }

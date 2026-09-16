@@ -129,13 +129,8 @@ function RegisterForm() {
         return
       }
 
-      // Mark invite as used
-      if (inviteToken) {
-        try {
-          await fetch(`/api/coach/students/invite/${inviteToken}/use`, { method: 'POST' })
-        } catch { /* ignore */ }
-      }
-
+      // Invite jest oznaczane jako used po stronie API przy rejestracji —
+      // dodatkowe wołanie /use byłoby zdublowanym requestem.
       toast({ title: 'Konto utworzone', description: 'Pomyślnie zarejestrowano. Logowanie…' })
       setRedirecting(true)
       setIsLoading(true)

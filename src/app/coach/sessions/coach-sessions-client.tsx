@@ -107,14 +107,37 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
     videoIds: [] as string[],
   })
 
+  // datetime-local nie zna stref — input pokazuje czas warszawski, a serwer
+  // (UTC) czyta "YYYY-MM-DDTHH:mm" jako UTC. Konwertujemy w obie strony,
+  // żeby sesja nie przesuwała się o 1-2h przy każdym zapisie.
+  const isoToLocalInput = (iso: string) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(new Date(iso))
+    const g = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
+    return `${g('year')}-${g('month')}-${g('day')}T${g('hour')}:${g('minute')}`
+  }
+  const localInputToIso = (input: string) => {
+    if (!input) return input
+    const [date, time] = input.split('T')
+    const probe = new Date(`${date}T${time}:00Z`)
+    const w = new Date(probe.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' })).getTime()
+    const u = new Date(probe.toLocaleString('en-US', { timeZone: 'UTC' })).getTime()
+    return new Date(probe.getTime() - (w - u)).toISOString()
+  }
+
   const filteredSessions = sessions.filter((s) =>
-    matchesSearch(search, s.title, s.student.name, s.student.email) &&
+    matchesSearch(search, s.title, s.student?.name ?? '', s.student?.email ?? '') &&
     (statusFilter === 'all' || s.status === statusFilter)
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.title.trim() || !formData.studentId) return
+    if (!formData.title.trim() || !formData.studentId) {
+      toast({ title: 'Uzupełnij formularz', description: 'Tytuł i uczeń są wymagani', variant: 'destructive' })
+      return
+    }
 
     setIsLoading(true)
 
@@ -125,7 +148,10 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          scheduledAt: formData.scheduledAt ? localInputToIso(formData.scheduledAt) : formData.scheduledAt,
+        }),
       })
 
       const data = await res.json()
@@ -177,7 +203,7 @@ export function CoachSessionsClient({ initialSessions, initialStudents, initialT
       title: session.title,
       description: session.description || '',
       studentId: session.student.id,
-      scheduledAt: session.scheduledAt ? new Date(session.scheduledAt).toISOString().slice(0, 16) : '',
+      scheduledAt: session.scheduledAt ? isoToLocalInput(session.scheduledAt) : '',
       status: session.status as any,
       tagIds: session.tags.map((t) => t.tag.id),
       videoIds: session.videos.map((v) => v.video.id),

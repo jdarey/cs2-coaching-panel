@@ -30,10 +30,22 @@ export function CoachPresetsClient({ initialPresets, initialVideos }: { initialP
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.title.trim()) return
+    if (!form.title.trim()) {
+      toast({ title: 'Uzupełnij formularz', description: 'Nazwa presetu jest wymagana', variant: 'destructive' })
+      return
+    }
+    let minutes: number | null = null
+    if (form.minutes.trim()) {
+      const v = parseInt(form.minutes)
+      if (!Number.isFinite(v) || v < 1 || v > 600) {
+        toast({ title: 'Zła wartość', description: 'Minuty muszą być liczbą 1–600', variant: 'destructive' })
+        return
+      }
+      minutes = v
+    }
     setLoading(true)
     try {
-      const payload = { title: form.title, description: form.description||null, gifUrl: form.gifUrl||null, steamMapUrl: form.steamMapUrl||null, linkUrl: form.linkUrl||null, videoId: form.videoId||null, minutes: form.minutes ? parseInt(form.minutes) : null, tags: form.tags.split(',').map(s=>s.trim()).filter(Boolean) }
+      const payload = { title: form.title, description: form.description||null, gifUrl: form.gifUrl||null, steamMapUrl: form.steamMapUrl||null, linkUrl: form.linkUrl||null, videoId: form.videoId||null, minutes, tags: Array.from(new Set(form.tags.split(',').map(s=>s.trim()).filter(Boolean))) }
       const url = editing ? `/api/exercise-presets/${editing.id}` : '/api/exercise-presets'
       const method = editing ? 'PATCH' : 'POST'
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })

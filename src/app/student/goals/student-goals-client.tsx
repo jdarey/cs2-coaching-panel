@@ -151,7 +151,10 @@ export function StudentGoalsClient() {
           <div className="space-y-4">
             {/* Active goals */}
             {active.map((g, i) => {
-              const overdue = g.deadline && new Date(g.deadline) < new Date()
+              // Porównanie dni kalendarzowych w PL — input date to północ UTC,
+              // więc naiwne new Date() ogłaszało "po terminie" już po północy.
+              const todayKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Warsaw' })
+              const overdue = g.deadline && new Date(g.deadline).toLocaleDateString('en-CA', { timeZone: 'Europe/Warsaw' }) < todayKey
               return (
                 <div
                   key={g.id}

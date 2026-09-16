@@ -32,7 +32,7 @@ export function StudentRankClient() {
     try {
       const rRes = await fetch('/api/ranks')
       const r = rRes.ok ? await rRes.json() : []
-      setRankEntries(r ?? [])
+      setRankEntries(Array.isArray(r) ? r : [])
     } catch {
       /* ignore */
     } finally {
@@ -41,8 +41,10 @@ export function StudentRankClient() {
   }, [])
 
   const deleteRank = async (id: string) => {
+    if (!confirm('Usunąć ten wpis z historii rangi?')) return
     try {
-      await fetch(`/api/ranks/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/ranks/${id}`, { method: 'DELETE' })
+      if (!res.ok) return
       setRankEntries((prev) => prev.filter((e) => e.id !== id))
     } catch {
       /* ignore */

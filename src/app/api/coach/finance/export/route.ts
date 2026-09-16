@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -6,16 +6,28 @@ import { isCoachRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
-// GET: eksport wszystkich wpisów do CSV (Excel-friendly, BOM + średniki).
-export async function GET() {
+// GET: eksport wpisów do CSV (Excel-friendly, BOM + średniki).
+// ?month=YYYY-MM filtruje miesiąc, ?all=1 daje całość (jak podgląd w UI).
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
   const user = session?.user as any
   if (!user?.id || !isCoachRole(user.role)) {
     return NextResponse.json({ error: 'Brak dostępu' }, { status: 403 })
   }
 
+  const { searchParams } = new URL(request.url)
+  const showAll = searchParams.get('all') === '1'
+  const monthParam = searchParams.get('month')
+  let range: any = {}
+  let fileSuffix = 'calosc'
+  if (!showAll && monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+    const [y, m] = monthParam.split('-').map(Number)
+    range = { date: { gte: new Date(y, m - 1, 1), lt: new Date(y, m, 1) } }
+    fileSuffix = monthParam
+  }
+
   const entries = await prisma.financeEntry.findMany({
-    where: { coachId: user.id },
+    where: { coachId: user.id, ...range },
     orderBy: { date: 'asc' },
     take: 5000,
   })
@@ -46,7 +58,7 @@ export async function GET() {
   return new NextResponse(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="finanse-${date}.csv"`,
+      'Content-Disposition': `attachment; filename="finanse-${fileSuffix}-${date}.csv"`,
     },
   })
 }

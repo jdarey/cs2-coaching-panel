@@ -163,12 +163,21 @@ export function CoachFeedbackClient() {
             const open = openId === f.id
             return (
               <div key={f.id} className={cn('glass rounded-2xl overflow-hidden transition-all duration-300', f.status === 'NEW' && 'border-[#a78bfa]/40')}>
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => {
                     setOpenId(open ? null : f.id)
                     if (!open && f.status === 'NEW') markRead(f.id)
                   }}
-                  className="w-full flex items-start gap-4 p-5 text-left"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setOpenId(open ? null : f.id)
+                      if (!open && f.status === 'NEW') markRead(f.id)
+                    }
+                  }}
+                  className="w-full flex items-start gap-4 p-5 text-left cursor-pointer"
                 >
                   <Avatar className="h-11 w-11 rounded-xl ring-1 ring-white/10 shrink-0">
                     <AvatarImage src={f.student.avatarUrl || ''} alt={f.student.name || ''} />
@@ -209,7 +218,7 @@ export function CoachFeedbackClient() {
                   >
                     {deletingId === f.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   </button>
-                </button>
+                </div>
 
                 {open && (
                   <div className="px-5 pb-5 pt-1 border-t border-white/[0.05]">

@@ -14,8 +14,9 @@ type Message = { id: string; senderId: string; receiverId: string; content: stri
 type Coach = { id: string; name: string | null; email: string | null; avatarUrl: string | null }
 
 export function StudentMessagesClient() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const myId = (session?.user as any)?.id
+  const sessionReady = status !== 'loading' && !!myId
 
   const [coach, setCoach] = useState<Coach | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -118,7 +119,7 @@ export function StudentMessagesClient() {
           subtitle="Masz pytanie? Napisz bezpośrednio do swojego trenera."
         />
 
-      {loading ? (
+      {loading || !sessionReady ? (
         <div className="flex items-center justify-center py-24 text-white/40">
           <Loader2 className="w-6 h-6 animate-spin mr-3" /> Ładowanie…
         </div>

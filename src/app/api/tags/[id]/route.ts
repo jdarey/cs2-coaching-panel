@@ -21,9 +21,9 @@ export async function PUT(
 
     const userId = (session.user as any).id
 
-    // Check ownership
+    // Check ownership — tagi globalne (coachId null) są read-only dla trenerów
     const existingTag = await prisma.tag.findUnique({ where: { id } })
-    if (!existingTag || (existingTag.coachId && existingTag.coachId !== userId)) {
+    if (!existingTag || existingTag.coachId !== userId) {
       return NextResponse.json({ error: 'Tag nie znaleziony lub brak uprawnień' }, { status: 404 })
     }
 
@@ -57,9 +57,9 @@ export async function DELETE(
     const { id } = await params
     const userId = (session.user as any).id
 
-    // Check ownership
+    // Check ownership — tagi globalne (coachId null) są read-only dla trenerów
     const existingTag = await prisma.tag.findUnique({ where: { id } })
-    if (!existingTag || (existingTag.coachId && existingTag.coachId !== userId)) {
+    if (!existingTag || existingTag.coachId !== userId) {
       return NextResponse.json({ error: 'Tag nie znaleziony lub brak uprawnień' }, { status: 404 })
     }
 

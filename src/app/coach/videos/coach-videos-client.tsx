@@ -123,7 +123,10 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.title.trim() || !formData.url.trim()) return
+    if (!formData.title.trim() || !formData.url.trim()) {
+      toast({ title: 'Uzupełnij formularz', description: 'Tytuł i URL filmu są wymagane', variant: 'destructive' })
+      return
+    }
 
     setIsLoading(true)
 
@@ -195,10 +198,11 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
         sessionId = data.id
       }
 
-      // If no session selected and not creating new, find or create a session
+      // If no session selected and not creating new, find or create a session.
+      // Tylko otwarte (DRAFT/ACTIVE) — film nie może wpaść do zamkniętej sesji.
       if (!sessionId) {
         const existingSession = sessions.find(
-          (s) => s.studentId === assignFormData.studentId && s.status !== 'ARCHIVED'
+          (s) => s.studentId === assignFormData.studentId && (s.status === 'DRAFT' || s.status === 'ACTIVE')
         )
         if (existingSession) {
           sessionId = existingSession.id

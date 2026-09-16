@@ -25,6 +25,7 @@ import {
   Repeat,
   Clock,
   Timer,
+  Printer,
   CalendarDays,
   Moon,
   Trophy,
@@ -37,6 +38,7 @@ import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS, getYouTubeId } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 const FaceitEloChart = dynamic(() => import('@/components/faceit-elo-chart').then(m => m.FaceitEloChart), { ssr: false, loading: () => <div className="rounded-3xl p-6 text-center text-white/30 text-sm">Ładowanie ELO…</div> })
@@ -120,6 +122,7 @@ export function CoachStudentDetailClient({
   sessions: SessionSummary[]
   coachVideos: CoachVideo[]
 }) {
+  const { toast } = useToast()
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [assignmentsLoading, setAssignmentsLoading] = useState(true)
   const [form, setForm] = useState({ title: '', description: '', videoId: '', dueDate: '' })
@@ -405,12 +408,16 @@ export function CoachStudentDetailClient({
     if (!confirm('Usunąć przypisaną rutynę?')) return
     try {
       const res = await fetch(`/api/routines/assign?assignmentId=${assignmentId}`, { method: 'DELETE' })
-      // fallback: jeśli endpoint nie istnieje, spróbuj DELETE na /api/routines/[id] logic - używamy PATCH na assignment
-      if (res.ok || res.status === 404) {
-        // spróbuj usunąć przez inny endpoint - na razie odśwież
-        loadRoutines()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast({ title: 'Błąd', description: data.error || 'Nie udało się usunąć rutyny', variant: 'destructive' })
+        return
       }
-    } catch { loadRoutines() }
+      toast({ title: 'Usunięto', description: 'Rutyna odpięta od ucznia' })
+      loadRoutines()
+    } catch {
+      toast({ title: 'Błąd', description: 'Błąd sieci', variant: 'destructive' })
+    }
   }
 
   const pendingCount = assignments.filter((a) => a.status === 'PENDING').length
@@ -550,6 +557,14 @@ export function CoachStudentDetailClient({
               >
                 <MessageSquare className="w-4 h-4 text-[#2de5ca]" />
                 Wiadomość
+              </Link>
+              <Link
+                href={`/coach/students/${student.id}/report`}
+                title="Raport miesięczny do druku / PDF"
+                className="inline-flex items-center gap-1.5 rounded-full px-4 h-10 text-sm font-semibold text-white/75 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.06] transition-all duration-300"
+              >
+                <Printer className="w-4 h-4 text-[#c4b5fd]" />
+                Raport PDF
               </Link>
               <button
                 onClick={sendReminder}

@@ -283,9 +283,19 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
       }
       setFaceitResult({ nickname: data.name || identifier, elo: data.faceitElo, skillLevel: data.faceitLevel })
 
-      // Auto-save rank entries (Premier + Faceit) so they land on the rank page
+      // Auto-save rank entries (Premier + Faceit) so they land on the rank page.
+      // Bez deduplikacji każde kliknięcie dokładało identyczne wpisy — pomijamy
+      // tryb, którego ostatnia wartość się nie zmieniła.
+      const existing: { mode: string; elo: number | null }[] = await fetch('/api/ranks')
+        .then((hr) => (hr.ok ? hr.json() : []))
+        .then((h) => (Array.isArray(h) ? h : []))
+        .catch(() => [])
+      const lastEloOf = (mode: string) => {
+        const same = existing.filter((e) => e.mode === mode)
+        return same.length ? same[same.length - 1].elo : undefined
+      }
       let saved = 0
-      if (data.premier != null) {
+      if (data.premier != null && lastEloOf('PREMIER') !== data.premier) {
         const r = await fetch('/api/ranks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -299,7 +309,7 @@ export function StudentSettingsClient({ initialUser }: StudentSettingsClientProp
         })
         if (r.ok) saved++
       }
-      if (data.faceitElo != null || data.faceitLevel != null) {
+      if ((data.faceitElo != null || data.faceitLevel != null) && lastEloOf('FACEIT') !== (data.faceitElo ?? null)) {
         const r = await fetch('/api/ranks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

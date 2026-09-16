@@ -3,9 +3,24 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mail'
 import { renderEmail, isTemplateEnabled } from '@/lib/email-templates'
 import { infoCard } from '@/lib/email-layout'
-import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
+
+// Dedup: nie wysyłaj tego samego przypomnienia w kółko przy codziennym cronie.
+const DEDUP_HOURS = { OVERDUE: 72, DUE_TOMORROW: 20, INACTIVE: 168 } as const
+
+async function alreadySent(type: keyof typeof DEDUP_HOURS, targetId: string): Promise<boolean> {
+  const since = new Date(Date.now() - DEDUP_HOURS[type] * 3600_000)
+  const hit = await prisma.reminderLog.findFirst({
+    where: { type, targetId, sentAt: { gte: since } },
+    select: { id: true },
+  })
+  return !!hit
+}
+
+async function markSent(type: keyof typeof DEDUP_HOURS, targetId: string) {
+  await prisma.reminderLog.create({ data: { type, targetId } }).catch(() => {})
+}
 
 const CRON_SECRET = process.env.CRON_SECRET || ''
 
@@ -86,6 +101,10 @@ export async function GET(request: NextRequest) {
     // Send overdue notifications to coaches
     for (const assignment of overdueAssignments) {
       if (!overdueOn) break
+      if (await alreadySent('OVERDUE', assignment.id)) {
+        results.skipped.push(`overdue:${assignment.id}`)
+        continue
+      }
       try {
         const due = assignment.dueDate?.toLocaleDateString('pl-PL', { timeZone: 'Europe/Warsaw' })
         const studentName = assignment.student.name || assignment.student.email
@@ -111,6 +130,7 @@ export async function GET(request: NextRequest) {
           },
         )
         await sendEmail({ to: assignment.coach.email, subject, html, text })
+        await markSent('OVERDUE', assignment.id)
         results.overdueNotified++
       } catch (e) {
         results.errors.push(`Overdue email failed for assignment ${assignment.id}: ${e}`)
@@ -120,6 +140,10 @@ export async function GET(request: NextRequest) {
     // Send due tomorrow notifications to students
     for (const assignment of dueTomorrow) {
       if (!dueTomorrowOn) break
+      if (await alreadySent('DUE_TOMORROW', assignment.id)) {
+        results.skipped.push(`due-tomorrow:${assignment.id}`)
+        continue
+      }
       try {
         const studentName = assignment.student.name || 'graczu'
         const { subject, html, text } = await renderEmail(
@@ -140,6 +164,7 @@ export async function GET(request: NextRequest) {
           },
         )
         await sendEmail({ to: assignment.student.email, subject, html, text })
+        await markSent('DUE_TOMORROW', assignment.id)
         results.dueTomorrowNotified++
       } catch (e) {
         results.errors.push(`Due tomorrow email failed for assignment ${assignment.id}: ${e}`)
@@ -150,6 +175,10 @@ export async function GET(request: NextRequest) {
     for (const student of inactiveStudents) {
       if (!inactiveOn) break
       if (!student.coach) continue
+      if (await alreadySent('INACTIVE', student.id)) {
+        results.skipped.push(`inactive:${student.id}`)
+        continue
+      }
       try {
         const lastActivity = student.videoProgress[0]?.updatedAt
         const days = Math.floor((Date.now() - new Date(lastActivity).getTime()) / 86400000)
@@ -173,6 +202,7 @@ export async function GET(request: NextRequest) {
           },
         )
         await sendEmail({ to: student.coach.email, subject, html, text })
+        await markSent('INACTIVE', student.id)
         results.inactiveNotified++
       } catch (e) {
         results.errors.push(`Inactive email failed for student ${student.id}: ${e}`)

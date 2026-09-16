@@ -85,11 +85,18 @@ export function CoachDemoReviewClient({ initialMatch }: { initialMatch: MatchDat
   const [verdict, setVerdict] = useState(match.coachVerdict || '')
   const [showPdfExport, setShowPdfExport] = useState(false)
 
-  // Initialize rounds from coachNotes if available
+  // Initialize rounds from coachNotes if available.
+  // coachNotes bywa obiektem ({0: {...}}) zamiast tablicy — konwertujemy
+  // wartości zamiast generować puste rundy (nie gubimy zapisu).
   const initializeRounds = useCallback(() => {
-    if (match.coachNotes && Array.isArray(match.coachNotes)) {
-      const parsedRounds: DemoRound[] = match.coachNotes.map((note: any, i) => ({
-        round: i + 1,
+    const rawNotes = Array.isArray(match.coachNotes)
+      ? match.coachNotes
+      : match.coachNotes && typeof match.coachNotes === 'object'
+        ? Object.values(match.coachNotes)
+        : null
+    if (rawNotes && rawNotes.length > 0) {
+      const parsedRounds: DemoRound[] = rawNotes.map((note: any, i) => ({
+        round: note.round ?? i + 1,
         side: note.side || (i < 15 ? 'CT' : 'T'),
         won: note.won ?? false,
         timestamp: note.timestamp || i * 120,

@@ -21,7 +21,7 @@ export default async function StudentDashboardPage() {
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 86400000)
 
-  const [sessions, progress, coach, rankEntries, myTags, assignments, coachInfo, weekStats, routines, practice] = await Promise.all([
+  const [sessions, progress, coach, rankEntries, myTags, assignments, weekStats, routines, practice] = await Promise.all([
     prisma.session.findMany({
       where: { studentId: userId, status: { in: ['ACTIVE', 'COMPLETED'] } },
       orderBy: { scheduledAt: 'desc' },
@@ -63,12 +63,6 @@ export default async function StudentDashboardPage() {
       where: { studentId: userId },
       orderBy: { createdAt: 'desc' },
       take: 30,
-    }),
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        coach: { select: { id: true, name: true, avatarUrl: true } },
-      },
     }),
     // Weekly deltas
     prisma.$transaction([
