@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { CoachLayout } from '@/components/coach-layout-export'
 import { PageHeader } from '@/components/page-header'
@@ -11,6 +11,7 @@ import {
   Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
+import { useGifPreview, GifPreviewCard, canHoverFine } from '@/components/gif-preview'
 import { getYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
@@ -133,7 +134,15 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [previewRoutine, setPreviewRoutine] = useState<Routine | null>(null)
   const [previewTask, setPreviewTask] = useState<RoutineTask | null>(null)
+  // Progressive disclosure: które ćwiczenie jest rozwinięte (tylko jedno naraz —
+  // reszta to zwarta karta-podsumowanie). null = wszystkie zwinięte.
+  const [openTaskIdx, setOpenTaskIdx] = useState<number | null>(null)
+  // fokus wraca do inputa "szybkie dodawanie" po dodaniu kolejnego ćwiczenia
+  const quickAddRef = useRef<HTMLInputElement | null>(null)
   const { toast } = useToast()
+  // współdzielony podgląd GIF-a "za kursorem" (portal do body — nie ucina go
+  // overflow-hidden modala podglądu, w przeciwieństwie do starego dymka CSS)
+  const gif = useGifPreview()
 
   const addPresetToTasks = (p: ExercisePreset) => {
     setTasks(prev=> [...prev, { title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, linkUrl: p.linkUrl, day: 1, minutes: p.minutes }])
@@ -152,6 +161,9 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
       copy.splice(idx, 0, moved)
       return copy
     })
+    // przenieś rozwinięcie razem z zadaniem
+    const from = draggedIdx
+    setOpenTaskIdx(cur => cur === null ? null : cur === from ? idx : cur === idx ? from : cur)
     setDraggedIdx(null); setDragOverIdx(null)
   }
   const moveTask = (idx: number, dir: -1 | 1) => {
@@ -163,6 +175,8 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
       copy.splice(to, 0, m)
       return copy
     })
+    // przenieś rozwinięcie razem z zadaniem
+    setOpenTaskIdx(cur => cur === idx ? to : cur === to ? idx : cur)
   }
 
   const saveTaskAsPreset = async (t: RoutineTask) => {
@@ -184,6 +198,10 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
     setter(nv)
     setTimeout(()=>{ el.focus(); el.setSelectionRange(s+before.length, s+before.length+sel.length)},0)
   }
+
+  // zamknięcie modala podglądu rutyny — kill() zamiast close(): wiersz może
+  // zniknąć z DOM bez mouseleave, więc animacja wyjścia GIF-a nie ma się gdzie grać
+  const closePreviewRoutine = () => { gif.kill(); setPreviewRoutine(null) }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -305,6 +323,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
     setEditing(null)
     setFormData({ title: '', description: '', recurring: true })
     setTasks([emptyTask(1)])
+    setOpenTaskIdx(null)
     setDialogOpen(true)
   }
 
@@ -312,16 +331,39 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
     setEditing(r)
     setFormData({ title: r.title, description: r.description || '', recurring: r.recurring })
     setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t, gifUrl: t.gifUrl || null, steamMapUrl: t.steamMapUrl || null, linkUrl: t.linkUrl || null })) : [emptyTask(1)])
+    setOpenTaskIdx(null)
     setDialogOpen(true)
   }
 
   const closeDialog = () => {
     setDialogOpen(false)
     setEditing(null)
+    setOpenTaskIdx(null)
   }
 
   const updateTask = (i: number, patch: Partial<RoutineTask>) => {
     setTasks((prev) => prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)))
+  }
+
+  // Usunięcie zadania z korektą openTaskIdx (indeksy się przesuwają)
+  const removeTask = (idx: number) => {
+    setTasks(prev => prev.filter((_, idx2) => idx2 !== idx))
+    setOpenTaskIdx(cur => {
+      if (cur === null) return null
+      if (cur === idx) return null
+      if (cur > idx) return cur - 1
+      return cur
+    })
+  }
+
+  // Szybkie dodawanie: Enter = dodaj i od razu focus na nowy wpis
+  const addTaskFromQuickInput = () => {
+    const title = quickAddRef.current?.value.trim() ?? ''
+    if (!title) return
+    setTasks(prev => [...prev, { ...emptyTask(1), title }])
+    setOpenTaskIdx(tasks.length) // rozwinięcie nowo dodanego
+    if (quickAddRef.current) quickAddRef.current.value = ''
+    requestAnimationFrame(() => quickAddRef.current?.focus())
   }
 
   return (
@@ -605,86 +647,82 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   </span>
                 </label>
 
-                {/* Tasks builder */}
+                {/* Tasks builder — progressive disclosure: zwinięte podsumowania, edytor tylko w rozwiniętym */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-white/70">Ćwiczenia — przeciągnij <GripVertical className="w-3 h-3 inline text-white/30"/> by zmienić kolejność</label>
+                    <label className="text-sm font-semibold text-white/70">Ćwiczenia ({tasks.length}) — kliknij „Edytuj”, rozwiń szczegóły</label>
                     <div className="flex items-center gap-2">
                       {exercisePresets.length > 0 && (
                         <button type="button" onClick={()=>setPresetPickerOpen(true)} disabled={isLoading} className="inline-flex items-center gap-1.5 rounded-xl px-4 h-10 text-xs font-bold bg-gradient-to-br from-[#a78bfa]/15 to-[#8b5cf6]/15 border border-[#a78bfa]/20 text-[#c4b5fd] hover:from-[#a78bfa]/25 hover:to-[#8b5cf6]/25 transition"><Zap className="w-3.5 h-3.5"/>Biblioteka ({exercisePresets.length})</button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => setTasks((prev) => [...prev, emptyTask(1)])}
-                        disabled={isLoading}
-                        className="inline-flex items-center gap-1.5 rounded-xl px-4 h-10 text-xs font-bold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] hover:opacity-90 transition shadow"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Dodaj ćwiczenie
-                      </button>
                     </div>
                   </div>
 
-                  <div className="space-y-4 max-h-[45vh] overflow-y-auto pr-2 -mr-2">
-                  {tasks.map((t, i) => (
-                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("relative overflow-hidden rounded-2xl bg-white/[0.02] border p-5 pl-6 space-y-4 transition shadow-sm", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30 scale-[0.98]" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.06] hover:border-white/[0.10] hover:bg-white/[0.03]")}>
+                  <div className="space-y-2.5 max-h-[52vh] overflow-y-auto pr-2 -mr-2">
+                  {tasks.map((t, i) => {
+                    const expanded = openTaskIdx === i
+                    return (
+                    <div key={i} draggable onDragStart={()=>handleDragStart(i)} onDragOver={(e)=>handleDragOver(e,i)} onDragLeave={handleDragLeave} onDrop={()=>handleDrop(i)} className={cn("relative overflow-hidden rounded-2xl bg-white/[0.02] border transition shadow-sm", draggedIdx===i ? "opacity-40 border-[#a78bfa]/40 ring-2 ring-[#a78bfa]/30 scale-[0.98]" : dragOverIdx===i ? "border-[#a78bfa]/50 bg-[#a78bfa]/[0.06] ring-1 ring-[#a78bfa]/20" : "border-white/[0.06] hover:border-white/[0.10] hover:bg-white/[0.03]", expanded ? "p-5 pl-6 space-y-4" : "p-3.5 pl-6")}>
                       {/* Kolorowy pasek akcentu + poświata (rotowane po indeksie) */}
                       <span className="pointer-events-none absolute inset-y-0 left-0 w-1" style={{ background: TASK_ACCENTS[i % TASK_ACCENTS.length].bar }} aria-hidden />
                       <span className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl" style={{ background: TASK_ACCENTS[i % TASK_ACCENTS.length].soft }} aria-hidden />
+                      {/* === NAGŁÓWEK KARTY: drag + numer + (zwinięty: podgląd | rozwinięty: edycja inline) === */}
                       <div className="flex items-center gap-1.5 relative">
-                        <div className="flex flex-col gap-1 shrink-0">
-                          <button type="button" onClick={()=>moveTask(i,-1)} disabled={i===0 || isLoading} className="grid h-6 w-7 place-items-center rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-white disabled:opacity-20 transition"><ChevronUp className="w-3 h-3"/></button>
-                          <button type="button" onClick={()=>moveTask(i,1)} disabled={i===tasks.length-1 || isLoading} className="grid h-6 w-7 place-items-center rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-white disabled:opacity-20 transition"><ChevronDown className="w-3 h-3"/></button>
-                        </div>
-                        <button type="button" draggable onDragStart={(e)=>{e.stopPropagation(); handleDragStart(i)}} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/30 hover:text-white hover:bg-[#a78bfa]/15 hover:border-[#a78bfa]/30 cursor-grab active:cursor-grabbing touch-manipulation transition" title="Przytrzymaj i przeciągnij" aria-label="Przeciągnij by zmienić kolejność"><GripVertical className="w-5 h-5" /></button>
+                        <button type="button" draggable onDragStart={(e)=>{e.stopPropagation(); handleDragStart(i)}} className="grid h-10 w-8 shrink-0 place-items-center rounded-xl text-white/30 hover:text-white hover:bg-[#a78bfa]/15 cursor-grab active:cursor-grabbing touch-manipulation transition" title="Przytrzymaj i przeciągnij" aria-label="Przeciągnij by zmienić kolejność"><GripVertical className="w-5 h-5" /></button>
                         <span
-                          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold text-white shadow-lg"
+                          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold text-white shadow-lg"
                           style={{ background: `linear-gradient(135deg, ${TASK_ACCENTS[i % TASK_ACCENTS.length].from}, ${TASK_ACCENTS[i % TASK_ACCENTS.length].to})` }}
                         >
                           {i + 1}
                         </span>
-                        {[
-                          t.minutes ? { icon: Clock, label: `${t.minutes} min`, color: '#fbbf24' } : null,
-                          t.videoId ? { icon: Film, label: 'Film', color: '#c4b5fd' } : null,
-                          t.gifUrl ? { icon: Image, label: 'GIF', color: '#2dd4bf' } : null,
-                          t.steamMapUrl ? { icon: MapPin, label: 'Mapa', color: '#fda4af' } : null,
-                          t.linkUrl ? { icon: Globe, label: 'Link', color: '#7dd3fc' } : null,
-                        ].filter(Boolean).map((chip: any, ci) => (
-                          <span
-                            key={ci}
-                            className="hidden md:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1"
-                            style={{ color: chip.color, background: `${chip.color}14`, borderColor: `${chip.color}35` }}
-                          >
-                            <chip.icon className="w-3 h-3" />{chip.label}
-                          </span>
-                        ))}
-                        <input
-                          value={t.title}
-                          onChange={(e) => updateTask(i, { title: e.target.value })}
-                          placeholder="np. 30 minut DM z focusem na peeking"
-                          disabled={isLoading}
-                          className="h-10 flex-1 min-w-0 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                        />
-                        <label className="shrink-0 flex items-center gap-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08] pl-2.5 pr-1.5 h-10" title="Dzień rutyny, do którego należy ćwiczenie">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Dzień</span>
-                          <input
-                            type="number"
-                            min={1}
-                            max={60}
-                            value={t.day}
-                            onChange={(e) => {
-                              const v = parseInt(e.target.value)
-                              updateTask(i, { day: Number.isFinite(v) ? Math.min(60, Math.max(1, v)) : 1 })
-                            }}
-                            disabled={isLoading}
-                            aria-label="Dzień rutyny"
-                            className="w-12 bg-transparent text-sm font-bold text-white text-center outline-none"
-                          />
-                        </label>
+
+                        {expanded ? (
+                          <>
+                            <input
+                              value={t.title}
+                              onChange={(e) => updateTask(i, { title: e.target.value })}
+                              placeholder="np. 30 minut DM z focusem na peeking"
+                              disabled={isLoading}
+                              autoFocus
+                              className="h-10 flex-1 min-w-0 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm font-semibold text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                            />
+                            <label className="shrink-0 flex items-center gap-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08] pl-2.5 pr-1.5 h-10" title="Dzień rutyny, do którego należy ćwiczenie">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Dzień</span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={60}
+                                value={t.day}
+                                onChange={(e) => {
+                                  const v = parseInt(e.target.value)
+                                  updateTask(i, { day: Number.isFinite(v) ? Math.min(60, Math.max(1, v)) : 1 })
+                                }}
+                                disabled={isLoading}
+                                aria-label="Dzień rutyny"
+                                className="w-12 bg-transparent text-sm font-bold text-white text-center outline-none"
+                              />
+                            </label>
+                          </>
+                        ) : (
+                          <button type="button" onClick={()=>setOpenTaskIdx(i)} className="flex-1 min-w-0 text-left group/row">
+                            <span className="block truncate text-sm font-semibold text-white/90 group-hover/row:text-white">{t.title || <span className="text-white/35 italic">(bez nazwy — kliknij, aby uzupełnić)</span>}</span>
+                            <span className="mt-0.5 flex items-center gap-2 text-[11px] text-white/40">
+                              <span className="inline-flex items-center gap-1"><CalendarRange className="w-3 h-3"/>Dzień {t.day}</span>
+                              {t.minutes ? <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3"/>{t.minutes} min</span> : null}
+                              {t.videoId ? <span className="inline-flex items-center gap-1 text-[#c4b5fd]"><Film className="w-3 h-3"/>Film</span> : null}
+                              {t.gifUrl ? <span className="inline-flex items-center gap-1 text-[#2dd4bf]"><Image className="w-3 h-3"/>GIF</span> : null}
+                              {t.steamMapUrl ? <span className="inline-flex items-center gap-1 text-[#fda4af]"><MapPin className="w-3 h-3"/>Mapa</span> : null}
+                              {t.linkUrl ? <span className="inline-flex items-center gap-1 text-[#7dd3fc]"><Globe className="w-3 h-3"/>Link</span> : null}
+                              {t.description ? <span className="truncate text-white/30 max-w-[16rem]">— {t.description.replace(/[*`#\-\[\]]/g, '').slice(0, 60)}{t.description.length > 60 ? '…' : ''}</span> : null}
+                              <span className="ml-auto hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-[#c4b5fd] opacity-0 group-hover/row:opacity-100 transition">Edytuj →</span>
+                            </span>
+                          </button>
+                        )}
+
                         <button type="button" onClick={()=>saveTaskAsPreset(t)} disabled={isLoading} className="hidden sm:grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#c4b5fd] hover:text-white hover:bg-[#a78bfa]/15 border border-transparent hover:border-[#a78bfa]/20 transition" title="Zapisz jako preset" aria-label="Zapisz jako preset"><BookmarkPlus className="w-4 h-4" /></button>
                         <button
                           type="button"
-                          onClick={() => setTasks((prev) => prev.filter((_, idx) => idx !== i))}
+                          onClick={() => removeTask(i)}
                           disabled={isLoading || tasks.length === 1}
                           className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white/50 hover:text-red-300 hover:bg-red-500/10 transition disabled:opacity-30"
                           aria-label="Usuń zadanie"
@@ -692,6 +730,10 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
+
+                      {/* === ROZWINIĘTY EDYTOR: opis + minuty + wszystkie materiały w jednym miejscu === */}
+                      {expanded && (
+                      <>
                       <div>
                         <label className="text-[11px] font-medium text-white/45 flex items-center gap-1"><FileText className="w-3 h-3"/>Opis ćwiczenia — **pogrubienie** *kursywa* `kod` [link]</label>
                         <div className="flex gap-1 mt-1">
@@ -703,9 +745,11 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                         <textarea id={`task-desc-${i}`} value={t.description ?? ''} onChange={(e)=> updateTask(i, { description: e.target.value || null })} placeholder="Opisz na czym skupić się w tym ćwiczeniu... **pogrubienie** - lista" rows={2} disabled={isLoading} className="mt-1 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] p-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition resize-none" />
                         {t.description && <div className="mt-2 p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-white/80 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}
                       </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-white/45">Minuty (opcjonalnie)</label>
-                        <div className="relative mt-1">
+
+                      {/* Materiały: wszystkie pola opcjonalne w siatce 2-kolumnowej */}
+                      <div className="grid sm:grid-cols-2 gap-3 rounded-2xl bg-white/[0.015] border border-white/[0.05] p-3.5">
+                        <div>
+                          <label className="text-[11px] font-medium text-white/45">Minuty</label>
                           <input
                             type="number"
                             min={1}
@@ -718,73 +762,102 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                             }}
                             disabled={isLoading}
                             placeholder="—"
-                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                            className="mt-1 h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] px-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
                           />
                         </div>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-white/45">GIF demonstracja (opcjonalnie)</label>
-                        <div className="relative mt-1">
-                          <Image className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                          <input
-                            type="url"
-                            value={t.gifUrl ?? ''}
-                            onChange={(e) => updateTask(i, { gifUrl: e.target.value || null })}
-                            disabled={isLoading}
-                            placeholder="Link do GIF-a (np. giphy, imgur, tenor)..."
-                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                          />
+                        <div>
+                          <label className="text-[11px] font-medium text-white/45">Film z biblioteki</label>
+                          <div className="relative mt-1">
+                            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                            <select
+                              value={t.videoId ?? ''}
+                              onChange={(e) => updateTask(i, { videoId: e.target.value || null })}
+                              disabled={isLoading}
+                              className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-3.5 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                            >
+                              <option value="">Bez filmu</option>
+                              {videos.map((v) => (
+                                <option key={v.id} value={v.id}>
+                                  {v.title}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-medium text-white/45">GIF demonstracja</label>
+                          <div className="relative mt-1">
+                            <Image className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                            <input
+                              type="url"
+                              value={t.gifUrl ?? ''}
+                              onChange={(e) => updateTask(i, { gifUrl: e.target.value || null })}
+                              disabled={isLoading}
+                              placeholder="Link do GIF-a (giphy, imgur, tenor)..."
+                              className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-medium text-white/45">Mapa ze Steam</label>
+                          <div className="relative mt-1">
+                            <MapPin className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                            <input
+                              type="url"
+                              value={t.steamMapUrl ?? ''}
+                              onChange={(e) => updateTask(i, { steamMapUrl: e.target.value || null })}
+                              disabled={isLoading}
+                              placeholder="Link do mapy z warsztatu Steam..."
+                              className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                            />
+                          </div>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-[11px] font-medium text-white/45">Link do strony</label>
+                          <div className="relative mt-1">
+                            <Globe className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                            <input
+                              type="url"
+                              value={t.linkUrl ?? ''}
+                              onChange={(e) => updateTask(i, { linkUrl: e.target.value || null })}
+                              disabled={isLoading}
+                              placeholder="https://..."
+                              className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                            />
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-white/45">Mapa ze Steam (opcjonalnie)</label>
-                        <div className="relative mt-1">
-                          <MapPin className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                          <input
-                            type="url"
-                            value={t.steamMapUrl ?? ''}
-                            onChange={(e) => updateTask(i, { steamMapUrl: e.target.value || null })}
-                            disabled={isLoading}
-                            placeholder="Link do mapy z warsztatu Steam..."
-                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                          />
+
+                      {/* Stopka edytora: kolejność + zwiń */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <button type="button" onClick={()=>moveTask(i,-1)} disabled={i===0 || isLoading} className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/50 hover:text-white disabled:opacity-20 transition text-xs font-semibold"><ChevronUp className="w-3.5 h-3.5"/>W górę</button>
+                          <button type="button" onClick={()=>moveTask(i,1)} disabled={i===tasks.length-1 || isLoading} className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/50 hover:text-white disabled:opacity-20 transition text-xs font-semibold"><ChevronDown className="w-3.5 h-3.5"/>W dół</button>
                         </div>
+                        <button type="button" onClick={()=>setOpenTaskIdx(null)} className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-semibold text-white/70 hover:text-white hover:bg-white/[0.1] transition">
+                          <Check className="w-3.5 h-3.5"/>Gotowe
+                        </button>
                       </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-white/45">Link do strony (opcjonalnie)</label>
-                        <div className="relative mt-1">
-                          <Globe className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                          <input
-                            type="url"
-                            value={t.linkUrl ?? ''}
-                            onChange={(e) => updateTask(i, { linkUrl: e.target.value || null })}
-                            disabled={isLoading}
-                            placeholder="https://..."
-                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-10 pr-3.5 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-white/45">Film z biblioteki (opcjonalnie)</label>
-                        <div className="relative mt-1">
-                          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                          <select
-                            value={t.videoId ?? ''}
-                            onChange={(e) => updateTask(i, { videoId: e.target.value || null })}
-                            disabled={isLoading}
-                            className="h-10 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-3.5 pr-10 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
-                          >
-                            <option value="">Bez filmu</option>
-                            {videos.map((v) => (
-                              <option key={v.id} value={v.id}>
-                                {v.title}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
+                      </>
+                      )}
                     </div>
-                  ))}
+                    )
+                  })}
+                  </div>
+
+                  {/* Szybkie dodawanie — jeden input, Enter dodaje i trzyma fokus */}
+                  <div className="flex items-center gap-2 rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.12] focus-within:border-[#a78bfa]/40 focus-within:bg-white/[0.03] transition p-2 pl-3.5">
+                    <Plus className="h-4 w-4 text-white/35 shrink-0" />
+                    <input
+                      ref={quickAddRef}
+                      placeholder="Nazwa ćwiczenia i Enter — dodaje kolejne..."
+                      disabled={isLoading}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTaskFromQuickInput() } }}
+                      className="h-9 flex-1 min-w-0 bg-transparent text-sm text-white placeholder:text-white/35 outline-none"
+                    />
+                    <button type="button" onClick={addTaskFromQuickInput} disabled={isLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3.5 h-9 text-xs font-bold text-white bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] hover:opacity-90 transition shadow shrink-0">
+                      Dodaj
+                    </button>
                   </div>
                 </div>
 
@@ -933,7 +1006,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
         {/* Podgląd rutyny - jak zobaczy uczeń */}
         {previewRoutine && (
           <div className="fixed inset-0 z-50 grid place-items-center p-4 animate-fade-up">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={() => setPreviewRoutine(null)} aria-hidden="true" />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={()=>closePreviewRoutine()} aria-hidden="true" />
             <div className="glass-liquid relative w-full max-w-3xl max-h-[88vh] overflow-hidden rounded-3xl flex flex-col animate-rise-in" role="dialog" aria-modal="true">
               <div className="p-6 border-b border-white/[0.06] shrink-0">
                 <div className="flex items-start justify-between gap-4">
@@ -952,7 +1025,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => setPreviewRoutine(null)} className="grid place-items-center w-9 h-9 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] shrink-0"><X className="w-5 h-5"/></button>
+                  <button onClick={()=>closePreviewRoutine()} className="grid place-items-center w-9 h-9 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] shrink-0"><X className="w-5 h-5"/></button>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -967,28 +1040,22 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           {dayTasks.map((t, idx) => {
                             const vid = t.videoId ? videos.find((v)=>v.id===t.videoId) : null
                             return (
-                              <div key={idx} onClick={() => setPreviewTask(t)} className="group flex items-start gap-3 rounded-2xl p-3.5 border bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03] transition-all duration-300 relative cursor-pointer">
+                              <div
+                                key={idx}
+                                onClick={() => { gif.kill(); setPreviewTask(t) }}
+                                onMouseEnter={(e)=>{ if (t.gifUrl && canHoverFine()) gif.open(t.gifUrl, t.title, e.clientX, e.clientY) }}
+                                onMouseMove={(e)=>{ gif.move(e.clientX, e.clientY) }}
+                                onMouseLeave={gif.close}
+                                className="group flex items-start gap-3 rounded-2xl p-3.5 border bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03] transition-all duration-300 relative cursor-pointer"
+                              >
                                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-bold text-white/70 shrink-0 mt-0.5">{idx+1}</span>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-white/90 flex items-center gap-2">
-                                      <span className="relative inline-flex items-center gap-1">
-                                        {t.title}
-                                        {t.gifUrl && (
-                                        <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-[40%] hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-300 scale-[0.96] group-hover:scale-100 z-30">
-                                          <span className="flex flex-col rounded-2xl overflow-hidden bg-gradient-to-br from-[#0a0c0e]/95 via-[#141222]/95 to-[#1a1628]/95 backdrop-blur-xl border border-white/10 shadow-[0_24px_64px_-16px_rgba(139,92,246,0.35)] w-64">
-                                            <span className="relative h-36 w-64 bg-black block overflow-hidden">
-                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img decoding="async" src={t.gifUrl} alt={`Demo: ${t.title}`} className="w-full h-full object-cover" loading="lazy" />
-                                            </span>
-                                          </span>
-                                        </span>
-                                        )}
-                                      </span>
-                                  </p>
+                                  <p className="text-sm font-semibold text-white/90">{t.title}</p>
                                   {t.description && <div className="mt-1 text-xs text-white/45 line-clamp-2 prose prose-invert max-w-none" dangerouslySetInnerHTML={{__html: mdToHtml(t.description)}} />}
                                   <div className="mt-2 flex flex-wrap items-center gap-2">
                                     {t.minutes && <span className="inline-flex items-center gap-1 text-[11px] text-white/40"><Clock className="w-3 h-3" />~{t.minutes} min</span>}
                                     {t.videoId && <span className="inline-flex items-center gap-1 text-[11px] text-[#c4b5fd]"><Film className="w-3 h-3" />Film</span>}
+                                    {t.gifUrl && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#c4b5fd] group-hover:text-white transition"><Image className="w-3 h-3" />GIF</span>}
                                     {t.steamMapUrl && <span onClick={e=>e.stopPropagation()}><a href={t.steamMapUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#fda4af] bg-[#f43f5e]/[0.08] border border-[#f43f5e]/25 hover:bg-[#f43f5e]/[0.16] hover:border-[#f43f5e]/40 transition-all"><MapPin className="w-3.5 h-3.5" />Mapa</a></span>}
                                     {t.linkUrl && <span onClick={e=>e.stopPropagation()}><a href={t.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#c4b5fd] bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 hover:bg-[#a78bfa]/[0.16] hover:border-[#a78bfa]/30 transition-all"><Globe className="w-3.5 h-3.5" />Link</a></span>}
                                     <span className="text-[11px] text-white/30 hidden sm:inline">kliknij aby zobaczyć film/opis</span>
@@ -1005,11 +1072,14 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
               </div>
               <div className="p-4 border-t border-white/[0.06] flex justify-between items-center shrink-0">
                 <p className="text-xs text-white/40">Tak widzi uczeń · kliknij zadanie aby zobaczyć film/GIF</p>
-                <button onClick={() => setPreviewRoutine(null)} className="px-5 h-10 rounded-xl glass-liquid text-white/70 hover:text-white">Zamknij podgląd</button>
+                <button onClick={()=>closePreviewRoutine()} className="px-5 h-10 rounded-xl glass-liquid text-white/70 hover:text-white">Zamknij podgląd</button>
               </div>
             </div>
           </div>
         )}
+
+        {/* Podgląd GIF-a — portal do body, wspólny ze stroną ucznia */}
+        <GifPreviewCard preview={gif.preview} leaving={gif.leaving} wrapRef={gif.wrapRef} />
 
         {previewTask && (
           <div className="fixed inset-0 z-[60] grid place-items-center p-4">

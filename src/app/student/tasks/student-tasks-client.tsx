@@ -43,6 +43,7 @@ import {
   Crosshair,
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
+import { useGifPreview, GifPreviewCard, canHoverFine } from '@/components/gif-preview'
 
 interface Assignment {
   id: string
@@ -117,46 +118,10 @@ export function StudentTasksClient() {
   const [sleepDraft, setSleepDraft] = useState<number | null>(null)
   const [savingNote, setSavingNote] = useState(false)
   const [repeatingId, setRepeatingId] = useState<string | null>(null)
-  const [gifPreview, setGifPreview] = useState<{ src: string; title: string; x: number; y: number } | null>(null)
-  const gifPreviewRef = useRef<HTMLDivElement | null>(null)
-
-  const canHover = () =>
-    typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
-
-  // Zero animacji: podgląd pokazuje się i znika natychmiast. Pozycja liczona
-  // SYNCHRONICZNIE w handlerze i trafia do stanu — pierwszy paint jest od razu
-  // dobry (wcześniej karta przez klatkę migała w lewym górnym rogu, bo
-  // pozycja ustawiana była dopiero w rAF po mount).
-  const clampGifPos = (cx: number, cy: number, w: number, h: number) => {
-    const GAP = 26
-    let x = cx + GAP, y = cy - h / 2
-    if (x + w > window.innerWidth - 12) x = cx - w - GAP
-    if (y + h > window.innerHeight - 12) y = window.innerHeight - h - 12
-    if (x < 12) x = 12
-    if (y < 12) y = 12
-    return { x: Math.round(x), y: Math.round(y) }
-  }
-  const writeGifPos = (x: number, y: number) => {
-    gifPreviewRef.current?.style.setProperty('transform', `translate3d(${x}px, ${y}px, 0)`)
-  }
-  const openGifPreview = (src: string, title: string, cx: number, cy: number) => {
-    const pos = clampGifPos(cx, cy, 344, 320)
-    setGifPreview({ src, title, ...pos })
-    // Jednorazowa korekta po mount prawdziwymi wymiarami karty.
-    requestAnimationFrame(() => {
-      const el = gifPreviewRef.current
-      if (!el) return
-      const fixed = clampGifPos(cx, cy, el.offsetWidth || 344, el.offsetHeight || 320)
-      writeGifPos(fixed.x, fixed.y)
-    })
-  }
-  const moveGifPreview = (cx: number, cy: number) => {
-    if (!gifPreviewRef.current) return
-    const pos = clampGifPos(cx, cy, 344, 320)
-    writeGifPos(pos.x, pos.y)
-  }
-  const closeGifPreview = () => setGifPreview(null)
-  const killGifPreview = () => setGifPreview(null)
+  // współdzielony podgląd GIF-a "za kursorem" (komponent renderowany w portalu)
+  const gif = useGifPreview()
+  const { preview: gifPreview, leaving: gifLeaving, kill: killGifPreview } = gif
+  const canHover = canHoverFine
 
   const load = useCallback(async () => {
     try {
@@ -533,6 +498,8 @@ export function StudentTasksClient() {
               const completed = ra.status === 'COMPLETED'
               const days = Array.from(new Set((ra.routine.tasks || []).map((t: any) => t.day))).sort((a: number, b: number) => a - b)
               const totalMins = (ra.routine.tasks||[]).reduce((a:number,t:any)=>a+(t.minutes||0),0)
+              // obwód kolka postepu r=30 (2·π·30≈188.5) — jedno źródło prawdy dla dasharray i animacji sweep
+              const CIRC = 2 * Math.PI * 30
 
               return (
                 <div key={ra.id} className={cn('group/routine relative overflow-hidden rounded-[28px] border bg-[#0c0c14] transition-[border-color,box-shadow,transform] duration-300', expanded ? 'border-[#a78bfa]/30 shadow-[0_20px_80px_-20px_rgba(139,92,246,0.4),0_8px_32px_-12px_rgba(0,0,0,0.5)] scale-[1.005]' : 'border-white/[0.07] hover:border-white/[0.12] hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] hover:-translate-y-1', completed ? 'ring-1 ring-[#a78bfa]/25' : '')} onMouseMove={spotlightHandler}>
@@ -547,12 +514,12 @@ export function StudentTasksClient() {
                     <div className="relative shrink-0">
                       <div className={cn('relative grid place-items-center w-[56px] h-[56px] rounded-[18px] ring-1 transition-all duration-500', completed ? 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/25 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.7)]' : 'bg-gradient-to-br from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9] ring-white/20 shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)] group-hover/routine:shadow-[0_14px_40px_-10px_rgba(139,92,246,0.7)] group-hover/routine:scale-[1.02]')}>
                         {completed ? <Trophy className="w-6 h-6 text-white drop-shadow" /> : <Zap className="w-6 h-6 text-white drop-shadow" />}
-                        {!completed && pct>0 && pct<100 && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#22c55e] ring-2 ring-[#0c0c14]" />}
+                        {!completed && pct>0 && pct<100 && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#22c55e] ring-2 ring-[#0c0c14] animate-pulse" />}
                       </div>
-                      {/* circular pct ring */}
+                      {/* kolko postepu — --ring-c zgadza się z dasharray (2·π·30≈188.5): sweep od zera na mount, potem normalna tranzycja */}
                       <svg className="pointer-events-none absolute -inset-1.5 h-[68px] w-[68px] -rotate-90" viewBox="0 0 68 68">
                         <circle cx="34" cy="34" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-                        <circle cx="34" cy="34" r="30" fill="none" stroke={completed ? "#a78bfa" : "url(#grad-"+ra.id+")"} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${2*Math.PI*30}`} strokeDashoffset={`${2*Math.PI*30*(1-pct/100)}`} className="transition-all duration-1000 ease-out" style={{ filter: 'drop-shadow(0 0 6px rgba(139,92,246,0.4))' }} />
+                        <circle cx="34" cy="34" r="30" fill="none" stroke={completed ? "#a78bfa" : "url(#grad-"+ra.id+")"} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${CIRC}`} strokeDashoffset={`${CIRC*(1-pct/100)}`} style={{ ['--ring-c' as any]: `${CIRC}px`, filter: 'drop-shadow(0 0 6px rgba(139,92,246,0.4))' }} className="ring-sweep transition-all duration-1000 ease-out" />
                         <defs>
                           <linearGradient id={"grad-"+ra.id} x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stopColor="#a78bfa" />
@@ -585,10 +552,11 @@ export function StudentTasksClient() {
                       </div>
 
                       <div className="mt-3 flex items-center gap-3">
-                        <div className="flex-1 max-w-[340px] h-[6px] rounded-full bg-white/[0.06] overflow-hidden p-[2px]">
-                          <div className="relative h-full rounded-full overflow-hidden" style={{ width: '100%' }}>
-                            <div className={cn('absolute inset-0 rounded-full transition-all duration-1000 ease-out', completed ? 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf]')} style={{ width: `${pct}%` }} />
-                          </div>
+                        {/* pasek postępu — track, potem wypełnienie o szerokości pct; shimmer tylko gdy częściowo wypełniony */}
+                        <div className="flex-1 max-w-[340px] h-[6px] rounded-full bg-white/[0.06] overflow-hidden">
+                          {pct > 0 && (
+                            <div className={cn('h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r', completed ? 'from-[#a78bfa] via-[#8b5cf6] to-[#6d28d9]' : 'from-[#a78bfa] via-[#8b5cf6] to-[#2dd4bf]', !completed && pct < 100 && 'bar-shimmer')} style={{ width: `${pct}%` }} />
+                          )}
                         </div>
                         <span className={cn('text-xs font-black tabular-nums tracking-wide', completed ? 'text-[#c4b5fd]' : 'text-white/60')}>{pct}%</span>
                       </div>
@@ -656,14 +624,14 @@ export function StudentTasksClient() {
                                   </div>
                                   <div className="ml-auto hidden sm:flex items-center gap-2">
                                     <div className="h-1.5 w-24 rounded-full bg-white/[0.06] overflow-hidden">
-                                      <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#a78bfa] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]')} style={{ width: `${dayPct}%` }} />
+                                      <div className={cn('h-full rounded-full transition-all duration-700 will-change-[width]', isDayDone ? 'bg-gradient-to-r from-[#a78bfa] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]')} style={{ width: `${dayPct}%` }} />
                                     </div>
                                       <span className={cn('text-[11px] font-black tabular-nums min-w-[36px] text-right', isDayDone ? 'text-[#c4b5fd]' : 'text-white/40')}>{dayPct}%</span>
                                   </div>
                                 </div>
                                 {/* mobile progress */}
                                 <div className="sm:hidden h-1 rounded-full bg-white/[0.06] overflow-hidden mb-4 ml-1">
-                                  <div className={cn('h-full rounded-full transition-all duration-700', isDayDone ? 'bg-gradient-to-r from-[#a78bfa] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${dayPct}%` }} />
+                                  <div className={cn('h-full rounded-full transition-all duration-700 will-change-[width]', isDayDone ? 'bg-gradient-to-r from-[#a78bfa] to-[#6d28d9]' : 'bg-gradient-to-r from-[#a78bfa] to-[#8b5cf6]')} style={{ width: `${dayPct}%` }} />
                                 </div>
 
                                 <div className="space-y-3 sm:pl-10">
@@ -686,9 +654,9 @@ export function StudentTasksClient() {
                                       <div
                                         key={t.id}
                                         onClick={()=> { killGifPreview(); setSelectedTask(t); setSelectedAssignment(ra) }}
-                                        onMouseEnter={(e)=>{ if (t.gifUrl && canHover()) openGifPreview(t.gifUrl, t.title, e.clientX, e.clientY) }}
-                                        onMouseMove={(e)=>{ moveGifPreview(e.clientX, e.clientY) }}
-                                        onMouseLeave={closeGifPreview}
+                                        onMouseEnter={(e)=>{ if (t.gifUrl && canHover()) gif.open(t.gifUrl, t.title, e.clientX, e.clientY) }}
+                                        onMouseMove={(e)=>{ gif.move(e.clientX, e.clientY) }}
+                                        onMouseLeave={gif.close}
                                         className={cn(
                                           'group/task relative flex items-center gap-4 rounded-[20px] p-4 border cursor-pointer overflow-hidden transition-[border-color,background-color,box-shadow,transform] duration-300',
                                           'hover:-translate-y-[2px] hover:scale-[1.005]',
@@ -918,27 +886,8 @@ export function StudentTasksClient() {
           </div>
         )}
 
-        {/* Podgląd GIF-a — statyczny, bez animacji (tylko desktop z myszką) */}
-        {gifPreview && (
-          <div ref={gifPreviewRef} style={{ transform: `translate3d(${gifPreview.x}px, ${gifPreview.y}px, 0)` }} className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block w-[344px] will-change-transform">
-            <div className="relative">
-              <div className="absolute -inset-2 rounded-[20px] bg-gradient-to-br from-[#a78bfa]/25 via-[#2dd4bf]/10 to-transparent blur-xl" />
-              <div className="yt-force-dark relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a12] shadow-[0_32px_80px_-20px_rgba(139,92,246,0.55),0_16px_40px_-12px_rgba(0,0,0,0.7)]">
-                <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-[#a78bfa]/[0.08] to-transparent border-b border-white/[0.07]">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow"><Play className="w-3 h-3 text-white fill-white" /></span>
-                  <p className="flex-1 truncate text-[13px] font-bold text-white">{gifPreview.title}</p>
-                  <span className="inline-flex items-center rounded-md bg-[#a78bfa]/15 border border-[#a78bfa]/25 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#c4b5fd]">GIF</span>
-                </div>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={gifPreview.src} alt={gifPreview.title} loading="lazy" decoding="async" className="w-full h-auto max-h-[240px] object-contain bg-black" />
-                <div className="flex items-center justify-between px-3.5 py-2 border-t border-white/[0.07] bg-white/[0.02]">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/30">Podgląd demo</span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#c4b5fd]">kliknij po szczegóły <ArrowRight className="w-3 h-3" /></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Podgląd GIF-a (portal do body — nic go nie ucina) */}
+        <GifPreviewCard preview={gifPreview} leaving={gifLeaving} wrapRef={gif.wrapRef} />
 
         {selectedTask && (
           <div className="fixed inset-0 z-50 grid place-items-center p-4">

@@ -812,6 +812,25 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
+  /* Kolko postępu rutyny: jedno „narysowanie się” od 0 do pct przy pojawieniu
+     karty (transform/opacity nie wystarczą — to stroke-dashoffset, ale animuje
+     tylko raz na mount i nie kosztuje przy hoverze). --ring-c = pełny obwód. */
+  .ring-sweep { animation: ring-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  @keyframes ring-in {
+    from { stroke-dashoffset: var(--ring-c, 189px); }
+  }
+  /* Pasek postępu rutyny: delikatny sweep tylko na częściowo wypełnionym pasku */
+  .bar-shimmer { position: relative; overflow: hidden; }
+  .bar-shimmer::after {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 50%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 2.4s ease-in-out infinite;
+  }
+
   /* ===== GIF preview — lekkie 120fps: TYLKO transform + opacity =====
      (kompozytor GPU, zero repaintów). Żadnego blur() ani overshootu —
      to one powodowały lagi, zwłaszcza z backdrop-blur na karcie. */
@@ -834,7 +853,7 @@
     .animate-gradient-shift, .animate-grid-drift, .animate-twinkle,
     .animate-shimmer::after, .animate-border-flow::before, .particle,
     .animate-comet, .animate-letter, .animate-btn-gradient, .animate-icon-bounce,
-    .gif-enter, .gif-exit {
+    .gif-enter, .gif-exit, .ring-sweep, .bar-shimmer::after {
       animation: none !important;
     }
     .animate-letter { opacity: 1; }
