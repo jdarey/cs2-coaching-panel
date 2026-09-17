@@ -103,6 +103,9 @@ model User {
   // Password reset tokens
   passwordResetTokens PasswordResetToken[]
 
+  // Aktywowane kody dostępu do produktu (rutyna CS2)
+  accessCodes AccessCode[]
+
   // Admin impersonation (as admin / as target)
   impersonationsGranted ImpersonationToken[] @relation("ImpersonationAsAdmin")
   impersonationsReceived ImpersonationToken[] @relation("ImpersonationAsTarget")
@@ -561,6 +564,10 @@ model Routine {
   // Rutyna startowa (7 dni fundamentu): tworzona przez system / kupowana
   // przez ucznia jednym klikiem bez trenera ("klik Start — masz plan").
   isStarterRoutine Boolean @default(false)
+  // PRODUKT — jedyna rutyna sprzedawana za kod dostępu. Właściciel buduje ją
+  // na swoim koncie (coachId = konto właściciela): ćwiczenia z filmem + tekst.
+  // Kupujący: konto + kod → przypisanie do tej właśnie rutyny.
+  isProductRoutine Boolean @default(false)
   // Routines run every day on repeat by default; the coach can turn this off
   // (one-shot program) or set an end date on the assignment.
   recurring   Boolean  @default(true)
@@ -827,6 +834,24 @@ model EmailTemplate {
   // Dotyczy tylko szablonów automatycznych (reminder-*).
   enabled    Boolean  @default(true)
   updatedAt  DateTime @updatedAt
+}
+
+// Jednorazowy kod dostępu do produktu (rutyna CS2: film + tekst na każde
+// ćwiczenie). Kupujący dostaje kod po zapłacie → zakłada konto → aktywuje
+// kod na /aktywuj-kod → dostaje przypisanie rutyny produktowej.
+// code przechowywany jawnie (dostarczany kupującemu poza systemem, np. mailem
+// po zakupie); createdAt + usedBy opisują cykl życia kodu.
+model AccessCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  note      String?   // np. "zamówienie #1234", "partia na promocję"
+  usedById  String?   // użytkownik, który kod aktywował
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  usedBy User? @relation(fields: [usedById], references: [id], onDelete: SetNull)
+
+  @@index([usedById])
 }
 
 // Wpisy finansowe trenera (kosztorys): wpływy za coaching i wydatki.

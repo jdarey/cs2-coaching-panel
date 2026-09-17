@@ -18,6 +18,13 @@ function RegisterForm() {
   const { toast } = useToast()
 
   const inviteToken = searchParams.get('invite')
+  // Przepływ zakupu: /register?next=%2Faktywuj-kod → po rejestracji wracamy
+  // do aktywacji kodu, nie do logowania. Tylko ścieżki wewnętrzne.
+  const nextPath = (() => {
+    const raw = searchParams.get('next')
+    if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return null
+    return raw
+  })()
   const [inviteValid, setInviteValid] = useState<boolean | null>(null)
   const [inviteData, setInviteData] = useState<{ email: string; coachName: string } | null>(null)
 
@@ -189,10 +196,10 @@ function RegisterForm() {
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 font-sans text-white">
       <RedirectOverlay
-        to="/login?registered=true"
+        to={nextPath || '/login?registered=true'}
         visible={redirecting}
-        label="Przekierowujemy do logowania"
-        stages={['Tworzenie konta', 'Zabezpieczanie sesji', 'Prawie gotowe']}
+        label={nextPath ? 'Konto gotowe — aktywujemy kod' : 'Przekierowujemy do logowania'}
+        stages={nextPath ? ['Tworzenie konta', 'Zabezpieczanie sesji', 'Aktywacja kodu'] : ['Tworzenie konta', 'Zabezpieczanie sesji', 'Prawie gotowe']}
       />
       <AuroraBackground variant="auth" />
 

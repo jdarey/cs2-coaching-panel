@@ -1,44 +1,70 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { isAdminRole, isCoachRole } from '@/lib/roles'
-import { LandingLiveStats } from '@/components/landing-live-stats'
+import { isAdminRole } from '@/lib/roles'
+import { getStarterRoutine } from '@/lib/starter-routine'
 import {
-  Crosshair, Flame, CalendarDays, TrendingUp, ListChecks, Target, Timer,
-  CheckCircle2, ArrowRight, GraduationCap, CircleAlert, Repeat, ShieldCheck,
-  MessageSquareHeart, Swords, ChevronDown, ChevronRight, Eye, Users, Zap,
+  Crosshair, PlayCircle, FileText, ListChecks, Timer, Target, Repeat, ShieldCheck,
+  ArrowRight, CheckCircle2, CircleAlert, KeyRound, ChevronDown, Swords, Infinity as InfinityIcon,
 } from 'lucide-react'
 
 export const metadata = {
-  title: 'CS2 Coaching — codzienny system treningowy, który wynosi Cię z stagnacji',
+  title: 'Rutyna CS2 — plan treningowy z filmem i opisem do każdego ćwiczenia',
   description:
-    'Konkretny plan na każdy dzień: co robić, jak długo, dlaczego i jak mierzyć progres. Rutyny treningowe, tracking ELO, kalendarz regularności i trener, który widzi Twoje dane. Przestań mielić mecze bez planu.',
-  keywords: ['CS2 coaching', 'trening CS2', 'rutyna treningowa CS2', 'Faceit Elo', 'aim training', 'polepszenie aimu', 'coach CS2 PL'],
+    'Jedna rutyna treningowa do Counter-Strike 2: dokładny plan na każdy dzień, każde ćwiczenie omówione filmem i tekstem. Wiesz co robić, jak długo i jak sprawdzić progres. Dostęp jednorazowo — kod aktywujesz w 30 sekund.',
+  keywords: ['rutyna CS2', 'aim routine', 'trening CS2', 'plan treningowy CS2', 'Faceit Elo', 'poprawa aimu'],
   openGraph: {
-    title: 'CS2 Coaching — codzienny system treningowy',
-    description: 'Co robić → jak długo → dlaczego → jak mierzyć progres. System treningowy CS2 z trenerem i trackingiem.',
+    title: 'Rutyna CS2 — film + tekst do każdego ćwiczenia',
+    description: 'Konkretny plan treningowy do CS2. Każde ćwiczenie omówione filmem i tekstem. Jednorazowy dostęp, bez abonamentu.',
     type: 'website',
     locale: 'pl_PL',
   },
 }
 
-/**
- * Landing page — widoczna TYLKO dla niezalogowanych (zalogowani lecą od razu
- * do swoich paneli). Copy zbudowane na researchu: główny problem graczy to
- * nie brak wiedzy (YouTube jest darmowy), tylko brak SYSTEMU: planu na dziś,
- * regularności i mierzalnego progresu. Każda sekcja odpowiada na jedną
- * obiekcję lub problem z researchu.
- */
+// Cena i link zakupu idą ze środowiska — bez zmian w kodzie przy zmianie oferty.
+const BUY_URL = process.env.PRODUCT_BUY_URL || ''
+const PRICE_PLN = process.env.PRODUCT_PRICE_PLN || '97'
+
+function BuyCta({ className = '' }: { className?: string }) {
+  if (BUY_URL) {
+    return (
+      <a
+        href={BUY_URL}
+        className={`group inline-flex items-center gap-2 rounded-2xl px-8 py-4 text-base font-semibold text-white btn-darey ${className}`}
+      >
+        Kup dostęp — {PRICE_PLN} zł
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+      </a>
+    )
+  }
+  // Bez skonfigurowanego linku sprzedaży: kontakt (nie blokuje strony).
+  return (
+    <a
+      href="mailto:kontakt@example.com?subject=Rutyna%20CS2%20—%20zakup"
+      className={`group inline-flex items-center gap-2 rounded-2xl px-8 py-4 text-base font-semibold text-white btn-darey ${className}`}
+    >
+      Napisz po dostęp
+      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+    </a>
+  )
+}
+
 export default async function Home() {
   const session = await getServerSession(authOptions)
 
   if (session?.user) {
     const role = (session.user as any).role
-    if (isAdminRole(role)) redirect('/admin')
-    if (isCoachRole(role)) redirect('/coach/dashboard')
-    redirect('/student/dashboard')
+    // Zalogowani trafiają prosto do produktu. Admin (właściciel) zostaje na
+    // landing — to on zarządza treścią i sprzedażą.
+    if (role === 'COACH') redirect('/coach/dashboard')
+    if (role === 'STUDENT') redirect('/student/dashboard')
   }
+
+  // Realne liczby do sekcji "co dostajesz" — z biblioteki rutyn, nie z powietrza.
+  const beginner = getStarterRoutine('BEGINNER')
+  const starterDays = beginner.tasks.length
+  const starterMinutes = beginner.totalMinutes
 
   return (
     <main className="relative min-h-screen overflow-x-clip font-sans text-white bg-[#07060c]">
@@ -47,29 +73,29 @@ export default async function Home() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] shadow-[0_8px_24px_-8px_rgba(139,92,246,0.55)]">
-              <GraduationCap className="h-5 w-5 text-white" strokeWidth={2.2} />
+              <Crosshair className="h-5 w-5 text-white" strokeWidth={2.2} />
             </span>
-            <span className="font-display text-sm font-bold tracking-tight">CS2 Coaching</span>
+            <span className="font-display text-sm font-bold tracking-tight">Rutyna CS2</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link
-              href="/login"
-              className="rounded-xl px-4 py-2 text-sm font-medium text-white/65 transition hover:text-white hover:bg-white/[0.05]"
+              href="/aktywuj-kod/enter"
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium text-white/65 transition hover:text-white hover:bg-white/[0.05]"
             >
-              Zaloguj się
+              <KeyRound className="h-3.5 w-3.5" /> Aktywuj kod
             </Link>
             <Link
-              href="/register"
-              className="rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_rgba(139,92,246,0.6)] transition hover:scale-[1.02]"
+              href="/login"
+              className="hidden sm:inline-flex rounded-xl px-4 py-2 text-sm font-medium text-white/65 transition hover:text-white hover:bg-white/[0.05]"
             >
-              Zacznij teraz
+              Zaloguj się
             </Link>
           </div>
         </div>
       </nav>
 
       {/* ===== HERO ===== */}
-      <section className="relative pt-36 pb-24 sm:pt-44">
+      <section className="relative pt-36 pb-20 sm:pt-44">
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
           <div className="absolute -top-40 left-1/2 h-[560px] w-[900px] -translate-x-1/2 rounded-full opacity-30 blur-[120px]"
             style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 40%, rgba(139,92,246,0.5), transparent 75%)' }} />
@@ -78,44 +104,37 @@ export default async function Home() {
         <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full px-4 py-1.5 glass text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">
             <span className="live-dot" />
-            System treningowy dla graczy CS2
+            Plan treningowy do Counter-Strike 2
           </div>
           <h1 className="font-display text-4xl font-bold leading-[1.08] tracking-tight sm:text-6xl">
-            Rangi nie wchodzą od{' '}
-            <span className="text-gradient-vantor">ogladania poradników</span>.
-            Wchodzą od <span className="text-gradient-vantor">codziennej pracy z planem</span>.
+            Rutyna CS2, w której{' '}
+            <span className="text-gradient-vantor">każde ćwiczenie</span> omawiam{' '}
+            <span className="text-gradient-vantor">filmem i tekstem</span>.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/50">
-            Nie obiecujemy Ci Level 10 w tydzień. Dajemy Ci coś, czego nie ma na YouTube:
-            konkretny plan na dziś, kontrole regularności i trenera, który widzi Twoje dane.
-            Ty tylko klikasz Start.
+            Otwierasz plan na dziś: co robić, jak długo, dlaczego i jak sprawdzić, że działa.
+            Każde ćwiczenie ma film i dokładny opis — bez zgadywania, bez zbierania poradników z YouTube.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <BuyCta />
             <Link
-              href="/register"
-              className="group inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl px-8 py-3.5 text-base font-semibold text-white btn-darey sm:w-auto"
-            >
-              Załóż konto za darmo
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-            <Link
-              href="/login"
+              href="#w-srodku"
               className="inline-flex h-13 w-full items-center justify-center rounded-2xl px-8 py-3.5 text-base font-medium text-white/70 glass transition hover:text-white sm:w-auto"
             >
-              Mam już konto
+              Zobacz, co jest w środku
             </Link>
           </div>
           <p className="mt-4 text-xs text-white/35">
-            Konto ucznia bez karty · rutyna startowa w panelu od pierwszej minuty · dołączasz do trenera kodem zaproszenia
+            Płacisz raz · dostęp bez limitu czasu · kod aktywujesz w 30 sekund
           </p>
 
-          {/* Hero stats — odpowiedź na "czym to się różni od PDF-a z rutyną" */}
+          {/* Hero stats */}
           <div className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { icon: CalendarDays, v: 'Codziennie', l: 'gotowy plan na dziś' },
-              { icon: Timer, v: '30–60 min', l: 'trenuj, ile realnie masz' },
-              { icon: Flame, v: 'Seria dni', l: 'regularność widoczna' },
-              { icon: TrendingUp, v: 'ELO + staty', l: 'progres mierzalny' },
+              { icon: ListChecks, v: 'Każde ćwiczenie', l: 'film + tekst' },
+              { icon: Timer, v: 'Plan na każdy dzień', l: 'czas + cel + metryka' },
+              { icon: InfinityIcon, v: 'Bez abonamentu', l: 'płacisz raz' },
+              { icon: ShieldCheck, v: 'Tracking w panelu', l: 'postęp widoczny' },
             ].map((s) => (
               <div key={s.l} className="glass-liquid rounded-2xl p-4 text-left">
                 <s.icon className="mb-2 h-5 w-5 text-[#a78bfa]" />
@@ -124,39 +143,34 @@ export default async function Home() {
               </div>
             ))}
           </div>
-
-          {/* Live stats — realne liczby z platformy albo nic (zero ściemy) */}
-          <div className="mt-4">
-            <LandingLiveStats />
-          </div>
         </div>
       </section>
 
-      {/* ===== PROBLEM — nazwij to, co czci gracza (research: stagnacja, brak planu) ===== */}
+      {/* ===== PROBLEM ===== */}
       <section className="relative py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-14 max-w-2xl">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Znany brzmienia?</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Znane brzmienia?</p>
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Większość graczy nie utyka przez brak talentu. Utyka przez brak systemu.
+              Nie utykasz przez brak talentu. Utykasz, bo nie masz planu.
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {[
               {
                 icon: CircleAlert,
-                title: '„Wiem, CO robić — nie robię tego regularnie”',
-                body: 'Poradników masz setki. Aim Botz, Recoil Master, DM… Wiesz o nich wszystko. Ale bez planu na dziś i bez kontroli serii dzień bez treningu znika bez śladu — i znika Elo.',
+                title: '„Wiem, CO robić — nie robię tego regularnie"',
+                body: 'Aim Botz, Recoil Master, DM… znasz je wszystkie. Ale bez konkretnego planu na dziś nic z tego nie wychodzi w regularny trening — i Elo stoi.',
               },
               {
                 icon: Crosshair,
-                title: '„Trenuję dużo, Elo stoi w miejscu”',
-                body: 'Godziny w DM bez celu to mielenie, nie trening. Bez pomiaru (reakcja, pre-aim, celność, spray) nie wiesz, czy te 100 meczy coś zmieniło — i co trenować następne.',
+                title: '„Oglądam poradniki i nic się nie zmienia"',
+                body: 'Poradnik mówi „rób aim trening", ale nie mówi: dziś, tyle minut, w tym tempie, z tą metryką. Wiedza bez struktury nie składa się w progres.',
               },
               {
                 icon: Repeat,
-                title: '„Zaczynam rutynę, odpuszczam w tydzień”',
-                body: 'PDF-y i „30-dniowe wyzwania” umierają, bo nie widzą Twojego kontekstu: ile masz czasu dzisiaj, gdzie masz dziury i czy w ogóle wróciłeś wczoraj. System musi się dostosować do Ciebie.',
+                title: '„Zaczynam rutynę, odpuszczam w tydzień"',
+                body: 'PDF-y i listy ćwiczeń umierają, bo nie mówią Ci, co zrobić JUTRO i po co. Rutyna, która działa, prowadzi Cię dzień po dniu — i pokazuje postęp.',
               },
             ].map((p) => (
               <div key={p.title} className="glass-liquid rounded-3xl p-6">
@@ -171,41 +185,81 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ===== ROZWIĄZANIE — pętla dzienna (USP: system, nie materiał) ===== */}
+      {/* ===== CO JEST W ŚRODKU — film + tekst (główna różnica vs PDF) ===== */}
+      <section className="relative py-20" id="w-srodku">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="mb-14 max-w-2xl">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Co jest w środku</p>
+            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              Każde ćwiczenie omówione dwukrotnie: filmem i tekstem
+            </h2>
+            <p className="mt-4 text-white/50">
+              Nie dostajesz listy „20 minut Aim Botz”. Dostajesz instrukcję: cel ćwiczenia, technika krok po kroku,
+              błędy, które popełnia 90% graczy, i metrykę, którą sprawdzasz po treningu.
+            </p>
+          </div>
+
+          {/* Mockup karty ćwiczenia — pokazuje format produktu */}
+          <div className="mx-auto max-w-3xl">
+            <div className="glass-liquid relative overflow-hidden rounded-[28px] border border-white/[0.07] p-6 sm:p-8">
+              <div className="flex flex-col gap-6 sm:flex-row">
+                {/* Film */}
+                <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#1e1b4b] to-[#134e4a] sm:w-72">
+                  <div className="absolute inset-0 grid place-items-center">
+                    <span className="grid h-14 w-14 place-items-center rounded-full bg-white/10 ring-1 ring-white/25 backdrop-blur">
+                      <PlayCircle className="h-7 w-7 text-white" />
+                    </span>
+                  </div>
+                  <span className="absolute left-3 top-3 rounded-md bg-black/40 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-white/80 backdrop-blur">Film</span>
+                </div>
+                {/* Tekst */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c4b5fd]">Dzień 1 · 15 min</p>
+                  <h3 className="mt-1 font-display text-lg font-bold">Aim Botz — 100 killi bez pośpiechu</h3>
+                  <div className="mt-3 space-y-2 text-sm leading-relaxed text-white/55">
+                    <p><strong className="text-white/80">Cel:</strong> celownik zawsze na wysokości głowy.</p>
+                    <p><strong className="text-white/80">Jak robić:</strong> stań w jednym miejscu, celuj w głowę, dopiero potem strzał. Po każdej śmierci „wirtualnej” — 2 sekundy przerwy.</p>
+                    <p><strong className="text-white/80">Metryka sukcesu:</strong> zapisz, ile z 100 killi było w głowę. Jutro spróbuj zrobić lepiej.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: Target, t: 'Cel ćwiczenia', d: 'Po co to robisz i jaki problem naprawia — zanim odpalisz grę.' },
+              { icon: PlayCircle, t: 'Film z omówieniem', d: 'Widzisz technikę na żywo: tempo, pozycję celownika, timing.' },
+              { icon: FileText, t: 'Tekst krok po kroku', d: 'Checklista do wrócenia w dowolnym momencie — bez przewijania wideo.' },
+              { icon: CheckCircle2, t: 'Metryka sukcesu', d: 'Konkretna liczba do sprawdzenia po treningu. Wiesz, że działa.' },
+            ].map((f) => (
+              <div key={f.t} className="glass-liquid rounded-3xl p-6">
+                <span className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/10 ring-1 ring-[#a78bfa]/25">
+                  <f.icon className="h-5 w-5 text-[#c4b5fd]" />
+                </span>
+                <h3 className="font-display text-base font-bold">{f.t}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/50">{f.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== JAK TO WYGLĄDA W PRAKTYCE — pętla dzienna ===== */}
       <section className="relative py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-14 max-w-2xl">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Jak to działa</p>
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Codzienna pętla, która robi za Ciebie myślenie
+              Otwierasz panel. Widzisz dzisiejsze ćwiczenia. Klikasz Start.
             </h2>
-            <p className="mt-4 text-white/50">
-              Wchodzisz na panel — widzisz dokładnie jeden ekran: co dziś zrobić i dlaczego. Reszta dzieje się sama.
-            </p>
           </div>
-
           <div className="grid gap-4 md:grid-cols-4">
             {[
-              {
-                icon: ListChecks,
-                step: '1. Plan na dziś',
-                body: 'Twoja rutyna rozbita na konkretne ćwiczenia: Aim Botz, rekoił, DM z celem. Każde z czasem, opisem technicznym i materiałem wideo/GIF. Klikasz Start i robisz.',
-              },
-              {
-                icon: CheckCircle2,
-                step: '2. Odhaczasz',
-                body: 'Zaliczone ćwiczenia zapisują się w kalendarzu — nawet jeśli dziś zrobisz tylko jedno. Nie ma dnia „znikniętego”: kalendarz pamięta każdy wysiłek.',
-              },
-              {
-                icon: Flame,
-                step: '3. Budujesz serię',
-                body: 'Seria dni rośnie, tydzień po tygodniu. Regularność to jedyna metryka, która naprawdę przewiduje progres — i jest u Ciebie widoczna codziennie.',
-              },
-              {
-                icon: Swords,
-                step: '4. Grasz i sprawdzasz',
-                body: 'Mecze z Faceita importują się same: Elo, K/D, reakcja, pre-aim, celność. Widzisz trend — a trener widzi to samo i pokazuje, co poprawić.',
-              },
+              { icon: ListChecks, step: '1. Plan na dziś', body: `Rutyna rozbita na dni i ćwiczenia z czasem. Żadnego „co dziś trenować?" — decyzja jest już podjęta.` },
+              { icon: PlayCircle, step: '2. Oglądasz film', body: 'Krótkie omówienie techniki do ćwiczenia. Patrzysz raz — potem wracasz tylko do checklisty.' },
+              { icon: CheckCircle2, step: '3. Robisz i odhaczasz', body: `Trenujesz z timerem, odhaczasz ćwiczenie. Każdy dzień zostaje w kalendarzu — nawet z jednym ćwiczeniem.` },
+              { icon: Swords, step: '4. Sprawdzasz progres', body: 'Kalendarz regularności, minuty treningu i seria dni. Progres widoczny w liczbach, nie w wrażeniach.' },
             ].map((s) => (
               <div key={s.step} className="glass-liquid relative rounded-3xl p-6">
                 <span className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/10 ring-1 ring-[#a78bfa]/25">
@@ -216,133 +270,6 @@ export default async function Home() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ===== FUNKCJE ===== */}
-      <section className="relative py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-14 max-w-2xl">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">W środku</p>
-            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Wszystko, czego YouTube Ci nie da</h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { icon: CalendarDays, t: 'Kalendarz treningów', d: 'Widzisz ostatnie tygodnie: pełne dni, częściowe dni, notatki i sen. Twoja regularność przestaje być zgadywanką.' },
-              { icon: ListChecks, t: 'Rutyny od trenera', d: 'Programy wielodniowe z ćwiczeniami, minutami, filmami i GIF-ami. Przypisane konkretnie pod Twoje dziury — nie generyczny PDF.' },
-              { icon: Timer, t: 'Timer praktyki', d: 'Wbudowany timer liczy minuty treningu. Ty.week sumują się w wykres tygodniowy — widzisz, czy trenujesz wystarczająco.' },
-              { icon: Swords, t: 'Log meczów z Faceita', d: 'Automatyczny import: wynik, mapa, Elo, reakcja, pre-aim, celność. Po każdym meczu wiesz, co poszło nie tak.' },
-              { icon: TrendingUp, t: 'Trajektoria Elo', d: 'Wykres Elo w czasie zamiast „chyba chyba wchodzę”. Realny trend zamiast wrażeń po jednym złym wieczorze.' },
-              { icon: Target, t: 'Cele 1–3 i kamienie milowe', d: 'Krótkie, konkretne cele z terminem. Trener widzi postęp i pilnuje, żebyś nie płynął po rozum do kubełka.' },
-              { icon: MessageSquareHeart, t: 'Feedback i wiadomości', d: 'Komentarz trenera do sesji, zadań i meczów. Masz odpowiedź „co dalej”, zanim stracisz motywację.' },
-              { icon: Flame, t: 'Seria i ranking tygodnia', d: 'Zobacz, kto z Twojej drużyny trenuje najwięcej w tym tygodniu. Zdrowa presja grupy działa lepiej niż norma.' },
-              { icon: ShieldCheck, t: 'Zero ściemy', d: 'Dane z Faceita i Twoje odhaczenia — bez sztucznie zawyżanych statystyk. Jeśli nie trenujesz, panel to pokaże.' },
-            ].map((f) => (
-              <div key={f.t} className="glass-liquid rounded-3xl p-6">
-                <span className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/10 ring-1 ring-[#a78bfa]/25">
-                  <f.icon className="h-5 w-5 text-[#c4b5fd]" />
-                </span>
-                <h3 className="font-display text-base font-bold">{f.t}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/50">{f.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== STARTER — dzień 0 bez pustki: gracz widzi dokładnie, co dostaje
-           zanim się zarejestruje. Research: Refrag sprzedaje "plan od razu" —
-           tu pokazujemy konkury konkretem: 7 dni, 3 poziomy, suma minut. ===== */}
-      <section className="relative py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-14 max-w-2xl">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Pierwsze 7 dni</p>
-            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Zacznij od gotowego planu. Nie od pustego ekranu.
-            </h2>
-            <p className="mt-4 text-white/50">
-              Zaraz po rejestracji wybierasz poziom i dostajesz rutynę startową: 7 dni, każdy z konkretnym
-              ćwiczeniem, czasem i metryką sukcesu. Bez czekania na trenera, bez pustego panelu.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                icon: Crosshair,
-                level: 'Początkujący',
-                total: '140 min łącznie',
-                body: 'Fundament: celownik na wysokości głowy, pierwsze 10 pocisków AK, counter-strafe i dzień meczowy. Każdy dzień ~15–20 minut.',
-              },
-              {
-                icon: Zap,
-                level: 'Średni',
-                total: '210 min łącznie',
-                body: 'Przełamanie stagnacji: tempo, prefire, demo review własnego meczu i praca nad tym jednym błędem, który powtarzasz.',
-              },
-              {
-                icon: Swords,
-                level: 'Zaawansowany',
-                total: '225 min łącznie',
-                body: 'Pod Faceit: off-angle, spray na dystans, analiza pro demo i wdrożenie decyzji pod presją ranked.',
-              },
-            ].map((p) => (
-              <div key={p.level} className="glass-liquid rounded-3xl p-6">
-                <span className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/10 ring-1 ring-[#a78bfa]/25">
-                  <p.icon className="h-5 w-5 text-[#c4b5fd]" />
-                </span>
-                <h3 className="font-display text-base font-bold">{p.level}</h3>
-                <p className="mt-0.5 text-xs font-bold text-[#c4b5fd]">7 dni · {p.total}</p>
-                <p className="mt-2 text-sm leading-relaxed text-white/50">{p.body}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-white/35">
-            Dzień 1 zaczyna się od 15 minut. Każde ćwiczenie mówi Ci: co robić, jak długo, dlaczego i jak sprawdzić, że działa.
-          </p>
-        </div>
-      </section>
-
-      {/* ===== USP — obiekcja nr 1 z researchu: "mam YouTube za darmo".
-           3 kolumny = 3 realne różnice systemu vs darmowe materiały. ===== */}
-      <section className="relative py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-14 max-w-2xl">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Dlaczego nie YouTube?</p>
-            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Wiedza jest darmowa. Regularność, pomiar i rozliczanie — już nie.
-            </h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                icon: Zap,
-                t: 'Zero decyzji, zero zwlekania',
-                d: 'Poradnik mówi Ci „rób aim trening”. My mówimy: dziś 12 minut Aim Botz, 8 minut rekoił, 10 minut DM z celem — i timer leci. Decyzja „co dziś trenować” to najtańszy powód, żeby odpuszczać.',
-              },
-              {
-                icon: Eye,
-                t: 'Trener, który widzi Twoje dane',
-                d: 'Film nie wie, że last 5 dni nie trenowałeś. Trener widzi serię, minuty, staty meczów i reaguje zanim przerwa zrobi się z 2 tygodni. To różnica między „może kiedyś” a „robisz teraz”.',
-              },
-              {
-                icon: Users,
-                t: 'Konto ucznia, nie playlista',
-                d: 'Każde odhaczone ćwiczenie, każdy mecz i każda sesja zostają w Twoim kalendarzu i na wykresach. Progres, który nie żyje w głowie — żyje w systemie.',
-              },
-            ].map((f) => (
-              <div key={f.t} className="glass-liquid rounded-3xl p-6">
-                <span className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/10 ring-1 ring-[#a78bfa]/25">
-                  <f.icon className="h-5 w-5 text-[#c4b5fd]" />
-                </span>
-                <h3 className="font-display text-base font-bold">{f.t}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/50">{f.d}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mx-auto mt-10 max-w-2xl text-center text-sm text-white/35">
-            <ChevronRight className="mr-1 inline h-4 w-4 -translate-y-0.5 text-[#a78bfa]/60" />
-            Poradniki dalej będą Cię bawić. Ten system ma Cię wynieść z miejsca, w którym stoisz od miesięcy.
-          </p>
         </div>
       </section>
 
@@ -359,8 +286,8 @@ export default async function Home() {
                 <ul className="space-y-3 text-sm text-white/55">
                   <li className="flex gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/70" /> grasz regularnie, ale Elo stoi od miesięcy</li>
                   <li className="flex gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/70" /> masz 30–60 minut dziennie i chcesz je zamienić w progres</li>
-                  <li className="flex gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/70" /> chcesz konkretnego planu, nie kolejnej porcji poradników</li>
-                  <li className="flex gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/70" /> chcesz trenera, który patrzy na Twoje dane, a nie gadą ogólników</li>
+                  <li className="flex gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/70" /> wolisz gotowy plan niż składanie własnego z poradników</li>
+                  <li className="flex gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/70" /> chcesz widzieć każdy ćwiczony element na filmie, a nie tylko w opisie</li>
                 </ul>
               </div>
               <div>
@@ -370,7 +297,7 @@ export default async function Home() {
                 <ul className="space-y-3 text-sm text-white/55">
                   <li className="flex gap-2.5"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400/60" /> szukasz magicznego tricku na Level 10 bez pracy</li>
                   <li className="flex gap-2.5"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400/60" /> grasz „od święta” i nie planujesz wracać regularnie</li>
-                  <li className="flex gap-2.5"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400/60" /> wolisz kupować skiny niż trenować — też spoko, ale tu bez nas</li>
+                  <li className="flex gap-2.5"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400/60" /> chcesz treningu z indywidualnym analizowaniem Twoich meczów — to robimy w coachingu 1:1</li>
                 </ul>
               </div>
             </div>
@@ -378,7 +305,33 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ===== FAQ — odpowiedzi na realne obiekcje zakupowe z researchu ===== */}
+      {/* ===== CO DOSTAJESZ + BONUS ===== */}
+      <section className="relative py-20">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="glass-card border-glow rounded-[28px] p-8 sm:p-10">
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Co dokładnie dostajesz</h2>
+            <ul className="mt-8 space-y-4">
+              {[
+                { t: 'Pełna rutyna CS2 w panelu', d: 'Wszystkie dni i ćwiczenia z czasem, celem i metryką sukcesu — na dożywotni dostęp, bez abonamentu.' },
+                { t: 'Film do każdego ćwiczenia', d: 'Technika omówiona na żywo: tempo, ustawienie celownika, typowe błędy.' },
+                { t: 'Tekst krok po kroku do każdego ćwiczenia', d: 'Checklisty do wrócenia przed każdym treningiem.' },
+                { t: 'Timer i tracking w panelu', d: 'Wbudowany timer, kalendarz regularności, seria dni i statystyki praktyki.' },
+                { t: `Bonus: rutyna startowa (${starterDays} dni)`, d: `Jeśli chcesz zacząć od fundamentu — osobny darmowy plan (${starterMinutes} min łącznie) dostajesz w panelu od razu po aktywacji konta.` },
+              ].map((i) => (
+                <li key={i.t} className="flex gap-3.5">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400/80" />
+                  <div>
+                    <p className="font-semibold text-white/90">{i.t}</p>
+                    <p className="mt-0.5 text-sm text-white/50">{i.d}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FAQ — obiekcje zakupowe ===== */}
       <section className="relative py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <div className="mb-12 text-center">
@@ -388,28 +341,32 @@ export default async function Home() {
           <div className="space-y-3">
             {[
               {
-                q: '„Mogę znaleźć to wszystko za darmo na YouTube. Po co mi to?”',
-                a: 'Masz rację — wiedza jest darmowa. My sprzedajemy to, czego YouTube nie ma: system, który sprawia, że tę wiedzę realnie stosujesz codziennie. Plan na dziś, seria, kalendarz, import meczów i trener, który sprawdza, czy robisz co trzeba. To różnica między „wiem jak” a „robię”.',
+                q: '„Mogę znaleźć to wszystko za darmo na YouTube. Po co mi to?"',
+                a: 'Wiedza jest darmowa — struktura nie. YouTube daje tysiące poradników, ale nie mówi Ci: dziś robisz TO, tyle minut, w tym tempie, i sprawdzasz TĄ metryką. Rutyna składa wiedzę w codzienny plan i pilnuje regularności. To różnica między „wiem jak" a „robię".',
               },
               {
-                q: '„Ile czasu muszę trenować dziennie?”',
-                a: 'Minimum 30 minut. Rutyny są budowane z ćwiczeń po 5–20 minut, więc układasz je pod swój dzień. Badania i praktyka pro-sceny zgodnie pokazują: 30 minut codziennie bije 4 godziny raz w tygodniu. Regularność jest tu metryką numer jeden — i jest przez nas mierzona.',
+                q: '„Jak długo mam dostęp?"',
+                a: 'Na zawsze. Jednorazowa płatność, bez abonamentu, bez limitu czasu. Rutyna zostaje w Twoim panelu razem z timerem, kalendarzem i statystykami.',
               },
               {
-                q: '„Jaki poziom musi mieć gracz, żeby zacząć?”',
-                a: 'Dowolny. Zaraz po rejestracji wybierasz jeden z trzech poziomów rutyny startowej (Początkujący / Średni / Zaawansowany) i dostajesz plan na pierwsze 7 dni — a potem trener może dopasować kolejne rutyny po rozpoznaniu Twojej gry. Zła decyzja? Zmieniasz poziom jednym klikiem.',
+                q: '„Ile czasu muszę trenować dziennie?"',
+                a: 'Ćwiczenia mają po 10–45 minut, a plan dnia układa się pod 30–60 minut. Codzienna regularność bije jeden długi trening w tygodniu — dlatego cała rutyna jest zbudowana wokół dnia, nie weekendu.',
               },
               {
-                q: '„Czy zobaczę progres i po jakim czasie?”',
-                a: 'Progres mierzysz trzema warstwami: serią dni (regularność), statystykami praktyki (minuty, ukończone ćwiczenia) i danymi z meczów (Elo, reakcja, pre-aim, celność). Wszystko widzisz w panelu na wykresach. Realnie: zmiany w statystykach treningowych widać po 2–3 tygodniach, w Elo po 1–2 miesiącach konsekwencji.',
+                q: '„Jaki poziom muszę mieć?"',
+                a: 'Rutyna prowadzi Cię od fundamentów (celownik, kontrola sprayu, movement) po zastosowanie w meczach. Jeśli dopiero zaczynasz, w panelu dostaniesz dodatkowo darmową rutynę startową na pierwsze dni.',
               },
               {
-                q: '„Czy to nie kolejny PDF / kurs, który odpuszczam po tygodniu?”',
-                a: 'Nie, bo to nie jest materiał do przerobienia. To system, który żyje razem z Tobą: kalendarz pamięta każdy dzień (nawet z jednym ćwiczeniem), seria rośnie, trener widzi przerwy i reaguje. Ty możesz odpuszczać — ale panel będzie o tym wiedział, i to zwykle wystarcza.',
+                q: '„Jak aktywuję dostęp po zakupie?"',
+                a: 'Po zapłacie dostajesz kod dostępu mailem. Zakładasz konto (30 sekund), wpisujesz kod na stronie /aktywuj-kod — i rutyna pojawia się w Twoim panelu. Całość to 2 minuty.',
               },
               {
-                q: '„Ile to kosztuje?”',
-                a: 'Konto ucznia zakładasz za darmo — dołączasz do trenera kodem zaproszenia i pracujecie w panelu. Płacisz trenerowi za sesje 1:1 i pracę nad Twoją grą; sam system treningowy dostajesz w pakiecie. Bez abonamentu, bez ukrytych opłat.',
+                q: '„Czy zobaczę progres i po jakim czasie?"',
+                a: 'Progres widzisz w trzech warstwach: seria dni (regularność), minuty i ukończone ćwiczenia (pracowitość) oraz metryki sukcesu z ćwiczeń (precyzja). Zmiany w precyzji widać zwykle po 2–3 tygodniach codziennej pracy, w Elo po 1–2 miesiącach.',
+              },
+              {
+                q: '„A jeśli mi nie zadziała?"',
+                a: 'Rutyna działa wtedy, gdy ją robisz — dlatego jest zbudowana z krótkich ćwiczeń z jasną metryką, a panel pokazuje Ci serię dni. Jeśli technicznie coś nie działa albo kod nie aktywuje się poprawnie, napisz — rozwiązujemy sprawę.',
               },
             ].map((f) => (
               <details key={f.q} className="group glass-liquid rounded-2xl">
@@ -429,21 +386,20 @@ export default async function Home() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <div className="glass-card border-glow rounded-[32px] p-10 sm:p-14">
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Za miesiąc będziesz mieć <span className="text-gradient-vantor">30 dni serii</span>.<br />
+              Za miesiąc możesz mieć <span className="text-gradient-vantor">30 dni planu za sobą</span>.<br />
               Albo te same 30 dni mielenia.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-white/50">
-              Oba upłyną tak samo szybko. Jeden z nich zostawia ślad w kalendarzu i na wykresie Elo.
+              Oba upłyną tak samo szybko. Jeden z nich zostawia ślad w kalendarzu, metrykach i na wykresie.
             </p>
-            <Link
-              href="/register"
-              className="group mt-9 inline-flex items-center gap-2 rounded-2xl px-10 py-4 text-base font-semibold text-white btn-darey"
-            >
-              Załóż konto za darmo
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+            <div className="mt-9">
+              <BuyCta />
+            </div>
+            <p className="mt-5 text-xs text-white/35">
+              Płacisz raz · kod aktywujesz w 30 sekund · dołączasz do graczy, którzy przestali zgadywać
+            </p>
           </div>
-          <p className="mt-8 text-xs text-white/30">© {new Date().getFullYear()} CS2 Coaching · Panel ucznia i trenera</p>
+          <p className="mt-8 text-xs text-white/30">© {new Date().getFullYear()} Rutyna CS2</p>
         </div>
       </section>
     </main>
