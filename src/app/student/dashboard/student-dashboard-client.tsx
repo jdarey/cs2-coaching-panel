@@ -16,7 +16,7 @@ import {
   TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks, Timer,
 } from 'lucide-react'
 import Link from 'next/link'
-import { getStreak } from '@/lib/gamification'
+import { getStreak as getTrainingStreak } from '@/lib/gamification'
 
 interface Session {
   id: string
@@ -99,6 +99,8 @@ interface StudentDashboardClientProps {
     sessions: number
   }
   weekly: { videosDone: number; tasksDone: number; sessionsThisWeek: number; overdueAssignments: number; dueSoonAssignments: number }
+  /** Dni z odhaczonymi rutynami (ISO) — serie liczymy z trenowania, nie tylko filmów */
+  trainingDays?: string[]
 }
 
 type TabKey = 'sessions' | 'activity'
@@ -114,6 +116,7 @@ export function StudentDashboardClient({
   initialRoutines,
   initialPractice,
   weekly,
+  trainingDays = [],
 }: StudentDashboardClientProps) {
   const router = useRouter()
   useRealtimeRefresh(() => router.refresh())
@@ -127,7 +130,17 @@ export function StudentDashboardClient({
   const assignments = initialAssignments
 
   const completionRate = totalVideos > 0 ? Math.round(((watched + implemented) / totalVideos) * 100) : 0
-  const streak = getStreak(progress.map((p) => p.watchedAt || p.updatedAt))
+  // Seria regularności = dni z JAKĄKOLWIEK aktywnością treningową: rutyny (nawet
+  // jedno ćwiczenie), praktyka z timera, filmy. Research: kluczowa metryka to
+  // regularność — uczeń trenujący codziennie nie może mieć serii 0.
+  // Dni z praktyką (timer) — przychodzą jako nagromadzone minuty, więc wyciągamy
+  // unikalne dni z danych tygodniowych nie jest możliwe; używamy sumy tygodniowej.
+  // Seria: rutyny (trainingDays) + filmy (obejrzane/wdrożone).
+  const activityDays = [
+    ...trainingDays,
+    ...progress.filter((p) => p.watchedAt || p.status === 'WATCHED' || p.status === 'IMPLEMENTED').map((p) => p.updatedAt),
+  ]
+  const streak = getTrainingStreak(activityDays)
 
   const nextUpVideo = progress.find((p) => p.status === 'PENDING' || p.status === 'WATCHING')
   const upcomingSessions = sessions.filter((s) => s.status === 'ACTIVE').slice(0, 4)
@@ -205,6 +218,13 @@ export function StudentDashboardClient({
                 {streak} {streak === 1 ? 'dzień' : 'dni'} serii
               </div>
             )}
+            {/* Delta tygodnia — research: gracze chcą widzieć, że ten tydzień jest
+                inny niż poprzedni. Liczba zaliczonych zadań od poniedziałku. */}
+            <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium glass text-white/60">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+              Ten tydzień: {weekly.tasksDone} {weekly.tasksDone === 1 ? 'zadanie' : 'zadań'}
+              {weekly.videosDone > 0 && <span className="text-white/35">· {weekly.videosDone} film.</span>}
+            </div>
             {weekly.overdueAssignments > 0 && (
               <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold glass border border-red-500/40 text-red-300">
                 <AlertTriangle className="w-3.5 h-3.5" />

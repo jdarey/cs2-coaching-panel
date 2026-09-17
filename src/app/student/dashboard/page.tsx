@@ -21,7 +21,7 @@ export default async function StudentDashboardPage() {
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 86400000)
 
-  const [sessions, progress, coach, rankEntries, myTags, assignments, weekStats, routines, practice] = await Promise.all([
+  const [sessions, progress, coach, rankEntries, myTags, assignments, weekStats, routines, practice, completions] = await Promise.all([
     prisma.session.findMany({
       where: { studentId: userId, status: { in: ['ACTIVE', 'COMPLETED'] } },
       orderBy: { scheduledAt: 'desc' },
@@ -91,6 +91,12 @@ export default async function StudentDashboardPage() {
       where: { studentId: userId, createdAt: { gte: new Date(now.getTime() - 8 * 7 * 86400000) } },
       select: { minutes: true, createdAt: true },
       orderBy: { createdAt: 'asc' },
+    }),
+    // Dni treningowe (rutyny) z ostatnich 60 dni — zasilają serię regularności.
+    // Research: serię liczy KAŻDA aktywność (trenowanie!), nie tylko oglądanie filmów.
+    prisma.routineCompletion.findMany({
+      where: { studentId: userId, completedAt: { gte: new Date(now.getTime() - 60 * 86400000) } },
+      select: { completedAt: true },
     }),
   ])
 
@@ -216,6 +222,7 @@ export default async function StudentDashboardPage() {
         thisWeek: thisWeekPractice,
         sessions: practice.length,
       }}
+      trainingDays={completions.map((c) => c.completedAt.toISOString())}
       weekly={{ videosDone: weekStats[0], tasksDone: weekStats[1], sessionsThisWeek: weekStats[2], overdueAssignments, dueSoonAssignments }}
     />
   )
