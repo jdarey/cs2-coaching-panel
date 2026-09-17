@@ -15,11 +15,17 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <div className="relative min-h-screen bg-[#07060c] font-sans text-white">
       <div className="relative flex min-h-screen">
-        <aside className="sticky top-0 z-40 h-screen w-[240px] flex-shrink-0 hidden md:flex flex-col border-r border-white/[0.07] bg-[#0a0c0e]">
+        <aside
+          className="sticky top-0 z-40 h-screen w-[240px] flex-shrink-0 hidden md:flex flex-col"
+          style={{
+            background: 'var(--sidebar-bg, #0b0b12)',
+            borderRight: '1px solid var(--sidebar-border, rgba(255,255,255,0.07))',
+          }}
+        >
           <div className="flex h-[72px] items-center px-5 border-b border-white/[0.06]">
             <Link href="/admin" className="leading-tight">
               <p className="font-display font-bold text-sm tracking-tight">CS2 Coaching</p>
-              <p className="text-[10px] text-[#f4f6f7]/[0.45] font-medium tracking-wider uppercase">Panel admina</p>
+              <p className="text-[10px] text-[#f4f6f7]/[0.45] font-medium tracking-[0.18em] uppercase">Panel admina</p>
             </Link>
           </div>
           <AdminNav />
@@ -34,7 +40,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           </div>
         </aside>
         <div className="flex-1 min-w-0 min-h-screen flex flex-col">
-          <header className="md:hidden sticky top-0 z-30 border-b border-white/[0.06] bg-[#0a0c0e] px-4 py-3 flex items-center gap-3 overflow-x-auto">
+          <header
+            className="md:hidden sticky top-0 z-30 border-b border-white/[0.06] px-4 py-3 flex items-center gap-3 overflow-x-auto"
+            style={{ background: 'var(--sidebar-bg, #0b0b12)' }}
+          >
             <span className="font-display font-bold text-sm shrink-0">Admin</span>
             <AdminNav mobile />
           </header>

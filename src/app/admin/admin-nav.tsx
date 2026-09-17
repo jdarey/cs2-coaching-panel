@@ -24,8 +24,8 @@ export function AdminNav({ mobile = false }: { mobile?: boolean }) {
             key={item.href}
             href={item.href}
             className={cn(
-              'shrink-0 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium',
-              pathname.startsWith(item.href) ? 'text-white bg-[#a78bfa]/[0.12]' : 'text-white/55',
+              'shrink-0 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm',
+              pathname.startsWith(item.href) ? 'text-white font-semibold bg-[#a78bfa]/[0.1] ring-1 ring-[#a78bfa]/20' : 'text-white/55',
             )}
           >
             <item.icon className="w-4 h-4" /> {item.name}
@@ -44,8 +44,8 @@ export function AdminNav({ mobile = false }: { mobile?: boolean }) {
               <Link
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-                  active ? 'text-white bg-[#a78bfa]/[0.08]' : 'text-white/55 hover:text-white/90 hover:bg-white/[0.04]',
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
+                  active ? 'text-white font-semibold bg-[#a78bfa]/[0.1] ring-1 ring-[#a78bfa]/20' : 'text-white/55 hover:text-white/90 hover:bg-white/[0.04]',
                 )}
               >
                 <item.icon className={cn('w-[18px] h-[18px]', active ? 'text-[#a78bfa]' : 'text-white/50')} />

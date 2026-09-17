@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Shield, Activity, RefreshCw, Loader2, CheckCircle2, AlertTriangle, XCircle, ExternalLink } from 'lucide-react'
+import { Shield, Activity, RefreshCw, Loader2, CheckCircle2, AlertTriangle, XCircle, ExternalLink, Users, UserPlus, Zap, Database, ClipboardList, ScrollText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface HealthCheck {
@@ -17,8 +17,19 @@ interface HealthResponse {
   overall: 'healthy' | 'degraded' | 'down'
 }
 
+interface Overview {
+  entities: { usersTotal: number; students: number; coaches: number; admins: number; routines: number; routineAssignments: number; sessionsTotal: number; videosTotal: number }
+  growth: { last24h: number; last7d: number; last30d: number; latest: { email: string; name: string | null; createdAt: string } | null }
+  activity: { active24h: number; active7d: number; auditEvents24h: number; auditErrors24h: number }
+  signups: { date: string; count: number }[]
+  training: { date: string; count: number }[]
+  recentAudit: { id: string; action: string; actorRole: string; createdAt: string }[]
+  generatedAt: string
+}
+
 export function AdminMonitoringClient() {
   const [data, setData] = useState<HealthResponse | null>(null)
+  const [overview, setOverview] = useState<Overview | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,10 +40,13 @@ export function AdminMonitoringClient() {
     else setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/admin/health')
-      if (!res.ok) throw new Error(`Health API: ${res.status}`)
-      const data = await res.json()
-      setData(data)
+      const [hRes, oRes] = await Promise.all([
+        fetch('/api/admin/health'),
+        fetch('/api/admin/overview').catch(() => null),
+      ])
+      if (!hRes.ok) throw new Error(`Health API: ${hRes.status}`)
+      setData(await hRes.json())
+      if (oRes?.ok) setOverview(await oRes.json())
     } catch (e: any) {
       setError(e.message || 'Nie udało się pobrać statusu')
     } finally {
@@ -116,6 +130,62 @@ export function AdminMonitoringClient() {
           </button>
         </div>
       </div>
+
+      {/* ===== Przegląd systemu (overview) ===== */}
+      {overview && (
+        <div className="mb-8 space-y-4">
+          {/* Statystyki naboru i aktywności */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <StatCard icon={Users} label="Użytkownicy" value={overview.entities.usersTotal} sub={`${overview.entities.students} uczniów · ${overview.entities.coaches} trenerów`} />
+            <StatCard icon={UserPlus} label="Nowi (7 dni)" value={overview.growth.last7d} sub={`${overview.growth.last24h} dziś · ${overview.growth.last30d} w 30 dni`} accent />
+            <StatCard icon={Zap} label="Aktywni (24h)" value={overview.activity.active24h} sub={`${overview.activity.active7d} w 7 dni`} />
+            <StatCard icon={Database} label="Treningi (24h)" value={overview.activity.auditEvents24h} sub="zdarzenia audytu" />
+          </div>
+
+          {/* Wykresy: rejestracje + treningi (14 dni) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <MiniChart title="Rejestracje — 14 dni" icon={UserPlus} data={overview.signups} color="139, 92, 246" />
+            <MiniChart title="Zaliczone zadania treningowe — 14 dni" icon={ClipboardList} data={overview.training} color="45, 212, 191" />
+          </div>
+
+          {/* Encje + ostatnie akcje audytu */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="glass rounded-2xl p-4">
+              <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-3 flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Encje w bazie</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <EntityRow label="Rutyny" value={overview.entities.routines} />
+                <EntityRow label="Przypisane rutyny" value={overview.entities.routineAssignments} />
+                <EntityRow label="Sesje" value={overview.entities.sessionsTotal} />
+                <EntityRow label="Filmy" value={overview.entities.videosTotal} />
+                <EntityRow label="Trenerzy" value={overview.entities.coaches} />
+                <EntityRow label="Admini" value={overview.entities.admins} />
+              </div>
+              {overview.growth.latest && (
+                <p className="mt-3 pt-3 border-t border-white/[0.06] text-xs text-white/45 truncate">
+                  Ostatnio dołączył: <b className="text-white/75">{overview.growth.latest.name || overview.growth.latest.email}</b>{' '}
+                  · {new Date(overview.growth.latest.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+                </p>
+              )}
+            </div>
+            <div className="glass rounded-2xl p-4">
+              <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-3 flex items-center gap-1.5"><ScrollText className="w-3.5 h-3.5" /> Ostatnie akcje w systemie</p>
+              <ul className="space-y-2">
+                {overview.recentAudit.length === 0 && <li className="text-sm text-white/35">Brak zdarzeń.</li>}
+                {overview.recentAudit.map((a) => (
+                  <li key={a.id} className="flex items-center gap-2 text-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa] shrink-0" />
+                    <span className="font-mono text-xs text-white/75 truncate">{a.action}</span>
+                    <span className="ml-auto text-[11px] text-white/35 shrink-0">{new Date(a.createdAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="/admin/audit-logs" className="mt-3 pt-3 border-t border-white/[0.06] inline-flex items-center gap-1 text-xs text-[#a78bfa] hover:text-[#c4b5fd] transition-colors">
+                Zobacz pełne logi <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Overall status */}
       {data && (
@@ -204,6 +274,57 @@ export function AdminMonitoringClient() {
           </div>
           <p className="text-xs text-white/50">Serwis nie odpowiada lub zwraca błąd krytyczny.</p>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* ===== Pomocnicze komponenty ===== */
+
+function StatCard({ icon: Icon, label, value, sub, accent }: { icon: any; label: string; value: number | string; sub?: string; accent?: boolean }) {
+  return (
+    <div className="glass rounded-2xl p-4">
+      <div className="flex items-center gap-2.5 mb-2">
+        <span className={cn('grid h-8 w-8 place-items-center rounded-lg', accent ? 'bg-gradient-to-br from-[#a78bfa] to-[#6d28d9]' : 'bg-white/[0.06] border border-white/[0.08]')}>
+          <Icon className={cn('w-4 h-4', accent ? 'text-white' : 'text-[#a78bfa]')} />
+        </span>
+        <span className="text-[11px] uppercase tracking-wider text-white/40 font-semibold">{label}</span>
+      </div>
+      <p className="font-display text-2xl font-bold tabular-nums">{value}</p>
+      {sub && <p className="text-[11px] text-white/40 mt-0.5">{sub}</p>}
+    </div>
+  )
+}
+
+function EntityRow({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white/[0.03]">
+      <span className="text-white/55">{label}</span>
+      <span className="font-semibold tabular-nums">{value}</span>
+    </div>
+  )
+}
+
+/** Mini wykres słupkowy — czysty CSS, bez bibliotek. 14 dni. */
+function MiniChart({ title, icon: Icon, data, color }: { title: string; icon: any; data: { date: string; count: number }[]; color: string }) {
+  const max = Math.max(1, ...data.map((d) => d.count))
+  return (
+    <div className="glass rounded-2xl p-4">
+      <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold mb-3 flex items-center gap-1.5"><Icon className="w-3.5 h-3.5" /> {title}</p>
+      <div className="flex items-end gap-1 h-24">
+        {data.map((d) => (
+          <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
+            <div
+              className="w-full rounded-t-sm transition-all duration-300 group-hover:opacity-100 opacity-80 min-h-[2px]"
+              style={{ height: `${Math.max(4, (d.count / max) * 88)}px`, background: `linear-gradient(180deg, rgba(${color},0.9), rgba(${color},0.35))` }}
+              title={`${d.date}: ${d.count}`}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between text-[10px] text-white/30 mt-1.5">
+        <span>{data[0]?.date.slice(5)}</span>
+        <span>{data[data.length - 1]?.date.slice(5)}</span>
       </div>
     </div>
   )
