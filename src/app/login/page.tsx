@@ -125,8 +125,13 @@ function LoginForm() {
           </p>
         </div>
 
-        {/* ===== Card — hairline, barely there ===== */}
-        <div className="animate-fade-in-slow rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl p-7 sm:p-8 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.8)]" style={{ animationDelay: '120ms' }}>
+        {/* ===== Card — gradient border + top hairline + high elevation ===== */}
+        <div className="animate-fade-in-slow relative rounded-3xl p-px" style={{ background: 'linear-gradient(180deg, rgba(167,139,250,0.35), rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.04))', boxShadow: 'var(--shadow-3, 0 28px 80px -28px rgba(0,0,0,0.7))' }}>
+          <div className="relative rounded-[calc(1.5rem-1px)] bg-[#0b0b12]/95 backdrop-blur-xl p-7 sm:p-8 overflow-hidden">
+            {/* Top hairline — rozświetlona krawędź karty */}
+            <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#a78bfa]/50 to-transparent" aria-hidden />
+            {/* Rogowy blask */}
+            <div className="absolute -top-20 -right-20 h-48 w-48 rounded-full blur-3xl" style={{ background: 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(139,92,246,0.18), transparent 70%)' }} aria-hidden />
           {registered && (
             <div className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm text-[#34d399] bg-[#34d399]/[0.08] border border-[#34d399]/20">
               <ShieldCheck className="w-4 h-4 flex-shrink-0" />
@@ -233,6 +238,7 @@ function LoginForm() {
           >
             Załóż nowe konto
           </Link>
+          </div>
         </div>
 
         {/* ===== Footer — whisper quiet ===== */}

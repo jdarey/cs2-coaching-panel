@@ -645,12 +645,12 @@ export function CoachVideosClient({ initialVideos, initialTags, initialStudents,
                           <Play className="h-10 w-10 text-white/25" />
                         </div>
                       )}
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#a78bfa]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="pointer-events-none absolute inset-0 dark:bg-gradient-to-t dark:from-[#a78bfa]/40 dark:via-transparent dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="yt-force-dark inline-flex items-center gap-1.5 px-4 h-9 rounded-full bg-black/60 backdrop-blur border border-white/10 text-white text-xs font-semibold"><Play className="w-4 h-4"/> Odtwórz</span>
                       </div>
                     </div>
-                    <div className="yt-force-dark absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/50 ring-1 ring-white/15 text-white">
+                    <div className="yt-force-dark video-duration-badge absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 text-[11px] font-medium backdrop-blur-xl bg-black/50 ring-1 ring-white/15 text-white">
                       <Clock className="h-3 w-3" />
                       {formatDuration(video.duration)}
                     </div>

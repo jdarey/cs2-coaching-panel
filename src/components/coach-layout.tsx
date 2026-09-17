@@ -99,7 +99,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
           style={{
-            background: 'var(--sidebar-bg, #0a0c0e)',
+            background: 'var(--sidebar-bg, #0b0b12)',
             borderRight: '1px solid var(--sidebar-border, rgba(255,255,255,0.07))',
           }}
         >
@@ -111,13 +111,16 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                 className="flex items-center gap-3 group"
                 onClick={() => setMobileSidebarOpen(false)}
               >
-                <div className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] animate-pulse-ring shadow-[0_0_24px_-6px_rgba(139,92,246,0.5)] transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
+                <div
+                  className="relative grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3"
+                  style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 24px -8px rgba(139,92,246,0.55)' }}
+                >
                   <ShieldCheck className="w-5 h-5 text-white" strokeWidth={2.2} />
                   <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
                 </div>
                 <div className="leading-tight min-w-0">
                   <p className="font-display font-bold text-sm tracking-tight">CS2 Coaching</p>
-                  <p className="text-[10px] text-[#f4f6f7]/[0.45] font-medium tracking-wider uppercase">Panel trenera</p>
+                  <p className="text-[10px] text-[#f4f6f7]/[0.45] font-medium tracking-[0.18em] uppercase">Panel trenera</p>
                 </div>
               </Link>
               <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 hover:bg-white/5" onClick={() => setMobileSidebarOpen(false)}>
@@ -137,9 +140,9 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                           href={item.href}
                           onClick={() => setMobileSidebarOpen(false)}
                           className={cn(
-                            'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
+                            'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
                             pathname === item.href || pathname.startsWith(item.href + '/')
-                              ? 'text-white bg-[#a78bfa]/[0.08]'
+                              ? 'text-white font-semibold bg-[#a78bfa]/[0.1] ring-1 ring-[#a78bfa]/20'
                               : 'text-[#f4f6f7]/[0.55] hover:text-[#f4f6f7]/[0.9] hover:bg-white/[0.04]',
                           )}
                         >
@@ -174,9 +177,9 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                       href="/coach/settings"
                       onClick={() => setMobileSidebarOpen(false)}
                       className={cn(
-                        'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
+                        'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
                         pathname === '/coach/settings'
-                          ? 'text-white bg-[#a78bfa]/[0.08]'
+                          ? 'text-white font-semibold bg-[#a78bfa]/[0.1] ring-1 ring-[#a78bfa]/20'
                           : 'text-[#f4f6f7]/[0.55] hover:text-[#f4f6f7]/[0.9] hover:bg-white/[0.04]',
                       )}
                     >
@@ -221,7 +224,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
 
             {/* User card */}
             <div className="p-3 border-t border-white/[0.06]">
-              <div className="rounded-2xl p-3 bg-[#101316] border border-white/[0.07]">
+              <div className="rounded-2xl p-3 glass">
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-9 w-9 shrink-0 rounded-lg ring-1 ring-white/15">
                     <AvatarImage src={(user as any)?.avatarUrl || ''} alt={user?.name || ''} />

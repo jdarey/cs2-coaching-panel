@@ -614,9 +614,9 @@ export function StudentSessionDetailClient({ initialSession, initialProgress }: 
                             <Play className="w-10 h-10 text-white/30" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="dark:absolute dark:inset-0 dark:bg-gradient-to-t dark:from-black/40 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute bottom-2 right-2">
-                          <span className="yt-force-dark inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-white bg-black/55 backdrop-blur border border-white/10">
+                          <span className="yt-force-dark video-duration-badge inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-white bg-black/55 backdrop-blur border border-white/10">
                             <Clock className="w-3 h-3" />
                             {formatDuration(video.duration)}
                           </span>

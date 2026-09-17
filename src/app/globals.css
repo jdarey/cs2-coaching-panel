@@ -43,11 +43,17 @@
     --radius: 0.75rem;
     --radius-card: 1.25rem;
     --radius-pill: 999px;
-    --surface-1: #0a0c0e;
-    --surface-2: #101316;
-    --surface-3: #171a1e;
+    --surface-1: #0b0b12;
+    --surface-2: #11111a;
+    --surface-3: #171722;
     --line: rgba(255, 255, 255, 0.08);
     --line-strong: rgba(255, 255, 255, 0.14);
+
+    /* Elevation — spójna skala cieni (karty, modale, popovery) */
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    --shadow-2: 0 12px 32px -16px rgba(0, 0, 0, 0.55);
+    --shadow-3: 0 28px 80px -28px rgba(0, 0, 0, 0.7);
+    --glow: 0 0 0 1px rgba(167, 139, 250, 0.25), 0 16px 48px -20px rgba(139, 92, 246, 0.5);
     --text-1: #f4f6f7;
     --text-2: rgba(244, 246, 247, 0.72);
     --text-3: rgba(244, 246, 247, 0.48);
@@ -69,6 +75,11 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans), system-ui, sans-serif;
     background-color: #07060c;
+    /* Subtelna głębia tła — dwa fioletowe rozbłyski w rogach (fixed, zero kosztu) */
+    background-image:
+      radial-gradient(1100px 700px at 85% -10%, rgba(109, 40, 217, 0.12), transparent 60%),
+      radial-gradient(900px 650px at -10% 30%, rgba(139, 92, 246, 0.07), transparent 55%);
+    background-attachment: fixed;
     color: var(--text-1);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -78,6 +89,12 @@
   ::selection {
     background: rgba(139, 92, 246, 0.35);
     color: #ffffff;
+  }
+
+  /* Keyboard focus — spójny, widoczny, nie koliduje z focus ringami inputów */
+  :focus-visible {
+    outline: 2px solid rgba(167, 139, 250, 0.55);
+    outline-offset: 2px;
   }
 
   /* Scrollbar */
@@ -94,36 +111,48 @@
 
 @layer components {
   /* ===== SURFACES — solid, layered, hairline borders ===== */
+  /* ===== SURFACES — warstwowe: gradient-top highlight + solidna baza +
+     cień elevacji. Efekt "mlecznego szkła" bez backdrop-blur (wydajność). */
   .glass {
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-card);
-  }
-  .glass-strong {
-    background: var(--surface-3);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-card);
-  }
-  .glass-card {
-    background: var(--surface-1);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-card);
-  }
-  .glass-tinted {
-    background: linear-gradient(180deg, rgba(45, 229, 202, 0.05), transparent 40%),
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 96px),
       var(--surface-2);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
+    box-shadow: var(--shadow-1);
   }
-  .glass-liquid {
-    background: var(--surface-2);
+  .glass-strong {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 96px),
+      var(--surface-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-2);
+  }
+  .glass-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 96px),
+      var(--surface-1);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    box-shadow: var(--shadow-1);
+  }
+  .glass-tinted {
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.06), transparent 40%),
+      var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-1);
+  }
+  .glass-liquid {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
+      var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-1);
+    transition: border-color 0.25s ease, box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .glass-liquid:hover {
-    border-color: rgba(167, 139, 250, 0.22);
-    box-shadow: 0 12px 48px -20px rgba(139, 92, 246, 0.25);
+    border-color: rgba(167, 139, 250, 0.28);
+    box-shadow: var(--glow);
+    transform: translateY(-2px);
   }
 
   /* ===== TYPOGRAPHY ===== */
@@ -169,11 +198,10 @@
     position: relative;
     color: #ffffff;
     background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 45%, #6d28d9 100%);
-    background-size: 220% 220%;
     border: 1px solid rgba(167, 139, 250, 0.45);
     border-radius: var(--radius-pill);
-    box-shadow: 0 8px 32px -10px rgba(139, 92, 246, 0.55);
-    animation: btn-gradient-flow 6s ease-in-out infinite;
+    /* inset highlight na górze = "tłoczone szkło", minus ciągła animacja tła */
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 32px -10px rgba(139, 92, 246, 0.55);
     transition: transform 0.2s ease, filter 0.25s ease, box-shadow 0.3s ease;
   }
   .btn-primary-gradient:hover,
@@ -201,8 +229,8 @@
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   }
   .btn-secondary-glass:hover {
-    background: #1d2126;
-    border-color: rgba(45, 229, 202, 0.4);
+    background: #1d2029;
+    border-color: rgba(167, 139, 250, 0.4);
     transform: translateY(-1px);
   }
 
@@ -215,8 +243,8 @@
     transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   }
   .btn-ghost-premium:hover {
-    background: rgba(45, 229, 202, 0.08);
-    border-color: rgba(45, 229, 202, 0.35);
+    background: rgba(167, 139, 250, 0.08);
+    border-color: rgba(167, 139, 250, 0.35);
     color: #ffffff;
   }
 
@@ -242,8 +270,8 @@
   }
   .input-premium:focus {
     outline: none;
-    border-color: rgba(45, 229, 202, 0.5);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.14);
+    border-color: rgba(167, 139, 250, 0.55);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
     background: var(--surface-3);
   }
   .input-premium::placeholder { color: rgba(244, 246, 247, 0.25); }
@@ -264,9 +292,9 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--teal);
-    background: rgba(20, 184, 166, 0.09);
-    border: 1px solid rgba(45, 229, 202, 0.28);
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(167, 139, 250, 0.28);
   }
 
   /* ===== BENTO CARD ===== */
@@ -282,8 +310,8 @@
   }
   .bento-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(45, 229, 202, 0.35);
-    box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.6);
+    border-color: rgba(167, 139, 250, 0.35);
+    box-shadow: var(--glow);
   }
 
   /* ===== ICON TILE ===== */
@@ -292,7 +320,8 @@
     place-items: center;
     border-radius: 0.9rem;
     background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-    border: 1px solid rgba(45, 229, 202, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 24px -10px rgba(139, 92, 246, 0.55);
     color: #fff;
   }
 
@@ -302,14 +331,14 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--teal);
+    background: #a78bfa;
   }
   .live-dot::after {
     content: "";
     position: absolute;
     inset: -4px;
     border-radius: 50%;
-    border: 1px solid rgba(45, 229, 202, 0.55);
+    border: 1px solid rgba(167, 139, 250, 0.55);
     animation: live-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
   @keyframes live-ping {
@@ -776,7 +805,7 @@
       115deg,
       transparent 32%,
       rgba(255, 255, 255, 0.07) 46%,
-      rgba(140, 255, 239, 0.14) 50%,
+      rgba(196, 181, 253, 0.16) 50%,
       rgba(255, 255, 255, 0.07) 54%,
       transparent 68%
     );
@@ -886,7 +915,15 @@
 /* ============================================================
    LIGHT THEME — html.light overrides (settings → Wygląd)
    ============================================================ */
-.light body { background-color: #f4f5f7 !important; color: rgb(13, 17, 23) !important; }
+.light body {
+  background-color: #f4f5f7 !important;
+  color: rgb(13, 17, 23) !important;
+  /* Delikatny fioletowy rozbłysk jak w dark — jasna wersja tła */
+  background-image:
+    radial-gradient(1100px 700px at 85% -10%, rgba(139, 92, 246, 0.07), transparent 60%),
+    radial-gradient(900px 650px at -10% 30%, rgba(139, 92, 246, 0.045), transparent 55%) !important;
+  background-attachment: fixed !important;
+}
 /* Komponenty shadcn/ui (dialog, dropdown, select, toast, tabs, button, input...)
    stoją na zmiennych --popover/--secondary/--muted/--accent. Bez tego w light
    mode dropdowny/toasty były CIEMNE (czarne tło + czarny tekst) — niektóre
@@ -921,11 +958,23 @@
   --surface-3: #eef0f2;
   --line: rgba(13, 17, 23, 0.09);
   --line-strong: rgba(13, 17, 23, 0.16);
+  /* Elevation w light: miękkie, rozmyte cienie (M3-like) + fioletowy glow */
+  --shadow-1: 0 1px 2px rgba(13, 17, 23, 0.05), 0 0 0 1px rgba(13, 17, 23, 0.02) inset;
+  --shadow-2: 0 12px 32px -16px rgba(13, 17, 23, 0.16);
+  --shadow-3: 0 28px 80px -28px rgba(13, 17, 23, 0.22);
+  --glow: 0 0 0 1px rgba(139, 92, 246, 0.18), 0 16px 48px -20px rgba(139, 92, 246, 0.35);
 }
 .light .glass, .light .glass-card, .light .glass-liquid, .light .glass-tinted, .light .glass-strong {
   background: #ffffff !important;
   border-color: rgba(13, 17, 23, 0.1) !important;
-  box-shadow: 0 16px 32px -16px rgba(13, 17, 23, 0.1) !important;
+  box-shadow: var(--shadow-1) !important;
+}
+/* Gradient-top highlight z dark w light robił szarą mgłę — czyścimy.
+   Za to hover zyskuje miękkie uniesienie jak w SaaS dashboardach. */
+.light .glass-liquid:hover {
+  border-color: rgba(139, 92, 246, 0.28) !important;
+  box-shadow: var(--glow) !important;
+  transform: translateY(-2px);
 }
 .light .bg-\[\#060606\] { background-color: #f4f5f7 !important; }
 .light .bg-\[\#07060c\] { background-color: #f4f5f7 !important; }
@@ -938,6 +987,8 @@
 .light .bg-\[\#101316\] { background-color: #f8f9fa !important; }
 .light .bg-\[\#06070d\] { background-color: #eef0f3 !important; }
 .light .bg-\[\#0a0a12\] { background-color: #eef0f3 !important; }
+.light .bg-\[\#0b0b12\] { background-color: #ffffff !important; }
+.light .bg-\[\#0b0b12\]\/95 { background-color: rgba(255, 255, 255, 0.95) !important; }
 /* Ciemne wyspy inline z kart (routine card #0c0c14, dzienne paski #14161c,
    modale #0a0a14 itd.) — bez tego były czarnymi plamami na białych kartach. */
 .light .bg-\[\#0c0c14\] { background-color: #ffffff !important; }
@@ -1186,3 +1237,16 @@
 .light .yt-force-dark .ring-white\/10 { --tw-ring-color: rgba(255,255,255,0.10) !important; }
 .light .yt-force-dark .ring-white\/15 { --tw-ring-color: rgba(255,255,255,0.15) !important; }
 .light .yt-force-dark .ring-white\/20 { --tw-ring-color: rgba(255,255,255,0.20) !important; }
+
+/* Czas trwania filmu na miniaturkach (yt-force-dark): w jasnym motywie tekst
+   robił się czarny (globalny override text-white/85) na czarnym tle — plakietka
+   była nieczytelna i wyglądała jak obcy, brudny prostokąt. W light: jasna
+   pigułka z ciemnym tekstem (spójna z motywem); dark zostaje bez zmian. */
+.light .video-duration-badge {
+  background-color: rgba(255, 255, 255, 0.82) !important;
+  --tw-ring-color: rgba(13, 17, 23, 0.14) !important;
+  backdrop-filter: blur(6px);
+}
+.light .video-duration-badge,
+.light .video-duration-badge * { color: rgb(13, 17, 23) !important; }
+.light .video-duration-badge.border-white\/10 { border-color: rgba(13, 17, 23, 0.14) !important; }

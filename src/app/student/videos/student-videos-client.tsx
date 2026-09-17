@@ -431,9 +431,9 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
                       aria-hidden
                     />
 
-                    {/* Przyciemnienie dołu (zawsze, dla czytelności) + mocniejsze na hover */}
+                    {/* Przyciemnienie dołu — tylko na ciemnym motywie (w jasnym było widoczne jak ciemny "cień" na miniaturce) */}
                     <div
-                      className="absolute inset-x-0 bottom-0 h-2/3 opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                      className="dark:absolute dark:inset-x-0 dark:bottom-0 dark:h-2/3 dark:opacity-70 dark:group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                       style={{ background: 'linear-gradient(180deg, rgba(6,7,13,0) 0%, rgba(6,7,13,0.55) 55%, rgba(76,29,149,0.55) 100%)' }}
                       aria-hidden
                     />
@@ -456,7 +456,7 @@ export function StudentVideosClient({ initialSessions, initialProgress }: Studen
 
                     {/* Duration — bottom-right */}
                     <div className="absolute bottom-2.5 right-2.5 z-20 pointer-events-none">
-                      <span className="yt-force-dark inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold text-white/85 bg-black/55 backdrop-blur-md ring-1 ring-white/10 tabular-nums">
+                      <span className="yt-force-dark video-duration-badge inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold text-white/85 bg-black/55 backdrop-blur-md ring-1 ring-white/10 tabular-nums">
                         <Clock className="h-2.5 w-2.5" />
                         {formatDuration(video.duration)}
                       </span>
