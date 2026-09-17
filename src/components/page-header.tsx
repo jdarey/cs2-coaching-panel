@@ -56,12 +56,8 @@ export function PageHeader({ icon: Icon, label, title, subtitle, children }: Pag
         )}
       </div>
 
-      {/* Hairline oddzielająca nagłówek od treści — subtelna, fioletowa w przekroju */}
-      <div
-        className="h-px w-full"
-        style={{ background: 'linear-gradient(90deg, rgba(167,139,250,0.35), rgba(255,255,255,0.06) 45%, transparent)' }}
-        aria-hidden
-      />
+      {/* Hairline oddzielająca nagłówek od treści — z powolnym shimmerem (ambient, nie hover) */}
+      <div className="header-line" aria-hidden />
     </header>
   )
 }

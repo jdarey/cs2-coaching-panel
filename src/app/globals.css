@@ -1250,3 +1250,256 @@
 .light .video-duration-badge,
 .light .video-duration-badge * { color: rgb(13, 17, 23) !important; }
 .light .video-duration-badge.border-white\/10 { border-color: rgba(13, 17, 23, 0.14) !important; }
+
+/* ============================================================
+   CS2 AMBIENT LAYER — tło-owe animacje w klimacie CS2
+   (embers, tracer, crosshair, smoke). TYLKO transform+opacity.
+   W jasnym motywie i przy prefers-reduced-motion: ukryte.
+   ============================================================ */
+.cs2-ambient { display: none; }
+.dark .cs2-ambient { display: block; }
+
+.cs2-ember {
+  position: absolute;
+  bottom: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #c4b5fd 45%, rgba(139, 92, 246, 0.2) 100%);
+  box-shadow: 0 0 8px 1px rgba(167, 139, 250, 0.45);
+  animation-name: cs2-ember-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+@keyframes cs2-ember-rise {
+  0% { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }
+  8% { opacity: var(--ember-op, 0.55); }
+  55% { transform: translate3d(var(--drift, 40px), -55vh, 0) scale(1.05); }
+  90% { opacity: calc(var(--ember-op, 0.55) * 0.35); }
+  100% { transform: translate3d(calc(var(--drift, 40px) * -0.6), -105vh, 0) scale(0.8); opacity: 0; }
+}
+
+.cs2-tracer {
+  position: absolute;
+  height: 2px;
+  width: 220px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(196, 181, 253, 0.85) 55%, #ffffff);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.55);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.cs2-tracer-a { top: 22%; animation: cs2-tracer-fly 15s ease-in infinite; }
+.cs2-tracer-b { top: 58%; animation: cs2-tracer-fly 21s ease-in 7s infinite; }
+@keyframes cs2-tracer-fly {
+  0% { transform: translate3d(-260px, 0, 0) rotate(-9deg); opacity: 0; }
+  4% { opacity: 0.9; }
+  9% { opacity: 0.25; }
+  12%, 100% { transform: translate3d(110vw, 9vh, 0) rotate(-9deg); opacity: 0; }
+}
+
+.cs2-crosshair {
+  position: absolute;
+  top: 18%;
+  left: 72%;
+  width: 26px;
+  height: 26px;
+  opacity: 0.5;
+  will-change: transform, opacity;
+  animation: cs2-crosshair-drift 38s ease-in-out infinite alternate;
+}
+/* Rysowane czterema liniami + kropką — bez obrazków */
+.cs2-crosshair::before,
+.cs2-crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(196, 181, 253, 0.8);
+}
+.cs2-crosshair::before {
+  left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px;
+  background: linear-gradient(180deg, transparent, rgba(196,181,253,0.8) 20%, rgba(196,181,253,0.8) 80%, transparent);
+}
+.cs2-crosshair::after {
+  top: 50%; left: 0; right: 0; height: 2px; margin-top: -1px;
+  background: linear-gradient(90deg, transparent, rgba(196,181,253,0.8) 20%, rgba(196,181,253,0.8) 80%, transparent);
+}
+@keyframes cs2-crosshair-drift {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0.35; }
+  30% { transform: translate3d(-9vw, 16vh, 0) rotate(90deg); opacity: 0.55; }
+  60% { transform: translate3d(-20vw, 4vh, 0) rotate(180deg); opacity: 0.3; }
+  100% { transform: translate3d(-30vw, 24vh, 0) rotate(270deg); opacity: 0.45; }
+}
+
+.cs2-smoke {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform, opacity;
+}
+.cs2-smoke-a {
+  bottom: -18%; left: -6%;
+  width: 46vw; height: 46vw;
+  background: radial-gradient(circle at 50% 50%, rgba(109, 40, 217, 0.14) 0%, rgba(109, 40, 217, 0.05) 45%, transparent 70%);
+  animation: cs2-smoke-breathe 26s ease-in-out infinite;
+}
+.cs2-smoke-b {
+  top: -22%; right: -10%;
+  width: 40vw; height: 40vw;
+  background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.04) 45%, transparent 70%);
+  animation: cs2-smoke-breathe 34s ease-in-out -12s infinite reverse;
+}
+@keyframes cs2-smoke-breathe {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.8; }
+  50% { transform: translate3d(4vw, -3vh, 0) scale(1.12); opacity: 1; }
+}
+
+/* ---- RADAR (minimapowy sweep w prawym dolnym rogu) ---- */
+.cs2-radar {
+  position: absolute;
+  right: -90px;
+  bottom: -90px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  border: 1px solid rgba(167, 139, 250, 0.14);
+}
+.cs2-radar::before {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px solid rgba(167, 139, 250, 0.1);
+}
+.cs2-radar::after {
+  content: "";
+  position: absolute;
+  inset: 32%;
+  border-radius: 50%;
+  border: 1px solid rgba(167, 139, 250, 0.08);
+}
+.cs2-radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(167, 139, 250, 0.28), transparent 75deg);
+  animation: cs2-radar-rotate 12s linear infinite;
+  will-change: transform;
+}
+@keyframes cs2-radar-rotate { to { transform: rotate(360deg); } }
+.cs2-radar-ping {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 10px; height: 10px;
+  margin: -5px;
+  border-radius: 50%;
+  background: rgba(196, 181, 253, 0.9);
+  animation: cs2-radar-ping 4.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+}
+.cs2-radar-ping-b { animation-delay: 2.2s; background: rgba(45, 212, 191, 0.7); }
+@keyframes cs2-radar-ping {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  100% { transform: scale(19); opacity: 0; }
+}
+
+/* ---- SCANLINE — powolny pas światła przejeżdżający w dół ekranu ---- */
+.cs2-scanline {
+  position: absolute;
+  left: 0; right: 0; top: -160px;
+  height: 140px;
+  background: linear-gradient(180deg, transparent, rgba(167, 139, 250, 0.045) 42%, rgba(255, 255, 255, 0.035) 50%, rgba(167, 139, 250, 0.045) 58%, transparent);
+  animation: cs2-scan 19s linear infinite;
+  will-change: transform;
+}
+@keyframes cs2-scan {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  6% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translate3d(0, 125vh, 0); opacity: 0; }
+}
+
+/* ---- SITE MARKERS A/B — dryfujące znaczniki bomb-site'ów ---- */
+.cs2-site {
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1px dashed rgba(196, 181, 253, 0.3);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: rgba(196, 181, 253, 0.42);
+  letter-spacing: 0.04em;
+  will-change: transform;
+}
+.cs2-site-a { top: 28%; left: 10%; animation: cs2-site-drift 46s ease-in-out infinite alternate; }
+.cs2-site-b { bottom: 24%; right: 16%; animation: cs2-site-drift 56s ease-in-out -22s infinite alternate-reverse; }
+@keyframes cs2-site-drift {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(4vw, -5vh, 0) rotate(10deg); }
+  100% { transform: translate3d(-3vw, 6vh, 0) rotate(-8deg); }
+}
+
+/* Drugi crosshair — mniejszy, inna trasa */
+.cs2-crosshair-b {
+  position: absolute;
+  top: 64%;
+  left: 16%;
+  width: 18px;
+  height: 18px;
+  opacity: 0.35;
+  will-change: transform;
+  animation: cs2-crosshair-drift-b 52s ease-in-out infinite alternate-reverse;
+}
+.cs2-crosshair-b::before,
+.cs2-crosshair-b::after {
+  content: "";
+  position: absolute;
+}
+.cs2-crosshair-b::before {
+  left: 50%; top: 0; bottom: 0; width: 1.5px; margin-left: -1px;
+  background: linear-gradient(180deg, transparent, rgba(196, 181, 253, 0.7) 20%, rgba(196, 181, 253, 0.7) 80%, transparent);
+}
+.cs2-crosshair-b::after {
+  top: 50%; left: 0; right: 0; height: 1.5px; margin-top: -1px;
+  background: linear-gradient(90deg, transparent, rgba(196, 181, 253, 0.7) 20%, rgba(196, 181, 253, 0.7) 80%, transparent);
+}
+@keyframes cs2-crosshair-drift-b {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(14vw, -10vh, 0) rotate(-120deg); }
+  100% { transform: translate3d(4vw, 8vh, 0) rotate(-240deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs2-ember, .cs2-tracer, .cs2-crosshair, .cs2-smoke, .cs2-radar-sweep,
+  .cs2-radar-ping, .cs2-scanline, .cs2-site, .cs2-crosshair-b { animation: none !important; }
+  .cs2-ember, .cs2-tracer, .cs2-scanline, .cs2-radar-ping { opacity: 0 !important; }
+  .cs2-crosshair { opacity: 0.3; transform: none; }
+  .cs2-crosshair-b, .cs2-site { opacity: 0.25; transform: none; }
+  .cs2-smoke { opacity: 0.6; }
+  .cs2-radar-sweep { opacity: 0.4; }
+  .header-line::after { animation: none !important; opacity: 0; }
+}
+
+/* Shimmer przejeżdżający po linii pod nagłówkiem strony (ambient, nie hover) */
+.header-line {
+  position: relative;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(167, 139, 250, 0.35), rgba(255, 255, 255, 0.06) 45%, transparent);
+  overflow: hidden;
+}
+.header-line::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: translateX(-110%);
+  animation: header-line-sweep 9s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes header-line-sweep {
+  0% { transform: translateX(-110%); }
+  55%, 100% { transform: translateX(440%); }
+}

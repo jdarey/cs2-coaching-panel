@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { AuroraBackground } from '@/components/aurora-background'
+import { Cs2Ambient } from '@/components/cs2-ambient'
 import { UnreadBadge } from '@/components/unread-badge'
 import { fetchAndSaveLiveElo } from '@/lib/live-elo'
 import {
@@ -158,6 +159,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     <div className="relative min-h-screen bg-[#07060c] font-sans text-white overflow-x-clip">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-white focus:text-black focus:text-sm focus:font-semibold">Przejdź do treści</a>
       <AuroraBackground />
+      <Cs2Ambient />
 
       {/* Ambient orbs — static (frozen drift animations: sustained GPU cost) */}
       <div className="pointer-events-none fixed inset-0 -z-[5] overflow-hidden" aria-hidden>

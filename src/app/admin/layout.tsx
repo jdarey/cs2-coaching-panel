@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { isAdmin } from '@/lib/admin'
+import { Cs2Ambient } from '@/components/cs2-ambient'
 import { AdminNav } from './admin-nav'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
@@ -14,6 +15,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="relative min-h-screen bg-[#07060c] font-sans text-white">
+      <Cs2Ambient />
       <div className="relative flex min-h-screen">
         <aside
           className="sticky top-0 z-40 h-screen w-[240px] flex-shrink-0 hidden md:flex flex-col"

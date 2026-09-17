@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import { AuroraBackground } from '@/components/aurora-background'
+import { Cs2Ambient } from '@/components/cs2-ambient'
 import { PageTitle } from '@/components/page-title'
 import { RedirectOverlay } from '@/components/redirect-overlay'
 import { Button } from '@/components/ui/button'
@@ -100,6 +101,7 @@ function LoginForm() {
         stages={['Uwierzytelnianie', 'Weryfikacja sesji', 'Przygotowanie panelu', 'Prawie gotowe']}
       />
       <AuroraBackground variant="auth" intensity={0.9} />
+      <Cs2Ambient variant="auth" />
 
       {/* Single breathing violet glow — the one focal point */}
       <div className="pointer-events-none absolute top-[8%] left-1/2 -translate-x-1/2 w-[620px] h-[420px] animate-breathe" aria-hidden>
