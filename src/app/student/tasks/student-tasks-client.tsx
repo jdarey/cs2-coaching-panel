@@ -45,6 +45,7 @@ import {
 } from 'lucide-react'
 import { PracticeTimer } from '@/components/practice-timer'
 import { useGifPreview, GifPreviewCard, canHoverFine } from '@/components/gif-preview'
+import { levelLabel } from '@/lib/starter-routine'
 
 interface Assignment {
   id: string
@@ -69,6 +70,7 @@ interface RoutineAssignment {
     title: string
     description: string | null
     recurring: boolean
+    level?: string | null
     tasks: { id: string; title: string; description: string | null; videoId: string | null; video?: { id: string; title: string; url: string; thumbnail: string | null } | null; steamMapUrl: string | null; gifUrl: string | null; linkUrl: string | null; day: number; minutes: number | null }[]
   }
   progress: { id: string; taskId: string; status: string; completedAt: string | null }[]
@@ -526,7 +528,8 @@ export function StudentTasksClient() {
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/70"><Layers className="w-3 h-3 text-[#a78bfa]"/>{days.length} {days.length===1?'dzień':'dni'}</span>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/70"><ListChecks className="w-3 h-3 text-[#2dd4bf]"/>{totalCount} zadań</span>
-                        {totalMins>0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/60"><Clock className="w-3 h-3 text-[#fbbf24]"/>~{totalMins} min</span>}
+                        {totalMins>0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] px-2.5 py-1 text-[11px] font-bold text-white/60"><Clock className="w-3 h-3 text-[#fbbf24]"/>~{totalMins} min łącznie</span>}
+                        {ra.routine.level && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/25 px-2.5 py-1 text-[11px] font-bold text-[#c4b5fd]"><Target className="w-3 h-3"/>{levelLabel(ra.routine.level)}</span>}
                         <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-white/40 ml-1"><span className={cn('h-1.5 w-1.5 rounded-full', pct===100?'bg-[#a78bfa]': pct>60?'bg-[#a78bfa]':'bg-white/30')}/> {doneCountR}/{totalCount}</span>
                       </div>
 

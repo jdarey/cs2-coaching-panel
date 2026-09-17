@@ -555,6 +555,12 @@ model Routine {
   coachId     String
   title       String
   description String?
+  // Ranga poziomu — sygnał "dla kogo" (marketing: nie generyczny PDF, tylko
+  // plan dopasowany do miejsca, w którym gracz stoi). null = bez poziomu.
+  level       String?  // BEGINNER | INTERMEDIATE | ADVANCED
+  // Rutyna startowa (7 dni fundamentu): tworzona przez system / kupowana
+  // przez ucznia jednym klikiem bez trenera ("klik Start — masz plan").
+  isStarterRoutine Boolean @default(false)
   // Routines run every day on repeat by default; the coach can turn this off
   // (one-shot program) or set an end date on the assignment.
   recurring   Boolean  @default(true)

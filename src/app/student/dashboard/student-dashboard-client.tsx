@@ -13,10 +13,193 @@ import { AnnouncementsFeed } from '@/components/community/announcements-feed'
 import { LeaderboardWidget } from '@/components/community/leaderboard-widget'
 import {
   Film, Clock, CalendarClock, BookOpen, ArrowRight,  Sparkles, MessageSquare, Flame, Zap, PlayCircle,
-  TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks, Timer,
+  TrendingUp, AlertTriangle, CheckCircle2, Target, ListChecks, Timer, CalendarCheck,
 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { getStreak as getTrainingStreak } from '@/lib/gamification'
+import { levelLabel } from '@/lib/starter-routine'
+
+interface StarterPlan {
+  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+  label: string
+  title: string
+  description: string
+  totalMinutes: number
+  days: number
+  tasks: number
+}
+
+/**
+ * Pusty stan bez trenera → start w 1 klik. Research: nowy gracz dostawał
+ * "poproś trenera" (ściana) zamiast planu. Tu: wybór poziomu → rutyna
+ * 7-dniowa przypisana natychmiast; zmiana poziomu kieruje istniejące
+ * przypisanie zamiast tworzyć duplikaty.
+ */
+function StarterRoutineBanner() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [plans, setPlans] = useState<StarterPlan[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [switching, setSwitching] = useState(false)
+
+  const start = async (level: StarterPlan['level']) => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/routines/starter-routine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setError(data?.error || 'Nie udało się uruchomić rutyny')
+        return
+      }
+      toast({ title: 'Rutyna startowa aktywna', description: 'Twoje Pierwsze 7 dni czeka w Zadaniach treningowych.' })
+      router.refresh()
+      router.push('/student/tasks')
+    } catch {
+      setError('Brak połączenia — spróbuj ponownie')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const switchLevel = async (assignmentId: string, level: StarterPlan['level']) => {
+    if (!confirm('Zmienić poziom rutyny startowej? Postęp wyzeruje się i zaczniesz nowy plan od dnia 1.')) return
+    setSwitching(true)
+    setError('')
+    try {
+      const res = await fetch('/api/routines/starter-routine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level, assignmentId }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setError(data?.error || 'Nie udało się zmienić poziomu')
+        return
+      }
+      toast({ title: 'Poziom zmieniony', description: 'Nowy plan czeka w Zadaniach treningowych.' })
+      router.refresh()
+    } catch {
+      setError('Brak połączenia — spróbuj ponownie')
+    } finally {
+      setSwitching(false)
+    }
+  }
+
+  useEffect(() => {
+    fetch('/api/routines/starter-routine')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.plans && setPlans(d.plans))
+      .catch(() => {})
+  }, [])
+
+  return (
+    <div className="glass-liquid relative overflow-hidden rounded-3xl p-6 sm:p-8 mb-8 border border-[#a78bfa]/25" style={{ animationDelay: '40ms' }}>
+      <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#8b5cf6]/15 blur-3xl pointer-events-none" />
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] ring-1 ring-white/25">
+            <Zap className="w-5 h-5 text-white" />
+          </span>
+          <div>
+            <h3 className="font-display text-xl font-bold text-white">Nie czekaj na trenera — startuj teraz</h3>
+            <p className="text-xs text-white/45">Rutyna startowa 7 dni: co robić, jak długo, dlaczego i jak mierzyć progres.</p>
+          </div>
+        </div>
+        {error && <p className="text-sm text-red-300 mb-3">{error}</p>}
+        <div className="grid gap-3 sm:grid-cols-3">
+          {plans.length > 0
+            ? plans.map((p) => (
+                <button key={p.level} onClick={() => start(p.level)} disabled={loading}
+                  className="group text-left rounded-2xl p-4 bg-white/[0.03] border border-white/[0.07] hover:border-[#a78bfa]/40 hover:bg-white/[0.05] transition-all disabled:opacity-50">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[#c4b5fd]">{p.label}</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{p.days} dni · {p.tasks} ćwiczeń · ~{p.totalMinutes} min łącznie</p>
+                  <p className="mt-1 text-xs text-white/45 line-clamp-2">{p.description}</p>
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#c4b5fd] group-hover:text-white">
+                    {loading ? 'Uruchamiam…' : 'Start — przypisz mi ten plan'} <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              ))
+            : [0, 1, 2].map((i) => (
+                <div key={i} className="rounded-2xl p-4 bg-white/[0.03] border border-white/[0.06] animate-pulse">
+                  <div className="h-3 w-16 rounded bg-white/10" />
+                  <div className="mt-2 h-3 w-40 rounded bg-white/[0.07]" />
+                  <div className="mt-2 h-3 w-full rounded bg-white/[0.05]" />
+                </div>
+              ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Przełącznik poziomu pod kartą aktywnej rutyny startowej: research — gracz
+ * niedocenia/overestymuje swój poziom i odpuszcza, gdy plan nie pasuje.
+ * Zmiana poziomu kieruje istniejące przypisanie (bez duplikatów).
+ */
+function StarterLevelSwitch({ assignmentId, currentLevel }: { assignmentId: string; currentLevel: string | null }) {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [switching, setSwitching] = useState(false)
+  const [switchError, setSwitchError] = useState('')
+
+  const switchLevel = async (level: StarterPlan['level']) => {
+    if (level === currentLevel) return
+    if (!confirm('Zmienić poziom rutyny startowej? Postęp wyzeruje się i zaczniesz nowy plan od dnia 1.')) return
+    setSwitching(true)
+    setSwitchError('')
+    try {
+      const res = await fetch('/api/routines/starter-routine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level, assignmentId }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setSwitchError(data?.error || 'Nie udało się zmienić poziomu')
+        return
+      }
+      toast({ title: 'Poziom zmieniony', description: 'Nowy plan czeka w Zadaniach treningowych.' })
+      router.refresh()
+    } catch {
+      setSwitchError('Brak połączenia — spróbuj ponownie')
+    } finally {
+      setSwitching(false)
+    }
+  }
+
+  return (
+    <div className="animate-rise-in glass-liquid rounded-3xl p-5 mb-8" style={{ animationDelay: '110ms' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-white/85">Plan nie pasuje? Zmień poziom w 1 klik</p>
+          <p className="text-xs text-white/45 mt-0.5">Zaczniesz nowy plan od dnia 1 — bez pytania trenera.</p>
+          {switchError && <p className="text-xs text-red-300 mt-1">{switchError}</p>}
+        </div>
+        <div className="flex gap-2">
+          {(['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const).map((lv) => (
+            <button key={lv} onClick={() => switchLevel(lv)} disabled={switching || lv === currentLevel}
+              className={cn(
+                'rounded-xl px-4 h-9 text-xs font-bold transition-all border',
+                lv === currentLevel
+                  ? 'bg-[#a78bfa]/15 border-[#a78bfa]/40 text-[#c4b5fd] cursor-default'
+                  : 'bg-white/[0.04] border-white/[0.08] text-white/60 hover:text-white hover:border-[#a78bfa]/35 hover:bg-white/[0.07] disabled:opacity-50',
+              )}>
+              {levelLabel(lv)}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface Session {
   id: string
@@ -68,6 +251,8 @@ interface RoutineAssignment {
     id: string
     title: string
     description: string | null
+    level: string | null
+    isStarterRoutine: boolean
     tasks: { id: string; title: string; description: string | null; videoId: string | null; day: number; minutes: number | null }[]
   }
   progress: { taskId: string; status: string }[]
@@ -98,7 +283,7 @@ interface StudentDashboardClientProps {
     thisWeek: number
     sessions: number
   }
-  weekly: { videosDone: number; tasksDone: number; sessionsThisWeek: number; overdueAssignments: number; dueSoonAssignments: number }
+  weekly: { videosDone: number; tasksDone: number; sessionsThisWeek: number; overdueAssignments: number; dueSoonAssignments: number; trainedDaysThisWeek: number }
   /** Dni z odhaczonymi rutynami (ISO) — serie liczymy z trenowania, nie tylko filmów */
   trainingDays?: string[]
 }
@@ -225,6 +410,25 @@ export function StudentDashboardClient({
               Ten tydzień: {weekly.tasksDone} {weekly.tasksDone === 1 ? 'zadanie' : 'zadań'}
               {weekly.videosDone > 0 && <span className="text-white/35">· {weekly.videosDone} film.</span>}
             </div>
+            {/* Cel tygodnia: DNI treningu, nie minuty — research: regularność bije
+                maratony. 5 dni = tydzień zrobiony dobrze; nie wymaga perfekcji. */}
+            {(() => {
+              const goal = 5
+              const done = weekly.trainedDaysThisWeek
+              const hit = done >= goal
+              return (
+                <div
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold glass border',
+                    hit ? 'border-emerald-500/40 text-emerald-300' : 'border-[#a78bfa]/35 text-[#c4b5fd]',
+                  )}
+                  title="Cel tygodnia: 5 dni z jakimkolwiek treningiem (rutyna albo timer)"
+                >
+                  <CalendarCheck className={cn('w-3.5 h-3.5', hit ? 'text-emerald-400' : 'text-[#a78bfa]')} />
+                  Cel tygodnia: {Math.min(done, goal)}/{goal} dni{hit && ' — zrobione!'}
+                </div>
+              )
+            })()}
             {weekly.overdueAssignments > 0 && (
               <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold glass border border-red-500/40 text-red-300">
                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -247,6 +451,9 @@ export function StudentDashboardClient({
             <LeaderboardWidget variant="student" />
           </div>
         </div>
+
+        {/* ===== Rutyna startowa: pusty stan → start w 1 klik ===== */}
+        {!activeRoutine && <StarterRoutineBanner />}
 
         {/* ===== DZIŚ — what matters today ===== */}
         <div className="grid gap-4 lg:grid-cols-2 mb-8">
@@ -331,7 +538,7 @@ export function StudentDashboardClient({
             ) : (
               <li className="flex items-center gap-3 rounded-2xl px-3.5 py-3 bg-white/[0.02] border border-dashed border-white/10 text-sm text-white/40">
                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/[0.04] shrink-0"><ListChecks className="w-3.5 h-3.5" /></span>
-                Brak aktywnej rutyny — poproś trenera
+                Wybierz powyżej plan startowy 7 dni — lub poczekaj na rutynę od trenera
               </li>
             )}
             {(nextUpVideo ? [nextUpVideo] : []).concat(progress.filter(p => p.status === 'PENDING' && p.id !== nextUpVideo?.id).slice(0,1)).slice(0,2).map((p: any) => (
@@ -405,6 +612,7 @@ export function StudentDashboardClient({
             </div>
           </Link>
         )}
+        {activeRoutine && activeRoutine.routine.isStarterRoutine && <StarterLevelSwitch assignmentId={activeRoutine.id} currentLevel={activeRoutine.routine.level} />}
 
         {/* ===== PROGRESS + ELO TRAJECTORY (samo ELO, bez rangi strony) ===== */}
         <div className="grid gap-6 lg:grid-cols-5 mb-8">

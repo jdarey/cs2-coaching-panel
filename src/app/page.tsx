@@ -106,7 +106,7 @@ export default async function Home() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-white/35">
-            Konto ucznia bez karty · dołączasz do trenera kodem zaproszenia
+            Konto ucznia bez karty · rutyna startowa w panelu od pierwszej minuty · dołączasz do trenera kodem zaproszenia
           </p>
 
           {/* Hero stats — odpowiedź na "czym to się różni od PDF-a z rutyną" */}
@@ -250,6 +250,58 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ===== STARTER — dzień 0 bez pustki: gracz widzi dokładnie, co dostaje
+           zanim się zarejestruje. Research: Refrag sprzedaje "plan od razu" —
+           tu pokazujemy konkury konkretem: 7 dni, 3 poziomy, suma minut. ===== */}
+      <section className="relative py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="mb-14 max-w-2xl">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Pierwsze 7 dni</p>
+            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              Zacznij od gotowego planu. Nie od pustego ekranu.
+            </h2>
+            <p className="mt-4 text-white/50">
+              Zaraz po rejestracji wybierasz poziom i dostajesz rutynę startową: 7 dni, każdy z konkretnym
+              ćwiczeniem, czasem i metryką sukcesu. Bez czekania na trenera, bez pustego panelu.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                icon: Crosshair,
+                level: 'Początkujący',
+                total: '140 min łącznie',
+                body: 'Fundament: celownik na wysokości głowy, pierwsze 10 pocisków AK, counter-strafe i dzień meczowy. Każdy dzień ~15–20 minut.',
+              },
+              {
+                icon: Zap,
+                level: 'Średni',
+                total: '210 min łącznie',
+                body: 'Przełamanie stagnacji: tempo, prefire, demo review własnego meczu i praca nad tym jednym błędem, który powtarzasz.',
+              },
+              {
+                icon: Swords,
+                level: 'Zaawansowany',
+                total: '225 min łącznie',
+                body: 'Pod Faceit: off-angle, spray na dystans, analiza pro demo i wdrożenie decyzji pod presją ranked.',
+              },
+            ].map((p) => (
+              <div key={p.level} className="glass-liquid rounded-3xl p-6">
+                <span className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#a78bfa]/20 to-[#8b5cf6]/10 ring-1 ring-[#a78bfa]/25">
+                  <p.icon className="h-5 w-5 text-[#c4b5fd]" />
+                </span>
+                <h3 className="font-display text-base font-bold">{p.level}</h3>
+                <p className="mt-0.5 text-xs font-bold text-[#c4b5fd]">7 dni · {p.total}</p>
+                <p className="mt-2 text-sm leading-relaxed text-white/50">{p.body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-white/35">
+            Dzień 1 zaczyna się od 15 minut. Każde ćwiczenie mówi Ci: co robić, jak długo, dlaczego i jak sprawdzić, że działa.
+          </p>
+        </div>
+      </section>
+
       {/* ===== USP — obiekcja nr 1 z researchu: "mam YouTube za darmo".
            3 kolumny = 3 realne różnice systemu vs darmowe materiały. ===== */}
       <section className="relative py-20">
@@ -345,7 +397,7 @@ export default async function Home() {
               },
               {
                 q: '„Jaki poziom musi mieć gracz, żeby zacząć?”',
-                a: 'Dowolny. Rutyny przypisuje trener po rozpoznaniu Twojej gry — od pierwszych kroków w recoil po pracę nad crosshair placement i pre-aim pod Faceita. Nie ma tu „za nisko”: im niżej jesteś, tym więcej single-change daje.',
+                a: 'Dowolny. Zaraz po rejestracji wybierasz jeden z trzech poziomów rutyny startowej (Początkujący / Średni / Zaawansowany) i dostajesz plan na pierwsze 7 dni — a potem trener może dopasować kolejne rutyny po rozpoznaniu Twojej gry. Zła decyzja? Zmieniasz poziom jednym klikiem.',
               },
               {
                 q: '„Czy zobaczę progres i po jakim czasie?”',

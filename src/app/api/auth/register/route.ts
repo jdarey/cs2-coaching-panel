@@ -2,6 +2,40 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { registerSchema } from '@/lib/validations'
+import { getStarterRoutine } from '@/lib/starter-routine'
+
+/**
+ * Dzień 0 bez pustki: każdy nowy uczeń dostaje od razu rutynę startową
+ * "Pierwsze 7 dni" (BEGINNER). Research: obietnica landing page'a to
+ * "klikasz Start i masz plan" — pusty panel w dniu 0 to najdroższe miejsce
+ * na churn. Best-effort: błąd nie blokuje rejestracji.
+ */
+async function assignStarterRoutine(studentId: string) {
+  const def = getStarterRoutine('BEGINNER')
+  const routine = await prisma.routine.create({
+    data: {
+      coachId: studentId,
+      title: def.title,
+      description: def.description,
+      level: 'BEGINNER',
+      isStarterRoutine: true,
+      recurring: false,
+      tasks: {
+        create: def.tasks.map((t, i) => ({
+          title: t.title,
+          description: t.description,
+          minutes: t.minutes,
+          day: i + 1,
+          order: i,
+        })),
+      },
+    },
+  })
+  await prisma.routineAssignment.create({
+    // coachId = uczeń (rutyna systemowa, bez trenera — autor to sam system)
+    data: { routineId: routine.id, studentId, coachId: studentId },
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,6 +111,15 @@ export async function POST(request: NextRequest) {
         where: { token: inviteToken },
         data: { usedAt: new Date() },
       })
+    }
+
+    // Uczeń startuje z gotowym planem od pierwszej minuty (dzień 0 zamyka się).
+    if (role === 'STUDENT') {
+      try {
+        await assignStarterRoutine(user.id)
+      } catch (starterError) {
+        console.error('Starter routine auto-assign failed:', starterError)
+      }
     }
 
     return NextResponse.json(user, { status: 201 })

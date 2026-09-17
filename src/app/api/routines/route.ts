@@ -18,10 +18,13 @@ const taskSchema = z.object({
   minutes: z.number().int().min(1).max(600).optional().nullable(),
 })
 
+const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const
 const routineSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional().nullable(),
   recurring: z.boolean().default(true),
+  // Poziom rutyny (opcjonalny) — wyświetlany uczniowi jako sygnał "dla kogo"
+  level: z.enum(LEVELS).optional().nullable(),
   tasks: z.array(taskSchema).min(1).max(60),
 })
 
@@ -126,6 +129,7 @@ export async function POST(request: NextRequest) {
         title: validated.title,
         description: validated.description ?? null,
         recurring: validated.recurring,
+        level: validated.level ?? null,
         tasks: {
           create: validated.tasks.map((t, i) => ({
             title: t.title,

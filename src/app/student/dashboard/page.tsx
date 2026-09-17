@@ -77,7 +77,7 @@ export default async function StudentDashboardPage() {
         id: true, status: true,
         routine: {
           select: {
-            id: true, title: true, description: true,
+            id: true, title: true, description: true, level: true, isStarterRoutine: true,
             tasks: { select: { id: true, title: true, description: true, videoId: true, day: true, minutes: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
           },
         },
@@ -167,6 +167,8 @@ export default async function StudentDashboardPage() {
       id: ra.routine.id,
       title: ra.routine.title,
       description: ra.routine.description,
+      level: ra.routine.level,
+      isStarterRoutine: ra.routine.isStarterRoutine,
       tasks: ra.routine.tasks.map((t) => ({
         id: t.id,
         title: t.title,
@@ -206,6 +208,17 @@ export default async function StudentDashboardPage() {
     .filter((p) => p.createdAt >= startOfWeek)
     .reduce((acc, p) => acc + p.minutes, 0)
 
+  // Cel tygodnia: unikalne dni z treningiem (rutyna LUB praktyka z timera)
+  // od poniedziałku. Research: "30 minut codziennie bije 4 godziny raz w
+  // tygodniu" — cel to DNI, nie minuty, żeby nie nagradzać jednego maratonu.
+  const warsawDayFmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit',
+  })
+  const trainedDaysThisWeek = new Set([
+    ...completions.filter((c) => c.completedAt >= startOfWeek).map((c) => warsawDayFmt.format(c.completedAt)),
+    ...practice.filter((p) => p.createdAt >= startOfWeek).map((p) => warsawDayFmt.format(p.createdAt)),
+  ]).size
+
   return (
     <StudentDashboardClient
       initialStats={stats}
@@ -223,7 +236,7 @@ export default async function StudentDashboardPage() {
         sessions: practice.length,
       }}
       trainingDays={completions.map((c) => c.completedAt.toISOString())}
-      weekly={{ videosDone: weekStats[0], tasksDone: weekStats[1], sessionsThisWeek: weekStats[2], overdueAssignments, dueSoonAssignments }}
+      weekly={{ videosDone: weekStats[0], tasksDone: weekStats[1], sessionsThisWeek: weekStats[2], overdueAssignments, dueSoonAssignments, trainedDaysThisWeek }}
     />
   )
 }

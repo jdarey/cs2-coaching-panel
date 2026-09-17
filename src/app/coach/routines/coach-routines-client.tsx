@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Search, Trash2, Pencil, Loader2, X, Sparkles, UserPlus, ListChecks,
   CalendarRange, Clock, Film, Check, ChevronDown, ChevronUp, PlayCircle, Users, MapPin, Repeat,
-  Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye,
+  Image, Zap, GripVertical, BookmarkPlus, FileText, ArrowUp, ArrowDown, LinkIcon, Globe, Eye, Target,
 } from 'lucide-react'
 import { StudentPicker } from '@/components/student-picker'
 import { MarkdownEditor } from '@/components/markdown-editor'
@@ -37,6 +37,7 @@ interface Routine {
   title: string
   description: string | null
   recurring: boolean
+  level?: string | null
   tasks: RoutineTask[]
   assignments: { id: string; status: string; student: { id: string; name: string | null; email: string } }[]
 }
@@ -110,7 +111,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   const [editing, setEditing] = useState<Routine | null>(null)
   const [assigning, setAssigning] = useState<Routine | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({ title: '', description: '', recurring: true })
+  const [formData, setFormData] = useState({ title: '', description: '', recurring: true, level: '' })
   const [tasks, setTasks] = useState<RoutineTask[]>([emptyTask(1)])
   const [assignStudentId, setAssignStudentId] = useState('')
   const [assignEndsAt, setAssignEndsAt] = useState('')
@@ -211,6 +212,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
           title: formData.title,
           description: formData.description || null,
           recurring: formData.recurring,
+          level: formData.level || null,
           tasks: cleanTasks.map((t) => ({
             id: t.id || undefined,
             title: t.title,
@@ -296,7 +298,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
 
   const openAddDialog = () => {
     setEditing(null)
-    setFormData({ title: '', description: '', recurring: true })
+    setFormData({ title: '', description: '', recurring: true, level: '' })
     setTasks([emptyTask(1)])
     setOpenTaskIdx(null)
     setDialogOpen(true)
@@ -304,7 +306,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
 
   const openEditDialog = (r: Routine) => {
     setEditing(r)
-    setFormData({ title: r.title, description: r.description || '', recurring: r.recurring })
+    setFormData({ title: r.title, description: r.description || '', recurring: r.recurring, level: r.level || '' })
     setTasks(r.tasks.length ? r.tasks.map((t) => ({ ...t, gifUrl: t.gifUrl || null, steamMapUrl: t.steamMapUrl || null, linkUrl: t.linkUrl || null, clientKey: t.clientKey || t.id || `k${Date.now()}_${Math.random().toString(36).slice(2, 8)}` })) : [emptyTask(1)])
     setOpenTaskIdx(null)
     setDialogOpen(true)
@@ -453,6 +455,12 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                           Powtarzana codziennie
                         </span>
                       )}
+                      {r.level && (
+                        <span className="mt-2 ml-1.5 inline-flex w-fit items-center gap-1 rounded-lg px-2 h-6 text-[11px] font-semibold bg-[#a78bfa]/10 border border-[#a78bfa]/25 text-[#c4b5fd]">
+                          <Target className="h-3 w-3" />
+                          {{ BEGINNER: 'Początkujący', INTERMEDIATE: 'Średni', ADVANCED: 'Zaawansowany' }[r.level] || r.level}
+                        </span>
+                      )}
 
                     {/* Stats */}
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-white/50">
@@ -585,6 +593,29 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                     disabled={isLoading}
                     maxLength={2000}
                   />
+                </div>
+
+                {/* Poziom rutyny — research: gracze szukają planu "pod siebie".
+                    Opcjonalny sygnał dla ucznia: dla kogo jest ten program. */}
+                <div className="space-y-1.5">
+                  <label htmlFor="r-level" className="text-xs font-medium text-white/55">
+                    Poziom (opcjonalnie) — sygnał dla ucznia, dla kogo jest ten plan
+                  </label>
+                  <div className="relative">
+                    <Target className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <select
+                      id="r-level"
+                      value={formData.level}
+                      onChange={(e) => setFormData((p) => ({ ...p, level: e.target.value }))}
+                      disabled={isLoading}
+                      className="h-12 w-full rounded-xl bg-white/[0.03] border border-white/[0.08] pl-11 pr-4 text-sm text-white appearance-none outline-none focus:border-[#a78bfa]/40 focus:ring-2 focus:ring-[#8b5cf6]/25 transition"
+                    >
+                      <option value="">Bez poziomu</option>
+                      <option value="BEGINNER">Początkujący</option>
+                      <option value="INTERMEDIATE">Średni</option>
+                      <option value="ADVANCED">Zaawansowany</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Recurring toggle */}

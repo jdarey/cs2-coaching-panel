@@ -19,10 +19,12 @@ const taskSchema = z.object({
   minutes: z.number().int().min(1).max(600).optional().nullable(),
 })
 
+const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const
 const patchSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).optional().nullable(),
   recurring: z.boolean().optional(),
+  level: z.enum(LEVELS).optional().nullable(),
   tasks: z.array(taskSchema).min(1).max(60).optional(),
 })
 
@@ -139,6 +141,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           title: validated.title,
           description: validated.description === undefined ? undefined : validated.description,
           recurring: validated.recurring,
+          level: validated.level === undefined ? undefined : validated.level,
         },
         include: {
           tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
