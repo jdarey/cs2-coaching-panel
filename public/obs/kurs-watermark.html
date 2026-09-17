@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  background: transparent;
+  width: 420px;
+  height: 200px;
+  overflow: hidden;
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --bg:    rgba(6, 6, 6, 0.82);
+  --text:  #e8e8e8;
+  --muted: #8a8a8a;
+  --dim:   #5a5a5a;
+  --line:  rgba(255,255,255,0.10);
+  --line2: rgba(255,255,255,0.16);
+  --glass: rgba(255,255,255,0.04);
+  --accent: #a78bfa;
+}
+
+/* ===== watermark — domyślnie prawy GÓRNY róg ===== */
+.wm {
+  position: absolute;
+  right: 20px; top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 12px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transform: translateY(-8px);
+  animation: wm-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+}
+@keyframes wm-in { to { opacity: 1; transform: translateY(0); } }
+
+/* subtelny "bicie" serca co 6s — przypomina obecność, nie rozprasza */
+.wm::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(167, 139, 250, 0.0);
+  animation: wm-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes wm-pulse {
+  0%, 88%, 100% { border-color: rgba(167, 139, 250, 0); }
+  94%           { border-color: rgba(167, 139, 250, 0.45); }
+}
+
+/* ===== logo ===== */
+.wm-logo {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  border: 1.5px solid var(--line2);
+  background: linear-gradient(135deg, rgba(167,139,250,0.18), rgba(167,139,250,0.06));
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wm-logo svg { width: 20px; height: 20px; fill: var(--text); }
+
+/* ===== teksty ===== */
+.wm-texts { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.wm-brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 7px;
+}
+.wm-brand .sep {
+  width: 3px; height: 3px; border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.wm-brand .course {
+  color: var(--accent);
+}
+.wm-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 230px;
+}
+
+/* rotujący dopisek — subtelny fade */
+.wm-sub span {
+  display: inline-block;
+  transition: opacity 0.5s ease;
+}
+.wm-sub span.out { opacity: 0; }
+</style>
+</head>
+<body>
+  <div class="wm" id="wm">
+    <div class="wm-logo">
+      <svg viewBox="0 0 24 24"><path d="M4 2h7a8 8 0 0 1 8 8v4a8 8 0 0 1-8 8H4V2zm3 3v14h4a5 5 0 0 0 5-5v-4a5 5 0 0 0-5-5H7z"/></svg>
+    </div>
+    <div class="wm-texts">
+      <div class="wm-brand">
+        DAREY<span class="sep"></span><span class="course">KURS CS2</span>
+      </div>
+      <div class="wm-sub"><span id="note">dareycs2.vercel.app</span></div>
+    </div>
+  </div>
+
+<script>
+// ══════════════ KONFIGURACJA ══════════════
+// Dopiski rotujące pod brandem (materiał z kursu, plan, strona)
+const NOTES = [
+  'dareycs2.vercel.app',
+  'materiał z kursu',
+  'jeden plan · każde ćwiczenie z filmem',
+  'plan: ćwiczenia + czas + wyjaśnienia'
+];
+const NOTE_MS = 6000;  // jak często zmienia się dopisek
+// ══════════════════════════════════════════
+
+// pozycja: ?pos=tr|tl|br|bl (domyślnie tr — prawy górny)
+const m = location.search.match(/pos=(tr|tl|br|bl)/);
+if (m) {
+  const wm = document.getElementById('wm');
+  wm.style.right = m[1][1] === 'r' ? '20px' : 'auto';
+  wm.style.left  = m[1][1] === 'l' ? '20px' : 'auto';
+  wm.style.top   = m[1][0] === 't' ? '20px' : 'auto';
+  wm.style.bottom = m[1][0] === 'b' ? '20px' : 'auto';
+}
+
+const noteEl = document.getElementById('note');
+let ni = 0;
+setInterval(() => {
+  ni = (ni + 1) % NOTES.length;
+  noteEl.classList.add('out');
+  setTimeout(() => {
+    noteEl.textContent = NOTES[ni];
+    noteEl.classList.remove('out');
+  }, 500);
+}, NOTE_MS);
+</script>
+</body>
+</html>
