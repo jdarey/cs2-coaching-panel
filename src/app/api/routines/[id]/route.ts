@@ -17,6 +17,9 @@ const taskSchema = z.object({
   linkUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   day: z.number().int().min(1).default(1),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
+  // Wariant trudności dobrany temu uczniowi (zmienialny też przez ucznia)
+  variantLabel: z.string().max(60).optional().nullable(),
+  variantDifficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).optional().nullable(),
 })
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const
@@ -124,6 +127,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
             day: t.day,
             minutes: t.minutes ?? null,
             order: i,
+            variantLabel: t.variantLabel ?? null,
+            variantDifficulty: t.variantDifficulty ?? null,
           }
           if (t.id) {
             await tx.routineTask.updateMany({

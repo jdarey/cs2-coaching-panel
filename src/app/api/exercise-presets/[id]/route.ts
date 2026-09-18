@@ -2,21 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
 import { isCoachRole } from '@/lib/roles'
+import { replaceVariants, exercisePresetPatchSchema } from '@/lib/preset-schema'
 
 export const dynamic = 'force-dynamic'
-
-const exercisePresetSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().max(2000).optional().nullable(),
-  videoId: z.string().optional().nullable(),
-  gifUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
-  steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
-  linkUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
-  minutes: z.number().int().min(1).max(600).optional().nullable(),
-  tags: z.array(z.string()).optional(),
-})
 
 export async function PATCH(
   request: NextRequest,
@@ -34,7 +23,7 @@ export async function PATCH(
     const userId = (session.user as any).id
     const { id } = await params
     const body = await request.json()
-    const validated = exercisePresetSchema.parse(body)
+    const validated = exercisePresetPatchSchema.parse(body)
 
     const preset = await prisma.exercisePreset.findFirst({
       where: { id, coachId: userId },
@@ -63,10 +52,22 @@ export async function PATCH(
         linkUrl: validated.linkUrl ?? undefined,
         minutes: validated.minutes ?? undefined,
         tags: validated.tags ?? undefined,
+        category: validated.category ?? undefined,
       },
+      include: { variants: { orderBy: { order: 'asc' } } },
     })
 
-    return NextResponse.json(updated)
+    // Warianty podmieniane w całości gdy przyszły w body
+    if (validated.variants) {
+      await replaceVariants(id, validated.variants)
+    }
+
+    const fresh = await prisma.exercisePreset.findUnique({
+      where: { id },
+      include: { variants: { orderBy: { order: 'asc' } } },
+    })
+
+    return NextResponse.json(fresh ?? updated)
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json({ error: 'Nieprawidłowe dane', details: error }, { status: 400 })

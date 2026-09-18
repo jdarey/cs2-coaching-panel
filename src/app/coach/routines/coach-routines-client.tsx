@@ -28,6 +28,9 @@ interface RoutineTask {
   linkUrl: string | null
   day: number
   minutes: number | null
+  /** Wariant trudności dobrany temu uczniowi (z wariantów presetu) */
+  variantLabel: string | null
+  variantDifficulty: string | null
   /** Stabilny klucz React — nowo dodane taski nie mają jeszcze id z DB */
   clientKey?: string
 }
@@ -76,6 +79,15 @@ interface ExercisePreset {
   linkUrl: string | null
   minutes: number | null
   tags: string[]
+  category?: string | null
+  variants?: { id: string; label: string; difficulty: string; description: string | null; minutes: number | null; order: number }[]
+}
+
+// Kolory plakietek wariantów (spójne z presetami)
+export const VARIANT_DIFF_META: Record<string, { label: string; color: string }> = {
+  EASY: { label: 'Łatwy', color: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/25' },
+  MEDIUM: { label: 'Średni', color: 'text-amber-300 bg-amber-500/10 border-amber-500/25' },
+  HARD: { label: 'Trudny', color: 'text-red-300 bg-red-500/10 border-red-500/25' },
 }
 
 interface CoachRoutinesClientProps {
@@ -94,6 +106,8 @@ const emptyTask = (day = 1): RoutineTask => ({
   linkUrl: null,
   day,
   minutes: null,
+  variantLabel: null,
+  variantDifficulty: null,
   clientKey: `k${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
 })
 
@@ -130,9 +144,14 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
   // overflow-hidden modala podglądu, w przeciwieństwie do starego dymka CSS)
   const gif = useGifPreview()
 
-  const addPresetToTasks = (p: ExercisePreset) => {
-    setTasks(prev=> [...prev, { ...emptyTask(1), title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, linkUrl: p.linkUrl, minutes: p.minutes }])
-    toast({ title: 'Dodano', description: `"${p.title}" dodane do rutyny` })
+  const addPresetToTasks = (p: ExercisePreset, variant?: { label: string; difficulty: string; minutes: number | null } | null) => {
+    const t = { ...emptyTask(1), title: p.title, description: p.description, videoId: p.videoId, gifUrl: p.gifUrl, steamMapUrl: p.steamMapUrl, linkUrl: p.linkUrl, minutes: variant?.minutes ?? p.minutes }
+    if (variant) {
+      t.variantLabel = variant.label
+      t.variantDifficulty = variant.difficulty
+    }
+    setTasks(prev => [...prev, t])
+    toast({ title: 'Dodano', description: variant ? `"${p.title}" (${variant.label}) dodane do rutyny` : `"${p.title}" dodane do rutyny` })
   }
 
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
@@ -704,6 +723,7 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                             <span className="block truncate text-sm font-semibold text-white/90 group-hover/row:text-white">{t.title || <span className="text-white/35 italic">(bez nazwy — kliknij, aby uzupełnić)</span>}</span>
                             <span className="mt-0.5 flex items-center gap-2 text-[11px] text-white/40">
                               <span className="inline-flex items-center gap-1"><CalendarRange className="w-3 h-3"/>Dzień {t.day}</span>
+                              {t.variantLabel ? (() => { const m = VARIANT_DIFF_META[t.variantDifficulty ?? ''] ?? VARIANT_DIFF_META.MEDIUM; return <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded-full border font-semibold', m.color)}>{t.variantLabel}</span> })() : null}
                               {t.minutes ? <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3"/>{t.minutes} min</span> : null}
                               {t.videoId ? <span className="inline-flex items-center gap-1 text-[#c4b5fd]"><Film className="w-3 h-3"/>Film</span> : null}
                               {t.gifUrl ? <span className="inline-flex items-center gap-1 text-[#2dd4bf]"><Image className="w-3 h-3"/>GIF</span> : null}
@@ -746,6 +766,45 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
 
                       {/* Materiały: wszystkie pola opcjonalne w siatce 2-kolumnowej */}
                       <div className="grid sm:grid-cols-2 gap-3 rounded-2xl bg-white/[0.015] border border-white/[0.05] p-3.5">
+                        {/* Wariant trudności — dopasowanie per uczeń */}
+                        <div className="sm:col-span-2">
+                          <label className="text-[11px] font-medium text-white/45">Wariant trudności dla ucznia (z presetów z wariantami)</label>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {(() => {
+                              const preset = exercisePresets.find(p => p.title === t.title && p.variants?.length)
+                              const vars = preset?.variants ?? []
+                              if (!vars.length) {
+                                return <span className="text-[11px] text-white/30 italic">To ćwiczenie nie ma wariantów — dodaj je w zakładce Presety (ten sam tytuł) albo dodaj ćwiczenie z biblioteki.</span>
+                              }
+                              return (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateTask(i, { variantLabel: null, variantDifficulty: null, minutes: preset?.minutes ?? t.minutes })}
+                                    className={cn('text-[11px] px-2.5 py-1.5 rounded-full border font-semibold transition', !t.variantLabel ? 'bg-white text-black border-white' : 'bg-white/[0.03] text-white/45 border-white/[0.08] hover:text-white')}
+                                  >
+                                    Bez wariantu
+                                  </button>
+                                  {vars.map(v => {
+                                    const meta = VARIANT_DIFF_META[v.difficulty] ?? VARIANT_DIFF_META.MEDIUM
+                                    const active = t.variantLabel === v.label
+                                    return (
+                                      <button
+                                        key={v.id}
+                                        type="button"
+                                        title={v.description || ''}
+                                        onClick={() => updateTask(i, { variantLabel: v.label, variantDifficulty: v.difficulty, minutes: v.minutes ?? t.minutes })}
+                                        className={cn('text-[11px] px-2.5 py-1.5 rounded-full border font-semibold transition', active ? 'bg-white text-black border-white ring-2 ring-[#a78bfa]/40' : cn(meta.color, 'hover:scale-[1.03]'))}
+                                      >
+                                        {v.label}{v.minutes ? ` · ${v.minutes}m` : ''}
+                                      </button>
+                                    )
+                                  })}
+                                </>
+                              )
+                            })()}
+                          </div>
+                        </div>
                         <div>
                           <label className="text-[11px] font-medium text-white/45">Minuty</label>
                           <input
@@ -985,11 +1044,32 @@ export function CoachRoutinesClient({ initialRoutines, initialStudents, initialV
                   <div key={p.id} className="rounded-2xl bg-white/[0.04] border border-white/[0.07] overflow-hidden flex flex-col">
                     {p.gifUrl && <div className="h-32 bg-black overflow-hidden"><img decoding="async" src={p.gifUrl} alt={p.title} className="w-full h-full object-cover" /></div>}
                     <div className="p-3 flex-1">
-                      <p className="font-semibold text-white text-sm">{p.title}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-white text-sm">{p.title}</p>
+                        {p.category && <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#a78bfa]/15 text-[#c4b5fd] border border-[#a78bfa]/25">{p.category}</span>}
+                      </div>
                       {p.description && <p className="text-xs text-white/40 line-clamp-2 mt-1">{p.description}</p>}
                       <div className="flex gap-1.5 mt-2 flex-wrap">{p.minutes && <span className="text-[11px] px-2 py-1 rounded-full bg-white/[0.06] text-white/60">{p.minutes} min</span>}{p.tags.map(t=> <span key={t} className="text-[10px] px-2 py-1 rounded-full bg-[#a78bfa]/10 text-[#c4b5fd]">{t}</span>)}</div>
+                      {/* Warianty: każdy osobny przycisk — 1 klik = ćwiczenie z tym wariantem */}
+                      {p.variants && p.variants.length > 0 && (
+                        <div className="mt-2.5">
+                          <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold mb-1.5">Dodaj z wariantem:</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {p.variants.map(v => {
+                              const meta = VARIANT_DIFF_META[v.difficulty] ?? VARIANT_DIFF_META.MEDIUM
+                              return (
+                                <button key={v.id} onClick={() => addPresetToTasks(p, { label: v.label, difficulty: v.difficulty, minutes: v.minutes })} title={v.description || ''} className={cn('inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold hover:scale-[1.03] transition-transform', meta.color)}>
+                                  <Plus className="w-3 h-3" />{v.label}{v.minutes ? ` · ${v.minutes}m` : ''}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <button onClick={()=> addPresetToTasks(p)} className="m-3 mt-0 inline-flex items-center justify-center gap-1.5 h-9 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white text-xs font-bold hover:opacity-90 transition"><Plus className="w-3.5 h-3.5"/>Dodaj do rutyny</button>
+                    {(!p.variants || p.variants.length === 0) && (
+                      <button onClick={()=> addPresetToTasks(p)} className="m-3 mt-0 inline-flex items-center justify-center gap-1.5 h-9 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#6d28d9] text-white text-xs font-bold hover:opacity-90 transition"><Plus className="w-3.5 h-3.5"/>Dodaj do rutyny</button>
+                    )}
                   </div>
                 ))}
                 {exercisePresets.filter(p=> !presetSearch || p.title.toLowerCase().includes(presetSearch.toLowerCase())).length===0 && <p className="col-span-2 text-center text-white/40 py-8">Brak wyników — stwórz preset w zakładce Presety</p>}

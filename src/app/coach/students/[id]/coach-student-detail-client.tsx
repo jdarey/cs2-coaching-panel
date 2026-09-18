@@ -24,12 +24,9 @@ import {
   ListChecks,
   Repeat,
   Clock,
-  Timer,
   Printer,
   CalendarDays,
   Moon,
-  Trophy,
-  Flame,
   X,
   MapPin,
   Globe,
@@ -37,11 +34,13 @@ import {
 import { CoachLayout } from '@/components/coach-layout-export'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { FaceitIcon } from '@/components/faceit-icon'
+import { levelFromElo } from '@/lib/faceit-levels'
 import { cn, formatDate, getInitials, STATUS_LABELS, STATUS_COLORS, getYouTubeId } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
-const FaceitEloChart = dynamic(() => import('@/components/faceit-elo-chart').then(m => m.FaceitEloChart), { ssr: false, loading: () => <div className="rounded-3xl p-6 text-center text-white/30 text-sm">Ładowanie ELO…</div> })
+const FaceitCard = dynamic(() => import('@/components/faceit-card').then(m => m.FaceitCard), { ssr: false, loading: () => <div className="glass-card rounded-3xl p-10 text-center text-white/30 text-sm">Ładowanie karty Faceit…</div> })
 
 interface StudentDetail {
   id: string
@@ -102,14 +101,7 @@ function SteamIcon({ className }: { className?: string }) {
   )
 }
 
-// Official FACEIT brand mark (simple-icons path).
-function FaceitIcon({ className }: { className?: string }) {
-  return (
-    <svg role="img" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M23.999 2.705a.167.167 0 00-.312-.1 1141.27 1141.27 0 00-6.053 9.375H.218c-.221 0-.301.282-.11.352 7.227 2.73 17.667 6.836 23.5 9.134.15.06.39-.08.39-.18z" />
-    </svg>
-  )
-}
+// Official FACEIT mark lives in @/components/faceit-icon (shared with the chart and card).
 
 export function CoachStudentDetailClient({
   student,
@@ -155,22 +147,10 @@ export function CoachStudentDetailClient({
   const [reminding, setReminding] = useState(false)
   const [reminded, setReminded] = useState(false)
 
-  // Live Faceit ELO obok Steam - auto co 30s, progi CS2 aktualne
+  // Live Faceit ELO w badge'u nagłówka — odświeżane z /api/ranks (karta Faceit
+  // poniżej robi własny live-fetch; tu tylko tani odczyt historii do badge'a).
   const [liveFaceitElo, setLiveFaceitElo] = useState<number | null>(student.faceitElo)
   const [liveFaceitLevel, setLiveFaceitLevel] = useState<number | null>(student.faceitLevel)
-  const levelFromEloLive = (elo: number | null) => {
-    if (elo == null) return null
-    if (elo <= 500) return 1
-    if (elo <= 750) return 2
-    if (elo <= 900) return 3
-    if (elo <= 1050) return 4
-    if (elo <= 1200) return 5
-    if (elo <= 1350) return 6
-    if (elo <= 1530) return 7
-    if (elo <= 1750) return 8
-    if (elo <= 2000) return 9
-    return 10
-  }
   useEffect(() => {
     const fetchLiveElo = () => {
       fetch(`/api/ranks?studentId=${student.id}`)
@@ -181,7 +161,7 @@ export function CoachStudentDetailClient({
             const sorted = faceitOnly.sort((a: any, b: any) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
             const last = sorted[sorted.length - 1]
             setLiveFaceitElo(last.elo)
-            setLiveFaceitLevel(levelFromEloLive(last.elo))
+            setLiveFaceitLevel(levelFromElo(last.elo))
           }
         })
         .catch(() => {})
@@ -396,12 +376,18 @@ export function CoachStudentDetailClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ routineId: routineForm.routineId, studentId: student.id, endsAt: routineForm.endsAt || null }),
       })
-      if (res.ok) {
-        setRoutineForm({ routineId: '', endsAt: '' })
-        loadRoutines()
-        loadCalendar()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast({ title: 'Błąd', description: data.error || 'Nie udało się przypisać rutyny', variant: 'destructive' })
+        return
       }
-    } catch { /* ignore */ } finally { setAssigningRoutine(false) }
+      setRoutineForm({ routineId: '', endsAt: '' })
+      toast({ title: 'Przypisano', description: 'Rutyna pojawiła się u ucznia w Zadaniach treningowych' })
+      loadRoutines()
+      loadCalendar()
+    } catch {
+      toast({ title: 'Błąd', description: 'Błąd sieci — spróbuj ponownie', variant: 'destructive' })
+    } finally { setAssigningRoutine(false) }
   }
 
   const removeRoutineAssignment = async (assignmentId: string) => {
@@ -515,10 +501,10 @@ export function CoachStudentDetailClient({
                           className="inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-semibold text-white/70 hover:text-white bg-white/[0.04] border border-white/[0.08] hover:border-[#ff5500]/40 hover:bg-[#ff5500]/[0.08] transition-all duration-300"
                         >
                           <FaceitIcon className="w-4 h-4" />
-                          {student.faceitElo != null ? `${student.faceitElo} ELO` : student.faceitLevel != null ? `Poziom ${student.faceitLevel}` : 'Faceit'}
-                          {student.faceitLevel != null && (
+                          Faceit
+                          {liveFaceitLevel != null && (
                             <span className="ml-0.5 inline-flex items-center rounded-md bg-[#ff5500]/15 border border-[#ff5500]/25 px-1.5 py-0.5 text-[10px] font-bold text-[#ff9a5c]">
-                              Lv.{student.faceitLevel}
+                              Lv.{liveFaceitLevel}
                             </span>
                           )}
                         </a>
@@ -528,25 +514,18 @@ export function CoachStudentDetailClient({
                           className="inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-semibold text-white/60 bg-white/[0.04] border border-white/[0.08] cursor-default"
                         >
                           <FaceitIcon className="w-4 h-4" />
-                          {student.faceitElo != null ? `${student.faceitElo} ELO` : student.faceitLevel != null ? `Poziom ${student.faceitLevel}` : 'Faceit'}
-                          {student.faceitLevel != null && (
+                          Faceit
+                          {liveFaceitLevel != null && (
                             <span className="ml-0.5 inline-flex items-center rounded-md bg-[#ff5500]/15 border border-[#ff5500]/25 px-1.5 py-0.5 text-[10px] font-bold text-[#ff9a5c]">
-                              Lv.{student.faceitLevel}
+                              Lv.{liveFaceitLevel}
                             </span>
                           )}
                         </span>
                       ))}
                   </div>
                 )}
-                {/* Wyraźne ELO obok Steam - aktualne, 1:1, auto co 30s */}
-                {liveFaceitElo != null && (
-                  <a href={student.faceitNickname ? `https://www.faceit.com/pl/players/${encodeURIComponent(student.faceitNickname)}` : undefined} target={student.faceitNickname ? "_blank" : undefined} rel={student.faceitNickname ? "noopener noreferrer" : undefined} className="mt-3 inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-gradient-to-br from-[#ff5500]/15 to-[#ff1a1a]/10 border border-[#ff5500]/20 hover:border-[#ff5500]/30 hover:bg-[#ff5500]/20 transition-colors">
-                    <FaceitIcon className="w-4 h-4 text-[#ff5500]" />
-                    <span className="text-sm font-bold text-white">{liveFaceitElo} ELO</span>
-                    {liveFaceitLevel && <span className="text-xs text-white/50">· Lvl {liveFaceitLevel}</span>}
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" title="auto co 30s" />
-                  </a>
-                )}
+                {/* ELO pokazuje KARTA FACEIT poniżej — w nagłówku zostaje tylko
+                    identyfikacja kont (Steam / Faceit + level), bez zdublowanych liczb. */}
               </div>
             </div>
 
@@ -672,9 +651,9 @@ export function CoachStudentDetailClient({
           </div>
         </div>
 
-        {/* Faceit ELO - wykres 1:1 jak premier widget, u trenera i ucznia ten sam */}
+        {/* FACEIT jako karta piłkarska: live ELO + statystyki + progres poziomu */}
         <div className="mb-8">
-          <FaceitEloChart studentId={student.id} faceitNickname={student.faceitNickname} faceitElo={student.faceitElo} faceitLevel={student.faceitLevel} />
+          <FaceitCard studentId={student.id} faceitNickname={student.faceitNickname} />
         </div>
 
         {/* Sessions header */}
@@ -941,7 +920,7 @@ export function CoachStudentDetailClient({
                 >
                   <option value="">— wybierz —</option>
                   {routines.map((r: any) => (
-                    <option key={r.id} value={r.id}>{r.title} · {r.tasks?.length || 0} zadań{r.recurring ? ' · codziennie' : ''}</option>
+                    <option key={r.id} value={r.id}>{r.title} · {r._count?.tasks ?? r.tasks?.length ?? 0} zadań{r.recurring ? ' · codziennie' : ''}</option>
                   ))}
                 </select>
               </div>
@@ -1142,9 +1121,6 @@ export function CoachStudentDetailClient({
                         <div className="space-y-2">
                           {dayTasks.map((t: any) => {
                             const done = isDone(t.id)
-                            const vidUrl = t.videoId ? (routines.find((r:any)=> r.id===previewAssignment.routine?.id)?.tasks?.find((x:any)=>x.id===t.id)?.videoId ? null : null) : null
-                            // znajdź video z globalnej listy
-                            const video = t.videoId ? coachVideos.find((v:any)=>v.id===t.videoId) : null
                             return (
                               <div key={t.id} onClick={() => setPreviewTask(t)} className={['group flex items-start gap-3 rounded-2xl p-3.5 border transition-all duration-300 relative cursor-pointer', done ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.07] hover:border-[#a78bfa]/30 hover:bg-[#a78bfa]/[0.03]'].join(' ')}>
                                 <span className={['mt-0.5 shrink-0 grid place-items-center w-7 h-7 rounded-lg text-xs font-bold', done ? 'bg-gradient-to-br from-[#34d399] to-[#10b981] text-white ring-1 ring-white/25' : 'bg-white/[0.04] text-white/35 border border-white/[0.1]'].join(' ')}>

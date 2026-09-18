@@ -22,7 +22,7 @@ export default async function CoachRoutinesPage() {
     prisma.routine.findMany({
       where: { coachId: userId },
       include: {
-        tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
+        tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true, variantLabel: true, variantDifficulty: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] },
         assignments: {
           select: { id: true, status: true, student: { select: { id: true, name: true, email: true } } },
           orderBy: { createdAt: 'desc' },
@@ -44,6 +44,7 @@ export default async function CoachRoutinesPage() {
     }),
     prisma.exercisePreset.findMany({
       where: { coachId: userId },
+      include: { variants: { orderBy: { order: 'asc' } } },
       orderBy: { updatedAt: 'desc' },
     }),
   ])

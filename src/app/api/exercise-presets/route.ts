@@ -2,21 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
 import { isCoachRole } from '@/lib/roles'
+import { exercisePresetSchema } from '@/lib/preset-schema'
 
 export const dynamic = 'force-dynamic'
-
-const exercisePresetSchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().max(2000).optional().nullable(),
-  videoId: z.string().optional().nullable(),
-  gifUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
-  steamMapUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
-  linkUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
-  minutes: z.number().int().min(1).max(600).optional().nullable(),
-  tags: z.array(z.string()).optional().default([]),
-})
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,6 +20,7 @@ export async function GET(request: NextRequest) {
     const userId = (session.user as any).id
     const presets = await prisma.exercisePreset.findMany({
       where: { coachId: userId },
+      include: { variants: { orderBy: { order: 'asc' } } },
       orderBy: { updatedAt: 'desc' },
     })
     return NextResponse.json(presets)
@@ -74,7 +64,18 @@ export async function POST(request: NextRequest) {
         linkUrl: validated.linkUrl || null,
         minutes: validated.minutes ?? null,
         tags: validated.tags,
+        category: validated.category ?? null,
+        variants: {
+          create: validated.variants.map((v, i) => ({
+            label: v.label,
+            difficulty: v.difficulty,
+            description: v.description ?? null,
+            minutes: v.minutes ?? null,
+            order: i,
+          })),
+        },
       },
+      include: { variants: { orderBy: { order: 'asc' } } },
     })
 
     return NextResponse.json(preset, { status: 201 })

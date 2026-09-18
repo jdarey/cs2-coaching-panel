@@ -593,6 +593,10 @@ model RoutineTask {
   day         Int      @default(1) // day offset within the routine (1, 2, 3…)
   minutes     Int?     // estimated practice minutes
   order       Int      @default(0)
+  // Wybrany wariant trudności (z presetu) — coach dobiera per uczeń przy
+  // tworzeniu rutyny, uczeń może sam zmienić na łatwiejszy/trudniejszy.
+  variantLabel String?
+  variantDifficulty String? // EASY | MEDIUM | HARD — do koloru plakietki
 
   routine  Routine              @relation(fields: [routineId], references: [id], onDelete: Cascade)
   video    Video?               @relation(fields: [videoId], references: [id], onDelete: SetNull)
@@ -614,12 +618,34 @@ model ExercisePreset {
   linkUrl     String? // optional generic website link
   minutes     Int?     // estimated practice minutes
   tags        String[] // searchable tags
+  // Kategoria umiejętności (aim, movement, utility...) — filtr w bibliotece
+  category    String?
+  // Warianty trudności tego samego ćwiczenia (np. counter-strafe:
+  // Łatwy/Średni/Trudny z różnymi minutami i opisem). Puste = ćwiczenie bez wariantów.
+  variants    PresetVariant[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
 
   @@index([coachId])
+}
+
+// Jeden wariant trudności ćwiczenia (preset). Coach definiuje listę — uczeń
+// (lub coach przy przypisywaniu) wybiera konkretny wariant dla zadania.
+model PresetVariant {
+  id          String   @id @default(cuid())
+  presetId    String
+  label       String   // np. "Łatwy", "Średni", "Trudny"
+  // Kolory/skalowanie trudności: EASY | MEDIUM | HARD (tylko do UI)
+  difficulty  String   @default("MEDIUM")
+  description String?  // np. "Tylko stój-A-D, 10 min"
+  minutes     Int?     // ile minut NA TEN wariant
+  order       Int      @default(0)
+
+  preset ExercisePreset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+
+  @@index([presetId])
 }
 
 // A routine assigned to one specific student (their personal copy).

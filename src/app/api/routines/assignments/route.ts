@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
       routine: {
         include: {
           tasks: {
-            select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true },
+            // order potrzebny do numeracji zadań w podglądzie u trenera
+            select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true, variantLabel: true, variantDifficulty: true },
             orderBy: [{ day: 'asc' }, { order: 'asc' }],
           },
         },

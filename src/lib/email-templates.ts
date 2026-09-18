@@ -25,6 +25,19 @@ interface TemplateDefault {
 }
 
 export const TEMPLATE_DEFAULTS: Record<string, TemplateDefault> = {
+  'access-code': {
+    label: 'Kod dostępu po zakupie (Stripe)',
+    hint: 'Wysyłany automatycznie po opłaceniu. Zmienne: {{code}}, {{activateUrl}}, {{amount}}',
+    subject: 'Twój kod dostępu do Rutyny CS2',
+    preheader: 'Kod: {{code}} — aktywacja zajmie 30 sekund',
+    badge: 'Twoje zamówienie',
+    title: 'Dziękujemy za zakup! Twój kod: {{code}}',
+    subtitle: 'Płatność przyjęta{{amount}}. Poniżej Twój jednorazowy kod dostępu do pełnej Rutyny CS2 — każde ćwiczenie omówione filmem i tekstem.',
+    bodyHtml: `<p style="margin:0;">Twój kod dostępu:</p>\n<p style="margin:14px 0; text-align:center;">\n  <span style="display:inline-block; font-size:30px; font-weight:800; letter-spacing:4px; color:#ffffff; background:rgba(167,139,250,0.16); border:2px solid rgba(167,139,250,0.55); border-radius:16px; padding:18px 30px;">{{code}}</span>\n</p>\n<p style="margin:0;">Aktywacja: kliknij przycisk, załóż konto (30 sekund) i wpisz kod. Rutyna pojawi się w Twoim panelu razem z timerem, kalendarzem i statystykami.</p>\n<p style="margin:12px 0 0; font-size:13px; color:rgba(244,246,247,0.55);">Kod jest jednorazowy i przypisuje się do konta, na którym go aktywujesz. Zachowaj tego maila do momentu aktywacji.</p>`,
+    buttonLabel: 'Aktywuj kod →',
+    buttonNote: 'Przycisk nie działa? Wklej do przeglądarki:',
+    footerNote: 'Problem z aktywacją? Odpowiedz na tego maila — pomożemy.',
+  },
   'reset-password': {
     label: 'Reset hasła',
     hint: 'Mail z linkiem do nowego hasła. Zmienne: {{name}}, {{resetUrl}}',

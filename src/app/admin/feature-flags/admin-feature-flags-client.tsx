@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Settings, Plus, Loader2, Save, Trash2, Shield, Zap, MessageSquare, Video, Wallet } from 'lucide-react'
+import {
+  Settings, Plus, Loader2, Save, Trash2, Shield, Zap, MessageSquare, Video, Wallet,
+  Timer, Swords, ListChecks, Megaphone, MessageSquareHeart, Target, Trophy, BarChart2, BookOpen, Tag,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface FeatureFlag {
@@ -24,6 +27,18 @@ const flagIcons: Record<string, any> = {
   audit_logs: Shield,
   health_monitoring: Zap,
   backup_restore: Shield,
+  paths_module: Video,
+  presets_module: Zap,
+  practice_module: Timer,
+  matches_module: Swords,
+  routines_module: ListChecks,
+  announcements_module: Megaphone,
+  feedback_module: MessageSquareHeart,
+  goals_module: Target,
+  rank_module: Trophy,
+  progress_module: BarChart2,
+  sessions_module: BookOpen,
+  tags_module: Tag,
 }
 
 const DEFAULT_FLAGS = [
@@ -37,12 +52,34 @@ const DEFAULT_FLAGS = [
   { key: 'audit_logs', name: 'Logi audytu', description: 'Rejestracja działań administracyjnych', enabled: true },
   { key: 'health_monitoring', name: 'Monitoring zdrowia', description: 'Sprawdzanie statusu serwisów zewnętrznych', enabled: true },
   { key: 'backup_restore', name: 'Backup/Restore', description: 'Funkcje backupu i przywracania bazy', enabled: true },
+  // ── Widoczność zakładek/modułów (trener + uczeń) ──
+  { key: 'video_module', name: 'Zakładka: Filmy', description: 'Pokazuje moduł filmów (trener + uczeń). Wyłączona = brak w menu i na stronie.', enabled: true },
+  { key: 'paths_module', name: 'Zakładka: Ścieżki treningowe', description: 'Pokazuje ścieżki treningowe (trener + uczeń). Wyłączona = brak w menu i na stronie.', enabled: true },
+  { key: 'presets_module', name: 'Zakładka: Presety ćwiczeń', description: 'Biblioteka presetów ćwiczeń u trenera.', enabled: true },
+  { key: 'routines_module', name: 'Zakładka: Rutyny', description: 'Kreator i przypisywanie rutyn treningowych.', enabled: true },
+  { key: 'practice_module', name: 'Zakładka: Praktyka', description: 'Moduł praktyki u trenera.', enabled: true },
+  { key: 'matches_module', name: 'Zakładka: Mecze', description: 'Log meczów uczniów (trener + uczeń).', enabled: true },
+  { key: 'sessions_module', name: 'Zakładka: Sesje', description: 'Sesje 1:1 z uczniami.', enabled: true },
+  { key: 'finance_module', name: 'Zakładka: Finanse', description: 'Kosztorys i płatności.', enabled: true },
+  { key: 'tags_module', name: 'Zakładka: Tagi', description: 'Tagi filmów i sesji.', enabled: true },
+  { key: 'announcements_module', name: 'Zakładka: Ogłoszenia', description: 'Ogłoszenia trenera dla uczniów.', enabled: true },
+  { key: 'feedback_module', name: 'Zakładka: Opinie', description: 'Opinie uczniów o sesjach.', enabled: true },
+  { key: 'goals_module', name: 'Zakładka: Cele', description: 'Cele ucznia (panel ucznia).', enabled: true },
+  { key: 'rank_module', name: 'Zakładka: Moja ranga', description: 'Ranking ELO/Premier (panel ucznia).', enabled: true },
+  { key: 'progress_module', name: 'Zakładka: Mój postęp', description: 'Statystyki postępu (panel ucznia).', enabled: true },
 ]
 
 function FlagIcon({ flag, enabled }: { flag: { key: string }; enabled: boolean }) {
   const Icon = flagIcons[flag.key] || Settings
   return <Icon className={cn('w-5 h-5', enabled ? 'text-[#c4b5fd]' : 'text-white/30')} />
 }
+
+// Flagi, które sterują widocznością zakładek w menu (coach-layout / student-layout).
+const NAV_FLAG_KEYS = new Set([
+  'video_module', 'paths_module', 'presets_module', 'routines_module', 'practice_module',
+  'matches_module', 'sessions_module', 'finance_module', 'tags_module', 'announcements_module',
+  'feedback_module', 'goals_module', 'rank_module', 'progress_module', 'chat_enabled',
+])
 
 export function AdminFeatureFlagsClient() {
   const [flags, setFlags] = useState<Record<string, FeatureFlag>>({})
@@ -258,8 +295,13 @@ export function AdminFeatureFlagsClient() {
                     <span className={cn('text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md', flag.enabled ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/50')}>
                       {flag.enabled ? 'WŁĄCZONE' : 'WYŁĄCZONE'}
                     </span>
+                    {NAV_FLAG_KEYS.has(flag.key) && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#2de5ca]/10 text-[#7de8d8] border border-[#2de5ca]/20" title="Ta flaga chowa zakładkę w menu trenera i ucznia">
+                        WIDOCZNOŚĆ ZAKŁADKI
+                      </span>
+                    )}
                   </div>
-                  {flag.description && <p className="mt-1 text-sm text-white/45 truncate">{flag.description}</p>}
+                  {flag.description && <p className="mt-1 text-sm text-white/45">{flag.description}</p>}
                   <p className="mt-1 text-xs text-white/35 font-mono">Key: {flag.key}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

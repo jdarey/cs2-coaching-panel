@@ -16,6 +16,10 @@ const taskSchema = z.object({
   linkUrl: z.string().url().max(500).optional().nullable().or(z.literal('')),
   day: z.number().int().min(1).default(1),
   minutes: z.number().int().min(1).max(600).optional().nullable(),
+  // Wariant trudności dobrany temu uczniowi (np. "Trudny") — uczeń może
+  // sam zmienić na inny wariant tego samego ćwiczenia.
+  variantLabel: z.string().max(60).optional().nullable(),
+  variantDifficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).optional().nullable(),
 })
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const
@@ -44,6 +48,9 @@ export async function GET(request: NextRequest) {
       const routines = await prisma.routine.findMany({
         where: { coachId: userId },
         include: {
+          // Wersja skrócona (dropdown „Przypisz rutynę”) bierze take:3 — ale
+          // _count.tasks zwraca PEŁNĄ liczbę zadań, więc etykieta „· N zadań”
+          // nigdy nie kłamie. Bez full=1 nie wybieraj tej listy do liczenia.
           tasks: full
             ? { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }] }
             : { select: { id: true, title: true, day: true, minutes: true, order: true }, orderBy: [{ day: 'asc' }, { order: 'asc' }], take: 3 },
@@ -68,7 +75,7 @@ export async function GET(request: NextRequest) {
       where: { studentId: userId },
       include: {
         routine: {
-          include: { tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true, video: { select: { id: true, title: true, url: true, thumbnail: true } } }, orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
+          include: { tasks: { select: { id: true, title: true, description: true, videoId: true, steamMapUrl: true, gifUrl: true, linkUrl: true, day: true, minutes: true, order: true, variantLabel: true, variantDifficulty: true, video: { select: { id: true, title: true, url: true, thumbnail: true } } }, orderBy: [{ day: 'asc' }, { order: 'asc' }] } },
         },
         progress: true,
       },
@@ -141,6 +148,8 @@ export async function POST(request: NextRequest) {
             day: t.day,
             minutes: t.minutes ?? null,
             order: i,
+            variantLabel: t.variantLabel ?? null,
+            variantDifficulty: t.variantDifficulty ?? null,
           })),
         },
       },

@@ -14,7 +14,7 @@ export default async function CoachPresetsPage() {
   if (!session?.user || !isCoachRole((session.user as any).role)) redirect('/login')
   const userId = (session.user as any).id
   const [presets, videos] = await Promise.all([
-    prisma.exercisePreset.findMany({ where: { coachId: userId }, orderBy: { updatedAt: 'desc' } }),
+    prisma.exercisePreset.findMany({ where: { coachId: userId }, include: { variants: { orderBy: { order: 'asc' } } }, orderBy: { updatedAt: 'desc' } }),
     prisma.video.findMany({ where: { coachId: userId, isActive: true }, select: { id: true, title: true }, orderBy: { createdAt: 'desc' } }),
   ])
   return <CoachPresetsClient initialPresets={presets} initialVideos={videos} />

@@ -6,6 +6,7 @@ import { StudentLayout } from '@/components/student-layout'
 import { PageHeader } from '@/components/page-header'
 import { cn, formatDate, spotlightHandler, getYouTubeId } from '@/lib/utils'
 import { mdToHtml } from '@/lib/format'
+import { VARIANT_DIFF_META } from '@/app/coach/routines/coach-routines-client'
 import dynamic from 'next/dynamic'
 const YoutubeCustomPlayer = dynamic(() => import('@/components/youtube-custom-player').then(m => m.YoutubeCustomPlayer), { ssr: false, loading: () => <div className="yt-force-dark w-full h-full grid place-items-center bg-black/40 text-white/30 text-sm">Ładowanie odtwarzacza…</div> })
 import { useSession } from 'next-auth/react'
@@ -71,7 +72,7 @@ interface RoutineAssignment {
     description: string | null
     recurring: boolean
     level?: string | null
-    tasks: { id: string; title: string; description: string | null; videoId: string | null; video?: { id: string; title: string; url: string; thumbnail: string | null } | null; steamMapUrl: string | null; gifUrl: string | null; linkUrl: string | null; day: number; minutes: number | null }[]
+    tasks: { id: string; title: string; description: string | null; videoId: string | null; video?: { id: string; title: string; url: string; thumbnail: string | null } | null; steamMapUrl: string | null; gifUrl: string | null; linkUrl: string | null; day: number; minutes: number | null; variantLabel?: string | null; variantDifficulty?: string | null }[]
   }
   progress: { id: string; taskId: string; status: string; completedAt: string | null }[]
 }
@@ -85,6 +86,9 @@ export function StudentTasksClient() {
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'DONE'>('ALL')
   const [togglingId, setTogglingId] = useState<string | null>(null)
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
+  // Zmiana wariantu trudności (uczeń sam dostosowuje poziom ćwiczenia)
+  const [variantPicker, setVariantPicker] = useState<{ taskId: string; current: string | null; difficulty: string | null; minutes: number | null } | null>(null)
+  const [variantSaving, setVariantSaving] = useState(false)
   const [expandedRoutine, setExpandedRoutine] = useState<string | null>(null)
   const [activeTimer, setActiveTimer] = useState<{ assignment: RoutineAssignment; task: RoutineAssignment['routine']['tasks'][number] } | null>(null)
   const [routineHistory, setRoutineHistory] = useState<Record<string, { calendar: any[]; summary: any }>>({})
@@ -678,6 +682,18 @@ export function StudentTasksClient() {
                                             {t.title}
                                           </h4>
                                           <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                            {t.variantLabel && (() => { const m = VARIANT_DIFF_META[t.variantDifficulty ?? ''] ?? VARIANT_DIFF_META.MEDIUM; return (
+                                              <span
+                                                role="button"
+                                                tabIndex={0}
+                                                title="Zmień wariant — za trudne/za łatwe? Kliknij"
+                                                onClick={(e)=>{ e.stopPropagation(); setVariantPicker({ taskId: t.id, current: t.variantLabel ?? null, difficulty: t.variantDifficulty ?? null, minutes: t.minutes ?? null }) }}
+                                                onKeyDown={(e)=>{ if (e.key==='Enter'){ e.stopPropagation(); setVariantPicker({ taskId: t.id, current: t.variantLabel ?? null, difficulty: t.variantDifficulty ?? null, minutes: t.minutes ?? null }) } }}
+                                                className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold border cursor-pointer hover:scale-[1.05] transition-transform', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : m.color)}
+                                              >
+                                                <Layers className="w-3 h-3"/>{t.variantLabel}<ChevronDown className="w-2.5 h-2.5 opacity-60" />
+                                              </span>
+                                            ) })() }
                                             {t.minutes && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-white/[0.06] border-white/[0.08] text-white/50')}><Clock className="w-3 h-3"/>{t.minutes} min</span>}
                                             {t.video?.url && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-[#a78bfa]/10 border-[#a78bfa]/15 text-[#c4b5fd]')}><Film className="w-3 h-3"/>Wideo</span>}
                                             {hasGif && <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border', done ? 'bg-white/[0.03] border-white/[0.06] text-white/25' : 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#c4b5fd] group-hover/task:bg-[#a78bfa]/15 group-hover/task:border-[#a78bfa]/30 transition')}><ImageIcon className="w-3 h-3"/>GIF</span>}
@@ -822,6 +838,78 @@ export function StudentTasksClient() {
               else setActiveTimer(null)
             }} />
         )}
+
+        {/* Zmiana wariantu trudności — uczeń sam dostosowuje poziom */}
+        {variantPicker && (() => {
+          // Znajdź warianty zadania: z presetu o tym samym tytule (fetch z /api/exercise-presets jest tylko dla trenera,
+          // więc uczniowi pokazujemy warianty zaszyte w zadaniach tej samej rutyny o tym samym tytule)
+          const task = routines.flatMap(ra => ra.routine.tasks).find(t => t.id === variantPicker.taskId)
+          const sameTitleTasks = task ? routines.flatMap(ra => ra.routine.tasks).filter(t => t.title === task.title && t.variantLabel) : []
+          const seen = new Set<string>()
+          const variants = sameTitleTasks
+            .map(t => ({ label: t.variantLabel!, difficulty: t.variantDifficulty ?? 'MEDIUM', minutes: t.minutes }))
+            .filter(v => { const k = v.label.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true })
+          const apply = async (v: { label: string | null; difficulty: string | null; minutes: number | null }) => {
+            setVariantSaving(true)
+            try {
+              const res = await fetch('/api/routines/tasks/variant', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId: variantPicker.taskId, variantLabel: v.label, variantDifficulty: v.difficulty, minutes: v.minutes ?? undefined }),
+              })
+              if (res.ok) {
+                // optymistyczna aktualizacja w lokalnym stanie
+                setRoutines(prev => prev.map(ra => ({
+                  ...ra,
+                  routine: { ...ra.routine, tasks: ra.routine.tasks.map(t => t.id === variantPicker.taskId ? { ...t, variantLabel: v.label, variantDifficulty: v.difficulty, ...(v.minutes != null ? { minutes: v.minutes } : {}) } : t) },
+                })))
+                setVariantPicker(null)
+              }
+            } finally { setVariantSaving(false) }
+          }
+          return (
+            <div className="fixed inset-0 z-[70] grid place-items-center p-4">
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" onClick={() => setVariantPicker(null)} />
+              <div className="glass-liquid relative w-full max-w-sm rounded-3xl p-6">
+                <button onClick={() => setVariantPicker(null)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5"><X className="w-4 h-4" /></button>
+                <p className="text-[11px] uppercase tracking-widest text-[#c4b5fd] font-bold">Wariant ćwiczenia</p>
+                <h3 className="font-display text-lg font-bold text-white mt-1 pr-6">{task?.title ?? 'Zadanie'}</h3>
+                {variants.length > 0 ? (
+                  <>
+                    <p className="text-xs text-white/45 mt-2">Za trudne? Za łatwe? Wybierz poziom dopasowany do Ciebie — trener widzi Twój wybór.</p>
+                    <div className="mt-4 space-y-2">
+                      <button
+                        onClick={() => apply({ label: null, difficulty: null, minutes: null })}
+                        disabled={variantSaving}
+                        className={cn('w-full h-11 rounded-2xl border font-semibold text-sm transition flex items-center justify-center gap-2', !variantPicker.current ? 'bg-white text-black border-white' : 'bg-white/[0.03] text-white/60 border-white/[0.08] hover:text-white')}
+                      >
+                        Wersja podstawowa (bez wariantu)
+                      </button>
+                      {variants.map(v => {
+                        const meta = VARIANT_DIFF_META[v.difficulty] ?? VARIANT_DIFF_META.MEDIUM
+                        const active = variantPicker.current === v.label
+                        return (
+                          <button
+                            key={v.label}
+                            onClick={() => apply({ label: v.label, difficulty: v.difficulty, minutes: v.minutes })}
+                            disabled={variantSaving}
+                            className={cn('w-full h-11 rounded-2xl border font-semibold text-sm transition flex items-center justify-between px-4', active ? 'bg-white text-black border-white ring-2 ring-[#a78bfa]/40' : cn(meta.color, 'hover:scale-[1.02]'))}
+                          >
+                            <span className="flex items-center gap-2"><Layers className="w-4 h-4" />{v.label}</span>
+                            {v.minutes ? <span className="text-[11px] opacity-70">{v.minutes} min</span> : null}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-white/40 mt-3">To ćwiczenie ma tylko jedną wersję — trener nie zdefiniował wariantów trudności.</p>
+                )}
+                {variantSaving && <p className="text-[11px] text-white/40 mt-3 flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" />Zapisywanie…</p>}
+              </div>
+            </div>
+          )
+        })()}
 
         {selectedDay && (
           <div className="fixed inset-0 z-50 grid place-items-center p-4">

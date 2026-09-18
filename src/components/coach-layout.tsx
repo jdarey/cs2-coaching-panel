@@ -16,8 +16,10 @@ import {
 } from 'lucide-react'
 
 import { isAdminUser, isCoachRole } from '@/lib/roles'
+import { useFeatureFlags, isFlagEnabled } from '@/lib/feature-flags-client'
+import { ModuleDisabledNotice } from '@/components/module-disabled-notice'
 
-type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback' }
+type NavItem = { name: string; href: string; icon: any; badge?: 'messages' | 'feedback'; flag?: string }
 
 const navSections: { label: string; items: NavItem[] }[] = [
   {
@@ -26,20 +28,20 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { name: 'Dashboard', href: '/coach/dashboard', icon: LayoutDashboard },
       { name: 'Uczniowie', href: '/coach/students', icon: Users },
       { name: 'Sesje', href: '/coach/sessions', icon: BookOpen },
-      { name: 'Filmy', href: '/coach/videos', icon: Video },
+      { name: 'Filmy', href: '/coach/videos', icon: Video, flag: 'video_module' },
       { name: 'Rutyny', href: '/coach/routines', icon: ListChecks },
-      { name: 'Presety ćwiczeń', href: '/coach/presets', icon: Zap },
-      { name: 'Ścieżki', href: '/coach/paths', icon: GraduationCap },
-      { name: 'Praktyka', href: '/coach/practice', icon: Timer },
-      { name: 'Mecze uczniów', href: '/coach/matches', icon: Swords },
+      { name: 'Presety ćwiczeń', href: '/coach/presets', icon: Zap, flag: 'presets_module' },
+      { name: 'Ścieżki', href: '/coach/paths', icon: GraduationCap, flag: 'paths_module' },
+      { name: 'Praktyka', href: '/coach/practice', icon: Timer, flag: 'practice_module' },
+      { name: 'Mecze uczniów', href: '/coach/matches', icon: Swords, flag: 'matches_module' },
       { name: 'Tagi', href: '/coach/tags', icon: Tag },
-      { name: 'Finanse', href: '/coach/finance', icon: Wallet },
+      { name: 'Finanse', href: '/coach/finance', icon: Wallet, flag: 'finance_module' },
     ],
   },
   {
     label: 'Komunikacja',
     items: [
-      { name: 'Wiadomości', href: '/coach/messages', icon: MessageSquare, badge: 'messages' },
+      { name: 'Wiadomości', href: '/coach/messages', icon: MessageSquare, badge: 'messages', flag: 'chat_enabled' },
       { name: 'Ogłoszenia', href: '/coach/announcements', icon: Megaphone },
       { name: 'Opinie uczniów', href: '/coach/feedback', icon: MessageSquareHeart, badge: 'feedback' },
     ],
@@ -51,6 +53,7 @@ export function CoachLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const flags = useFeatureFlags()
 
   const user = session?.user
 
@@ -132,11 +135,14 @@ export function CoachLayout({ children }: { children: ReactNode }) {
 
             {/* Nav */}
             <nav className="flex-1 overflow-y-auto py-5 px-3">
-              {navSections.map((section) => (
+              {navSections.map((section) => {
+                const items = section.items.filter((it) => !it.flag || isFlagEnabled(flags, it.flag))
+                if (!items.length) return null
+                return (
                 <div key={section.label} className="mb-5">
                   <p className="px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold">{section.label}</p>
                   <ul className="space-y-0.5">
-                    {section.items.map((item) => (
+                    {items.map((item) => (
                       <li key={item.name}>
                         <Link
                           href={item.href}
@@ -170,7 +176,8 @@ export function CoachLayout({ children }: { children: ReactNode }) {
                     ))}
                   </ul>
                 </div>
-              ))}
+                )
+              })}
               <div className="mb-2">
                 <p className="px-3 mb-1.5 text-[10px] uppercase tracking-widest text-[#f4f6f7]/[0.3] font-semibold">Konto</p>
                 <ul className="space-y-0.5">
@@ -277,7 +284,10 @@ export function CoachLayout({ children }: { children: ReactNode }) {
           </header>
 
           <main id="main-content" className="flex-1 min-h-screen pt-6 lg:pt-8">
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
+            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+              <ModuleDisabledNotice flags={flags} pathname={pathname} />
+              {children}
+            </div>
           </main>
         </div>
       </div>

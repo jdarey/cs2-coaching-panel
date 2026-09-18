@@ -1,34 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { fetchFaceitLegacy } from '@/lib/gaming'
-import { isCoachRole } from '@/lib/roles'
-import { decryptSecret } from '@/lib/crypto'
+import { getFaceitApiKey } from '@/lib/faceit-key'
 
 export const dynamic = 'force-dynamic'
 
 const FACEIT_API = 'https://open.faceit.com/data/v4'
-
-async function getFaceitApiKey(userId: string, role: string): Promise<string | null> {
-  const envKey = process.env.FACEIT_API_KEY
-  if (envKey) return envKey
-
-  let settings: { faceitApiKey: string | null } | null = null
-  if (isCoachRole(role)) {
-    settings = await prisma.coachSettings.findUnique({
-      where: { coachId: userId },
-      select: { faceitApiKey: true },
-    })
-  } else {
-    const student = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { coach: { select: { coachSettings: { select: { faceitApiKey: true } } } } },
-    })
-    settings = (student as any)?.coach?.coachSettings ?? null
-  }
-  return decryptSecret(settings?.faceitApiKey) || null
-}
 
 // Keyless first (Faceit legacy endpoint), Open API as an optional upgrade.
 export async function GET(request: NextRequest) {

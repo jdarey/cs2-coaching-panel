@@ -27,6 +27,19 @@ const BUY_URL = process.env.PRODUCT_BUY_URL || ''
 const PRICE_PLN = process.env.PRODUCT_PRICE_PLN || '97'
 
 function BuyCta({ className = '' }: { className?: string }) {
+  // Priorytet: Stripe Checkout (płatność + automatyczny mail z kodem).
+  // Fallback: zewnętrzny link sprzedaży. Ostatecznie: kontakt mailowy.
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET) {
+    return (
+      <a
+        href="/api/checkout/create"
+        className={`group inline-flex items-center gap-2 rounded-2xl px-8 py-4 text-base font-semibold text-white btn-darey ${className}`}
+      >
+        Kup dostęp — {PRICE_PLN} zł
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+      </a>
+    )
+  }
   if (BUY_URL) {
     return (
       <a
@@ -38,7 +51,7 @@ function BuyCta({ className = '' }: { className?: string }) {
       </a>
     )
   }
-  // Bez skonfigurowanego linku sprzedaży: kontakt (nie blokuje strony).
+  // Bez skonfigurowanej sprzedaży: kontakt (nie blokuje strony).
   return (
     <a
       href="mailto:kontakt@example.com?subject=Rutyna%20CS2%20—%20zakup"
